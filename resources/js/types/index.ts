@@ -14,3 +14,4 @@ export * from './Settings';
 export * from './Order';
 export * from './PromoCode';
 export * from './Seo';
+export * from './Page';
