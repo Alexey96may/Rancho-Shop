@@ -12,7 +12,18 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('order_items', function (Blueprint $table) {
+
             $table->id();
+            $table->foreignId('order_id')->constrained()->onDelete('cascade');
+
+            $table->foreignId('product_id')->nullable()->constrained()->onDelete('set null');
+
+            // Снапшот данных (Дублируем инфо из таблицы products)
+            $table->string('product_name'); // Например: "Молоко от Белки"
+            $table->integer('price_at_purchase'); // Цена, которая была В МОМЕНТ заказа
+            $table->integer('base_price_at_purchase');
+            $table->integer('quantity'); // Сколько штук/литров взял
+
             $table->timestamps();
         });
     }
