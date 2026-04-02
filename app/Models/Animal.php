@@ -64,7 +64,7 @@ class Animal extends Model implements HasMedia
     /**
     * Polymorphic relationship with comments
     */
-    public function reviews(): MorphMany
+    public function comments(): MorphMany
     {
         return $this->morphMany(Comment::class, 'commentable');
     }
