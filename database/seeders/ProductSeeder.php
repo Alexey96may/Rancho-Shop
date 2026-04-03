@@ -10,6 +10,8 @@ use Illuminate\Support\Str;
 
 class ProductSeeder extends Seeder
 {
+    use WithoutModelEvents;
+    
     /**
      * Run the database seeds.
      */

@@ -2,11 +2,15 @@
 
 namespace App\Models;
 
+use App\Traits\HasSmartActiveScope;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class PromoCode extends Model
 {
+    use HasSmartActiveScope;
+
     protected $fillable = [
         'code', 'type', 'value', 'min_order_amount', 
         'max_discount', 'usage_limit', 'used_count', 
@@ -18,7 +22,9 @@ class PromoCode extends Model
         'is_active'  => 'boolean',
         'value'      => 'integer',
         'min_order_amount' => 'integer',
+        'max_discount' => 'integer',
         'used_count' => 'integer',
+        'usage_limit' => 'integer',
     ];
 
     /**
@@ -37,14 +43,16 @@ class PromoCode extends Model
     }
 
     /**
-    * Scope for quickly finding active codes
+    * Extend the basic scopeActive with date checking
     */
-    public function scopeActive(Builder $query): void
+    public function scopeValid(Builder $query): void
     {
-        $query->where('is_active', true)
-              ->where(function ($q) {
-                  $q->whereNull('expires_at')
-                    ->orWhere('expires_at', '>', now());
-              });
+        $query->active()
+            ->where(function ($q) {
+                $q->whereNull('expires_at')->orWhere('expires_at', '>', now());
+            })
+            ->where(function ($q) {
+                $q->whereNull('usage_limit')->orWhereRaw('used_count < usage_limit');
+            });
     }
 }

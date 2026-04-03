@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Traits\HasInteractions;
 use App\Traits\HasStandardMedia;
+use App\Traits\HasSmartActiveScope;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -22,7 +23,7 @@ use Spatie\Image\Enums\Fit;
 
 class Product extends Model implements HasMedia
 {
-    use SoftDeletes, InteractsWithMedia, HasStandardMedia, HasInteractions;
+    use SoftDeletes, InteractsWithMedia, HasStandardMedia, HasInteractions, HasSmartActiveScope;
 
     protected $fillable = [
         'animal_id', 'name', 'slug', 'description', 
@@ -39,18 +40,6 @@ class Product extends Model implements HasMedia
     ];
 
     /**
-     * Global Scope: Hide inactive products for everyone except the admin panel.
-     */
-    protected static function booted(): void
-    {
-        static::addGlobalScope('active', function (Builder $builder) {
-            if (!request()->is('admin/*') && !request()->is('api/admin/*')) {
-                $builder->where('is_active', true);
-            }
-        });
-    }
-
-    /**
     * Connection with an animal (for example, whose milk is this)
     */
     public function animal(): BelongsTo
@@ -65,8 +54,8 @@ class Product extends Model implements HasMedia
     protected function priceFormatted(): Attribute
     {
         return Attribute::make(
-            get: fn () => number_format($this->price / 100, 2, '.', '')
-        );
+            get: fn (mixed $value, array $attributes) => number_format($attributes['price'] / 100, 2, '.', '')
+        )->shouldCache();
     }
 
     /** 
