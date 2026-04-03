@@ -60,6 +60,7 @@ class Animal extends Model implements HasMedia
     public function registerMediaCollections(): void
     {
         $this->addMediaCollection('gallery')
+            ->useFallbackUrl('/images/no-animal.jpg')
             ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/webp']);
 
         $this->addMediaCollection('voice')

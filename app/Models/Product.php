@@ -2,12 +2,16 @@
 
 namespace App\Models;
 
+use App\Traits\HasInteractions;
+use App\Traits\HasStandardMedia;
+
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 //Spatie
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
@@ -18,7 +22,7 @@ use Spatie\Image\Enums\Fit;
 
 class Product extends Model implements HasMedia
 {
-    use SoftDeletes, InteractsWithMedia;
+    use SoftDeletes, InteractsWithMedia, HasStandardMedia, HasInteractions;
 
     protected $fillable = [
         'animal_id', 'name', 'slug', 'description', 
@@ -40,7 +44,7 @@ class Product extends Model implements HasMedia
     protected static function booted(): void
     {
         static::addGlobalScope('active', function (Builder $builder) {
-            if (!request()->is('admin/*')) {
+            if (!request()->is('admin/*') && !request()->is('api/admin/*')) {
                 $builder->where('is_active', true);
             }
         });
@@ -55,21 +59,12 @@ class Product extends Model implements HasMedia
     }
 
     /**
-    * Polymorphic links (SEO and Reviews)
+    * Accessor for displaying prices in a beautiful way.
+    * Store 1500 (int), get 15.00
     */
-    public function seo(): MorphOne
+    protected function priceFormatted(): Attribute
     {
-        return $this->morphOne(Seo::class, 'seoable');
-    }
-
-    public function comments(): MorphMany
-    {
-        return $this->morphMany(Comment::class, 'commentable');
-    }
-
-    protected function priceFormatted(): \Illuminate\Database\Eloquent\Casts\Attribute
-    {
-        return \Illuminate\Database\Eloquent\Casts\Attribute::make(
+        return Attribute::make(
             get: fn () => number_format($this->price / 100, 2, '.', '')
         );
     }
@@ -80,15 +75,7 @@ class Product extends Model implements HasMedia
     public function registerMediaCollections(): void
     {
         $this->addMediaCollection('gallery')
-            ->useFallbackUrl('/images/no-product.jpg');
-    }
-
-    public function registerMediaConversions(?Media $media = null): void
-    {
-        $this->addMediaConversion('thumb')
-            ->fit(Fit::Contain, 400, 400)
-            ->format(ImageFormat::Avif)
-            ->optimize()
-            ->nonQueued();
+            ->useFallbackUrl('/images/no-product.jpg')
+            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/webp', 'image/avif']);
     }
 }
