@@ -51,7 +51,7 @@ class Animal extends Model implements HasMedia
     */
     public function children(): HasMany
     {
-        return $this->HasMany(Animal::class, 'parent_id');
+        return $this->hasMany(Animal::class, 'parent_id');
     }
 
     /**
