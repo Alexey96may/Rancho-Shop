@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Traits\HasStandardMedia;
 use App\Traits\HasInteractions;
+use App\Traits\HasActiveScope;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -16,7 +17,7 @@ use Spatie\MediaLibrary\HasMedia;
 
 class Animal extends Model implements HasMedia
 {
-    use HasFactory, SoftDeletes, HasStandardMedia, HasInteractions;
+    use HasFactory, SoftDeletes, HasStandardMedia, HasInteractions, HasActiveScope;
 
     protected $fillable = [
         'parent_id',

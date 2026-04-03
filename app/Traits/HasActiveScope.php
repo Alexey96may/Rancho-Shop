@@ -4,12 +4,12 @@ namespace App\Traits;
 
 use Illuminate\Database\Eloquent\Builder;
 
-trait HasSmartActiveScope
+trait HasActiveScope
 {
     /**
     * Laravel magic: boot method + TraitName
     */
-    public function bootHasSmartActiveScope(): void
+    public function bootHasActiveScope(): void
     {
         static::addGlobalScope('active', function (Builder $builder) {
             // Check if this is an admin panel

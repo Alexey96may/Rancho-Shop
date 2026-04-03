@@ -4,7 +4,7 @@ namespace App\Models;
 
 use App\Traits\HasInteractions;
 use App\Traits\HasStandardMedia;
-use App\Traits\HasSmartActiveScope;
+use App\Traits\HasActiveScope;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -23,7 +23,7 @@ use Spatie\Image\Enums\Fit;
 
 class Product extends Model implements HasMedia
 {
-    use SoftDeletes, InteractsWithMedia, HasStandardMedia, HasInteractions, HasSmartActiveScope;
+    use SoftDeletes, InteractsWithMedia, HasStandardMedia, HasInteractions, HasActiveScope;
 
     protected $fillable = [
         'animal_id', 'name', 'slug', 'description', 

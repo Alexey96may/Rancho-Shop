@@ -2,14 +2,14 @@
 
 namespace App\Models;
 
-use App\Traits\HasSmartActiveScope;
+use App\Traits\HasActiveScope;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class PromoCode extends Model
 {
-    use HasSmartActiveScope;
+    use HasActiveScope;
 
     protected $fillable = [
         'code', 'type', 'value', 'min_order_amount', 
