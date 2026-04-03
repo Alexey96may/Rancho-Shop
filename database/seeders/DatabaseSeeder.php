@@ -30,6 +30,7 @@ class DatabaseSeeder extends Seeder
             PromoCodeSeeder::class,
             SettingSeeder::class,
             PageSeeder::class,
+            OrderSeeder::class,
             CommentSeeder::class,
             SeoSeeder::class,
         ]);

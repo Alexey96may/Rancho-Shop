@@ -17,25 +17,25 @@ return new class extends Migration
 
             $table->foreignId('promo_code_id')
             ->nullable()
-            ->constrained('promo_codes') // Явно указываем таблицу
+            ->constrained('promo_codes')
             ->onDelete('set null');
 
-            // Информация о клиенте
+            // Client Information
             $table->string('customer_name');
             $table->string('customer_phone');
             $table->text('delivery_address')->nullable();
-            $table->text('customer_comment')->nullable(); // Комментарий клиента к заказу
+            $table->text('customer_comment')->nullable(); // Client's comment on the order
 
             $table->unsignedInteger('discount_total')->default(0);
 
-            // Финансовые итоги
-            $table->integer('total_price'); // Сумма всего заказа в копейках
-            $table->integer('delivery_price')->default(0); // Стоимость доставки
+            // Financial results
+            $table->integer('total_price');
+            $table->integer('delivery_price')->default(0);
 
             $table->enum('status', ['new', 'confirmed', 'delivering', 'completed', 'cancelled'])
                 ->default('new');
 
-            $table->text('admin_note')->nullable(); // Комментарий админа к заказу
+            $table->text('admin_note')->nullable(); // Admin's comment on the order
             $table->timestamps();
 
         });
