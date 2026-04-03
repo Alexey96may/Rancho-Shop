@@ -13,7 +13,9 @@ return new class extends Migration
     {
         Schema::create('comments', function (Blueprint $table) {
             $table->id();
-            $table->string('user_name');
+            $table->foreignId('user_id')->nullable()->constrained()->onDelete('set null');
+            $table->string('guest_name')->nullable();
+            
             $table->text('content');
             $table->unsignedTinyInteger('rating')->nullable()->default(5);
             $table->boolean('is_published')->default(false);
