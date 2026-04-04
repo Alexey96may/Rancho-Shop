@@ -12,11 +12,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 // Spatie
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
-use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class Product extends Model implements HasMedia
 {
-    use HasActiveScope, HasInteractions, HasStandardMedia, InteractsWithMedia, SoftDeletes;
+    use HasActiveScope, HasInteractions, HasStandardMedia, InteractsWithMedia, SoftDeletes {
+        HasStandardMedia::registerMediaConversions insteadof InteractsWithMedia;
+    }
 
     protected $fillable = [
         'animal_id', 'name', 'slug', 'description',
@@ -32,12 +33,26 @@ class Product extends Model implements HasMedia
         'old_price' => 'integer',
     ];
 
+    protected $appends = ['main_image', 'price_formatted'];
+
     /**
      * Connection with an animal (for example, whose milk is this)
      */
     public function animal(): BelongsTo
     {
         return $this->belongsTo(Animal::class);
+    }
+
+    /**
+     * Accessory for the main image (Spatie)
+     * To simply write :src="product.main_image" in Vue
+     */
+    protected function mainImage(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => $this->getFirstMediaUrl('gallery', 'preview') 
+                ?: '/images/no-product.jpg'
+        );
     }
 
     /**

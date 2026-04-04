@@ -13,7 +13,7 @@ trait HasActiveScope
     {
         static::addGlobalScope('active', function (Builder $builder) {
             // Check if this is an admin panel
-            if (! request()->is('admin/*') && ! request()->is('api/admin/*')) {
+            if (!request()->is('admin/*') && !request()->is('api/admin/*')) {
                 $builder->where('is_active', true);
             }
         });

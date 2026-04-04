@@ -58,7 +58,8 @@ class ProductSeeder extends Seeder
         foreach ($products as $item) {
             $product = Product::create(array_merge($item, ['is_active' => true]));
 
-            $product->addMediaFromUrl('https://images.unsplash.com/photo-1550583724-b2692b85b150')
+            $product->addMedia(public_path('images/seeds/milk.png'))
+                ->preservingOriginal()
                 ->toMediaCollection('gallery');
         }
     }

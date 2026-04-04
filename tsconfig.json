@@ -2,9 +2,9 @@
     "compilerOptions": {
         "allowJs": true,
         "module": "ESNext",
-        "moduleResolution": "node",
+        "moduleResolution": "bundler",
+        "allowImportingTsExtensions": true,
         "jsx": "preserve",
-        "baseUrl": ".",
         "strict": true,
         "sourceMap": true,
         "isolatedModules": true,
@@ -19,10 +19,9 @@
         "paths": {
             "@/*": ["./resources/js/*"],
             "ziggy-js": ["./vendor/tightenco/ziggy"],
-            "@/*": ["resources/js/*"],
-            "@css/*": ["resources/scss/*"],
-            "@img/*": ["resources/images/*"]
+            "@css/*": ["./resources/css/*"],
+            "@img/*": ["./resources/images/*"]
         }
     },
-    "include": ["resources/js/**/*.ts", "resources/js/**/*.vue"]
+    "include": ["resources/js/**/*.ts", "resources/js/**/*.vue", "resources/js/**/*.d.ts"]
 }

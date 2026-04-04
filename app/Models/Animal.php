@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 // Spatie
 use Spatie\MediaLibrary\HasMedia;
 
@@ -37,6 +38,8 @@ class Animal extends Model implements HasMedia
         'is_active' => 'boolean',
     ];
 
+    protected $appends = ['avatar_url', 'voice_url'];
+
     /**
      * Relationship to a parent (e.g., a cow's mother)
      */
@@ -58,12 +61,34 @@ class Animal extends Model implements HasMedia
      */
     public function registerMediaCollections(): void
     {
-        $this->addMediaCollection('gallery')
+        $this->addMediaCollection('avatars')
             ->useFallbackUrl('/images/no-animal.jpg')
             ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/webp']);
 
         $this->addMediaCollection('voice')
             ->acceptsMimeTypes(['audio/mpeg', 'audio/wav'])
             ->singleFile();
+    }
+
+    protected function avatarUrl(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => $this->getFirstMediaUrl('avatars') ?: '/images/no-animal.jpg'
+        );
+    }
+
+    protected function voiceUrl(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => $this->getFirstMediaUrl('voice') ?: null
+        );
+    }
+
+    /**
+    * Filter: cows only
+    */
+    public function scopeCows($query)
+    {
+        return $query->where('type', 'cow');
     }
 }

@@ -32,6 +32,14 @@ export default {
                 header: ['Spectral', 'serif'],
                 sans: ['Montserrat', 'sans-serif'],
             },
+            container: {
+                center: true,
+                padding: {
+                    DEFAULT: '1rem',
+                    sm: '2rem',
+                    lg: '4rem',
+                },
+            },
         },
         boxShadow: {
             'rancho-sm': '0 2px 10px rgba(28, 63, 52, 0.05)',

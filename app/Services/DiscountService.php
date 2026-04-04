@@ -13,7 +13,7 @@ class DiscountService
      */
     public function calculatePromoDiscount(PromoCode $promo, int $orderAmount): int
     {
-        if (! $promo->isValid()) {
+        if (!$promo->isValid()) {
             return 0;
         }
 

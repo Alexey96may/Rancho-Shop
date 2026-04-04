@@ -208,7 +208,7 @@ return [
      * The engine that should perform the image conversions.
      * Should be either `gd`, `imagick` or `vips`.
      */
-    'image_driver' => 'imagick',
+    'image_driver' => env('IMAGE_DRIVER', 'gd'),
 
     /*
      * FFMPEG & FFProbe binaries paths, only used if you try to generate video
