@@ -23,7 +23,7 @@ class OrderSeeder extends Seeder
 
         if ($product) {
             $quantity = 3;
-            $deliveryPrice = 20000; 
+            $deliveryPrice = 20000;
             $discount = $promo ? 30000 : 0; // 300 rub discount
 
             // 1. Create main order

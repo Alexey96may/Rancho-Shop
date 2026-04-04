@@ -2,11 +2,10 @@
 
 namespace Database\Seeders;
 
+use App\Models\Animal;
 use App\Models\Comment;
 use App\Models\Product;
-use App\Models\Animal;
 use App\Models\User;
-
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 

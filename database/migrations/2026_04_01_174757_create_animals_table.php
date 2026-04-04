@@ -29,10 +29,10 @@ return new class extends Migration
             $table->json('features')->nullable(); // Характеристики: ['Жирность' => '4.2%', 'Характер' => 'Тихая']
 
             $table->timestamps();
-            $table->softDeletes(); //В моделе use SoftDeletes;
+            $table->softDeletes(); // В моделе use SoftDeletes;
 
-            //$table->string('audio_path')->nullable(); // Путь к mp3 "приветствию"  // Удалим. Всё будет через Spatie.
-            //$table->json('images')->nullable(); // Удалим. Всё будет через Spatie.
+            // $table->string('audio_path')->nullable(); // Путь к mp3 "приветствию"  // Удалим. Всё будет через Spatie.
+            // $table->json('images')->nullable(); // Удалим. Всё будет через Spatie.
         });
     }
 

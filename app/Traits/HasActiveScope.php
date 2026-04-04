@@ -7,21 +7,21 @@ use Illuminate\Database\Eloquent\Builder;
 trait HasActiveScope
 {
     /**
-    * Laravel magic: boot method + TraitName
-    */
+     * Laravel magic: boot method + TraitName
+     */
     public function bootHasActiveScope(): void
     {
         static::addGlobalScope('active', function (Builder $builder) {
             // Check if this is an admin panel
-            if (!request()->is('admin/*') && !request()->is('api/admin/*')) {
+            if (! request()->is('admin/*') && ! request()->is('api/admin/*')) {
                 $builder->where('is_active', true);
             }
         });
     }
 
     /**
-    * Standard scope for manual invocation: PromoCode::active()->get()
-    */
+     * Standard scope for manual invocation: PromoCode::active()->get()
+     */
     public function scopeActive(Builder $query): void
     {
         $query->where('is_active', true);

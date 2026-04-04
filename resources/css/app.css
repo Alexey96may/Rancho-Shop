@@ -1,3 +1,79 @@
+@import './reset.css';
+
+/* Bold 700 - For H1 and H2 */
+@font-face {
+    font-family: 'Spectral';
+    src:
+        url('/fonts/spectral-bold.woff2') format('woff2'),
+        url('/fonts/spectral-bold.woff') format('woff'),
+        url('/fonts/spectral-bold.ttf') format('truetype');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* SemiBold 600 - For H3 and titles in cards */
+@font-face {
+    font-family: 'Spectral';
+    src:
+        url('/fonts/spectral-semibold.woff2') format('woff2'),
+        url('/fonts/spectral-semibold.woff') format('woff'),
+        url('/fonts/spectral-semibold.ttf') format('truetype');
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Italic 400 - For heartfelt quotes and inserts */
+@font-face {
+    font-family: 'Spectral';
+    src:
+        url('/fonts/spectral-italic.woff2') format('woff2'),
+        url('/fonts/spectral-italic.woff') format('woff'),
+        url('/fonts/spectral-italic.ttf') format('truetype');
+    font-weight: 400;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* --- NUNITO (Main text) --- */
+
+/* Regular 400*/
+@font-face {
+    font-family: 'Nunito';
+    src:
+        url('/fonts/nunito-regular.woff2') format('woff2'),
+        url('/fonts/nunito-regular.woff') format('woff'),
+        url('/fonts/nunito-regular.ttf') format('truetype');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* SemiBold 600 - For buttons and text accents */
+@font-face {
+    font-family: 'Nunito';
+    src:
+        url('/fonts/nunito-semibold.woff2') format('woff2'),
+        url('/fonts/nunito-semibold.woff') format('woff'),
+        url('/fonts/nunito-semibold.ttf') format('truetype');
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Bold 700 - For prices */
+@font-face {
+    font-family: 'Nunito';
+    src:
+        url('/fonts/nunito-bold.woff2') format('woff2'),
+        url('/fonts/nunito-bold.woff') format('woff'),
+        url('/fonts/nunito-bold.ttf') format('truetype');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

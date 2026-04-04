@@ -16,9 +16,9 @@ return new class extends Migration
             $table->id();
 
             $table->foreignId('promo_code_id')
-            ->nullable()
-            ->constrained('promo_codes')
-            ->onDelete('set null');
+                ->nullable()
+                ->constrained('promo_codes')
+                ->onDelete('set null');
 
             // Client Information
             $table->string('customer_name');

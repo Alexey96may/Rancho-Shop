@@ -21,6 +21,6 @@ class ProductResource extends JsonResource
             'unit' => $this->unit,
             'image' => $this->getFirstMediaUrl('gallery', 'thumbnail'),
             'is_available' => $this->stock > 0 || $this->availability_type === 'daily',
-    ];
+        ];
     }
 }

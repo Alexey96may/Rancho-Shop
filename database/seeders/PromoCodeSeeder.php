@@ -2,13 +2,14 @@
 
 namespace Database\Seeders;
 
+use App\Models\PromoCode;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use App\Models\PromoCode;
 
 class PromoCodeSeeder extends Seeder
 {
     use WithoutModelEvents;
+
     /**
      * Run the database seeds.
      */
@@ -37,7 +38,7 @@ class PromoCodeSeeder extends Seeder
                 'value' => 50000,
                 'expires_at' => now()->subDays(1), // Already expired
                 'is_active' => true,
-            ]
+            ],
         ];
 
         foreach ($codes as $code) {

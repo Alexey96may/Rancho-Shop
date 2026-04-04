@@ -2,22 +2,20 @@
 
 namespace App\Models;
 
-use App\Traits\HasStandardMedia;
-use App\Traits\HasInteractions;
 use App\Traits\HasActiveScope;
-
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Traits\HasInteractions;
+use App\Traits\HasStandardMedia;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-
-//Spatie
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
+// Spatie
 use Spatie\MediaLibrary\HasMedia;
 
 class Animal extends Model implements HasMedia
 {
-    use HasFactory, SoftDeletes, HasStandardMedia, HasInteractions, HasActiveScope;
+    use HasActiveScope, HasFactory, HasInteractions, HasStandardMedia, SoftDeletes;
 
     protected $fillable = [
         'parent_id',
@@ -31,33 +29,33 @@ class Animal extends Model implements HasMedia
     ];
 
     /**
-    * Automatic type conversion.
-    * JSON from the database immediately becomes an array in PHP.
-    */
+     * Automatic type conversion.
+     * JSON from the database immediately becomes an array in PHP.
+     */
     protected $casts = [
         'features' => 'array',
         'is_active' => 'boolean',
     ];
 
     /**
-    * Relationship to a parent (e.g., a cow's mother)
-    */
+     * Relationship to a parent (e.g., a cow's mother)
+     */
     public function parent(): BelongsTo
     {
         return $this->belongsTo(Animal::class, 'parent_id');
     }
 
     /**
-    * Relationship to a children (e.g., a cow's children)
-    */
+     * Relationship to a children (e.g., a cow's children)
+     */
     public function children(): HasMany
     {
         return $this->hasMany(Animal::class, 'parent_id');
     }
 
     /**
-    * Spatie Collection settings (to avoid confusing photos and audio)
-    */
+     * Spatie Collection settings (to avoid confusing photos and audio)
+     */
     public function registerMediaCollections(): void
     {
         $this->addMediaCollection('gallery')
@@ -68,5 +66,4 @@ class Animal extends Model implements HasMedia
             ->acceptsMimeTypes(['audio/mpeg', 'audio/wav'])
             ->singleFile();
     }
-
 }

@@ -2,13 +2,12 @@
 
 namespace Database\Seeders;
 
+use App\Models\Animal;
+use App\Models\Page;
+use App\Models\Product;
+use App\Models\Seo;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-
-use App\Models\Seo;
-use App\Models\Page;
-use App\Models\Animal;
-use App\Models\Product;
 
 class SeoSeeder extends Seeder
 {
@@ -54,19 +53,19 @@ class SeoSeeder extends Seeder
         // 3. SEO for a specific animal (for example, Zorka)
         $cow = Animal::where('slug', 'zorka')->first();
         if ($cow) {
-        Seo::create([
-            'seoable_id' => $cow->id,
-            'seoable_type' => Animal::class,
-            'title' => "Корова {$cow->name} — Наша гордость | Молочная Долина",
-            'description' => "Познакомьтесь с {$cow->name}. Узнайте её историю, особенности и посмотрите галерею нашей любимицы.",
-            'keywords' => "корова {$cow->name}, животные фермы, домашний скот Крым",
-            'og_data' => [
-                'og:title' => "Звезда нашей фермы: {$cow->name}",
-                'og:description' => "Посмотрите, как живёт {$cow->name} в Молочной Долине.",
-                'og:image' => $cow->getFirstMediaUrl('gallery') ?: '/images/og/default-animal.jpg',
-                'og:type' => 'profile',
-            ],
-        ]);
-    }
+            Seo::create([
+                'seoable_id' => $cow->id,
+                'seoable_type' => Animal::class,
+                'title' => "Корова {$cow->name} — Наша гордость | Молочная Долина",
+                'description' => "Познакомьтесь с {$cow->name}. Узнайте её историю, особенности и посмотрите галерею нашей любимицы.",
+                'keywords' => "корова {$cow->name}, животные фермы, домашний скот Крым",
+                'og_data' => [
+                    'og:title' => "Звезда нашей фермы: {$cow->name}",
+                    'og:description' => "Посмотрите, как живёт {$cow->name} в Молочной Долине.",
+                    'og:image' => $cow->getFirstMediaUrl('gallery') ?: '/images/og/default-animal.jpg',
+                    'og:type' => 'profile',
+                ],
+            ]);
+        }
     }
 }

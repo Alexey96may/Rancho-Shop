@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->nullable()->constrained()->onDelete('set null');
             $table->string('guest_name')->nullable();
-            
+
             $table->text('content');
             $table->unsignedTinyInteger('rating')->nullable()->default(5);
             $table->boolean('is_published')->default(false);

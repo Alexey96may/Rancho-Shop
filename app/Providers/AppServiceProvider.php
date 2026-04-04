@@ -2,9 +2,12 @@
 
 namespace App\Providers;
 
+use App\Models\Animal;
+use App\Models\Page;
+use App\Models\Product;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Database\Eloquent\Relations\Relation;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -24,9 +27,9 @@ class AppServiceProvider extends ServiceProvider
         Vite::prefetch(concurrency: 3);
 
         Relation::enforceMorphMap([
-            'animal' => \App\Models\Animal::class,
-            'product' => \App\Models\Product::class,
-            'page' => \App\Models\Page::class,
+            'animal' => Animal::class,
+            'product' => Product::class,
+            'page' => Page::class,
         ]);
     }
 }

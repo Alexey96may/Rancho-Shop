@@ -1,20 +1,20 @@
 /// <reference types="vitest" />
-import legacy from "@vitejs/plugin-legacy";
-import vue from "@vitejs/plugin-vue";
-import laravel from "laravel-vite-plugin";
-import path from "path";
-import { visualizer } from "rollup-plugin-visualizer";
-import { defineConfig } from "vite";
-import { imagetools } from "vite-imagetools";
-import viteCompression from "vite-plugin-compression";
-import { ViteImageOptimizer } from "vite-plugin-image-optimizer";
-import svgLoader from "vite-svg-loader";
+import legacy from '@vitejs/plugin-legacy';
+import vue from '@vitejs/plugin-vue';
+import laravel from 'laravel-vite-plugin';
+import path from 'path';
+import { visualizer } from 'rollup-plugin-visualizer';
+import { defineConfig } from 'vite';
+import { imagetools } from 'vite-imagetools';
+import viteCompression from 'vite-plugin-compression';
+import { ViteImageOptimizer } from 'vite-plugin-image-optimizer';
+import svgLoader from 'vite-svg-loader';
 
 export default defineConfig(({ isSsrBuild }) => ({
     plugins: [
         laravel({
-            input: ["resources/scss/app.scss", "resources/js/app.ts"],
-            ssr: "resources/js/ssr.ts",
+            input: ['resources/css/app.css', 'resources/js/app.ts'],
+            ssr: 'resources/js/ssr.ts',
             refresh: true,
         }),
         vue({
@@ -26,11 +26,11 @@ export default defineConfig(({ isSsrBuild }) => ({
             },
         }),
         legacy({
-            targets: ["defaults", "not IE 11"],
+            targets: ['defaults', 'not IE 11'],
         }),
         viteCompression({
-            algorithm: "brotliCompress",
-            ext: ".br",
+            algorithm: 'brotliCompress',
+            ext: '.br',
         }),
         svgLoader(),
         ViteImageOptimizer({
@@ -45,37 +45,31 @@ export default defineConfig(({ isSsrBuild }) => ({
             jpeg: { quality: 80 },
         }),
         visualizer({
-            filename: "stats.html",
+            filename: 'stats.html',
             gzipSize: true,
             brotliSize: true,
         }),
         imagetools({
             defaultDirectives: (url) => {
-                if (url.searchParams.has("smart")) {
-                    return new URLSearchParams(
-                        "format=avif;webp;jpg&as=picture",
-                    );
+                if (url.searchParams.has('smart')) {
+                    return new URLSearchParams('format=avif;webp;jpg&as=picture');
                 }
                 return new URLSearchParams();
             },
         }),
     ],
     ssr: {
-        noExternal: ["@inertiajs/server"],
+        noExternal: ['@inertiajs/server'],
     },
     build: {
-        minify: "terser",
+        minify: 'terser',
         cssMinify: true,
         rollupOptions: {
             output: {
                 inlineDynamicImports: isSsrBuild,
                 manualChunks(id) {
-                    if (id.includes("node_modules")) {
-                        return id
-                            .toString()
-                            .split("node_modules/")[1]
-                            .split("/")[0]
-                            .toString();
+                    if (id.includes('node_modules')) {
+                        return id.toString().split('node_modules/')[1].split('/')[0].toString();
                     }
                 },
             },
@@ -84,17 +78,17 @@ export default defineConfig(({ isSsrBuild }) => ({
     },
     test: {
         globals: true,
-        environment: "jsdom",
+        environment: 'jsdom',
         coverage: {
-            provider: "v8",
-            reporter: ["text", "json", "html"],
+            provider: 'v8',
+            reporter: ['text', 'json', 'html'],
         },
     },
     resolve: {
         alias: {
-            "@": path.resolve(__dirname, "./resources/js"),
-            "@css": path.resolve(__dirname, "./resources/scss"),
-            "@img": path.resolve(__dirname, "./resources/images"),
+            '@': path.resolve(__dirname, './resources/js'),
+            '@css': path.resolve(__dirname, './resources/css'),
+            '@img': path.resolve(__dirname, './resources/images'),
         },
     },
 }));

@@ -1,5 +1,5 @@
-import defaultTheme from 'tailwindcss/defaultTheme';
 import forms from '@tailwindcss/forms';
+import defaultTheme from 'tailwindcss/defaultTheme';
 
 /** @type {import('tailwindcss').Config} */
 export default {
@@ -11,11 +11,35 @@ export default {
     ],
 
     theme: {
-        extend: {
-            fontFamily: {
-                sans: ['Figtree', ...defaultTheme.fontFamily.sans],
+        colors: {
+            rancho: {
+                // Тот самый цвет акварельной бумаги
+                paper: '#FCFAF5',
+                // Глубокий зеленый для лого и заголовков
+                forest: '#1C3F34',
+                // Хвойный для кнопок
+                pine: '#3B7558',
+                // Приглушенный оливковый
+                olive: '#597D5B',
+                // Голубой (горы/небо)
+                sky: '#A8C4CB',
+                // Желтый (цветы на лугу)
+                buttercup: '#E3B44B',
             },
         },
+        extend: {
+            fontFamily: {
+                header: ['Spectral', 'serif'],
+                sans: ['Montserrat', 'sans-serif'],
+            },
+        },
+        boxShadow: {
+            'rancho-sm': '0 2px 10px rgba(28, 63, 52, 0.05)',
+        },
+    },
+
+    future: {
+        hoverOnlyWhenSupported: true,
     },
 
     plugins: [forms],

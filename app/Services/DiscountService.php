@@ -8,12 +8,12 @@ use InvalidArgumentException;
 class DiscountService
 {
     /**
-    * Calculate the total discount amount.
-    * All calculations are in cents.
-    */
+     * Calculate the total discount amount.
+     * All calculations are in cents.
+     */
     public function calculatePromoDiscount(PromoCode $promo, int $orderAmount): int
     {
-        if (!$promo->isValid()) {
+        if (! $promo->isValid()) {
             return 0;
         }
 
@@ -27,20 +27,20 @@ class DiscountService
         if ($promo->max_discount && $discount > $promo->max_discount) {
             $discount = $promo->max_discount;
         }
-        
+
         // The discount cannot be greater than the order amount
         return min($discount, $orderAmount);
     }
 
     /**
-    * Internal logic for applying the formula
-    */
+     * Internal logic for applying the formula
+     */
     private function applyFormula(PromoCode $promo, int $orderAmount): int
     {
         return match ($promo->type) {
-            'fixed'   => $promo->value,
+            'fixed' => $promo->value,
             'percent' => (int) ($orderAmount * ($promo->value / 100)),
-            default   => throw new InvalidArgumentException("Unknown promo type: {$promo->type}"),
+            default => throw new InvalidArgumentException("Unknown promo type: {$promo->type}"),
         };
     }
 }

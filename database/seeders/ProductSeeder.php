@@ -2,16 +2,15 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use App\Models\Product;
 use App\Models\Animal;
+use App\Models\Product;
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Str;
 
 class ProductSeeder extends Seeder
 {
     use WithoutModelEvents;
-    
+
     /**
      * Run the database seeds.
      */
@@ -53,7 +52,7 @@ class ProductSeeder extends Seeder
                 'unit' => '0.5 кг',
                 'stock' => 20,
                 'availability_type' => 'daily',
-            ]
+            ],
         ];
 
         foreach ($products as $item) {

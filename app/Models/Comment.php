@@ -2,21 +2,21 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class Comment extends Model
 {
     protected $fillable = [
         'user_id',
         'guest_name',
-        'content', 
-        'rating', 
-        'is_published', 
-        'commentable_id', 
-        'commentable_type'
+        'content',
+        'rating',
+        'is_published',
+        'commentable_id',
+        'commentable_type',
     ];
 
     protected $casts = [
@@ -43,8 +43,8 @@ class Comment extends Model
     }
 
     /**
-    * Scope for displaying only admin-approved reviews
-    */
+     * Scope for displaying only admin-approved reviews
+     */
     public function scopePublished(Builder $query): void
     {
         $query->where('is_published', true);
