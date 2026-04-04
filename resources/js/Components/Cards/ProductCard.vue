@@ -1,0 +1,116 @@
+<script setup lang="ts">
+    import { computed } from 'vue';
+
+    import { Link } from '@inertiajs/vue3';
+
+    import { CalendarCheck, Clock, ShoppingBasket } from 'lucide-vue-next';
+
+    import type { Product } from '@/types/Product';
+
+    const props = defineProps<{
+        product: Product;
+    }>();
+
+    // Форматируем цену из копеек в рубли
+    const formattedPrice = computed(() => (props.product.price / 100).toLocaleString('ru-RU'));
+    const formattedOldPrice = computed(() =>
+        props.product.old_price ? (props.product.old_price / 100).toLocaleString('ru-RU') : null,
+    );
+
+    // Берем первое изображение из media или ставим заглушку
+    const mainImage = computed(() =>
+        props.product.media.length > 0
+            ? props.product.main_image
+            : '/images/placeholder-product.jpg',
+    );
+
+    // Логика бейджа доступности
+    const availabilityLabel = computed(() => {
+        if (props.product.availability_type === 'daily') return 'Свежий удой сегодня';
+        if (props.product.availability_type === 'preorder') return 'Предзаказ';
+        return props.product.stock > 0 ? `В наличии: ${props.product.stock}` : 'Под заказ';
+    });
+
+    const addToCart = () => {
+        // Сюда придет Pinia
+        console.log(`Добавлена позиция: ${props.product.name}`);
+    };
+</script>
+
+<template>
+    <article
+        class="border-rancho-paper focus-within:ring-rancho-buttercup group relative flex flex-col overflow-hidden rounded-2xl border bg-white transition-all focus-within:ring-2 hover:shadow-xl"
+        role="listitem"
+    >
+        <div class="bg-rancho-paper/30 relative aspect-square overflow-hidden">
+            <img
+                :src="mainImage"
+                :alt="`Продукт: ${product.name}`"
+                class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                loading="lazy"
+            />
+
+            <div class="absolute left-3 top-3 flex flex-wrap gap-2">
+                <span
+                    class="text-rancho-forest inline-flex items-center gap-1.5 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider shadow-sm backdrop-blur-sm"
+                >
+                    <Clock v-if="product.availability_type === 'daily'" :size="12" />
+                    <CalendarCheck v-if="product.availability_type === 'preorder'" :size="12" />
+                    {{ availabilityLabel }}
+                </span>
+            </div>
+        </div>
+
+        <div class="flex flex-1 flex-col p-5">
+            <h3 class="text-rancho-forest mb-2 text-lg font-bold">
+                <Link :href="route('home')" class="focus:outline-none">
+                    <span class="absolute inset-0" aria-hidden="true"></span>
+                    {{ product.name }}
+                </Link>
+            </h3>
+
+            <p v-if="product.description" class="text-rancho-olive/70 mb-4 line-clamp-2 text-sm">
+                {{ product.description }}
+            </p>
+
+            <div class="mt-auto flex items-end justify-between">
+                <div class="flex flex-col">
+                    <div class="flex items-center gap-2">
+                        <span class="text-rancho-forest text-xl font-black"
+                            >{{ formattedPrice }} ₽</span
+                        >
+                        <span
+                            v-if="formattedOldPrice"
+                            class="text-rancho-olive/40 text-sm line-through"
+                        >
+                            {{ formattedOldPrice }} ₽
+                        </span>
+                    </div>
+                    <span
+                        class="text-rancho-olive/50 text-[11px] font-medium uppercase tracking-tight"
+                    >
+                        за {{ product.unit }}
+                    </span>
+                </div>
+
+                <button
+                    @click.stop="addToCart"
+                    class="bg-rancho-forest hover:bg-rancho-buttercup hover:text-rancho-forest relative z-20 flex h-12 w-12 items-center justify-center rounded-full text-white transition-all active:scale-90"
+                    :aria-label="`Добавить ${product.name} в корзину`"
+                >
+                    <ShoppingBasket :size="20" />
+                </button>
+            </div>
+        </div>
+    </article>
+</template>
+
+<style scoped>
+    /* Чтобы обрезать длинное описание до 2 строк */
+    .line-clamp-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+</style>

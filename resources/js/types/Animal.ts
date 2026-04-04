@@ -19,7 +19,7 @@ export interface BaseAnimal {
     features: Record<string, string> | null;
 
     // Хелперы для удобства (можно формировать в Resource)
-    main_image?: string;
+    avatar_url?: string;
     voice_url?: string | null; // Прямая ссылка на mp3
 
     parent?: {

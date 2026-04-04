@@ -27,6 +27,8 @@ export interface Product {
     stock: number;
     media: Media[]; // Массив из MediaLibrary
 
+    main_image?: string;
+
     seo?: SeoData | null;
 }
 
