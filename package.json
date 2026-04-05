@@ -4,7 +4,8 @@
     "type": "module",
     "scripts": {
         "build": "vue-tsc && vite build",
-        "dev": "vite"
+        "dev": "vite",
+        "test": "vitest"
     },
     "devDependencies": {
         "@inertiajs/vue3": "^2.0.0",
@@ -19,6 +20,7 @@
         "@vitest/coverage-v8": "^4.1.2",
         "@vue/eslint-config-prettier": "^10.2.0",
         "@vue/eslint-config-typescript": "^14.7.0",
+        "@vue/test-utils": "^2.4.6",
         "autoprefixer": "^10.4.12",
         "axios": ">=1.11.0 <=1.14.0",
         "concurrently": "^9.0.1",
