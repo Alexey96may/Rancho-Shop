@@ -26,10 +26,10 @@ export const useCartStore = defineStore(
         );
 
         // Actions
-        function addToCart(product: Product) {
-            const existing = items.value.find((i) => i.id === product.id);
-            if (existing) {
-                existing.quantity++;
+        function add(product: Product) {
+            const item = items.value.find((i) => i.id === product.id);
+            if (item) {
+                item.quantity++;
             } else {
                 items.value.push({
                     id: product.id,
@@ -41,7 +41,29 @@ export const useCartStore = defineStore(
             }
         }
 
-        return { items, totalItems, totalPrice, addToCart };
+        // Removing one unit or the entire product
+        function remove(productId: number) {
+            const index = items.value.findIndex((i) => i.id === productId);
+            if (index !== -1) {
+                if (items.value[index].quantity > 1) {
+                    items.value[index].quantity--;
+                } else {
+                    items.value.splice(index, 1);
+                }
+            }
+        }
+
+        // Complete deletion of a position (trash can)
+        function destroy(productId: number) {
+            items.value = items.value.filter((i) => i.id !== productId);
+        }
+
+        // Clearing the entire cart (after ordering)
+        function clear() {
+            items.value = [];
+        }
+
+        return { items, totalItems, totalPrice, add, remove, destroy, clear };
     },
     {
         persist: true, // The cart will be saved in localStorage
