@@ -43,6 +43,7 @@
             <AppImage
                 :src="props.animal?.media?.[0] || ''"
                 :alt="`Фотография нашего жителя по имени ${animal.name}`"
+                :context="'animal'"
                 :className="'h-full w-full object-cover transition-transform duration-700 group-hover:scale-105'"
             />
 

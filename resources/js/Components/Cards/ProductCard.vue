@@ -44,6 +44,7 @@
             <AppImage
                 :src="props.product?.media?.[0] || ''"
                 :alt="`Продукт: ${product.name}`"
+                :context="'product'"
                 :className="'h-full w-full object-cover transition-transform duration-700 group-hover:scale-105'"
             />
 
