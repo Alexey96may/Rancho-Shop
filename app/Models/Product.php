@@ -44,6 +44,14 @@ class Product extends Model implements HasMedia
     }
 
     /**
+     * Connection with an category
+     */
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(Category::class);
+    }
+
+    /**
      * Accessory for the main image (Spatie)
      * To simply write :src="product.main_image" in Vue
      */

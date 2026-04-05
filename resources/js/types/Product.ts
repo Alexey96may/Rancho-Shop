@@ -1,5 +1,6 @@
 // Совет: В будущем можно добавить в attributes или отдельным полем is_infinite (бесконечный товар).
 // Если оно true, то stock игнорируется (например, для услуг или свежего удоя, который есть всегда).
+import type { Category } from './Category';
 import type { Media } from './Media';
 import type { SeoData } from './Seo';
 
@@ -42,4 +43,8 @@ export interface AdminProduct extends Product {
         name: string;
         type: string;
     } | null;
+}
+
+export interface ProductWithCategory extends Product {
+    category: Category;
 }
