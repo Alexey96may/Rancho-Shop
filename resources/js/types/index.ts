@@ -15,3 +15,4 @@ export * from './Order';
 export * from './PromoCode';
 export * from './Seo';
 export * from './Page';
+export * from './Faq';
