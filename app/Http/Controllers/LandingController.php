@@ -23,8 +23,9 @@ class LandingController extends Controller
                 Animal::with('media')->where('type', 'cow')->get()
             ),
             
-            'hero'   => new LandingBlockResource(LandingBlock::getByKey('hero')),
-            'values' => new LandingBlockResource(LandingBlock::getByKey('values')),
+            'hero'   => new LandingBlockResource(LandingBlock::getSafe('hero')),
+            'values' => new LandingBlockResource(LandingBlock::getSafe('values')),
+            
             'faqs'   => FaqResource::collection(Faq::published()->orderBy('sort_order')->get()),
         ]);
     }
