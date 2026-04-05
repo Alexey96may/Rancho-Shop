@@ -24,7 +24,10 @@ class AnimalResource extends JsonResource
             'bio' => $this->bio,
             'features' => $this->features,
 
-            'media' => MediaResource::collection($this->whenLoaded('media')),
+            'media' => $this->media->isNotEmpty() 
+                        ? MediaResource::collection($this->media) 
+                        : [MediaResource::fallback($this->resource)],
+
             'voice_url' => $this->media->first(fn($m) => str_contains($m->mime_type, 'audio'))?->getUrl(),
 
             'parent' => $this->whenLoaded('parent', function() {

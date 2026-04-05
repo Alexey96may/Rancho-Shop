@@ -40,4 +40,19 @@ trait HasStandardMedia
             ->fit(Fit::Max, 1200, 1200)
             ->format('avif');
     }
+
+    public function getFallbackImage(): string
+    {
+        $type = strtolower(class_basename($this)); 
+        
+        $subType = $this->category?->slug ?? $this->type ?? 'default';
+        
+        $path = "images/placeholders/{$type}/{$subType}.jpg";
+
+        if (file_exists(public_path($path))) {
+            return asset($path);
+        }
+
+        return asset("images/no-{$type}.jpg");
+    }
 }

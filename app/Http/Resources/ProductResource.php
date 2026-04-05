@@ -23,7 +23,11 @@ class ProductResource extends JsonResource
             'is_available' => $this->stock > 0 || $this->availability_type === 'daily',
 
             'category' => new CategoryResource($this->whenLoaded('category')),
-            'media' => MediaResource::collection($this->whenLoaded('media')),
+            
+            'media' => $this->media->isNotEmpty() 
+                        ? MediaResource::collection($this->media) 
+                        : [MediaResource::fallback($this->resource)],
+
             'seo' => new SeoResource($this->whenLoaded('seo')),
         ];
     }

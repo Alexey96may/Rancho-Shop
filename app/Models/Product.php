@@ -33,7 +33,7 @@ class Product extends Model implements HasMedia
         'old_price' => 'integer',
     ];
 
-    protected $appends = ['main_image', 'price_formatted'];
+    protected $appends = ['price_formatted'];
 
     /**
      * Connection with an animal (for example, whose milk is this)
@@ -49,18 +49,6 @@ class Product extends Model implements HasMedia
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
-    }
-
-    /**
-     * Accessory for the main image (Spatie)
-     * To simply write :src="product.main_image" in Vue
-     */
-    protected function mainImage(): Attribute
-    {
-        return Attribute::make(
-            get: fn () => $this->getFirstMediaUrl('gallery', 'preview') 
-                ?: '/images/no-product.jpg'
-        );
     }
 
     /**
@@ -83,4 +71,5 @@ class Product extends Model implements HasMedia
             ->useFallbackUrl('/images/no-product.jpg')
             ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/webp', 'image/avif']);
     }
+
 }

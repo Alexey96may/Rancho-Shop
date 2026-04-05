@@ -20,6 +20,7 @@
     interface Props {
         src: string | ImageMetadata[] | Media;
         type?: ImageType;
+        context?: 'product' | 'animal' | 'general';
         alt?: string;
         className?: string;
         isDecorative?: boolean;
@@ -28,6 +29,7 @@
     const props = withDefaults(defineProps<Props>(), {
         alt: '',
         type: 'previews',
+        context: 'general',
         isDecorative: false,
     });
 
@@ -75,6 +77,10 @@
     const onImageLoad = (event: Event) => {
         emit('load', event);
     };
+
+    const onError = (e: Event) => {
+        handleImageError(e, props.context);
+    };
 </script>
 
 <template>
@@ -90,7 +96,7 @@
             :alt="isDecorative ? '' : alt || 'Plant image'"
             :role="isDecorative ? 'presentation' : undefined"
             :aria-hidden="isDecorative ? 'true' : undefined"
-            @error="handleImageError"
+            @error="onError"
             @load="onImageLoad"
             loading="lazy"
             class="object-cover"
@@ -104,7 +110,7 @@
         :src="src as string"
         :alt="isDecorative ? '' : alt || 'Plant image'"
         @load="onImageLoad"
-        @error="handleImageError"
+        @error="onError"
         loading="lazy"
         v-bind="$attrs"
         class="object-cover"

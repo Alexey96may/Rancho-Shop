@@ -26,7 +26,7 @@ export interface Product {
     unit: string; // 'литр', 'кг', 'десяток'
     attributes: Record<string, string> | null;
     stock: number;
-    media?: Media[]; // Массив из MediaLibrary
+    media: Media[];
 
     seo?: SeoData | null;
 }

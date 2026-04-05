@@ -38,7 +38,7 @@ class Animal extends Model implements HasMedia
         'is_active' => 'boolean',
     ];
 
-    protected $appends = ['avatar_url', 'voice_url'];
+    protected $appends = ['voice_url'];
 
     /**
      * Relationship to a parent (e.g., a cow's mother)
@@ -68,13 +68,6 @@ class Animal extends Model implements HasMedia
         $this->addMediaCollection('voice')
             ->acceptsMimeTypes(['audio/mpeg', 'audio/wav'])
             ->singleFile();
-    }
-
-    protected function avatarUrl(): Attribute
-    {
-        return Attribute::make(
-            get: fn () => $this->getFirstMediaUrl('avatars') ?: '/images/no-animal.jpg'
-        );
     }
 
     protected function voiceUrl(): Attribute
