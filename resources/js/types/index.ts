@@ -10,6 +10,7 @@ export * from './Page';
 export * from './Faq';
 export * from './Category';
 export * from './LandingBlock';
+export * from './Media';
 
 export interface ResourceCollection<T> {
     data: T[];

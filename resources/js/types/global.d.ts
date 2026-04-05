@@ -3,7 +3,8 @@ import { PageProps as InertiaPageProps } from '@inertiajs/core';
 import { AxiosInstance } from 'axios';
 import { route as ziggyRoute } from 'ziggy-js';
 
-import AppContainer from '@/Components/AppContainer.vue';
+import AppContainer from '@/Components/UI/AppContainer.vue';
+import AppImage from '@/Components/UI/AppImage.vue';
 
 import { PageProps as AppPageProps } from './';
 
@@ -29,5 +30,6 @@ declare module '@inertiajs/core' {
 declare module '@vue/runtime-core' {
     export interface GlobalComponents {
         AppContainer: typeof AppContainer;
+        AppImage: typeof AppImage;
     }
 }

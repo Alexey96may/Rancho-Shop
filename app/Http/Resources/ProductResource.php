@@ -20,7 +20,6 @@ class ProductResource extends JsonResource
             'slug' => $this->slug,
             'price_rub' => $this->price / 100, // Converting kopecks for the showcase
             'unit' => $this->unit,
-            'image' => $this->getFirstMediaUrl('gallery', 'thumbnail'),
             'is_available' => $this->stock > 0 || $this->availability_type === 'daily',
 
             'category' => new CategoryResource($this->whenLoaded('category')),

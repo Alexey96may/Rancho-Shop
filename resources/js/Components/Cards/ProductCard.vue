@@ -22,7 +22,9 @@
 
     // Берем первое изображение из media или ставим заглушку
     const mainImage = computed(() =>
-        props.product.main_image ? props.product.main_image : '/images/placeholder-product.jpg',
+        props.product.media?.[0]?.url
+            ? props.product.media?.[0]?.url
+            : '/images/placeholder-product.jpg',
     );
 
     // Логика бейджа доступности
@@ -31,11 +33,6 @@
         if (props.product.availability_type === 'preorder') return 'Предзаказ';
         return props.product.stock > 0 ? `В наличии: ${props.product.stock}` : 'Под заказ';
     });
-
-    const addToCart = () => {
-        // Сюда придет Pinia
-        console.log(`Добавлена позиция: ${props.product.name}`);
-    };
 </script>
 
 <template>
@@ -44,11 +41,10 @@
         role="listitem"
     >
         <div class="relative aspect-square overflow-hidden bg-rancho-paper/30">
-            <img
-                :src="mainImage"
+            <AppImage
+                :src="props.product?.media?.[0] || ''"
                 :alt="`Продукт: ${product.name}`"
-                class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-                loading="lazy"
+                :className="'h-full w-full object-cover transition-transform duration-700 group-hover:scale-105'"
             />
 
             <div class="absolute left-3 top-3 flex flex-wrap gap-2">
@@ -107,7 +103,6 @@
 </template>
 
 <style scoped>
-    /* Чтобы обрезать длинное описание до 2 строк */
     .line-clamp-2 {
         display: -webkit-box;
         -webkit-line-clamp: 2;

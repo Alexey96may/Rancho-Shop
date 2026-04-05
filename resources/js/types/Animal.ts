@@ -15,7 +15,7 @@ export interface BaseAnimal {
     status: CowStatus | CatStatus | BirdStatus;
     slug: string;
     bio: string | null;
-    media: Media[];
+    media?: Media[];
     features: Record<string, string> | null;
 
     voice_url: string | null;

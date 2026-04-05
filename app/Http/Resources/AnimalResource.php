@@ -25,7 +25,6 @@ class AnimalResource extends JsonResource
             'features' => $this->features,
 
             'media' => MediaResource::collection($this->whenLoaded('media')),
-
             'voice_url' => $this->media->first(fn($m) => str_contains($m->mime_type, 'audio'))?->getUrl(),
 
             'parent' => $this->whenLoaded('parent', function() {

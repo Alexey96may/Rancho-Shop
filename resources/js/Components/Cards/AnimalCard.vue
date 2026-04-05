@@ -40,10 +40,10 @@
         :aria-labelledby="`animal-name-${animal.id}`"
     >
         <div class="relative aspect-[4/5] overflow-hidden bg-rancho-paper/20">
-            <img
-                :src="'/images/placeholder-animal.jpg'"
+            <AppImage
+                :src="props.animal?.media?.[0] || ''"
                 :alt="`Фотография нашего жителя по имени ${animal.name}`"
-                class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                :className="'h-full w-full object-cover transition-transform duration-700 group-hover:scale-105'"
             />
 
             <div class="absolute left-4 top-4">
