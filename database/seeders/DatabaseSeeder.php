@@ -25,14 +25,19 @@ class DatabaseSeeder extends Seeder
         User::factory(10)->create();
 
         $this->call([
+            CategorySeeder::class,
             AnimalSeeder::class,
-            ProductSeeder::class,
-            PromoCodeSeeder::class,
             SettingSeeder::class,
             PageSeeder::class,
+            FaqSeeder::class,
+            LandingBlockSeeder::class,
+            SeoSeeder::class,
+
+            ProductSeeder::class,
+
+            PromoCodeSeeder::class,
             OrderSeeder::class,
             CommentSeeder::class,
-            SeoSeeder::class,
         ]);
     }
 }

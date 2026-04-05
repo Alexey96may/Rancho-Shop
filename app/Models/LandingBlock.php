@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class LandingBlocks extends Model
+class LandingBlock extends Model
 {
     protected $fillable = ['key', 'title', 'subtitle', 'content', 'is_visible'];
 
