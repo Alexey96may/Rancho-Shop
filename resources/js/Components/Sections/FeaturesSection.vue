@@ -51,11 +51,11 @@
         <div class="mb-16 text-center lg:text-left">
             <h2
                 id="features-section-title"
-                class="text-rancho-forest text-3xl font-bold lg:text-4xl"
+                class="text-3xl font-bold text-rancho-forest lg:text-4xl"
             >
                 Почему выбирают наше хозяйство
             </h2>
-            <p class="text-rancho-olive/60 mt-4">
+            <p class="mt-4 text-rancho-olive/60">
                 Забота о качестве на каждом этапе — от пастбища до вашего стола.
             </p>
         </div>
@@ -77,18 +77,18 @@
                     <component :is="feature.icon" :size="32" stroke-width="1.5" />
                 </div>
 
-                <h3 class="text-rancho-forest mb-3 text-xl font-bold">
+                <h3 class="mb-3 text-xl font-bold text-rancho-forest">
                     {{ feature.title }}
                 </h3>
 
-                <p class="text-rancho-olive/70 text-sm leading-relaxed lg:text-base">
+                <p class="text-sm leading-relaxed text-rancho-olive/70 lg:text-base">
                     {{ feature.description }}
                 </p>
             </div>
         </div>
 
-        <div class="border-rancho-paper mt-20 border-t pt-10 text-center">
-            <p class="text-rancho-olive/40 text-xs font-bold uppercase tracking-[0.2em]">
+        <div class="mt-20 border-t border-rancho-paper pt-10 text-center">
+            <p class="text-xs font-bold uppercase tracking-[0.2em] text-rancho-olive/40">
                 С гордостью из нашего хозяйства — к вашему столу
             </p>
         </div>
