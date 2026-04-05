@@ -5,17 +5,27 @@
     import FaqSection from '@/Components/Sections/FaqSection.vue';
     import FeaturesSection from '@/Components/Sections/FeaturesSection.vue';
     import HeroSection from '@/Components/Sections/HeroSection.vue';
+    import HowItWorksSection from '@/Components/Sections/HowItWorksSection.vue';
     import ReviewsSection from '@/Components/Sections/ReviewsSection.vue';
     import MainLayout from '@/Layouts/MainLayout.vue';
-    import type { Comment, Cow, Faq, Product, ResourceCollection } from '@/types';
+    import type {
+        Cow,
+        Faq,
+        LandingBlock,
+        Product,
+        ResourceCollection,
+        ResourceSingle,
+    } from '@/types';
 
     defineOptions({ layout: MainLayout });
 
     interface Props {
         cows: ResourceCollection<Cow>;
         products: ResourceCollection<Product>;
-        comments: ResourceCollection<Comment>;
         faqs: ResourceCollection<Faq>;
+        about: ResourceSingle<LandingBlock>;
+        values: ResourceSingle<LandingBlock>;
+        how_it_works: ResourceSingle<LandingBlock>;
     }
 
     defineProps<Props>();
@@ -25,8 +35,9 @@
     <HeroSection></HeroSection>
     <BestProductSection :products="products.data"></BestProductSection>
     <BestAnimalsSection :animals="cows.data"></BestAnimalsSection>
-    <FeaturesSection />
+    <FeaturesSection :values="values.data" />
+    <HowItWorksSection :block="how_it_works.data" />
     <ReviewsSection :comments="[]" />
-    <AboutSection />
+    <AboutSection :about="about.data" />
     <FaqSection :faqs="faqs.data" />
 </template>
