@@ -36,12 +36,12 @@
 
 <template>
     <article
-        class="border-rancho-paper focus-within:ring-rancho-buttercup group relative flex flex-col overflow-hidden rounded-3xl border bg-white transition-all focus-within:ring-2 hover:shadow-2xl"
+        class="bg-white hover:shadow-2xl group relative flex flex-col overflow-hidden rounded-3xl border border-rancho-paper transition-all focus-within:ring-2 focus-within:ring-rancho-buttercup"
         :aria-labelledby="`animal-name-${animal.id}`"
     >
-        <div class="bg-rancho-paper/20 relative aspect-[4/5] overflow-hidden">
+        <div class="relative aspect-[4/5] overflow-hidden bg-rancho-paper/20">
             <img
-                :src="animal.avatar_url || '/images/placeholder-animal.jpg'"
+                :src="'/images/placeholder-animal.jpg'"
                 :alt="`Фотография нашего жителя по имени ${animal.name}`"
                 class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
             />
@@ -49,7 +49,7 @@
             <div class="absolute left-4 top-4">
                 <span
                     :class="[
-                        'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold shadow-sm backdrop-blur-sm',
+                        'shadow-sm inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold backdrop-blur-sm',
                         statusConfig.color,
                     ]"
                     role="status"
@@ -67,7 +67,7 @@
                 :aria-label="
                     isPlaying ? `Остановить голос ${animal.name}` : `Послушать голос ${animal.name}`
                 "
-                class="text-rancho-forest hover:bg-rancho-buttercup absolute bottom-4 right-4 z-20 flex h-12 w-12 items-center justify-center rounded-full bg-white/95 shadow-lg transition-all focus:outline-none"
+                class="bg-white/95 shadow-lg absolute bottom-4 right-4 z-20 flex h-12 w-12 items-center justify-center rounded-full text-rancho-forest transition-all hover:bg-rancho-buttercup focus:outline-none"
             >
                 <component :is="isPlaying ? VolumeX : Volume2" :size="24" aria-hidden="true" />
                 <span class="sr-only" aria-live="polite">
@@ -83,7 +83,7 @@
         </div>
 
         <div class="flex flex-1 flex-col p-6">
-            <h3 :id="`animal-name-${animal.id}`" class="text-rancho-forest text-2xl font-bold">
+            <h3 :id="`animal-name-${animal.id}`" class="text-2xl font-bold text-rancho-forest">
                 <Link :href="route('home')" class="focus:outline-none">
                     <span class="absolute inset-0" aria-hidden="true"></span>
                     {{ animal.name }}
@@ -92,19 +92,19 @@
 
             <p
                 v-if="animal.bio"
-                class="text-rancho-olive/80 mt-3 line-clamp-3 text-sm leading-relaxed"
+                class="mt-3 line-clamp-3 text-sm leading-relaxed text-rancho-olive/80"
             >
                 {{ animal.bio }}
             </p>
 
             <dl
                 v-if="animal.features"
-                class="border-rancho-paper/50 mt-auto flex flex-wrap gap-2 border-t pt-4"
+                class="mt-auto flex flex-wrap gap-2 border-t border-rancho-paper/50 pt-4"
             >
                 <div
                     v-for="(value, key) in animal.features"
                     :key="key"
-                    class="bg-rancho-paper/40 text-rancho-olive flex items-center gap-1 rounded-lg px-2 py-1 text-[10px] font-semibold uppercase tracking-tighter"
+                    class="flex items-center gap-1 rounded-lg bg-rancho-paper/40 px-2 py-1 text-[10px] font-semibold uppercase tracking-tighter text-rancho-olive"
                 >
                     <dt>{{ key }}:</dt>
                     <dd>{{ value }}</dd>

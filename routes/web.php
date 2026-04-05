@@ -2,8 +2,6 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\LandingController;
-use App\Models\Animal;
-use App\Models\Product;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 

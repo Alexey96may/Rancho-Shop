@@ -10,3 +10,11 @@ export * from './Page';
 export * from './Faq';
 export * from './Category';
 export * from './LandingBlock';
+
+export interface ResourceCollection<T> {
+    data: T[];
+}
+
+export interface ResourceSingle<T> {
+    data: T;
+}
