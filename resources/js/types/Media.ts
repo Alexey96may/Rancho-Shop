@@ -1,11 +1,18 @@
 export interface Media {
     id: number;
-    url: string; // Прямая ссылка на оригинал
-    thumbnail?: string; // Ссылка на сконвертированное превью (напр. 200x200)
-    preview?: string; // Ссылка на средний размер (напр. 800x600)
-    name: string; // Имя файла (для альта)
-    file_name: string; // Физическое имя
-    mime_type: string; // 'image/jpeg', 'audio/mpeg'
-    size: number; // Размер в байтах
-    order_column: number; // Для сортировки в галерее
+    url: string;
+    thumbnails: {
+        original: string | null;
+        webp: string | null;
+        avif: string | null;
+    };
+    previews: {
+        original: string | null;
+        webp: string | null;
+        avif: string | null;
+    };
+    responsive: string[] | null;
+    name: string;
+    mime_type: string;
+    order_column: number;
 }

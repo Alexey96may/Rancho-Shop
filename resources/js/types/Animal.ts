@@ -15,12 +15,10 @@ export interface BaseAnimal {
     status: string;
     slug: string;
     bio: string | null;
-    media: Media[]; //через Спати
+    media: Media[];
     features: Record<string, string> | null;
 
-    // Хелперы для удобства (можно формировать в Resource)
-    avatar_url?: string;
-    voice_url?: string | null; // Прямая ссылка на mp3
+    voice_url: string | null; // Прямая ссылка на mp3
 
     parent?: {
         name: string;

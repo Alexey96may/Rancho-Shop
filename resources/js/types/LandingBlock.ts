@@ -7,7 +7,7 @@ export interface LandingContentItem {
 
 export interface LandingBlock {
     id: number;
-    key: 'values' | 'how_it_works' | 'about';
+    key: 'values' | 'how_it_works' | 'about' | 'hero';
     title: string;
     subtitle: string | null;
     content: LandingContentItem[];

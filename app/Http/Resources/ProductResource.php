@@ -17,10 +17,11 @@ class ProductResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
-            'price_rub' => $this->price / 100, // Конвертируем копейки для витрины
+            'price_rub' => $this->price / 100, // Converting kopecks for the showcase
             'unit' => $this->unit,
             'image' => $this->getFirstMediaUrl('gallery', 'thumbnail'),
             'is_available' => $this->stock > 0 || $this->availability_type === 'daily',
+            'media' => MediaResource::collection($this->whenLoaded('media')),
         ];
     }
 }
