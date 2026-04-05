@@ -12,13 +12,13 @@ export interface BaseAnimal {
     parent_id: number | null;
     name: string;
     type: AnimalType;
-    status: string;
+    status: CowStatus | CatStatus | BirdStatus;
     slug: string;
     bio: string | null;
     media: Media[];
     features: Record<string, string> | null;
 
-    voice_url: string | null; // Прямая ссылка на mp3
+    voice_url: string | null;
 
     parent?: {
         name: string;
@@ -36,13 +36,15 @@ export interface BaseAnimal {
 export interface Cow extends BaseAnimal {
     type: 'cow';
     status: CowStatus;
-    // Тут могут быть поля, уникальные только для коров (например, жирность молока в features)
+    features: {
+        fat_content?: string;
+        daily_yield?: string;
+    } | null;
 }
 
 export interface Cat extends BaseAnimal {
     type: 'cat';
     status: CatStatus;
-    // Коты не дают молоко, но у них может быть поле "ловит мышей: да/нет"
 }
 
 export type FarmAnimal = Cow | Cat | BaseAnimal;
