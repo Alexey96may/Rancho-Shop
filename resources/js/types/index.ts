@@ -9,3 +9,4 @@ export * from './Seo';
 export * from './Page';
 export * from './Faq';
 export * from './Category';
+export * from './LandingBlock';
