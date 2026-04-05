@@ -21,7 +21,7 @@ export interface Product {
     availability_type: AvailabilityType;
     next_delivery_date?: string | null; // "2026-04-05"
     schedule: ProductSchedule | null;
-    price: number; // Текущая цена (в копейках)
+    price_rub: number; // Текущая цена (в копейках)
     old_price: number | null; // Цена до скидки (в копейках)
     unit: string; // 'литр', 'кг', 'десяток'
     attributes: Record<string, string> | null;
