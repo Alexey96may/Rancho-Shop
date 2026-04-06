@@ -22,6 +22,7 @@ return new class() extends Migration
                 ->onDelete('set null');
 
             $table->string('name');
+            $table->string('type');
             $table->string('slug')->unique();
             $table->boolean('is_active')->default(true);
             $table->string('status')->default('home');

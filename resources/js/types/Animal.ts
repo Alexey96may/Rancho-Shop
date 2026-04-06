@@ -1,6 +1,8 @@
 import type { Media } from './Media';
 import type { SeoData } from './Seo';
 
+export type AnimalType = 'cow' | 'chicken' | 'goose' | 'turkey' | 'cat';
+
 export type CowStatus = 'pasture' | 'rest' | 'home' | 'vacation' | 'retired' | 'memorial';
 export type CatStatus = 'hunting' | 'sleeping' | 'home' | 'memorial';
 export type BirdStatus = 'nest' | 'pasture' | 'home';
@@ -9,6 +11,7 @@ export interface BaseAnimal {
     id: number;
     parent_id: number | null;
     name: string;
+    type: AnimalType;
     status: CowStatus | CatStatus | BirdStatus;
     slug: string;
     bio: string | null;
