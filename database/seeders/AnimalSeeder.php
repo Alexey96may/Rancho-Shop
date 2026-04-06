@@ -24,7 +24,6 @@ class AnimalSeeder extends Seeder
         $mother = Animal::create([
             'category_id' => $cowCat?->id,
             'name' => 'Зорька',
-            'type' => 'cow',
             'slug' => 'zorka',
             'is_active' => true,
             'status' => 'healthy',
@@ -42,7 +41,6 @@ class AnimalSeeder extends Seeder
             'category_id' => $cowCat?->id,
             'parent_id' => $mother->id,
             'name' => 'Лучик',
-            'type' => 'cow',
             'slug' => 'luchik',
             'is_active' => true,
             'status' => 'young',
@@ -59,7 +57,6 @@ class AnimalSeeder extends Seeder
         $others = [
             [
                 'name' => 'Белка',
-                'type' => 'goat',
                 'category_id' => $goatCat?->id,
                 'slug' => 'belka',
                 'bio' => 'Зааненская коза с очень спокойным характером.',
@@ -67,7 +64,6 @@ class AnimalSeeder extends Seeder
             ],
             [
                 'name' => 'Марта',
-                'type' => 'cow',
                 'category_id' => $cowCat?->id,
                 'slug' => 'marta',
                 'bio' => 'Любимица всей семьи.',
