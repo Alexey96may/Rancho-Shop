@@ -22,7 +22,6 @@ class Animal extends Model implements HasMedia
         'parent_id',
         'name',
         'category_id',
-        'type',
         'slug',
         'is_active',
         'status',
