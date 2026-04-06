@@ -1,5 +1,5 @@
 <script setup lang="ts">
-    import { computed } from 'vue';
+    import { computed, ref } from 'vue';
 
     import { Media } from '@/types';
     import { handleImageError } from '@/utils';
@@ -78,13 +78,20 @@
         emit('load', event);
     };
 
+    const isError = ref(false);
+
     const onError = (e: Event) => {
+        if (isError.value) return;
+        isError.value = true;
+        alert(props.src);
         handleImageError(e, props.context);
     };
+
+    const showOptimized = computed(() => isOptimized.value && !isError.value);
 </script>
 
 <template>
-    <picture v-if="isOptimized">
+    <picture v-if="showOptimized">
         <source
             v-for="source in optimizedSources"
             :key="source.src"
@@ -107,7 +114,11 @@
 
     <img
         v-else
-        :src="src as string"
+        :src="
+            isError
+                ? `/images/no-${context === 'general' ? 'image' : context}.jpg`
+                : (src as string)
+        "
         :alt="isDecorative ? '' : alt || 'Plant image'"
         @load="onImageLoad"
         @error="onError"

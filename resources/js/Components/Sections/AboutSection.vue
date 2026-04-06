@@ -1,5 +1,11 @@
 <script setup lang="ts">
     import { Quote } from 'lucide-vue-next';
+
+    import type { LandingBlock } from '@/types';
+
+    defineProps<{
+        about: LandingBlock;
+    }>();
 </script>
 
 <template>
@@ -11,10 +17,10 @@
                 ></div>
 
                 <div class="shadow-2xl overflow-hidden rounded-[1rem]">
-                    <img
+                    <AppImage
                         src="/images/philosophy-farm.jpg"
                         alt="Панорамный вид на наши пастбища, где животные находятся на свободном выпасе"
-                        class="h-full w-full object-cover transition-transform duration-700 hover:scale-105"
+                        :className="'h-full w-full object-cover transition-transform duration-700 hover:scale-105'"
                     />
                 </div>
 
@@ -39,25 +45,15 @@
                 <h2
                     id="philosophy-heading"
                     class="mb-8 text-4xl font-bold leading-tight text-rancho-forest lg:text-5xl"
-                >
-                    Больше, чем просто <span class="italic text-rancho-buttercup">ферма</span>
-                </h2>
+                    v-html="about?.title"
+                ></h2>
 
                 <div class="space-y-6 text-lg leading-relaxed text-rancho-olive/80">
-                    <p>
-                        Мы верим, что вкус продукта напрямую зависит от счастья того, кто его дал.
-                        На «Ранчо» коровы не просто «единицы производства», а личности со своими
-                        именами и даже отпусками.
-                    </p>
-                    <p>
-                        Наш путь — это
-                        <strong class="font-semibold text-rancho-forest"
-                            >Socrates without Plato</strong
-                        >
-                        в мире сельского хозяйства: мы ищем истину в чистоте продукта, не
-                        приукрашивая его химией или маркетинговыми уловками. Только честный удой и
-                        свежий сбор.
-                    </p>
+                    <p
+                        v-for="(paragraph, index) in about?.content"
+                        :key="index"
+                        v-html="paragraph?.desc"
+                    ></p>
                 </div>
 
                 <div class="mt-10">
