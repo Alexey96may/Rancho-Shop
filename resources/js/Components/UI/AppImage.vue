@@ -83,7 +83,6 @@
     const onError = (e: Event) => {
         if (isError.value) return;
         isError.value = true;
-        alert(props.src);
         handleImageError(e, props.context);
     };
 
