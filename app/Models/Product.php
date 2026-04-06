@@ -20,7 +20,7 @@ class Product extends Model implements HasMedia
     }
 
     protected $fillable = [
-        'animal_id', 'name', 'slug', 'description',
+        'animal_id', 'name', 'slug', 'description', 'category_id',
         'old_price', 'price', 'unit', 'stock',
         'availability_type', 'schedule', 'attributes', 'is_active',
     ];
@@ -44,7 +44,7 @@ class Product extends Model implements HasMedia
     }
 
     /**
-     * Connection with an category
+     * Connection with a category
      */
     public function category(): BelongsTo
     {

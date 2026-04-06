@@ -43,16 +43,16 @@ trait HasStandardMedia
 
     public function getFallbackImage(): string
     {
-        $type = strtolower(class_basename($this)); 
+        $className = strtolower(class_basename($this)); 
         
-        $subType = $this->category?->slug ?? $this->type ?? 'default';
+        $subType = $this->category?->slug ?? 'default';
         
-        $path = "images/placeholders/{$type}/{$subType}.jpg";
+        $path = "images/placeholders/{$className}/{$subType}.jpg";
 
         if (file_exists(public_path($path))) {
             return asset($path);
         }
 
-        return asset("images/no-{$type}.jpg");
+        return asset("images/no-{$className}.jpg");
     }
 }

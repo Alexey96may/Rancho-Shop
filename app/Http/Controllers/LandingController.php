@@ -17,10 +17,10 @@ class LandingController extends Controller
     public function index()
     {
         return Inertia::render('HomeView', [
-            'products' => ProductResource::collection(Product::with('media')->get()),
+            'products' => ProductResource::collection(Product::get()),
             
             'cows' => AnimalResource::collection(
-                Animal::with('media')->where('type', 'cow')->get()
+                Animal::where('type', 'cow')->get()
             ),
             
             'about'  => new LandingBlockResource(LandingBlock::getSafe('about')),

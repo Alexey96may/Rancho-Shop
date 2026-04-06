@@ -21,6 +21,7 @@ class Animal extends Model implements HasMedia
     protected $fillable = [
         'parent_id',
         'name',
+        'category_id',
         'type',
         'slug',
         'is_active',
@@ -54,6 +55,14 @@ class Animal extends Model implements HasMedia
     public function children(): HasMany
     {
         return $this->hasMany(Animal::class, 'parent_id');
+    }
+
+    /**
+     * Connection with a category
+     */
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(Category::class);
     }
 
     /**

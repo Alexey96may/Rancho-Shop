@@ -14,9 +14,11 @@ return new class() extends Migration
         Schema::create('animals', function (Blueprint $table) {
 
             $table->id();
+            
+            $table->foreignId('category_id')->constrained()->onDelete('cascade');
             $table->foreignId('parent_id')
                 ->nullable()
-                ->constrained('animals') // Указываем явно, что ссылаемся на эту же таблицу
+                ->constrained('animals')
                 ->onDelete('set null');
 
             $table->string('name');
@@ -26,13 +28,10 @@ return new class() extends Migration
             $table->string('status')->default('home');
             $table->text('bio')->nullable();
 
-            $table->json('features')->nullable(); // Характеристики: ['Жирность' => '4.2%', 'Характер' => 'Тихая']
+            $table->json('features')->nullable(); 
 
             $table->timestamps();
-            $table->softDeletes(); // В моделе use SoftDeletes;
-
-            // $table->string('audio_path')->nullable(); // Путь к mp3 "приветствию"  // Удалим. Всё будет через Spatie.
-            // $table->json('images')->nullable(); // Удалим. Всё будет через Spatie.
+            $table->softDeletes();
         });
     }
 

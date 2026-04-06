@@ -4,8 +4,10 @@ namespace Database\Seeders;
 
 use App\Models\Animal;
 use App\Models\Product;
+use App\Models\Category;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\File;
 
 class ProductSeeder extends Seeder
 {
@@ -19,8 +21,13 @@ class ProductSeeder extends Seeder
         $zorka = Animal::where('slug', 'zorka')->first();
         $belka = Animal::where('slug', 'belka')->first();
 
+        $milkCat = Category::where('type', 'product')->where('slug', 'moloko')->first();
+        $cheeseCat = Category::where('type', 'product')->where('slug', 'syry')->first();
+        $sourCreamCat = Category::where('type', 'product')->where('slug', 'smetana')->first();
+
         $products = [
             [
+                'category_id' => $milkCat?->id,
                 'animal_id' => $zorka?->id,
                 'name' => 'Молоко коровье цельное',
                 'slug' => 'moloko-korovye-tselnoe',
@@ -32,6 +39,7 @@ class ProductSeeder extends Seeder
                 'attributes' => ['fat' => '4%', 'pasteurized' => false],
             ],
             [
+                'category_id' => $cheeseCat?->id,
                 'animal_id' => $belka?->id,
                 'name' => 'Сыр козий "Домашний"',
                 'slug' => 'syr-koziy-domashniy',
@@ -44,6 +52,7 @@ class ProductSeeder extends Seeder
                 'attributes' => ['aging' => '3 дня', 'salt' => 'medium'],
             ],
             [
+                'category_id' => $sourCreamCat?->id,
                 'animal_id' => null, // General goods
                 'name' => 'Сметана фермерская',
                 'slug' => 'smetana-fermerskaya',
@@ -58,9 +67,13 @@ class ProductSeeder extends Seeder
         foreach ($products as $item) {
             $product = Product::create(array_merge($item, ['is_active' => true]));
 
-            $product->addMedia(public_path('images/seeds/milk.png'))
-                ->preservingOriginal()
-                ->toMediaCollection('gallery');
+            $imagePath = public_path('images/seeds/milk.png');
+
+            if (File::exists($imagePath)) {
+                $product->addMedia($imagePath)
+                    ->preservingOriginal()
+                    ->toMediaCollection('gallery');
+            }
         }
     }
 }

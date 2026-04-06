@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Animal;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use App\Models\Category;
 use Illuminate\Support\Facades\File;
 
 class AnimalSeeder extends Seeder
@@ -16,7 +17,12 @@ class AnimalSeeder extends Seeder
      */
     public function run(): void
     {
+            
+        $cowCat = Category::where('type', 'animal')->where('slug', 'korovy')->first();
+        $goatCat = Category::where('type', 'animal')->where('slug', 'kozy')->first();
+
         $mother = Animal::create([
+            'category_id' => $cowCat?->id,
             'name' => 'Зорька',
             'type' => 'cow',
             'slug' => 'zorka',
@@ -33,6 +39,7 @@ class AnimalSeeder extends Seeder
         $this->addMediaToAnimal($mother, 'cow.jpg', 'cow.mp3');
 
         $calf = Animal::create([
+            'category_id' => $cowCat?->id,
             'parent_id' => $mother->id,
             'name' => 'Лучик',
             'type' => 'cow',
@@ -53,6 +60,7 @@ class AnimalSeeder extends Seeder
             [
                 'name' => 'Белка',
                 'type' => 'goat',
+                'category_id' => $goatCat?->id,
                 'slug' => 'belka',
                 'bio' => 'Зааненская коза с очень спокойным характером.',
                 'features' => ['color' => 'white', 'horns' => false],
@@ -60,6 +68,7 @@ class AnimalSeeder extends Seeder
             [
                 'name' => 'Марта',
                 'type' => 'cow',
+                'category_id' => $cowCat?->id,
                 'slug' => 'marta',
                 'bio' => 'Любимица всей семьи.',
                 'features' => ['breed' => 'Джерсейская'],
@@ -67,7 +76,7 @@ class AnimalSeeder extends Seeder
         ];
 
         foreach ($others as $data) {
-            $image = $data['image'] ?? 'no.jpg';
+            $image = $data['image'] ?? 'no-animal.jpg';
             $voice = $data['voice'] ?? null;
 
             unset($data['image'], $data['voice']);
