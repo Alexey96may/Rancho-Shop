@@ -1,4 +1,6 @@
 <script setup lang="ts">
+    import { onMounted, onUnmounted } from 'vue';
+
     import AboutSection from '@/Components/Sections/AboutSection.vue';
     import BestAnimalsSection from '@/Components/Sections/BestAnimalsSection.vue';
     import BestProductSection from '@/Components/Sections/BestProductSection.vue';
@@ -7,7 +9,9 @@
     import HeroSection from '@/Components/Sections/HeroSection.vue';
     import HowItWorksSection from '@/Components/Sections/HowItWorksSection.vue';
     import ReviewsSection from '@/Components/Sections/ReviewsSection.vue';
+    import DayNightScene from '@/Components/UI/DayNightScene.vue';
     import MainLayout from '@/Layouts/MainLayout.vue';
+    import { useAppearanceStore } from '@/stores/useAppearanceStore';
     import type {
         Comment,
         Cow,
@@ -31,9 +35,32 @@
     }
 
     defineProps<Props>();
+
+    const store = useAppearanceStore();
+
+    const onScroll = (): void => {
+        // Вычисляем прогресс: текущий скролл / (высота всей страницы - высота экрана)
+        const totalScrollable = document.documentElement.scrollHeight - window.innerHeight;
+
+        if (totalScrollable <= 0) return;
+
+        const progress = window.scrollY / totalScrollable;
+        store.setNightProgress(progress);
+    };
+
+    onMounted(() => {
+        window.addEventListener('scroll', onScroll, { passive: true });
+        onScroll(); // Инициализация при загрузке
+    });
+
+    onUnmounted(() => {
+        window.removeEventListener('scroll', onScroll);
+    });
 </script>
 
 <template>
+    <DayNightScene />
+
     <HeroSection />
     <BestProductSection :products="products.data" />
     <BestAnimalsSection :animals="cows.data" />
