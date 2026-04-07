@@ -21,4 +21,18 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
+Route::middleware(['auth', 'role:admin'])->group(function () {
+    // Route::get('/admin/dashboard', function () {
+    //     return Inertia::render('Admin/Dashboard', [
+    //         'stats' => [/* твои данные */]
+    //     ]);
+    // });
+});
+
+Route::middleware(['auth', 'role:worker'])->group(function () {
+    // Route::get('/worker/tasks', function () {
+    //     return Inertia::render('Worker/TaskList');
+    // });
+});
+
 require __DIR__ . '/auth.php';

@@ -12,3 +12,12 @@ Route::prefix('auth/google')->group(function () {
     
     Route::get('/callback', [SocialAuthController::class, 'handleGoogleCallback']);
 });
+
+
+Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
+    // Route::get('/admin/stats', [AdminController::class, 'index']);
+});
+
+Route::middleware(['auth:sanctum', 'role:worker'])->group(function () {
+    // Route::get('/tasks', [TaskController::class, 'index']);
+});
