@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Models\Category;
 use App\Http\Resources\ProductResource;
+use App\Http\Resources\CategoryResource;
 use App\Http\Resources\CommentResource;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -18,12 +20,21 @@ class ProductController extends Controller
     {
         $products = Product::query()
             ->with(['category', 'media'])
-            ->where('is_active', true)
+
+            ->when($request->category, fn($q, $cat) => $q->whereHas('category', fn($c) => $c->where('slug', $cat)))
+            ->when($request->search, fn($q, $search) => $q->where('name', 'like', "%{$search}%"))
+            ->when($request->sort === 'cheap', fn($q) => $q->orderBy('price', 'asc'))
+            ->when($request->sort === 'expensive', fn($q) => $q->orderBy('price', 'desc'))
+
             ->latest()
             ->get();
 
+        $categories = Category::hasActiveProducts()->get();
+
         return Inertia::render('Catalog/Index', [
             'products' => ProductResource::collection($products),
+            'filters' => $request->only(['category', 'search', 'sort']),
+            'categories' => CategoryResource::collection($categories),
         ]);
     }
 

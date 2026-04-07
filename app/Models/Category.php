@@ -18,15 +18,19 @@ class Category extends Model
     ];
 
     // Request only product categories (dairy, etc.)
-    public function scopeProducts($query)
+    public function scopeHasActiveProducts($query)
     {
-        return $query->where('type', 'product');
+        return $query->whereHas('products', function ($q) {
+            $q->where('is_active', true); 
+        });
     }
 
     // Request only animal categories
-    public function scopeAnimals($query)
+    public function scopeHasActiveAnimals($query)
     {
-        return $query->where('type', 'animal');
+        return $query->whereHas('animals', function ($q) {
+            $q->where('is_active', true); 
+        });
     }
 
     public function products(): HasMany

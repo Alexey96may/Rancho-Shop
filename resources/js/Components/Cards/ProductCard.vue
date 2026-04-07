@@ -45,7 +45,6 @@
             class="bg-slate-100 relative aspect-square overflow-hidden"
         >
             <AppImage
-                v-if="product.media?.length"
                 :alt="product.name"
                 :src="product.media?.[0] || ''"
                 :class-name="'h-full w-full object-cover transition-transform duration-500 group-hover:scale-110'"
