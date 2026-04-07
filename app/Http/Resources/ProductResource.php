@@ -16,18 +16,28 @@ class ProductResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'animal_id' => $this->animal_id,
             'name' => $this->name,
             'slug' => $this->slug,
-            'price_rub' => $this->price / 100, // Converting kopecks for the showcase
-            'unit' => $this->unit,
-            'is_available' => $this->stock > 0 || $this->availability_type === 'daily',
+            'description' => $this->description,
 
-            'category' => new CategoryResource($this->whenLoaded('category')),
-            
+            'price_rub' => $this->price / 100, // Converting kopecks for the showcase
+            'old_price' => $this->old_price,
+
+            'unit' => $this->unit,
+            'stock' => $this->stock,
+            'availability_type' => $this->availability_type,
+
+            'schedule' => $this->schedule,
+            'next_delivery_date' => $this->next_delivery_date?->format('Y-m-d'),
+
+            'attributes' => $this->attributes,
+
             'media' => $this->media->isNotEmpty() 
                         ? MediaResource::collection($this->media) 
                         : [MediaResource::fallback($this->resource)],
 
+            'category' => new CategoryResource($this->whenLoaded('category')),
             'seo' => new SeoResource($this->whenLoaded('seo')),
         ];
     }
