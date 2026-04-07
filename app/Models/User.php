@@ -29,4 +29,12 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    protected $casts = [
+        'role' => \App\Enums\UserRole::class,
+    ];
+
+    public function isAdmin(): bool {
+        return $this->role === \App\Enums\UserRole::ADMIN;
+    }
 }
