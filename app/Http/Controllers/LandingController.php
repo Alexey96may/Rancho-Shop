@@ -33,7 +33,7 @@ class LandingController extends Controller
             'how_it_works' => new LandingBlockResource(LandingBlock::getSafe('how_it_works')),
             'comments' => CommentResource::collection(
                 Comment::where('is_published', true)
-                        ->where('commentable_type', 'page')
+                        // ->where('commentable_type', 'page')
                         ->latest()
                         ->take($limit) 
                         ->get()

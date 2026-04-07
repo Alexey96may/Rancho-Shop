@@ -17,9 +17,11 @@ class CommentResource extends JsonResource
         // Base structure
         $data = [
             'id'               => $this->id,
-            'user_name'        => $this->user_name,
+            'user_name'        => $this->user ? $this->user->name : 'Гость',
+            'avatar'           => $this->user ? $this->user->avatar_url : null,
             'content'          => $this->content,
             'rating'           => $this->rating,
+            'user_avatar'      => $this->user?->avatar_url,
             'commentable_id'   => $this->commentable_id,
             'commentable_type' => $this->commentable_type,
             'created_at'       => $this->created_at->format('d.m.Y H:i'),

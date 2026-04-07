@@ -10,24 +10,32 @@ export default {
         './resources/js/**/*.vue',
     ],
 
+    safelist: [
+        'bg-rancho-olive',
+        'bg-rancho-forest',
+        'bg-amber-600',
+        'bg-emerald-600',
+        'bg-stone-500',
+    ],
+
     theme: {
-        colors: {
-            rancho: {
-                // Тот самый цвет акварельной бумаги
-                paper: '#FCFAF5',
-                // Глубокий зеленый для лого и заголовков
-                forest: '#1C3F34',
-                // Хвойный для кнопок
-                pine: '#3B7558',
-                // Приглушенный оливковый
-                olive: '#597D5B',
-                // Голубой (горы/небо)
-                sky: '#A8C4CB',
-                // Желтый (цветы на лугу)
-                buttercup: '#E3B44B',
-            },
-        },
         extend: {
+            colors: {
+                rancho: {
+                    // Цвет акварельной бумаги
+                    paper: '#FCFAF5',
+                    // Глубокий зеленый для лого и заголовков
+                    forest: '#1C3F34',
+                    // Хвойный для кнопок
+                    pine: '#3B7558',
+                    // Приглушенный оливковый
+                    olive: '#597D5B',
+                    // Голубой (горы/небо)
+                    sky: '#A8C4CB',
+                    // Желтый (цветы на лугу)
+                    buttercup: '#E3B44B',
+                },
+            },
             fontFamily: {
                 header: ['Spectral', 'serif'],
                 sans: ['Montserrat', 'sans-serif'],

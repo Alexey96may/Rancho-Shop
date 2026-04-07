@@ -3,6 +3,8 @@ export const handleImageError = (
     type: 'product' | 'animal' | 'general' = 'general',
 ) => {
     const target = event.target as HTMLImageElement;
+    if (!target) return;
+
     target.onerror = null;
 
     const placeholders = {
@@ -13,6 +15,6 @@ export const handleImageError = (
 
     const newSrc = placeholders[type];
 
-    if (target.src.includes(newSrc)) return;
+    if (target.src && target.src.includes(newSrc)) return;
     target.src = newSrc;
 };

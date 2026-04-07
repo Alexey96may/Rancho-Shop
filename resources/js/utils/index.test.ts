@@ -15,7 +15,7 @@ describe('handleImageError', () => {
 
         handleImageError(mockEvent);
 
-        expect(img.src).toContain('/images/placeholder.png');
+        expect(img.src).toContain('/images/no-image.png');
 
         expect(img.onerror).toBeNull();
     });

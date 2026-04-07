@@ -4,17 +4,17 @@
     import { Heart, MessageSquare, ShoppingBag, Star } from 'lucide-vue-next';
 
     import type { Comment } from '@/types/Comment';
+    import { getAvatarColor, getInitials } from '@/utils/user';
 
     const props = defineProps<{
         comment: Comment;
     }>();
 
-    // Определяем иконку в зависимости от того, к чему оставлен отзыв
     const contextIcon = computed(() => {
         switch (props.comment.commentable_type) {
             case 'product':
                 return ShoppingBag;
-            case 'cow':
+            case 'animal':
                 return Heart;
             default:
                 return MessageSquare;
@@ -23,7 +23,7 @@
 
     const contextLabel = computed(() => {
         if (props.comment.commentable_type === 'product') return 'О товаре';
-        if (props.comment.commentable_type === 'cow') return 'О животном';
+        if (props.comment.commentable_type === 'animal') return 'О животном';
         return 'О сайте';
     });
 </script>
@@ -73,15 +73,29 @@
         </blockquote>
 
         <figcaption class="mt-6 flex items-center gap-3 border-t border-rancho-paper pt-6">
+            <img
+                v-if="comment.user_avatar"
+                :src="comment.user_avatar"
+                class="shadow-sm h-10 w-10 rounded-full object-cover"
+                :alt="comment.user_name"
+            />
+
             <div
-                class="text-white flex h-10 w-10 items-center justify-center rounded-full bg-rancho-forest text-sm font-bold uppercase"
-                aria-hidden="true"
+                v-else
+                :class="[
+                    'text-white shadow-sm flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold',
+                    getAvatarColor(comment.id),
+                ]"
             >
-                {{ comment.user_name?.charAt(0) }}
+                {{ getInitials(comment.user_name) }}
             </div>
-            <cite class="font-bold not-italic text-rancho-forest">
-                {{ comment.user_name }}
-            </cite>
+
+            <div class="flex flex-col">
+                <cite class="font-bold not-italic text-rancho-forest">
+                    {{ comment.user_name }}
+                </cite>
+                <span class="text-xs text-rancho-olive/50">{{ comment.created_at }}</span>
+            </div>
         </figcaption>
     </figure>
 </template>

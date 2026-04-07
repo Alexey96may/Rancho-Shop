@@ -23,12 +23,10 @@ class CommentSeeder extends Seeder
         $cow = Animal::where('slug', 'zorka')->first();
         $mainPage = Page::where('slug', 'main')->orWhere('slug', 'home')->first();
 
-        $randomUser = User::inRandomOrder()->first();
-
         // Product review
         if ($product) {
             Comment::create([
-                'user_id' => $randomUser->id,
+                'user_id' => User::inRandomOrder()->first()->id,
                 'content' => 'Очень вкусное молоко, дети в восторге! Будем брать еще.',
                 'rating' => 5,
                 'is_published' => true,
@@ -40,7 +38,7 @@ class CommentSeeder extends Seeder
         // Review of the cow (Zorka fans)
         if ($cow) {
             Comment::create([
-                'user_id' => $randomUser->id,
+                'user_id' => User::inRandomOrder()->first()->id,
                 'content' => 'Видел эту корову на ферме — очень ухоженная и добрая.',
                 'rating' => 5,
                 'is_published' => true,
@@ -60,7 +58,7 @@ class CommentSeeder extends Seeder
 
             foreach ($siteReviews as $review) {
                 Comment::create([
-                    'user_id' => $randomUser->id,
+                    'user_id' => User::inRandomOrder()->first()->id,
                     'content' => $review['text'],
                     'rating' => 5,
                     'is_published' => true,
@@ -71,7 +69,7 @@ class CommentSeeder extends Seeder
         }
 
         Comment::create([
-            'user_id' => $randomUser->id,
+            'user_id' => User::inRandomOrder()->first()->id,
             'content' => 'Тестовый отзыв, который никто не должен видеть.',
             'rating' => 1,
             'is_published' => false,
