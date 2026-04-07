@@ -3,111 +3,113 @@
 
     import { Link } from '@inertiajs/vue3';
 
-    import { CalendarCheck, Clock, ShoppingBasket } from 'lucide-vue-next';
-
-    import { useCartStore } from '@/stores/cart';
-    import type { Product } from '@/types/Product';
+    import type { ProductWithCategory } from '@/types';
 
     const props = defineProps<{
-        product: Product;
+        product: ProductWithCategory;
     }>();
 
-    const cartStore = useCartStore();
-
-    // Форматируем цену из копеек в рубли
-    const formattedPrice = computed(() => (props.product.price_rub / 100).toLocaleString('ru-RU'));
-    const formattedOldPrice = computed(() =>
-        props.product.old_price ? (props.product.old_price / 100).toLocaleString('ru-RU') : null,
+    const displayPrice = computed(() => (props.product.price_rub / 100).toFixed(2));
+    const displayOldPrice = computed(() =>
+        props.product.old_price ? (props.product.old_price / 100).toFixed(2) : null,
     );
 
-    // Берем первое изображение из media или ставим заглушку
-    const mainImage = computed(() =>
-        props.product.media?.[0]?.url
-            ? props.product.media?.[0]?.url
-            : '/images/placeholder-product.jpg',
-    );
+    const availabilityLabels: Record<string, string> = {
+        stock: 'В наличии',
+        daily: 'Ежедневно',
+        preorder: 'Предзаказ',
+    };
 
-    // Логика бейджа доступности
-    const availabilityLabel = computed(() => {
-        if (props.product.availability_type === 'daily') return 'Свежий удой сегодня';
-        if (props.product.availability_type === 'preorder') return 'Предзаказ';
-        return props.product.stock > 0 ? `В наличии: ${props.product.stock}` : 'Под заказ';
+    const getDaysNames = (days: number[] | undefined | null) => {
+        // Если days не массив или пустой — выходим
+        if (!Array.isArray(days)) return 'Не указано';
+
+        const names = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
+        return days.map((d) => names[d]).join(', ');
+    };
+
+    const discountBadge = computed(() => {
+        if (!props.product.old_price || props.product.old_price <= props.product.price_rub) {
+            return null;
+        }
+        return Math.round(100 - (props.product.price_rub / props.product.old_price) * 100);
     });
 </script>
 
 <template>
-    <article
-        class="bg-white hover:shadow-xl group relative flex flex-col overflow-hidden rounded-2xl border border-rancho-paper transition-all focus-within:ring-2 focus-within:ring-rancho-buttercup"
-        role="listitem"
+    <div
+        class="bg-white shadow-sm border-slate-100 hover:shadow-xl group flex h-full flex-col overflow-hidden rounded-2xl border transition-all duration-300"
     >
-        <div class="relative aspect-square overflow-hidden bg-rancho-paper/30">
+        <Link
+            :href="route('catalog.show', product.slug)"
+            class="bg-slate-100 relative aspect-square overflow-hidden"
+        >
             <AppImage
-                :src="props.product?.media?.[0] || ''"
-                :alt="`Продукт: ${product.name}`"
-                :context="'product'"
-                :className="'h-full w-full object-cover transition-transform duration-700 group-hover:scale-105'"
+                v-if="product.media?.length"
+                :alt="product.name"
+                :src="product.media?.[0] || ''"
+                :class-name="'h-full w-full object-cover transition-transform duration-500 group-hover:scale-110'"
             />
 
-            <div class="absolute left-3 top-3 flex flex-wrap gap-2">
+            <div class="absolute left-3 top-3 flex flex-col gap-2">
                 <span
-                    class="bg-white/90 shadow-sm inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-rancho-forest backdrop-blur-sm"
+                    :class="[
+                        'shadow-sm rounded-lg px-2 py-1 text-[10px] font-black uppercase tracking-wider',
+                        product.availability_type === 'daily'
+                            ? 'bg-green-500 text-white'
+                            : 'bg-slate-900 text-white',
+                    ]"
                 >
-                    <Clock v-if="product.availability_type === 'daily'" :size="12" />
-                    <CalendarCheck v-if="product.availability_type === 'preorder'" :size="12" />
-                    {{ availabilityLabel }}
+                    {{ availabilityLabels[product.availability_type] }}
                 </span>
             </div>
-        </div>
+        </Link>
 
-        <div class="flex flex-1 flex-col p-5">
-            <h3 class="mb-2 text-lg font-bold text-rancho-forest">
-                <Link :href="route('home')" class="focus:outline-none">
-                    <span class="absolute inset-0" aria-hidden="true"></span>
-                    {{ product.name }}
-                </Link>
-            </h3>
-
-            <p v-if="product.description" class="mb-4 line-clamp-2 text-sm text-rancho-olive/70">
-                {{ product.description }}
-            </p>
-
-            <div class="mt-auto flex items-end justify-between">
-                <div class="flex flex-col">
-                    <div class="flex items-center gap-2">
-                        <span class="text-xl font-black text-rancho-forest"
-                            >{{ formattedPrice }} ₽</span
-                        >
-                        <span
-                            v-if="formattedOldPrice"
-                            class="text-sm text-rancho-olive/40 line-through"
-                        >
-                            {{ formattedOldPrice }} ₽
-                        </span>
-                    </div>
-                    <span
-                        class="text-[11px] font-medium uppercase tracking-tight text-rancho-olive/50"
-                    >
-                        за {{ product.unit }}
-                    </span>
+        <div class="flex flex-grow flex-col p-5">
+            <div class="mb-3">
+                <div class="text-orange-600 mb-1 text-[10px] font-bold uppercase tracking-widest">
+                    {{ product.category?.name }}
                 </div>
-
-                <button
-                    @click.stop="cartStore.add(product)"
-                    class="text-white relative z-20 flex h-12 w-12 items-center justify-center rounded-full bg-rancho-forest transition-all hover:bg-rancho-buttercup hover:text-rancho-forest active:scale-90"
-                    :aria-label="`Добавить ${product.name} в корзину`"
-                >
-                    <ShoppingBasket :size="20" />
-                </button>
+                <Link :href="route('catalog.show', product.slug)">
+                    <h3
+                        class="text-slate-900 hover:text-orange-600 text-lg font-bold leading-tight transition-colors"
+                    >
+                        {{ product.name }}
+                    </h3>
+                </Link>
             </div>
-        </div>
-    </article>
-</template>
 
-<style scoped>
-    .line-clamp-2 {
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-    }
-</style>
+            <div class="mb-4 flex items-center gap-3">
+                <span class="text-slate-900 text-2xl font-black">{{ displayPrice }}₽</span>
+                <div v-if="displayOldPrice" class="flex flex-col">
+                    <span class="text-slate-400 text-xs leading-none line-through"
+                        >{{ displayOldPrice }}₽</span
+                    >
+                    <span class="text-red-500 text-[10px] font-bold">-{{ discountBadge }}%</span>
+                </div>
+                <span class="text-slate-400 ml-auto text-sm">/ {{ product.unit }}</span>
+            </div>
+
+            <div class="border-slate-50 mt-auto space-y-2 border-t pt-4">
+                <div v-if="product.schedule" class="flex items-start gap-2">
+                    <div class="bg-blue-100 rounded p-1">📅</div>
+                    <div>
+                        <span class="text-slate-400 block text-[10px] font-bold uppercase"
+                            >График сбора:</span
+                        >
+                        <span class="text-slate-700 text-xs font-semibold">{{
+                            getDaysNames(product.schedule.days)
+                        }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <button
+                class="bg-slate-900 text-white hover:bg-orange-600 disabled:bg-slate-200 disabled:text-slate-400 mt-5 w-full rounded-xl py-3 font-bold transition-all active:scale-95 disabled:transform-none"
+                :disabled="product.stock === 0 && product.availability_type === 'stock'"
+            >
+                {{ product.availability_type === 'preorder' ? 'Забронировать' : 'В корзину' }}
+            </button>
+        </div>
+    </div>
+</template>

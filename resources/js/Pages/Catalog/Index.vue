@@ -1,97 +1,44 @@
 <script setup lang="ts">
-    import { computed } from 'vue';
+    import { Head } from '@inertiajs/vue3';
 
-    import type { Product } from '@/types/Product';
+    import ProductCard from '@/Components/Cards/ProductCard.vue';
+    import MainLayout from '@/Layouts/MainLayout.vue';
+    import type { ProductWithCategory, ResourceCollection } from '@/types';
 
+    // Принимаем данные от контроллера
     const props = defineProps<{
-        product: Product;
+        products: ResourceCollection<ProductWithCategory>;
     }>();
-
-    // Форматируем цену (из копеек в рубли)
-    const displayPrice = computed(() => (props.product.price_rub / 100).toFixed(2));
-    const displayOldPrice = computed(() =>
-        props.product.old_price ? (props.product.old_price / 100).toFixed(2) : null,
-    );
-
-    // Текст для типа доступности
-    const availabilityLabels: Record<string, string> = {
-        stock: 'В наличии',
-        daily: 'Ежедневно',
-        preorder: 'Предзаказ',
-    };
-
-    // Функция для получения дней недели (если есть schedule)
-    const getDaysNames = (days: number[]) => {
-        const names = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
-        return days.map((d) => names[d]).join(', ');
-    };
 </script>
 
 <template>
-    <div
-        class="bg-white shadow-sm border-slate-100 hover:shadow-md flex h-full flex-col overflow-hidden rounded-2xl border transition-shadow"
-    >
-        <div class="bg-slate-100 relative aspect-video">
-            <img
-                v-if="product.media.length"
-                :src="product.media[0].url"
-                class="h-full w-full object-cover"
-            />
+    <Head title="Каталог продукции Ранчо" />
 
-            <div class="absolute left-2 top-2 flex gap-1">
-                <span
-                    :class="[
-                        'rounded-md px-2 py-1 text-[10px] font-bold uppercase tracking-wider',
-                        product.availability_type === 'daily'
-                            ? 'bg-green-500 text-white'
-                            : 'bg-slate-800 text-white',
-                    ]"
-                >
-                    {{ availabilityLabels[product.availability_type] }}
-                </span>
-            </div>
-        </div>
+    <MainLayout>
+        <template #header>
+            <h1 class="text-slate-900 text-3xl font-black">Наши продукты</h1>
+            <p class="text-slate-500 mt-1">Свежее из Симферополя прямо к вашему столу</p>
+        </template>
 
-        <div class="flex flex-grow flex-col p-4">
-            <div class="mb-2">
-                <h3 class="text-slate-900 text-lg font-bold leading-tight">{{ product.name }}</h3>
-                <span v-if="product.attributes?.breed" class="text-slate-500 text-xs">
-                    Порода: {{ product.attributes.breed }}
-                </span>
-            </div>
+        <div class="py-12">
+            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <div v-if="!products.data.length" class="py-20 text-center">
+                    <div class="mb-4 text-6xl">🚜</div>
+                    <h3 class="text-slate-900 text-xl font-bold">Пока ничего не выросло</h3>
+                    <p class="text-slate-500">Зайдите чуть позже или выберите другую категорию.</p>
+                </div>
 
-            <div class="mb-4 flex items-baseline gap-2">
-                <span class="text-slate-900 text-2xl font-black">{{ displayPrice }}₽</span>
-                <span class="text-slate-400 text-sm">/ {{ product.unit }}</span>
-                <span v-if="displayOldPrice" class="text-slate-400 text-sm line-through">
-                    {{ displayOldPrice }}₽
-                </span>
-            </div>
-
-            <div class="mt-auto space-y-2">
                 <div
-                    v-if="product.schedule"
-                    class="bg-blue-50 border-blue-100 rounded-lg border p-2"
+                    v-else
+                    class="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xl:gap-x-8"
                 >
-                    <span class="text-blue-600 block text-[10px] font-bold uppercase"
-                        >Дни сбора/доставки:</span
-                    >
-                    <span class="text-blue-800 text-xs font-medium">{{
-                        getDaysNames(product.schedule.days)
-                    }}</span>
-                </div>
-
-                <div v-if="product.next_delivery_date" class="text-orange-600 text-xs font-medium">
-                    Ближайшая дата: {{ product.next_delivery_date }}
+                    <ProductCard
+                        v-for="product in products.data"
+                        :key="product.id"
+                        :product="product"
+                    />
                 </div>
             </div>
-
-            <button
-                class="bg-slate-900 text-white hover:bg-orange-600 mt-4 w-full rounded-xl py-2 font-bold transition-colors active:scale-95"
-                :disabled="product.stock === 0 && product.availability_type === 'stock'"
-            >
-                {{ product.availability_type === 'preorder' ? 'Заказать' : 'В корзину' }}
-            </button>
         </div>
-    </div>
+    </MainLayout>
 </template>
