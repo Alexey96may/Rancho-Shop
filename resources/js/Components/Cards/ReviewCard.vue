@@ -30,12 +30,12 @@
 
 <template>
     <figure
-        class="border-rancho-paper flex flex-col rounded-3xl border bg-white p-6 shadow-sm transition-all hover:shadow-md lg:p-8"
+        class="bg-white shadow-sm hover:shadow-md flex flex-col rounded-3xl border border-rancho-paper p-6 transition-all lg:p-8"
         role="listitem"
     >
         <div class="mb-4 flex items-center justify-between">
             <div
-                class="bg-rancho-paper/30 text-rancho-olive/60 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider"
+                class="inline-flex items-center gap-1.5 rounded-full bg-rancho-paper/30 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-rancho-olive/60"
                 :title="contextLabel"
             >
                 <component :is="contextIcon" :size="12" aria-hidden="true" />
@@ -44,7 +44,7 @@
 
             <time
                 :datetime="comment.created_at"
-                class="text-rancho-olive/40 text-xs uppercase tracking-tighter"
+                class="text-xs uppercase tracking-tighter text-rancho-olive/40"
             >
                 {{ comment.created_at }}
             </time>
@@ -52,7 +52,7 @@
 
         <div
             v-if="comment.rating"
-            class="text-rancho-buttercup mb-4 flex items-center gap-0.5"
+            class="mb-4 flex items-center gap-0.5 text-rancho-buttercup"
             role="img"
             :aria-label="`Рейтинг: ${comment.rating} из 5 звезд`"
         >
@@ -67,19 +67,19 @@
         </div>
 
         <blockquote class="flex-1">
-            <p class="text-rancho-forest text-base leading-relaxed lg:text-lg">
+            <p class="text-base leading-relaxed text-rancho-forest lg:text-lg">
                 «{{ comment.content }}»
             </p>
         </blockquote>
 
-        <figcaption class="border-rancho-paper mt-6 flex items-center gap-3 border-t pt-6">
+        <figcaption class="mt-6 flex items-center gap-3 border-t border-rancho-paper pt-6">
             <div
-                class="bg-rancho-forest flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold uppercase text-white"
+                class="text-white flex h-10 w-10 items-center justify-center rounded-full bg-rancho-forest text-sm font-bold uppercase"
                 aria-hidden="true"
             >
-                {{ comment.user_name.charAt(0) }}
+                {{ comment.user_name?.charAt(0) }}
             </div>
-            <cite class="text-rancho-forest font-bold not-italic">
+            <cite class="font-bold not-italic text-rancho-forest">
                 {{ comment.user_name }}
             </cite>
         </figcaption>

@@ -9,6 +9,7 @@
     import ReviewsSection from '@/Components/Sections/ReviewsSection.vue';
     import MainLayout from '@/Layouts/MainLayout.vue';
     import type {
+        Comment,
         Cow,
         Faq,
         LandingBlock,
@@ -25,6 +26,7 @@
         faqs: ResourceCollection<Faq>;
         about: ResourceSingle<LandingBlock>;
         values: ResourceSingle<LandingBlock>;
+        comments: ResourceCollection<Comment>;
         how_it_works: ResourceSingle<LandingBlock>;
     }
 
@@ -32,12 +34,12 @@
 </script>
 
 <template>
-    <HeroSection></HeroSection>
-    <BestProductSection :products="products.data"></BestProductSection>
-    <BestAnimalsSection :animals="cows.data"></BestAnimalsSection>
+    <HeroSection />
+    <BestProductSection :products="products.data" />
+    <BestAnimalsSection :animals="cows.data" />
     <FeaturesSection :values="values.data" />
     <HowItWorksSection :block="how_it_works.data" />
-    <ReviewsSection :comments="[]" />
+    <ReviewsSection :comments="comments.data" />
     <AboutSection :about="about.data" />
     <FaqSection :faqs="faqs.data" />
 </template>

@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Animal;
 use App\Models\Comment;
 use App\Models\Product;
+use App\Models\Page;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -20,6 +21,7 @@ class CommentSeeder extends Seeder
     {
         $product = Product::where('slug', 'moloko-korovye-tselnoe')->first();
         $cow = Animal::where('slug', 'zorka')->first();
+        $mainPage = Page::where('slug', 'main')->orWhere('slug', 'home')->first();
 
         $randomUser = User::inRandomOrder()->first();
 
@@ -31,7 +33,7 @@ class CommentSeeder extends Seeder
                 'rating' => 5,
                 'is_published' => true,
                 'commentable_id' => $product->id,
-                'commentable_type' => Product::class,
+                'commentable_type' => 'product',
             ]);
         }
 
@@ -43,8 +45,29 @@ class CommentSeeder extends Seeder
                 'rating' => 5,
                 'is_published' => true,
                 'commentable_id' => $cow->id,
-                'commentable_type' => Animal::class,
+                'commentable_type' => 'animal',
             ]);
+        }
+
+        if ($mainPage) {
+            $siteReviews = [
+                ['text' => 'Отличный сервис и всегда свежая продукция!'],
+                ['text' => 'Удобно заказывать, доставка в Симферополь быстрая.'],
+                ['text' => 'Лучшая молочка в Крыму, рекомендую всем знакомым.'],
+                ['text' => 'Спасибо за ваш труд, всё очень натуральное и вкусное.'],
+                ['text' => 'Чистое хозяйство, прозрачные процессы. Доверяю.'],
+            ];
+
+            foreach ($siteReviews as $review) {
+                Comment::create([
+                    'user_id' => $randomUser->id,
+                    'content' => $review['text'],
+                    'rating' => 5,
+                    'is_published' => true,
+                    'commentable_id' => $mainPage->id,
+                    'commentable_type' => 'page',
+                ]);
+            }
         }
 
         Comment::create([
@@ -53,7 +76,7 @@ class CommentSeeder extends Seeder
             'rating' => 1,
             'is_published' => false,
             'commentable_id' => $product?->id ?? 1,
-            'commentable_type' => Product::class,
+            'commentable_type' => 'product',
         ]);
     }
 }

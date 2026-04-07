@@ -1,4 +1,4 @@
-export type ShopStatus = "open" | "closed" | "maintenance";
+export type ShopStatus = 'open' | 'closed' | 'maintenance';
 
 export interface SiteSettings {
     // Основная информация
@@ -27,6 +27,7 @@ export interface SiteSettings {
     cows_per_page: number;
     featured_cows_limit: number; // Сколько коров показать на главной
     featured_products_limit: number; // Сколько товаров на главной
+    featured_comments_limit: number; // Сколько комментов на главной
 
     // Маркетинг
     header_announcement?: string; // Текст в шапке: "Свежий удой ожидается в четверг!"

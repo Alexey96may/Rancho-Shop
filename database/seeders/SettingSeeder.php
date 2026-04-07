@@ -44,6 +44,7 @@ class SettingSeeder extends Seeder
             ['key' => 'cows_per_page', 'value' => '8', 'type' => 'integer'],
             ['key' => 'featured_cows_limit', 'value' => '4', 'type' => 'integer'],
             ['key' => 'featured_products_limit', 'value' => '6', 'type' => 'integer'],
+            ['key' => 'featured_comments_limit', 'value' => '6', 'type' => 'integer'],
 
             // --- Marketing ---
             ['key' => 'header_announcement', 'value' => '🐄 Свежий удой ожидается в этот четверг! Успейте заказать.', 'type' => 'string'],
