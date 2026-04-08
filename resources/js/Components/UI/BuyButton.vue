@@ -19,7 +19,9 @@
     const cart = useCartStore();
 
     // 1. Проверка: находится ли товар уже в Pinia
-    const isInCart = computed(() => cart.items.some((item) => item.id === props.product.id));
+    const isInCart = computed(() =>
+        cart.items.some((item) => item.product_id === props.product.id),
+    );
 
     // 2. Логика доступности: если это 'stock', проверяем количество
     const isOutOfStock = computed(

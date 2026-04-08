@@ -52,6 +52,10 @@
     const optimizedSources = computed((): ImageMetadata[] => {
         if (typeof props.src === 'string') return [];
 
+        if (!props.src || typeof props.src !== 'object') {
+            return [];
+        }
+
         if ('thumbnails' in (props.src as object)) {
             return getMetadata(props.src as Media, props.type);
         }

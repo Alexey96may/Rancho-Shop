@@ -6,6 +6,7 @@ use App\Http\Controllers\ProductController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\Auth\SocialController;
+use App\Http\Controllers\OrderController;
 
 Route::get('/', [LandingController::class, 'index'])->name('home');
 
@@ -14,6 +15,12 @@ Route::get('/auth/google/callback', [SocialController::class, 'handleGoogleCallb
 
 Route::get('/catalog', [ProductController::class, 'index'])->name('catalog.index');
 Route::get('/catalog/{product:slug}', [ProductController::class, 'show'])->name('catalog.show');
+
+Route::get('/cart', function () {
+        return inertia('Cart/Index');
+    })->name('cart.index');
+
+Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
 
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');

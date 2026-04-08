@@ -2,48 +2,64 @@ import { computed, ref } from 'vue';
 
 import { defineStore } from 'pinia';
 
-import type { Product } from '@/types';
+import type { CartItem, Media, Product } from '@/types';
 
 export const useCartStore = defineStore(
     'cart',
     () => {
-        const items = ref<
-            Array<{
-                id: number;
-                name: string;
-                price: number;
-                image: string | null;
-                quantity: number;
-            }>
-        >([]);
+        const items = ref<CartItem[]>([]);
 
         // Getters
         const totalItems = computed(() =>
             items.value.reduce((acc, item) => acc + item.quantity, 0),
         );
+
         const totalPrice = computed(() =>
             items.value.reduce((acc, item) => acc + item.price * item.quantity, 0),
         );
 
         // Actions
-        function add(product: Product) {
-            const item = items.value.find((i) => i.id === product.id);
-            if (item) {
-                item.quantity++;
+        // Добавляем логику прямо в Actions
+        function add(item: Product | CartItem) {
+            // Определяем ID в зависимости от того, что пришло (Product или CartItem)
+            const id = 'id' in item ? item.id : item.product_id;
+            const existingItem = items.value.find((i) => i.product_id === id);
+
+            if (existingItem) {
+                if (existingItem.quantity < existingItem.stock) {
+                    existingItem.quantity++;
+                }
             } else {
+                // Если это новый товар, он точно должен быть типа Product
+                const product = item as Product;
+
+                const fallbackMedia: Media = {
+                    id: 0,
+                    url: '/images/no-image.jpg',
+                    thumbnails: { original: '/images/no-image.jpg', webp: null, avif: null },
+                    previews: { original: null, webp: null, avif: null },
+                    responsive: [],
+                    name: 'placeholder',
+                    mime_type: 'image/jpeg',
+                    order_column: 0,
+                };
+
                 items.value.push({
-                    id: product.id,
+                    product_id: product.id,
                     name: product.name,
                     price: product.price_rub,
-                    image: product.media?.[0]?.url || null, // Take the first photo from the resource
+                    media: product.media?.[0] || fallbackMedia,
                     quantity: 1,
+                    unit: product.unit || 'шт.',
+                    slug: product.slug,
+                    stock: product.stock,
                 });
             }
         }
 
         // Removing one unit or the entire product
         function remove(productId: number) {
-            const index = items.value.findIndex((i) => i.id === productId);
+            const index = items.value.findIndex((i) => i.product_id === productId);
             if (index !== -1) {
                 if (items.value[index].quantity > 1) {
                     items.value[index].quantity--;
@@ -55,7 +71,7 @@ export const useCartStore = defineStore(
 
         // Complete deletion of a position (trash can)
         function destroy(productId: number) {
-            items.value = items.value.filter((i) => i.id !== productId);
+            items.value = items.value.filter((i) => i.product_id !== productId);
         }
 
         // Clearing the entire cart (after ordering)

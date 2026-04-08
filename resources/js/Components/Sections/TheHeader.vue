@@ -1,6 +1,8 @@
 <script setup lang="ts">
     import { computed, ref } from 'vue';
 
+    import { Link } from '@inertiajs/vue3';
+
     import { useCartStore } from '@/stores/cart';
 
     const menuItems = [
@@ -11,10 +13,6 @@
     ];
 
     const cartStore = useCartStore();
-
-    const toggleCart = () => {
-        console.log('Открываем боковую панель корзины');
-    };
 </script>
 
 <template>
@@ -26,7 +24,7 @@
                 <div
                     class="flex h-10 w-10 items-center justify-center rounded-full bg-rancho-pine transition-transform group-hover:rotate-12"
                 >
-                    <span class="text-white font-header text-xl">МД</span>
+                    <span class="font-header text-xl text-white">МД</span>
                 </div>
                 <div class="flex flex-col">
                     <span class="font-header text-2xl leading-none text-rancho-forest"
@@ -71,9 +69,9 @@
                     </svg>
                 </button>
 
-                <button
-                    @click="toggleCart"
-                    class="text-white shadow-md relative flex items-center gap-2 rounded-xl bg-rancho-pine px-4 py-2 transition-all hover:bg-rancho-forest active:scale-95"
+                <Link
+                    :href="route('cart.index')"
+                    class="shadow-md relative flex items-center gap-2 rounded-xl bg-rancho-pine px-4 py-2 text-white transition-all hover:bg-rancho-forest active:scale-95"
                 >
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -98,7 +96,7 @@
                     >
                         {{ cartStore.totalItems }}
                     </div>
-                </button>
+                </Link>
             </div>
         </AppContainer>
     </header>
