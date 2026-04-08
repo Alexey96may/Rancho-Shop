@@ -3,6 +3,7 @@
 
     import { Link } from '@inertiajs/vue3';
 
+    import BuyButton from '@/Components/UI/BuyButton.vue';
     import type { ProductWithCategory } from '@/types';
 
     const props = defineProps<{
@@ -21,7 +22,6 @@
     };
 
     const getDaysNames = (days: number[] | undefined | null) => {
-        // Если days не массив или пустой — выходим
         if (!Array.isArray(days)) return 'Не указано';
 
         const names = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
@@ -38,11 +38,11 @@
 
 <template>
     <div
-        class="bg-white shadow-sm border-slate-100 hover:shadow-xl group flex h-full flex-col overflow-hidden rounded-2xl border transition-all duration-300"
+        class="shadow-sm hover:shadow-xl group flex h-full flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white transition-all duration-300"
     >
         <Link
             :href="route('catalog.show', product.slug)"
-            class="bg-slate-100 relative aspect-square overflow-hidden"
+            class="relative aspect-square overflow-hidden bg-slate-100"
         >
             <AppImage
                 :alt="product.name"
@@ -66,49 +66,49 @@
 
         <div class="flex flex-grow flex-col p-5">
             <div class="mb-3">
-                <div class="text-orange-600 mb-1 text-[10px] font-bold uppercase tracking-widest">
+                <div class="mb-1 text-[10px] font-bold uppercase tracking-widest text-orange-600">
                     {{ product.category?.name }}
                 </div>
-                <Link :href="route('catalog.show', product.slug)">
-                    <h3
-                        class="text-slate-900 hover:text-orange-600 text-lg font-bold leading-tight transition-colors"
-                    >
+
+                <h3
+                    class="text-lg font-bold leading-tight text-slate-900 transition-colors hover:text-orange-600"
+                >
+                    <Link :href="route('catalog.show', product.slug)">
                         {{ product.name }}
-                    </h3>
-                </Link>
+                    </Link>
+                </h3>
             </div>
 
             <div class="mb-4 flex items-center gap-3">
-                <span class="text-slate-900 text-2xl font-black">{{ displayPrice }}₽</span>
+                <span class="text-2xl font-black text-slate-900">{{ displayPrice }}₽</span>
                 <div v-if="displayOldPrice" class="flex flex-col">
-                    <span class="text-slate-400 text-xs leading-none line-through"
+                    <span class="text-xs leading-none text-slate-400 line-through"
                         >{{ displayOldPrice }}₽</span
                     >
-                    <span class="text-red-500 text-[10px] font-bold">-{{ discountBadge }}%</span>
+                    <span class="text-[10px] font-bold text-red-500">-{{ discountBadge }}%</span>
                 </div>
-                <span class="text-slate-400 ml-auto text-sm">/ {{ product.unit }}</span>
+                <span class="ml-auto text-sm text-slate-400">/ {{ product.unit }}</span>
             </div>
 
-            <div class="border-slate-50 mt-auto space-y-2 border-t pt-4">
+            <div class="mt-auto space-y-2 border-t border-slate-50 pt-4">
                 <div v-if="product.schedule" class="flex items-start gap-2">
-                    <div class="bg-blue-100 rounded p-1">📅</div>
+                    <div class="rounded bg-blue-100 p-1">📅</div>
                     <div>
-                        <span class="text-slate-400 block text-[10px] font-bold uppercase"
+                        <span class="block text-[10px] font-bold uppercase text-slate-400"
                             >График сбора:</span
                         >
-                        <span class="text-slate-700 text-xs font-semibold">{{
+                        <span class="text-xs font-semibold text-slate-700">{{
                             getDaysNames(product.schedule.days)
                         }}</span>
                     </div>
                 </div>
             </div>
 
-            <button
-                class="bg-slate-900 text-white hover:bg-orange-600 disabled:bg-slate-200 disabled:text-slate-400 mt-5 w-full rounded-xl py-3 font-bold transition-all active:scale-95 disabled:transform-none"
-                :disabled="product.stock === 0 && product.availability_type === 'stock'"
-            >
-                {{ product.availability_type === 'preorder' ? 'Забронировать' : 'В корзину' }}
-            </button>
+            <BuyButton
+                :product="product"
+                :availability_type="product.availability_type"
+                :price="product.price_rub"
+            />
         </div>
     </div>
 </template>

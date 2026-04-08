@@ -33,3 +33,17 @@ declare module '@vue/runtime-core' {
         AppImage: typeof AppImage;
     }
 }
+
+declare module '@heroicons/vue/20/solid' {
+    import { FunctionalComponent, HTMLAttributes, VNodeProps } from 'vue';
+    const content: FunctionalComponent<HTMLAttributes & VNodeProps>;
+    export default content;
+    export const ChevronUpDownIcon: FunctionalComponent<HTMLAttributes & VNodeProps>;
+    export const CheckIcon: FunctionalComponent<HTMLAttributes & VNodeProps>;
+}
+
+declare module '@heroicons/vue/24/outline' {
+    import { FunctionalComponent, HTMLAttributes, VNodeProps } from 'vue';
+    const content: FunctionalComponent<HTMLAttributes & VNodeProps>;
+    export default content;
+}

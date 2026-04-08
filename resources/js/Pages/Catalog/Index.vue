@@ -4,6 +4,7 @@
     import { Head, router } from '@inertiajs/vue3';
 
     import ProductCard from '@/Components/Cards/ProductCard.vue';
+    import BaseSelect from '@/Components/UI/BaseSelect.vue';
     import MainLayout from '@/Layouts/MainLayout.vue';
     import type { Category, ProductWithCategory, ResourceCollection } from '@/types';
 
@@ -38,18 +39,23 @@
     watch([category, sort], () => applyFilters());
 
     // Для поиска лучше добавить задержку (debounce), но пока сделаем по кнопке или Enter
+
+    const sortArray = [
+        { id: 1, name: 'Сначала дешевле', slug: 'cheap' },
+        { id: 1, name: 'Сначала дороже', slug: 'expensive' },
+    ];
 </script>
 
 <template>
     <Head title="Каталог продукции Ранчо" />
 
     <MainLayout
-        ><AppContainer>
-            <template #header>
+        ><main>
+            <AppContainer>
                 <div class="flex flex-col justify-between gap-4 md:flex-row md:items-end">
                     <div>
-                        <h1 class="text-slate-900 text-3xl font-black">Наши продукты</h1>
-                        <p class="text-slate-500 mt-1">
+                        <h1 class="text-3xl font-black text-slate-900">Наши продукты</h1>
+                        <p class="mt-1 text-slate-500">
                             Свежее из Симферополя прямо к вашему столу
                         </p>
                     </div>
@@ -60,47 +66,30 @@
                             @keyup.enter="applyFilters"
                             type="text"
                             placeholder="Найти продукт..."
-                            class="border-slate-200 focus:ring-orange-500 focus:border-orange-500 w-full rounded-xl py-2 pl-10 pr-4 md:w-64"
+                            class="w-full rounded-xl border-slate-200 py-2 pl-10 pr-4 focus:border-orange-500 focus:ring-orange-500 md:w-64"
                         />
                         <span class="absolute left-3 top-2.5 opacity-30">🔍</span>
                     </div>
                 </div>
-            </template>
 
-            <div class="py-12">
-                <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                    <div
-                        class="border-slate-100 mb-8 flex flex-wrap items-center gap-4 border-b pb-6"
-                    >
-                        <div class="flex items-center gap-2">
-                            <span class="text-slate-400 text-xs font-bold uppercase"
-                                >Категория:</span
-                            >
-                            <select
+                <div class="py-12">
+                    <div class="mb-8 border-b border-slate-100 pb-6">
+                        <div class="flex flex-wrap items-center gap-4 pb-6">
+                            <BaseSelect
+                                label="Категория:"
+                                placeholder="Все продукты"
                                 v-model="category"
-                                class="border-slate-200 focus:ring-orange-500 rounded-lg text-sm"
-                            >
-                                <option value="">Все продукты</option>
-                                <option
-                                    v-for="cat in categories.data"
-                                    :key="cat.id"
-                                    :value="cat.slug"
-                                >
-                                    {{ cat.name }}
-                                </option>
-                            </select>
-                        </div>
+                                :options="categories.data"
+                                :width-class="'w-64'"
+                            />
 
-                        <div class="flex items-center gap-2">
-                            <span class="text-slate-400 text-xs font-bold uppercase">Цена:</span>
-                            <select
+                            <BaseSelect
+                                label="Сортировка:"
+                                placeholder="По умолчанию"
                                 v-model="sort"
-                                class="border-slate-200 focus:ring-orange-500 rounded-lg text-sm"
-                            >
-                                <option value="">По умолчанию</option>
-                                <option value="cheap">Сначала дешевле</option>
-                                <option value="expensive">Сначала дороже</option>
-                            </select>
+                                :options="sortArray"
+                                :width-class="'w-64'"
+                            />
                         </div>
 
                         <button
@@ -111,7 +100,7 @@
                                 sort = '';
                                 applyFilters();
                             "
-                            class="text-orange-600 text-xs font-bold hover:underline"
+                            class="self-center text-xs font-bold text-orange-600 hover:underline"
                         >
                             Сбросить всё
                         </button>
@@ -119,7 +108,7 @@
 
                     <div v-if="!products.data.length" class="py-20 text-center">
                         <div class="mb-4 text-6xl">🚜</div>
-                        <h3 class="text-slate-900 text-xl font-bold">Ничего не найдено</h3>
+                        <h3 class="text-xl font-bold text-slate-900">Ничего не найдено</h3>
                         <p class="text-slate-500">Попробуйте изменить параметры фильтрации.</p>
                     </div>
 
@@ -134,7 +123,7 @@
                         />
                     </div>
                 </div>
-            </div>
-        </AppContainer>
+            </AppContainer>
+        </main>
     </MainLayout>
 </template>

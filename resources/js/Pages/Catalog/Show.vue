@@ -3,6 +3,7 @@
 
     import { Head, Link } from '@inertiajs/vue3';
 
+    import BuyButton from '@/Components/UI/BuyButton.vue';
     import MainLayout from '@/Layouts/MainLayout.vue';
     import type { Comment, ProductWithCategory, ResourceCollection, ResourceSingle } from '@/types';
 
@@ -44,7 +45,7 @@
     <MainLayout>
         <div class="py-8 md:py-16">
             <AppContainer>
-                <nav class="text-slate-400 mb-8 flex text-sm">
+                <nav class="mb-8 flex text-sm text-slate-400">
                     <Link :href="route('catalog.index')" class="hover:text-orange-600"
                         >Каталог</Link
                     >
@@ -55,7 +56,7 @@
                 <div class="grid grid-cols-1 gap-12 lg:grid-cols-2">
                     <div class="space-y-4">
                         <div
-                            class="bg-slate-100 border-slate-100 shadow-inner aspect-square overflow-hidden rounded-3xl border"
+                            class="shadow-inner aspect-square overflow-hidden rounded-3xl border border-slate-100 bg-slate-100"
                         >
                             <AppImage
                                 :src="productData.media?.[0] || ''"
@@ -72,7 +73,7 @@
                             <div
                                 v-for="img in productData.media"
                                 :key="img.id"
-                                class="border-slate-200 hover:border-orange-500 h-20 w-20 cursor-pointer overflow-hidden rounded-xl border transition-colors"
+                                class="h-20 w-20 cursor-pointer overflow-hidden rounded-xl border border-slate-200 transition-colors hover:border-orange-500"
                             >
                                 <img :src="img.url" class="h-full w-full object-cover" />
                             </div>
@@ -82,51 +83,51 @@
                     <div class="flex flex-col">
                         <div class="mb-6">
                             <span
-                                class="bg-orange-50 text-orange-700 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider"
+                                class="rounded-full bg-orange-50 px-3 py-1 text-xs font-bold uppercase tracking-wider text-orange-700"
                             >
                                 {{ productData.category?.name }}
                             </span>
-                            <h1 class="text-slate-900 mt-4 text-4xl font-black leading-tight">
+                            <h1 class="mt-4 text-4xl font-black leading-tight text-slate-900">
                                 {{ productData.name }}
                             </h1>
                         </div>
 
                         <div class="mb-8 flex items-baseline gap-4">
-                            <span class="text-slate-900 text-4xl font-black">{{ price }}₽</span>
-                            <span v-if="oldPrice" class="text-slate-400 text-xl line-through"
+                            <span class="text-4xl font-black text-slate-900">{{ price }}₽</span>
+                            <span v-if="oldPrice" class="text-xl text-slate-400 line-through"
                                 >{{ oldPrice }}₽</span
                             >
                             <span
                                 v-if="discount"
-                                class="bg-red-500 text-white rounded-lg px-2 py-1 text-sm font-bold"
+                                class="rounded-lg bg-red-500 px-2 py-1 text-sm font-bold text-white"
                             >
                                 -{{ discount }}%
                             </span>
-                            <span class="text-slate-400 font-medium">/ {{ productData.unit }}</span>
+                            <span class="font-medium text-slate-400">/ {{ productData.unit }}</span>
                         </div>
 
-                        <div class="border-slate-100 space-y-4 border-y py-6">
+                        <div class="space-y-4 border-y border-slate-100 py-6">
                             <div v-if="productData.attributes?.breed" class="flex justify-between">
                                 <span class="text-slate-500">Порода/Сорт:</span>
-                                <span class="text-slate-900 font-bold">{{
+                                <span class="font-bold text-slate-900">{{
                                     productData.attributes.breed
                                 }}</span>
                             </div>
                             <div class="flex justify-between">
                                 <span class="text-slate-500">Статус:</span>
-                                <span class="text-slate-900 font-bold">{{
+                                <span class="font-bold text-slate-900">{{
                                     availabilityLabels[productData.availability_type]
                                 }}</span>
                             </div>
                             <div v-if="productData.schedule" class="flex justify-between">
                                 <span class="text-slate-500">Дни доставки:</span>
-                                <span class="text-blue-600 font-bold">{{
+                                <span class="font-bold text-blue-600">{{
                                     getDaysNames(productData.schedule.days)
                                 }}</span>
                             </div>
                         </div>
 
-                        <div class="text-slate-600 mt-8 leading-relaxed">
+                        <div class="mt-8 leading-relaxed text-slate-600">
                             <p>
                                 {{
                                     productData.description ||
@@ -136,8 +137,14 @@
                         </div>
 
                         <div class="mt-auto pt-10">
+                            <BuyButton
+                                :product="productData"
+                                :price="productData.price_rub"
+                                :availability_type="productData.availability_type"
+                            />
+
                             <button
-                                class="bg-slate-900 text-white hover:bg-orange-600 disabled:bg-slate-200 flex w-full items-center justify-center gap-3 rounded-2xl py-5 text-xl font-bold transition-all active:scale-95"
+                                class="flex w-full items-center justify-center gap-3 rounded-2xl bg-slate-900 py-5 text-xl font-bold text-white transition-all hover:bg-orange-600 active:scale-95 disabled:bg-slate-200"
                                 :disabled="
                                     productData.stock === 0 &&
                                     productData.availability_type === 'stock'
@@ -148,7 +155,7 @@
                                 >
                                 <span v-else>Добавить в корзину — {{ price }}₽</span>
                             </button>
-                            <p class="text-slate-400 mt-4 text-center text-xs">
+                            <p class="mt-4 text-center text-xs text-slate-400">
                                 Доставка по Симферополю осуществляется в течение 24 часов после
                                 сбора.
                             </p>
@@ -156,10 +163,10 @@
                     </div>
                 </div>
 
-                <section class="border-slate-100 mt-24 border-t pt-16">
+                <section class="mt-24 border-t border-slate-100 pt-16">
                     <div class="mb-10 flex items-center justify-between">
-                        <h2 class="text-slate-900 text-2xl font-black">Отзывы покупателей</h2>
-                        <span class="bg-slate-100 text-slate-600 rounded-lg px-3 py-1 font-bold">
+                        <h2 class="text-2xl font-black text-slate-900">Отзывы покупателей</h2>
+                        <span class="rounded-lg bg-slate-100 px-3 py-1 font-bold text-slate-600">
                             {{ comments.data.length }}
                         </span>
                     </div>
@@ -168,19 +175,19 @@
                         <div
                             v-for="comment in comments.data"
                             :key="comment.id"
-                            class="bg-white border-slate-100 shadow-sm rounded-2xl border p-6"
+                            class="shadow-sm rounded-2xl border border-slate-100 bg-white p-6"
                         >
                             <div class="mb-4 flex items-center gap-3">
                                 <div
-                                    class="bg-orange-100 text-orange-700 flex h-10 w-10 items-center justify-center rounded-full font-bold"
+                                    class="flex h-10 w-10 items-center justify-center rounded-full bg-orange-100 font-bold text-orange-700"
                                 >
                                     {{ comment.user_name[0] }}
                                 </div>
                                 <div>
-                                    <div class="text-slate-900 font-bold">
+                                    <div class="font-bold text-slate-900">
                                         {{ comment.user_name }}
                                     </div>
-                                    <div class="text-slate-400 text-xs">
+                                    <div class="text-xs text-slate-400">
                                         {{ comment.created_at }}
                                     </div>
                                 </div>
@@ -189,8 +196,8 @@
                         </div>
                     </div>
 
-                    <div v-else class="bg-slate-50 rounded-3xl py-12 text-center">
-                        <p class="text-slate-500 italic">
+                    <div v-else class="rounded-3xl bg-slate-50 py-12 text-center">
+                        <p class="italic text-slate-500">
                             Будьте первым, кто оставит отзыв об этом продукте!
                         </p>
                     </div>
