@@ -6,6 +6,7 @@
     import ProductCard from '@/Components/Cards/ProductCard.vue';
     import BaseSelect from '@/Components/UI/BaseSelect.vue';
     import MainLayout from '@/Layouts/MainLayout.vue';
+    import { useCartStore } from '@/stores/cart';
     import type { Category, ProductWithCategory, ResourceCollection } from '@/types';
 
     const props = defineProps<{

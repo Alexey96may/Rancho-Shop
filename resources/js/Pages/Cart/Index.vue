@@ -1,4 +1,6 @@
 <script setup lang="ts">
+    import { onMounted } from 'vue';
+
     import { Link } from '@inertiajs/vue3';
 
     import { MinusIcon, PlusIcon, TrashIcon } from '@heroicons/vue/24/outline';
@@ -12,6 +14,12 @@
 
     // Форматирование цены (из копеек в рубли)
     const formatPrice = (price: number) => (price / 100).toLocaleString('ru-RU');
+
+    const cartStore = useCartStore();
+
+    onMounted(() => {
+        cartStore.validate(true);
+    });
 </script>
 
 <template>

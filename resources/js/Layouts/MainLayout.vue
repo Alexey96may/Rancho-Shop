@@ -3,6 +3,7 @@
 
     import TheFooter from '@/Components/Sections/TheFooter.vue';
     import TheHeader from '@/Components/Sections/TheHeader.vue';
+    import { useCartStore } from '@/stores/cart';
 
     const showScrollTop = ref(false);
 
@@ -14,12 +15,28 @@
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
+    const cartStore = useCartStore();
+
+    const handleVisibilityChange = () => {
+        if (document.visibilityState === 'visible') {
+            cartStore.validate();
+        }
+    };
+
+    let isListenerAttached = false;
+
     onMounted(() => {
-        window.addEventListener('scroll', handleScroll);
+        // window.addEventListener('scroll', handleScroll);
+        if (!isListenerAttached) {
+            document.addEventListener('visibilitychange', handleVisibilityChange);
+            isListenerAttached = true;
+        }
     });
 
     onUnmounted(() => {
-        window.removeEventListener('scroll', handleScroll);
+        // window.removeEventListener('scroll', handleScroll);
+
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
     });
 </script>
 
@@ -41,7 +58,7 @@
             <button
                 v-show="showScrollTop"
                 @click="scrollToTop"
-                class="border-white shadow-2xl fixed bottom-10 right-10 z-40 rounded-full border-2 bg-rancho-buttercup p-4 text-rancho-forest transition-all hover:scale-110 active:scale-95"
+                class="shadow-2xl fixed bottom-10 right-10 z-40 rounded-full border-2 border-white bg-rancho-buttercup p-4 text-rancho-forest transition-all hover:scale-110 active:scale-95"
             >
                 <svg
                     xmlns="http://www.w3.org/2000/svg"

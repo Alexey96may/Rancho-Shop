@@ -4,6 +4,13 @@ import { defineStore } from 'pinia';
 
 import type { CartItem, Media, Product } from '@/types';
 
+type ServerCartItem = {
+    product_id: number;
+    valid: boolean;
+    price: number;
+    stock: number;
+};
+
 export const useCartStore = defineStore(
     'cart',
     () => {
@@ -18,10 +25,10 @@ export const useCartStore = defineStore(
             items.value.reduce((acc, item) => acc + item.price * item.quantity, 0),
         );
 
+        const lastValidatedAt = ref<number | null>(null);
+
         // Actions
-        // Добавляем логику прямо в Actions
         function add(item: Product | CartItem) {
-            // Определяем ID в зависимости от того, что пришло (Product или CartItem)
             const id = 'id' in item ? item.id : item.product_id;
             const existingItem = items.value.find((i) => i.product_id === id);
 
@@ -30,7 +37,6 @@ export const useCartStore = defineStore(
                     existingItem.quantity++;
                 }
             } else {
-                // Если это новый товар, он точно должен быть типа Product
                 const product = item as Product;
 
                 const fallbackMedia: Media = {
@@ -79,7 +85,58 @@ export const useCartStore = defineStore(
             items.value = [];
         }
 
-        return { items, totalItems, totalPrice, add, remove, destroy, clear };
+        // Validate the cart
+        async function validate(force = false) {
+            const now = Date.now();
+
+            if (!force && lastValidatedAt.value && now - lastValidatedAt.value < 30000) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/cart/validate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        items: items.value.map((i) => ({
+                            product_id: i.product_id,
+                            quantity: i.quantity,
+                        })),
+                    }),
+                });
+
+                const data = await response.json();
+
+                items.value = items.value
+                    .map((localItem) => {
+                        const serverItem = data.items.find(
+                            (i: ServerCartItem) => i.product_id === localItem.product_id,
+                        );
+
+                        if (!serverItem || !serverItem.valid) {
+                            return null;
+                        }
+
+                        return {
+                            ...localItem,
+                            price: serverItem.price,
+                            stock: serverItem.stock,
+                            quantity: Math.min(localItem.quantity, serverItem.stock),
+                        };
+                    })
+                    .filter(isCartItem);
+
+                lastValidatedAt.value = now;
+            } catch (e) {
+                console.error('Cart validation failed', e);
+            }
+        }
+
+        function isCartItem(item: CartItem | null): item is CartItem {
+            return item !== null;
+        }
+
+        return { items, totalItems, totalPrice, add, remove, destroy, clear, validate };
     },
     {
         persist: true, // The cart will be saved in localStorage
