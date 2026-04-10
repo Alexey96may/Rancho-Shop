@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\ApiLandingController;
 use App\Http\Controllers\Api\ProductController;
+use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\Auth\SocialAuthController;
 use Illuminate\Support\Facades\Route;
 
@@ -18,6 +19,8 @@ Route::prefix('v1')->group(function () {
     Route::get('/products', [ProductController::class, 'index']);
     Route::get('/products/{product:slug}', [ProductController::class, 'show']);
 });
+
+Route::post('/cart/validate', [CartController::class, 'validate']);
 
 
 Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
