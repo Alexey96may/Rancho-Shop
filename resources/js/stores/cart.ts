@@ -59,6 +59,7 @@ export const useCartStore = defineStore(
                     unit: product.unit || 'шт.',
                     slug: product.slug,
                     stock: product.stock,
+                    valid: true,
                 });
             }
         }
@@ -93,10 +94,12 @@ export const useCartStore = defineStore(
                 return;
             }
 
+            if (!items.value.length) return;
+
             try {
-                const response = await fetch('/cart/validate', {
+                const response = await fetch('/api/cart/validate', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
                     body: JSON.stringify({
                         items: items.value.map((i) => ({
                             product_id: i.product_id,
@@ -107,21 +110,23 @@ export const useCartStore = defineStore(
 
                 const data = await response.json();
 
+                console.log(data);
+
                 items.value = items.value
                     .map((localItem) => {
                         const serverItem = data.items.find(
                             (i: ServerCartItem) => i.product_id === localItem.product_id,
                         );
 
-                        if (!serverItem || !serverItem.valid) {
-                            return null;
-                        }
-
                         return {
                             ...localItem,
-                            price: serverItem.price,
-                            stock: serverItem.stock,
-                            quantity: Math.min(localItem.quantity, serverItem.stock),
+                            price: serverItem?.price ?? localItem.price,
+                            stock: serverItem?.stock ?? localItem.stock,
+                            quantity: serverItem
+                                ? Math.min(localItem.quantity, serverItem.stock)
+                                : localItem.quantity,
+                            valid: serverItem?.valid ?? false,
+                            reason: serverItem?.reason ?? null,
                         };
                     })
                     .filter(isCartItem);

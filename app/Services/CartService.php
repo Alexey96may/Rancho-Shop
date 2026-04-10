@@ -11,19 +11,23 @@ class CartService
 {
     public function validate(Collection $items): array
     {
+        if ($items->isEmpty()) {
+            return [];
+        }
+
         $products = Product::whereIn(
             'id',
-            $items->pluck('product_id')
-        )->get()->keyBy('id');
+            $items->pluck('productId')
+        )->get()->keyBy(fn ($p) => (int) $p->id);
 
         return $items->map(function (CartItemDTO $item) use ($products) {
-            $product = $products[$item->productId] ?? null;
+            $product = $products->get($item->productId) ?? null;
 
-            if (!$product || !$product->is_available) {
+            if (!$product->isPurchasable($item->quantity)) {
                 return [
                     'product_id' => $item->productId,
                     'valid' => false,
-                    'reason' => 'not_available',
+                    'reason' => 'Нет в наличии',
                 ];
             }
 

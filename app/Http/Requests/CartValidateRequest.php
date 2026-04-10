@@ -14,7 +14,7 @@ class CartValidateRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -34,9 +34,6 @@ class CartValidateRequest extends FormRequest
     public function toDTO(): Collection
     {
         return collect($this->validated()['items'])
-            ->map(fn ($item) => new CartItemDTO(
-                productId: $item['product_id'],
-                quantity: $item['quantity'],
-            ));
+            ->map(fn ($item) => CartItemDTO::fromArray($item));
     }
 }

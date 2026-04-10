@@ -72,4 +72,16 @@ class Product extends Model implements HasMedia
             ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/webp', 'image/avif']);
     }
 
+    public function isInStock(int $quantity = 1): bool
+    {
+        return $this->stock >= $quantity;
+    }
+
+    public function isPurchasable(int $quantity = 1): bool
+    {
+        return $this->is_active
+            && !$this->trashed()
+            && $this->isInStock($quantity);
+    }
+
 }

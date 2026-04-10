@@ -10,4 +10,7 @@ export interface CartItem {
 
     slug: string; // Чтобы из корзины можно было перейти обратно на товар
     stock: number; // Чтобы не дать добавить больше, чем есть в наличии
+
+    valid: boolean;
+    reason?: string | null;
 }
