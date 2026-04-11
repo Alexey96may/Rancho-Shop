@@ -12,7 +12,10 @@ class DecrementStockAction
         foreach ($dto->items as $item) {
             $product = $products->get($item->productId);
 
-            $product->decrement('stock', $item->quantity);
+            $variant = $product->variants
+                ->firstWhere('id', $item->variantId);
+
+            $variant->decrement('stock', $item->quantity);
         }
     }
 }

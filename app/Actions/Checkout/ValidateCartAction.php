@@ -14,17 +14,19 @@ class ValidateCartAction
     {
         foreach ($dto->items as $item) {
             $product = $products->get($item->productId);
+            $variant = $product->variants
+                ->firstWhere('id', $item->variantId);
 
-            if (!$product || !$product->is_active) {
+            if (!$variant || !$variant->is_active) {
                 throw new ProductNotAvailableException($item->productId);
             }
 
-            if ($product->stock < $item->quantity) {
-                
+            if ($variant->stock < $item->quantity) {
+
                 Log::warning('Insufficient stock', [
-                    'product_id' => $product->id,
+                    'variant_id' => $variant->id,
                     'requested' => $item->quantity,
-                    'available' => $product->stock,
+                    'available' => $variant->stock,
                 ]);
 
                 throw new InsufficientStockException($item->productId);

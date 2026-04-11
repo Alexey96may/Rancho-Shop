@@ -40,7 +40,7 @@ class ProductController extends Controller
                 ->orderBy('variants_price_max', 'desc');
             })
 
-            ->latest()
+            ->when(!$request->sort, fn ($q) => $q->latest())
             ->get();
 
         $categories = Category::hasActiveProducts()->get();

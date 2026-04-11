@@ -6,6 +6,7 @@ class CartItemDTO
 {
     public function __construct(
         public int $productId,
+        public int $variantId,
         public int $quantity,
     ) {}
 
@@ -14,6 +15,7 @@ class CartItemDTO
         return new self(
             productId: $data['product_id'],
             quantity: $data['quantity'],
+            variantId: $data['variantId'],
         );
     }
 }

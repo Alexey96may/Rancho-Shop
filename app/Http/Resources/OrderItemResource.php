@@ -17,16 +17,20 @@ class OrderItemResource extends JsonResource
         return [
             'id' => $this->id,
             'order_id' => $this->order_id,
-            'product_id' => $this->product_id,
+            'product_variant_id' => $this->product_variant_id,
             'product_name' => $this->product_name,
 
-            'price_at_purchase' => $this->price_at_purchase,
-            'base_price_at_purchase' => $this->base_price_at_purchase,
+            'unit_price' => $this->unit_price,
+            'old_unit_price' => $this->old_unit_price,
 
             'quantity' => $this->quantity,
 
-            // 👇 удобно сразу считать
-            'subtotal' => $this->price_at_purchase * $this->quantity,
+            'unit' => [
+                'name' => $this->unit_name,
+                'code' => $this->unit_code,
+            ],
+
+            'subtotal' => $this->unit_price * $this->quantity,
 
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,

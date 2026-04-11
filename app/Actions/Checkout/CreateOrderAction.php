@@ -14,7 +14,7 @@ class CreateOrderAction
             'customer_phone' => $dto->customerPhone,
             'delivery_address' => $dto->deliveryAddress,
             'customer_comment' => $dto->customerComment,
-
+            
             'total_price' => $totalPrice,
             'delivery_price' => 0,
             'discount_total' => 0,

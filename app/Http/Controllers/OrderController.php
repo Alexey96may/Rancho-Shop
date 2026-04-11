@@ -2,23 +2,41 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Http\Requests\StoreOrderRequest;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\ProductVariant;
 
 class OrderController extends Controller
 {
-    public function store(Request $request)
+    public function store(StoreOrderRequest $request)
     {
-        // 1. Валидация структуры
-        $cartItems = $request->validate([
-            'items' => 'required|array',
-            'items.*.product_id' => 'required|exists:products,id',
-            'items.*.quantity' => 'required|integer|min:1',
-        ]);
+        $items = $request->validated()['items'];
 
-        // 2. Бизнес-логика (Сервис, о котором мы говорили!)
-        // Здесь проверяем актуальные цены в БД и наличие stock
+        $total = 0;
+
+        foreach ($items as $item) {
+
+            $variant = ProductVariant::with('product')
+                ->findOrFail($item['variant_id']);
+
+            // ⚠️ всегда берём актуальную цену из БД
+            $price = $variant->price;
+
+            // проверка stock
+            if ($variant->stock < $item['quantity']) {
+                return back()->withErrors([
+                    'stock' => "Недостаточно товара: {$variant->name}"
+                ]);
+            }
+
+            $total += $price * $item['quantity'];
+        }
+
+        $order = Order::create([
+            'total_price' => $total,
+            'status' => 'new',
+        ]);
         
         return back()->with('success', 'Заказ принят!');
     }

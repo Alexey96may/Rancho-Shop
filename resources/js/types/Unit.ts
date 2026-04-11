@@ -1,7 +1,10 @@
-export interface Unit {
-    id: number;
+export interface BaseUnit {
     name: string; // килограмм
     code: string; // kg
+}
+
+export interface Unit extends BaseUnit {
+    id: number;
     position: number;
 }
 

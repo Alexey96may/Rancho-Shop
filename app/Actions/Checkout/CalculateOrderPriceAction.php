@@ -12,8 +12,13 @@ class CalculateOrderPriceAction
         $total = 0;
 
         foreach ($dto->items as $item) {
+
             $product = $products->get($item->productId);
-            $total += $product->price * $item->quantity;
+
+            $variant = $product->variants
+                ->firstWhere('id', $item->variantId);
+
+            $total += $variant->price * $item->quantity;
         }
 
         return $total;

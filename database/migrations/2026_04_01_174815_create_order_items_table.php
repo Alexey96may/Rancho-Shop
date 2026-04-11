@@ -14,15 +14,18 @@ return new class() extends Migration
         Schema::create('order_items', function (Blueprint $table) {
 
             $table->id();
-            $table->foreignId('order_id')->constrained()->onDelete('cascade');
-
-            $table->foreignId('product_id')->nullable()->constrained()->onDelete('set null');
+            $table->foreignId('order_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('product_variant_id')->constrained()->cascadeOnDelete();
 
             // Снапшот данных (Дублируем инфо из таблицы products)
             $table->string('product_name'); // Например: "Молоко от Белки"
-            $table->integer('price_at_purchase'); // Цена, которая была В МОМЕНТ заказа
-            $table->integer('base_price_at_purchase');
+            $table->integer('unit_price'); // Цена, которая была В МОМЕНТ заказа
+            $table->integer('old_unit_price')->nullable();
             $table->integer('quantity'); // Сколько штук/литров взял
+
+            // snapshot unit 
+            $table->string('unit_name')->nullable();
+            $table->string('unit_code')->nullable();
 
             $table->timestamps();
         });

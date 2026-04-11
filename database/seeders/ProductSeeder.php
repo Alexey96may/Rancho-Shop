@@ -108,7 +108,6 @@ class ProductSeeder extends Seeder
             foreach ($item['variants'] as $variant) {
                 ProductVariant::create(array_merge($variant, [
                     'product_id' => $product->id,
-                    'is_active' => true,
                 ]));
             }
 

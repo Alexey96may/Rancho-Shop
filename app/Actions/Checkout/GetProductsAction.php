@@ -10,12 +10,12 @@ class GetProductsAction
 {
     public function handle(CheckoutDTO $dto): Collection
     {
-        return Product::whereIn(
-            'id',
-            $dto->items->pluck('productId')
-        )
-        ->lockForUpdate()
-        ->get()
-        ->keyBy('id');
+        return Product::with(['variants.unit'])
+            ->whereHas('variants', function ($q) use ($dto) {
+                $q->whereIn('id', $dto->items->pluck('variantId'));
+            })
+            ->lockForUpdate()
+            ->get()
+            ->keyBy('id');
     }
 }

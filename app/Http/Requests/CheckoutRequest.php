@@ -31,7 +31,7 @@ class CheckoutRequest extends FormRequest
             'customer_comment' => ['nullable', 'string'],
 
             'items' => ['required', 'array', 'min:1'],
-            'items.*.product_id' => ['required', 'integer', 'exists:products,id'],
+            'items.*.variant_id' => ['required', 'integer', 'exists:product_variants,id'],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
         ];
     }
@@ -49,7 +49,8 @@ class CheckoutRequest extends FormRequest
             items: collect($data['items'])
                 ->map(fn ($item) => new CartItemDTO(
                     productId: $item['product_id'],
-                    quantity: $item['quantity']
+                    quantity: $item['quantity'],
+                    variantId: $item['variantId'],
                 )),
         );
     }
