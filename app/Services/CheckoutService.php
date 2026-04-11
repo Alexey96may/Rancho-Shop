@@ -6,70 +6,39 @@ use App\DTO\CheckoutDTO;
 use App\Models\Order;
 use Illuminate\Support\Facades\DB;
 
+use App\Actions\Checkout\GetProductsAction;
+use App\Actions\Checkout\ValidateCartAction;
+use App\Actions\Checkout\CalculateOrderPriceAction;
+use App\Actions\Checkout\CreateOrderAction;
+use App\Actions\Checkout\CreateOrderItemsAction;
+use App\Actions\Checkout\DecrementStockAction;
+
 class CheckoutService
 {
+    public function __construct(
+        protected GetProductsAction $getProducts,
+        protected ValidateCartAction $validateCart,
+        protected CalculateOrderPriceAction $calculatePrice,
+        protected CreateOrderAction $createOrder,
+        protected CreateOrderItemsAction $createItems,
+        protected DecrementStockAction $decrementStock,
+    ) {}
+
     public function handle(CheckoutDTO $dto): Order
     {
         return DB::transaction(function () use ($dto) {
 
-            // 1. Получаем продукты
-            // 2. Проверяем stock
-            // 3. Создаём заказ
-            // 4. Создаём order_items
-            // 5. Списываем stock
+            $products = $this->getProducts->handle($dto);
 
-            $products = \App\Models\Product::whereIn(
-                'id',
-                $dto->items->pluck('productId')
-            )
-            ->lockForUpdate()
-            ->get()
-            ->keyBy('id');
+            $this->validateCart->handle($dto, $products);
 
-            foreach ($dto->items as $item) {
-                $product = $products->get($item->productId);
+            $total = $this->calculatePrice->handle($dto, $products);
 
-                if (!$product || !$product->isPurchasable($item->quantity)) {
-                    throw new \Exception("Product {$item->productId} is not available");
-                }
-            }
+            $order = $this->createOrder->handle($dto, $total);
 
-            $totalPrice = 0;
+            $this->createItems->handle($order, $dto, $products);
 
-            foreach ($dto->items as $item) {
-                $product = $products->get($item->productId);
-
-                $totalPrice += $product->price * $item->quantity;
-            }
-
-            $order = Order::create([
-                'customer_name' => $dto->customerName,
-                'customer_phone' => $dto->customerPhone,
-                'delivery_address' => $dto->deliveryAddress,
-                'customer_comment' => $dto->customerComment,
-
-                'total_price' => $totalPrice,
-                'delivery_price' => 0,
-                'discount_total' => 0,
-
-                'status' => 'new',
-            ]);
-
-            foreach ($dto->items as $item) {
-                $product = $products->get($item->productId);
-
-                $order->items()->create([
-                    'product_id' => $product->id,
-                    'product_name' => $product->name,
-
-                    'price_at_purchase' => $product->price,
-                    'base_price_at_purchase' => $product->price,
-
-                    'quantity' => $item->quantity,
-                ]);
-
-                $product->decrement('stock', $item->quantity);
-            }
+            $this->decrementStock->handle($dto, $products);
 
             return $order->load('items');
         });
