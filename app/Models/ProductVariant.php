@@ -14,14 +14,17 @@ class ProductVariant extends Model
         'price',
         'old_price',
         'stock',
-        'is_active',
+        'is_default',
+        'position',
+        'attributes',
     ];
 
     protected $casts = [
+        'attributes' => 'array',
         'price' => 'integer',
         'old_price' => 'integer',
         'stock' => 'integer',
-        'is_active' => 'boolean',
+        'is_default' => 'boolean',
     ];
 
     /**
@@ -38,6 +41,16 @@ class ProductVariant extends Model
     public function unit(): BelongsTo
     {
         return $this->belongsTo(Unit::class);
+    }
+
+    public function priceRub(): float
+    {
+        return $this->price / 100;
+    }
+
+    public function isInStock(int $qty = 1): bool
+    {
+        return $this->stock >= $qty;
     }
 
     /**

@@ -12,9 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('product_variants', function (Blueprint $table) {
-            $table->foreignId('product_id')
-                ->constrained()
-                ->cascadeOnDelete();
+            $table->id();
+
+            $table->foreignId('product_id')->constrained()->cascadeOnDelete();
             $table->foreignId('unit_id')->constrained()->restrictOnDelete();
 
             $table->string('name'); // "1 литр", "3 литра"
@@ -24,9 +24,12 @@ return new class extends Migration
 
             $table->unsignedInteger('stock')->default(0);
 
+            $table->boolean('is_default')->default(false);
+            $table->unsignedInteger('position')->default(0);
+
             $table->json('attributes')->nullable();
 
-            $table->boolean('is_active')->default(true);
+            $table->timestamps();
         });
     }
 

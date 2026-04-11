@@ -56,6 +56,23 @@ class Product extends Model implements HasMedia
         return $this->hasMany(ProductVariant::class);
     }
 
+    public function defaultVariant()
+    {
+        return $this->hasOne(ProductVariant::class)->where('is_default', true);
+    }
+
+    public function mainVariant()
+    {
+        $default = $this->defaultVariant()->first();
+
+        return $default ?? $this->variants->first();
+    }
+
+    public function getMinPriceAttribute(): int
+    {
+        return $this->variants->min('price');
+    }
+
     /**
      * Setting up Spatie Media Library (v12 + Image v3)
      */

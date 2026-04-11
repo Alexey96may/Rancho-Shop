@@ -8,9 +8,11 @@ export interface ProductVariant {
 
     price_rub: number;
     old_price_rub: number | null;
-    unit_id: number;
 
     stock: number;
+
+    is_default: boolean;
+    position: number;
 
     attributes: Record<string, string> | null;
 

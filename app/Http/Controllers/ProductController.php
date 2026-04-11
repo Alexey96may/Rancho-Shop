@@ -19,12 +19,26 @@ class ProductController extends Controller
     public function index(Request $request): Response
     {
         $products = Product::query()
-            ->with(['category', 'media'])
+            ->with(['category', 'media', 'variants.unit'])
 
-            ->when($request->category, fn($q, $cat) => $q->whereHas('category', fn($c) => $c->where('slug', $cat)))
-            ->when($request->search, fn($q, $search) => $q->where('name', 'like', "%{$search}%"))
-            ->when($request->sort === 'cheap', fn($q) => $q->orderBy('price', 'asc'))
-            ->when($request->sort === 'expensive', fn($q) => $q->orderBy('price', 'desc'))
+            ->when(
+                $request->category,
+                fn ($q, $cat) =>
+                    $q->whereHas('category', fn ($c) => $c->where('slug', $cat))
+            )
+            ->when(
+                $request->search,
+                fn ($q, $search) =>
+                    $q->where('name', 'like', "%{$search}%")
+            )
+            ->when($request->sort === 'cheap', function ($q) {
+                $q->withMin('variants', 'price')
+                ->orderBy('variants_price_min', 'asc');
+            })
+            ->when($request->sort === 'expensive', function ($q) {
+                $q->withMax('variants', 'price')
+                ->orderBy('variants_price_max', 'desc');
+            })
 
             ->latest()
             ->get();
@@ -43,7 +57,8 @@ class ProductController extends Controller
         $product->load([
             'media',
             'seo',
-            'category', 
+            'category',
+            'variants.unit',
             'comments' => fn($query) => $query->published()->latest()->with('user')
         ]);
 
