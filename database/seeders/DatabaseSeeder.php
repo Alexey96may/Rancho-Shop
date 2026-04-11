@@ -27,6 +27,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             CategorySeeder::class,
             AnimalSeeder::class,
+            UnitSeeder::class,
             SettingSeeder::class,
             PageSeeder::class,
             FaqSeeder::class,

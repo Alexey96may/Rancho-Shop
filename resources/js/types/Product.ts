@@ -1,8 +1,6 @@
 // Совет: В будущем можно добавить в attributes или отдельным полем is_infinite (бесконечный товар).
 // Если оно true, то stock игнорируется (например, для услуг или свежего удоя, который есть всегда).
-import type { Category } from './Category';
-import type { Media } from './Media';
-import type { SeoData } from './Seo';
+import type { Category, Comment, Media, ProductVariant, ProductVariantWithUnit, SeoData } from './';
 
 export type AvailabilityType = 'stock' | 'daily' | 'preorder';
 
@@ -14,21 +12,23 @@ export interface ProductSchedule {
 
 export interface Product {
     id: number;
+
     animal_id: number | null;
+    category_id: number | null;
+
     name: string;
     slug: string;
     description: string | null;
+
     availability_type: AvailabilityType;
+
     next_delivery_date?: string | null; // "2026-04-05"
     schedule: ProductSchedule | null;
-    price_rub: number; // Текущая цена (в копейках)
-    old_price: number | null; // Цена до скидки (в копейках)
-    unit: string; // 'литр', 'кг', 'десяток'
     attributes: Record<string, string> | null;
-    stock: number;
     media: Media[];
 
     seo?: SeoData | null;
+    variants: ProductVariant[] | ProductVariantWithUnit[];
 }
 
 export interface AdminProduct extends Product {
@@ -45,4 +45,8 @@ export interface AdminProduct extends Product {
 
 export interface ProductWithCategory extends Product {
     category: Category;
+}
+
+export interface ProductWithComments extends Product {
+    comments: Comment;
 }

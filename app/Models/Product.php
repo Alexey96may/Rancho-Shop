@@ -20,8 +20,7 @@ class Product extends Model implements HasMedia
     }
 
     protected $fillable = [
-        'animal_id', 'name', 'slug', 'description', 'category_id',
-        'old_price', 'price', 'unit', 'stock',
+        'category_id', 'animal_id', 'name', 'slug', 'description',
         'availability_type', 'schedule', 'attributes', 'is_active',
     ];
 
@@ -29,8 +28,6 @@ class Product extends Model implements HasMedia
         'schedule' => 'array',
         'attributes' => 'array',
         'is_active' => 'boolean',
-        'price' => 'integer',
-        'old_price' => 'integer',
     ];
 
     protected $appends = ['price_formatted'];
@@ -52,14 +49,11 @@ class Product extends Model implements HasMedia
     }
 
     /**
-     * Accessor for displaying prices in a beautiful way.
-     * Store 1500 (int), get 15.00
+     * Connection with variants
      */
-    protected function priceFormatted(): Attribute
+    public function variants()
     {
-        return Attribute::make(
-            get: fn (mixed $value, array $attributes) => number_format($attributes['price'] / 100, 2, '.', '')
-        )->shouldCache();
+        return $this->hasMany(ProductVariant::class);
     }
 
     /**
