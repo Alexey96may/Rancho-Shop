@@ -23,7 +23,11 @@ Route::get('/cart', function () {
 
 Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
 
-Route::get('/checkout', CheckoutPageController::class)->name('checkout');
+Route::get('/checkout', [CheckoutPageController::class, 'index'])
+    ->name('checkout.index');
+
+Route::post('/checkout', [CheckoutPageController::class, 'store'])
+    ->name('checkout.store');
 
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');

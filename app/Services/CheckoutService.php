@@ -12,6 +12,7 @@ use App\Actions\Checkout\CalculateOrderPriceAction;
 use App\Actions\Checkout\CreateOrderAction;
 use App\Actions\Checkout\CreateOrderItemsAction;
 use App\Actions\Checkout\DecrementStockAction;
+use Illuminate\Support\Facades\Log;
 
 class CheckoutService
 {
@@ -27,8 +28,11 @@ class CheckoutService
     public function handle(CheckoutDTO $dto): Order
     {
         return DB::transaction(function () use ($dto) {
-
             $products = $this->getProducts->handle($dto);
+            
+            Log::info('Checkout started', [
+                'items_count' => $dto->items->count(),
+            ]);
 
             $this->validateCart->handle($dto, $products);
 
@@ -39,6 +43,11 @@ class CheckoutService
             $this->createItems->handle($order, $dto, $products);
 
             $this->decrementStock->handle($dto, $products);
+
+            Log::info('Order created', [
+                'order_id' => $order->id,
+                'total' => $order->total_price,
+            ]);
 
             return $order->load('items');
         });

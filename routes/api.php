@@ -20,7 +20,8 @@ Route::get('/products', [ProductController::class, 'index']);
 Route::get('/products/{product:slug}', [ProductController::class, 'show']);
 
 Route::post('/cart/validate', [CartController::class, 'validate']);
-Route::post('/checkout', CheckoutController::class);
+Route::get('/checkout', [CheckoutController::class, 'index']);
+Route::post('/checkout', [CheckoutController::class, 'store']);
 
 Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     // Route::get('/admin/stats', [AdminController::class, 'index']);

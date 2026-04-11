@@ -6,6 +6,7 @@ use Illuminate\Support\Collection;
 use App\DTO\CheckoutDTO;
 use App\Exceptions\Checkout\ProductNotAvailableException;
 use App\Exceptions\Checkout\InsufficientStockException;
+use Illuminate\Support\Facades\Log;
 
 class ValidateCartAction
 {
@@ -19,8 +20,19 @@ class ValidateCartAction
             }
 
             if ($product->stock < $item->quantity) {
+                
+                Log::warning('Insufficient stock', [
+                    'product_id' => $product->id,
+                    'requested' => $item->quantity,
+                    'available' => $product->stock,
+                ]);
+
                 throw new InsufficientStockException($item->productId);
             }
         }
+
+        Log::info('Cart validated', [
+            'items' => $dto->items->count(),
+        ]);
     }
 }
