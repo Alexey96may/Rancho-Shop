@@ -36,6 +36,7 @@ class CartService
                 'valid' => true,
                 'price' => $product->price_rub,
                 'stock' => $product->stock,
+                'quantity' => min($item->quantity, $product->stock),
             ];
         })->values()->toArray();
     }
