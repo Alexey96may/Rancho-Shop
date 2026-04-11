@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 // use App\Http\Controllers\Auth\SocialController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\CheckoutPageController;
 
 Route::get('/', [LandingController::class, 'index'])->name('home');
 
@@ -21,6 +22,8 @@ Route::get('/cart', function () {
     })->name('cart.index');
 
 Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
+
+Route::get('/checkout', CheckoutPageController::class)->name('checkout');
 
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');

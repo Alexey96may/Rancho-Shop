@@ -1,9 +1,4 @@
-export type OrderStatus =
-    | "new"
-    | "confirmed"
-    | "delivering"
-    | "completed"
-    | "cancelled";
+export type OrderStatus = 'new' | 'confirmed' | 'delivering' | 'completed' | 'cancelled';
 
 export interface Order {
     id: number;
@@ -14,6 +9,8 @@ export interface Order {
 
     total_price: number;
     delivery_price: number;
+
+    total_items: number;
 
     status: OrderStatus;
 
