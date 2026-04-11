@@ -4,7 +4,8 @@ namespace App\Actions\Checkout;
 
 use Illuminate\Support\Collection;
 use App\DTO\CheckoutDTO;
-use Exception;
+use App\Exceptions\Checkout\ProductNotAvailableException;
+use App\Exceptions\Checkout\InsufficientStockException;
 
 class ValidateCartAction
 {
@@ -14,11 +15,11 @@ class ValidateCartAction
             $product = $products->get($item->productId);
 
             if (!$product || !$product->is_active) {
-                throw new Exception("Product {$item->productId} not available");
+                throw new ProductNotAvailableException($item->productId);
             }
 
             if ($product->stock < $item->quantity) {
-                throw new Exception("Not enough stock for product {$item->productId}");
+                throw new InsufficientStockException($item->productId);
             }
         }
     }
