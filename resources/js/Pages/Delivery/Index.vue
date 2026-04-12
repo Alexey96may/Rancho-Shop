@@ -1,130 +1,95 @@
 <script setup lang="ts">
     import { computed, ref } from 'vue';
 
+    import MapboxPicker from '@/Components/Map/MapboxPicker.vue';
+    import CommentsSection from '@/Components/Sections/CommentsSection.vue';
     import MainLayout from '@/Layouts/MainLayout.vue';
-    import type { DeliveryInfo } from '@/types';
+    import type { Comment, DeliveryInfo, Page, Paginated } from '@/types';
 
     interface Props {
+        page: Page;
+        comments: Paginated<Comment>;
         delivery: DeliveryInfo;
     }
 
-    const props = defineProps<Props>();
-
     defineOptions({ layout: MainLayout });
 
-    // 📍 user input state
-    const address = ref<string>('');
-    const isInsideDeliveryArea = ref<boolean | null>(null);
+    const props = defineProps<Props>();
 
-    // 🧠 parsed farm coords (temporary string -> later Mapbox/geo object)
+    const selectedPoint = ref<{ lat: number; lng: number } | null>(null);
+
     const farmCoords = computed(() => {
         if (!props.delivery.farm_coords) return null;
         const [lat, lng] = props.delivery.farm_coords.split(',').map(Number);
-
         return { lat, lng };
     });
-
-    // 💰 simple delivery info
-    const deliveryCost = computed(() => props.delivery.delivery_cost);
-    const freeFrom = computed(() => props.delivery.free_delivery_from);
 </script>
 
 <template>
-    <main
-        class="min-h-screen bg-[#FCFAF5] p-6 text-[#1C3F34]"
-        role="main"
-        aria-labelledby="delivery-title"
-    >
-        <!-- HEADER -->
-        <header class="mx-auto mb-8 max-w-3xl">
-            <h1 id="delivery-title" class="text-3xl font-bold text-[#1C3F34]">Доставка</h1>
-
-            <p class="mt-2 text-[#597D5B]" aria-describedby="delivery-title">
-                Укажите адрес доставки или выберите точку на карте
-            </p>
+    <main class="min-h-screen bg-[#FCFAF5] text-[#1C3F34]">
+        <!-- 🧾 PAGE HEADER -->
+        <header class="mx-auto max-w-3xl px-6 pt-10">
+            <h1 class="text-3xl font-bold">
+                {{ page.title }}
+            </h1>
         </header>
 
-        <!-- MAIN GRID -->
+        <!-- 📄 CMS CONTENT -->
         <section
-            class="mx-auto grid max-w-5xl grid-cols-1 gap-6 md:grid-cols-2"
-            aria-label="Delivery information section"
+            v-if="page.content"
+            class="prose prose-neutral mx-auto mt-6 max-w-3xl px-6"
+            aria-label="Delivery information content"
         >
-            <!-- LEFT: FORM -->
-            <div
-                class="shadow-sm rounded-xl border border-[#EDE7DB] bg-white p-6"
-                role="form"
-                aria-label="Delivery address form"
-            >
-                <label for="address" class="block text-sm font-medium text-[#1C3F34]">
-                    Адрес доставки
-                </label>
+            <!-- ⚠️ HTML from CMS -->
+            <div v-html="page.content" />
+        </section>
+
+        <!-- 🗺️ DELIVERY BLOCK -->
+        <section
+            class="mx-auto mt-10 grid max-w-5xl gap-6 px-6 md:grid-cols-2"
+            aria-label="Delivery map and form"
+        >
+            <!-- LEFT -->
+            <div class="rounded-xl border bg-white p-6">
+                <label class="block text-sm font-medium"> Адрес доставки </label>
 
                 <input
-                    id="address"
-                    v-model="address"
                     type="text"
-                    autocomplete="street-address"
                     placeholder="Введите адрес..."
-                    class="mt-2 w-full rounded-lg border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#E3B44B]"
-                    aria-label="Delivery address input"
+                    class="mt-2 w-full rounded-lg border px-3 py-2"
+                    autocomplete="street-address"
+                    aria-label="Введите адрес доставки"
                 />
 
-                <!-- DELIVERY STATUS -->
-                <div class="mt-6" role="status" aria-live="polite">
-                    <p v-if="isInsideDeliveryArea === true" class="font-medium text-green-700">
-                        ✔ Доставка доступна
+                <div class="mt-6 text-sm">
+                    <p>
+                        Доставка: <strong>{{ delivery.delivery_cost }} ₽</strong>
                     </p>
-
-                    <p v-else-if="isInsideDeliveryArea === false" class="font-medium text-red-600">
-                        ✖ Только самовывоз
+                    <p>
+                        Бесплатно от: <strong>{{ delivery.free_delivery_from }} ₽</strong>
                     </p>
-
-                    <p v-else class="text-[#597D5B]">Введите адрес для проверки доставки</p>
                 </div>
 
-                <!-- DELIVERY INFO -->
-                <div class="mt-6 text-sm text-[#597D5B]" aria-label="Delivery pricing info">
-                    <p>
-                        Стоимость доставки: <strong>{{ deliveryCost }} ₽</strong>
-                    </p>
-
-                    <p>
-                        Бесплатно от: <strong>{{ freeFrom }} ₽</strong>
-                    </p>
+                <div class="mt-6 text-sm text-[#597D5B]">
+                    <p>Самовывоз: {{ delivery.address_farm }}</p>
                 </div>
             </div>
 
-            <!-- RIGHT: MAP PLACEHOLDER -->
+            <!-- RIGHT (MAP PLACEHOLDER) -->
             <div
-                class="shadow-sm rounded-xl border border-[#EDE7DB] bg-white p-6"
-                aria-label="Map section"
+                class="flex h-[400px] items-center justify-center rounded-xl border bg-white"
+                role="img"
+                aria-label="Карта доставки"
             >
-                <div
-                    class="flex h-[400px] items-center justify-center text-[#597D5B]"
-                    role="img"
-                    aria-label="Delivery map placeholder"
-                >
-                    🗺️ Mapbox map будет здесь
-                </div>
-
-                <p class="mt-3 text-xs text-[#597D5B]">
-                    Вы можете выбрать точку на карте внутри зоны доставки
-                </p>
+                <MapboxPicker v-model="selectedPoint" :farm-coords="farmCoords" />
             </div>
         </section>
 
-        <!-- PICKUP INFO -->
-        <section
-            class="mx-auto mt-10 max-w-3xl rounded-lg bg-[#F7F3EA] p-5"
-            aria-label="Pickup information"
-        >
-            <h2 class="text-lg font-semibold text-[#1C3F34]">Самовывоз</h2>
+        <!-- 💬 COMMENTS -->
+        <section class="mx-auto mt-12 max-w-3xl px-6 pb-16" aria-label="Отзывы о доставке">
+            <h2 class="mb-4 text-xl font-semibold">Отзывы о доставке</h2>
 
-            <p class="mt-2 text-sm text-[#597D5B]">Адрес фермы: {{ delivery.address_farm }}</p>
-
-            <p v-if="farmCoords" class="mt-1 text-xs text-[#597D5B]">
-                Координаты: {{ farmCoords.lat }}, {{ farmCoords.lng }}
-            </p>
+            <CommentsSection :comments="comments" />
         </section>
     </main>
 </template>

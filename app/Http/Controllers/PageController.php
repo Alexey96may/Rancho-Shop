@@ -39,7 +39,7 @@ class PageController extends Controller
             ->latest()
             ->paginate(10);
 
-        return Inertia::render('Pages/Delivery/Index', [
+        return Inertia::render('Delivery/Index', [
             'page' => new PageResource($page),
             'comments' => CommentResource::collection($comments),
 

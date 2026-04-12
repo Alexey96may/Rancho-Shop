@@ -11,7 +11,6 @@ use App\Http\Controllers\CheckoutPageController;
 use App\Http\Controllers\AnimalController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\PageController;
-use App\Http\Controllers\DeliveryController;
 
 Route::get('/', [LandingController::class, 'index'])->name('home');
 
