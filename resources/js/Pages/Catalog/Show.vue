@@ -5,7 +5,13 @@
 
     import BuyButton from '@/Components/UI/BuyButton.vue';
     import MainLayout from '@/Layouts/MainLayout.vue';
-    import type { Comment, ProductWithCategory, ResourceCollection, ResourceSingle } from '@/types';
+    import type {
+        Comment,
+        ProductVariantDTO,
+        ProductWithCategory,
+        ResourceCollection,
+        ResourceSingle,
+    } from '@/types';
 
     const props = defineProps<{
         product: ResourceSingle<ProductWithCategory>;
@@ -14,26 +20,47 @@
 
     const productData = computed(() => props.product.data);
 
-    // Форматирование цен
-    const price = computed(() => (productData.value.price_rub / 100).toFixed(2));
+    /**
+     * DEFAULT VARIANT (single source of truth)
+     */
+    const defaultVariant = computed<ProductVariantDTO | null>(() => {
+        return (
+            productData.value.variants?.find((v) => v.is_default) ??
+            productData.value.variants?.[0] ??
+            null
+        );
+    });
+
+    /**
+     * PRICES — ONLY FROM VARIANT
+     */
+    const price = computed(() =>
+        defaultVariant.value ? (defaultVariant.value.price / 100).toFixed(2) : '0.00',
+    );
+
     const oldPrice = computed(() =>
-        productData.value.old_price ? (productData.value.old_price / 100).toFixed(2) : null,
+        defaultVariant.value?.old_price ? (defaultVariant.value.old_price / 100).toFixed(2) : null,
     );
 
     const discount = computed(() => {
-        if (!productData.value.old_price) return null;
-        return Math.round(100 - (productData.value.price_rub / productData.value.old_price) * 100);
+        if (!defaultVariant.value?.old_price) return null;
+
+        return Math.round(
+            100 - (defaultVariant.value.price / defaultVariant.value.old_price) * 100,
+        );
     });
 
-    // Вспомогательные метки
+    /**
+     * LABELS
+     */
     const availabilityLabels: Record<string, string> = {
         stock: 'В наличии на ферме',
         daily: 'Собираем ежедневно',
         preorder: 'Доступно по предзаказу',
     };
 
-    const getDaysNames = (days: number[] | undefined) => {
-        if (!days) return '';
+    const getDaysNames = (days: number[] | undefined | null) => {
+        if (!Array.isArray(days)) return '';
         const names = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
         return days.map((d) => names[d]).join(', ');
     };
@@ -45,161 +72,125 @@
     <MainLayout>
         <div class="py-8 md:py-16">
             <AppContainer>
+                <!-- BREADCRUMBS -->
                 <nav class="mb-8 flex text-sm text-slate-400">
-                    <Link :href="route('catalog.index')" class="hover:text-orange-600"
-                        >Каталог</Link
-                    >
+                    <Link :href="route('catalog.index')" class="hover:text-orange-600">
+                        Каталог
+                    </Link>
                     <span class="mx-2">/</span>
-                    <span class="text-slate-600">{{ productData.category?.name }}</span>
+                    <span class="text-slate-600">
+                        {{ productData.category?.name }}
+                    </span>
                 </nav>
 
-                <div class="grid grid-cols-1 gap-12 lg:grid-cols-2">
+                <div class="grid gap-12 lg:grid-cols-2">
+                    <!-- IMAGE -->
                     <div class="space-y-4">
-                        <div
-                            class="shadow-inner aspect-square overflow-hidden rounded-3xl border border-slate-100 bg-slate-100"
-                        >
+                        <div class="aspect-square overflow-hidden rounded-3xl border bg-slate-100">
                             <AppImage
                                 :src="productData.media?.[0] || ''"
-                                :context="'product'"
                                 :alt="productData.name"
-                                :class-name="'h-full w-full object-cover'"
+                                class-name="h-full w-full object-cover"
                             />
-                        </div>
-
-                        <div
-                            v-if="productData.media && productData.media.length > 1"
-                            class="flex gap-4"
-                        >
-                            <div
-                                v-for="img in productData.media"
-                                :key="img.id"
-                                class="h-20 w-20 cursor-pointer overflow-hidden rounded-xl border border-slate-200 transition-colors hover:border-orange-500"
-                            >
-                                <img :src="img.url" class="h-full w-full object-cover" />
-                            </div>
                         </div>
                     </div>
 
+                    <!-- INFO -->
                     <div class="flex flex-col">
-                        <div class="mb-6">
-                            <span
-                                class="rounded-full bg-orange-50 px-3 py-1 text-xs font-bold uppercase tracking-wider text-orange-700"
-                            >
-                                {{ productData.category?.name }}
-                            </span>
-                            <h1 class="mt-4 text-4xl font-black leading-tight text-slate-900">
-                                {{ productData.name }}
-                            </h1>
-                        </div>
+                        <span class="text-xs font-bold uppercase text-orange-600">
+                            {{ productData.category?.name }}
+                        </span>
 
-                        <div class="mb-8 flex items-baseline gap-4">
-                            <span class="text-4xl font-black text-slate-900">{{ price }}₽</span>
-                            <span v-if="oldPrice" class="text-xl text-slate-400 line-through"
-                                >{{ oldPrice }}₽</span
-                            >
+                        <h1 class="mt-3 text-4xl font-black">
+                            {{ productData.name }}
+                        </h1>
+
+                        <!-- PRICE -->
+                        <div class="mt-6 flex items-baseline gap-4">
+                            <span class="text-4xl font-black"> {{ price }}₽ </span>
+
+                            <span v-if="oldPrice" class="text-xl text-slate-400 line-through">
+                                {{ oldPrice }}₽
+                            </span>
+
                             <span
                                 v-if="discount"
-                                class="rounded-lg bg-red-500 px-2 py-1 text-sm font-bold text-white"
+                                class="rounded bg-red-500 px-2 py-1 text-sm font-bold text-white"
                             >
                                 -{{ discount }}%
                             </span>
-                            <span class="font-medium text-slate-400">/ {{ productData.unit }}</span>
+
+                            <span class="text-slate-400">
+                                / {{ defaultVariant?.unit?.slug ?? 'pcs' }}
+                            </span>
                         </div>
 
-                        <div class="space-y-4 border-y border-slate-100 py-6">
-                            <div v-if="productData.attributes?.breed" class="flex justify-between">
-                                <span class="text-slate-500">Порода/Сорт:</span>
-                                <span class="font-bold text-slate-900">{{
-                                    productData.attributes.breed
-                                }}</span>
-                            </div>
+                        <!-- META -->
+                        <div class="mt-8 space-y-3 border-y py-6 text-sm">
                             <div class="flex justify-between">
-                                <span class="text-slate-500">Статус:</span>
-                                <span class="font-bold text-slate-900">{{
-                                    availabilityLabels[productData.availability_type]
-                                }}</span>
+                                <span class="text-slate-500">Статус</span>
+                                <span class="font-bold">
+                                    {{ availabilityLabels[productData.availability_type] }}
+                                </span>
                             </div>
-                            <div v-if="productData.schedule" class="flex justify-between">
-                                <span class="text-slate-500">Дни доставки:</span>
-                                <span class="font-bold text-blue-600">{{
-                                    getDaysNames(productData.schedule.days)
-                                }}</span>
+
+                            <div v-if="productData.schedule?.days" class="flex justify-between">
+                                <span class="text-slate-500">Дни доставки</span>
+                                <span class="font-bold text-blue-600">
+                                    {{ getDaysNames(productData.schedule.days) }}
+                                </span>
+                            </div>
+
+                            <div v-if="defaultVariant">
+                                <div class="flex justify-between">
+                                    <span class="text-slate-500">В наличии</span>
+                                    <span class="font-bold">
+                                        {{ defaultVariant.stock }}
+                                    </span>
+                                </div>
                             </div>
                         </div>
 
-                        <div class="mt-8 leading-relaxed text-slate-600">
-                            <p>
-                                {{
-                                    productData.description ||
-                                    'У этого товара пока нет подробного описания, но мы гарантируем его свежесть и качество прямо с нашего ранчо.'
-                                }}
-                            </p>
-                        </div>
+                        <!-- DESCRIPTION -->
+                        <p class="mt-6 text-slate-600">
+                            {{ productData.description || 'Описание пока отсутствует' }}
+                        </p>
 
+                        <!-- BUY -->
                         <div class="mt-auto pt-10">
                             <BuyButton
-                                :product="productData"
-                                :price="productData.price_rub"
+                                v-if="defaultVariant"
+                                :variant="defaultVariant"
                                 :availability_type="productData.availability_type"
                             />
-
-                            <button
-                                class="flex w-full items-center justify-center gap-3 rounded-2xl bg-slate-900 py-5 text-xl font-bold text-white transition-all hover:bg-orange-600 active:scale-95 disabled:bg-slate-200"
-                                :disabled="
-                                    productData.stock === 0 &&
-                                    productData.availability_type === 'stock'
-                                "
-                            >
-                                <span v-if="productData.availability_type === 'preorder'"
-                                    >Забронировать продукт</span
-                                >
-                                <span v-else>Добавить в корзину — {{ price }}₽</span>
-                            </button>
-                            <p class="mt-4 text-center text-xs text-slate-400">
-                                Доставка по Симферополю осуществляется в течение 24 часов после
-                                сбора.
-                            </p>
                         </div>
                     </div>
                 </div>
 
-                <section class="mt-24 border-t border-slate-100 pt-16">
-                    <div class="mb-10 flex items-center justify-between">
-                        <h2 class="text-2xl font-black text-slate-900">Отзывы покупателей</h2>
-                        <span class="rounded-lg bg-slate-100 px-3 py-1 font-bold text-slate-600">
-                            {{ comments.data.length }}
-                        </span>
-                    </div>
+                <!-- COMMENTS -->
+                <section class="mt-24 border-t pt-16">
+                    <h2 class="mb-8 text-2xl font-black">
+                        Отзывы
+                        <span class="ml-2 text-slate-400"> ({{ comments.data.length }}) </span>
+                    </h2>
 
-                    <div v-if="comments.data.length" class="grid grid-cols-1 gap-8 md:grid-cols-2">
+                    <div v-if="comments.data.length" class="grid gap-6 md:grid-cols-2">
                         <div
                             v-for="comment in comments.data"
                             :key="comment.id"
-                            class="shadow-sm rounded-2xl border border-slate-100 bg-white p-6"
+                            class="rounded-2xl border bg-white p-6"
                         >
-                            <div class="mb-4 flex items-center gap-3">
-                                <div
-                                    class="flex h-10 w-10 items-center justify-center rounded-full bg-orange-100 font-bold text-orange-700"
-                                >
-                                    {{ comment.user_name[0] }}
-                                </div>
-                                <div>
-                                    <div class="font-bold text-slate-900">
-                                        {{ comment.user_name }}
-                                    </div>
-                                    <div class="text-xs text-slate-400">
-                                        {{ comment.created_at }}
-                                    </div>
-                                </div>
+                            <div class="mb-3 font-bold">
+                                {{ comment.user_name }}
                             </div>
-                            <p class="text-slate-600">{{ comment.content }}</p>
+                            <p class="text-slate-600">
+                                {{ comment.content }}
+                            </p>
                         </div>
                     </div>
 
-                    <div v-else class="rounded-3xl bg-slate-50 py-12 text-center">
-                        <p class="italic text-slate-500">
-                            Будьте первым, кто оставит отзыв об этом продукте!
-                        </p>
+                    <div v-else class="rounded-2xl bg-slate-50 py-12 text-center">
+                        <p class="italic text-slate-500">Пока нет отзывов</p>
                     </div>
                 </section>
             </AppContainer>

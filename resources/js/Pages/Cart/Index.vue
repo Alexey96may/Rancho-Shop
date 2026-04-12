@@ -3,7 +3,7 @@
 
     import { Link } from '@inertiajs/vue3';
 
-    import { MinusIcon, PlusIcon, TrashIcon } from '@heroicons/vue/24/outline';
+    import { MinusIcon, PlusIcon, ShoppingCartIcon, TrashIcon } from '@heroicons/vue/24/outline';
 
     import MainLayout from '@/Layouts/MainLayout.vue';
     import { useCartStore } from '@/stores/cart';
@@ -13,12 +13,10 @@
     const cart = useCartStore();
 
     // Форматирование цены (из копеек в рубли)
-    const formatPrice = (price: number) => price.toLocaleString('ru-RU');
-
-    const cartStore = useCartStore();
+    const formatPrice = (price: number) => (price / 100).toLocaleString('ru-RU');
 
     onMounted(() => {
-        cartStore.validate(true);
+        cart.validate(true);
     });
 </script>
 
@@ -32,7 +30,7 @@
             <div class="space-y-4 lg:col-span-2">
                 <div
                     v-for="item in cart.items"
-                    :key="item.product_id"
+                    :key="item.variant_id"
                     class="shadow-sm transition-hover hover:shadow-md flex items-center gap-4 rounded-2xl border border-slate-100 bg-white p-4"
                 >
                     <AppImage
@@ -44,7 +42,7 @@
 
                     <div class="flex-1">
                         <Link
-                            :href="route('catalog.show', item)"
+                            :href="route('catalog.show', item.slug)"
                             class="font-bold text-slate-900 hover:text-orange-600"
                         >
                             {{ item.name }}
@@ -56,14 +54,14 @@
 
                     <div class="flex items-center gap-2 rounded-lg bg-slate-50 p-1">
                         <button
-                            @click="cart.remove(item.product_id)"
+                            @click="cart.remove(item.variant_id)"
                             class="p-1 hover:text-orange-600 disabled:opacity-30"
                         >
                             <MinusIcon class="h-4 w-4" />
                         </button>
                         <span class="w-8 text-center text-sm font-bold">{{ item.quantity }}</span>
                         <button
-                            @click="cart.add(item)"
+                            @click="cart.increment(item.variant_id)"
                             :disabled="item.quantity >= item.stock"
                             class="p-1 hover:text-orange-600 disabled:opacity-30"
                         >
@@ -78,7 +76,7 @@
                     </div>
 
                     <button
-                        @click="cart.destroy(item.product_id)"
+                        @click="cart.destroy(item.variant_id)"
                         class="text-slate-300 hover:text-red-500"
                     >
                         <TrashIcon class="h-5 w-5" />
@@ -119,7 +117,6 @@
                 <ShoppingCartIcon class="h-16 w-16" />
             </div>
             <h2 class="mb-2 text-2xl font-bold text-slate-900">В корзине пока пусто</h2>
-            <p class="mb-8 text-slate-500">Посмотрите наши свежие овощи и саженцы!</p>
             <Link
                 :href="route('catalog.index')"
                 class="rounded-xl bg-slate-900 px-8 py-3 font-bold text-white hover:bg-orange-600"

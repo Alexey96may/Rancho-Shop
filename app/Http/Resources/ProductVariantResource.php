@@ -34,14 +34,14 @@ class ProductVariantResource extends JsonResource
             'attributes' => $this->attributes,
 
             'unit' => [
-                'slug' => $this->unit?->slug,
+                'slug' => $this->unit->slug,
             ],
 
             'amount' => $this->amount,
 
             'product' => [
-                'name' => $this->product?->name,
-                'slug' => $this->product?->slug,
+                'name' => $this->product->name,
+                'slug' => $this->product->slug,
             ],
 
             'media' => $this->product && $this->product->media->isNotEmpty()

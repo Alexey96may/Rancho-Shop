@@ -12,19 +12,6 @@ type ServerCartItem = {
     reason?: string | null;
 };
 
-const normalizeUnit = (unit: string): CartItem['unit'] => {
-    switch (unit) {
-        case 'kg':
-        case 'g':
-        case 'l':
-        case 'ml':
-        case 'pcs':
-            return unit;
-        default:
-            return 'pcs';
-    }
-};
-
 export const useCartStore = defineStore(
     'cart',
     () => {
@@ -98,7 +85,7 @@ export const useCartStore = defineStore(
 
                 product_id: variant.product_id,
 
-                name: variant.product.name,
+                name: variant.product?.name,
                 variant_name: variant.name,
 
                 price: variant.price,
@@ -106,7 +93,7 @@ export const useCartStore = defineStore(
 
                 media: variant.media?.[0] || fallbackMedia,
 
-                unit: normalizeUnit(variant.unit.slug),
+                unit: variant.unit.slug,
                 amount: variant.amount,
 
                 slug: variant.product.slug,
@@ -204,6 +191,16 @@ export const useCartStore = defineStore(
             }
         }
 
+        function increment(variantId: number) {
+            const item = items.value.find((i) => i.variant_id === variantId);
+
+            if (!item) return;
+
+            if (item.quantity < item.stock) {
+                item.quantity++;
+            }
+        }
+
         return {
             items,
             totalItems,
@@ -216,6 +213,7 @@ export const useCartStore = defineStore(
             destroy,
             clear,
             validate,
+            increment,
         };
     },
     {

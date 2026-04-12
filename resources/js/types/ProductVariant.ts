@@ -6,8 +6,13 @@ export interface ProductVariant {
 
     name: string;
 
-    price_rub: number;
-    old_price_rub: number | null;
+    price: number; // копейки
+    old_price: number | null;
+
+    amount: number;
+    unit: {
+        slug: 'kg' | 'g' | 'l' | 'ml' | 'pcs';
+    };
 
     stock: number;
 
@@ -19,18 +24,23 @@ export interface ProductVariant {
     is_active: boolean;
 }
 
-export interface ProductVariantWithUnit extends ProductVariant {
-    unit: Unit;
-}
-
-export interface ProductVariantDTO extends ProductVariant {
+export interface ProductVariantDTO {
     id: number;
     product_id: number;
 
     name: string;
 
     price: number;
+    price_rub: number;
+    old_price: number | null;
+    old_price_rub: number | null;
+
     stock: number;
+
+    is_default: boolean;
+    position: number;
+
+    attributes: Record<string, string> | null;
 
     unit: {
         slug: 'kg' | 'g' | 'l' | 'ml' | 'pcs';
@@ -43,5 +53,5 @@ export interface ProductVariantDTO extends ProductVariant {
         slug: string;
     };
 
-    media?: Media[];
+    media: Media[];
 }

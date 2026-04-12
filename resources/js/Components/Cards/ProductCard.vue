@@ -4,15 +4,26 @@
     import { Link } from '@inertiajs/vue3';
 
     import BuyButton from '@/Components/UI/BuyButton.vue';
-    import type { ProductWithCategory } from '@/types';
+    import type { ProductVariantDTO, ProductWithCategory } from '@/types';
 
     const props = defineProps<{
         product: ProductWithCategory;
     }>();
 
-    const displayPrice = computed(() => (props.product.price_rub / 100).toFixed(2));
+    const defaultVariant = computed(() => {
+        return (
+            props.product.variants?.find((v) => v.is_default) ?? props.product.variants?.[0] ?? null
+        );
+    });
+
+    const displayPrice = computed(() =>
+        defaultVariant.value ? (defaultVariant.value.price / 100).toFixed(2) : '0.00',
+    );
+
     const displayOldPrice = computed(() =>
-        props.product.old_price ? (props.product.old_price / 100).toFixed(2) : null,
+        defaultVariant.value?.old_price_rub
+            ? (defaultVariant.value.old_price_rub / 100).toFixed(2)
+            : null,
     );
 
     const availabilityLabels: Record<string, string> = {
@@ -29,10 +40,16 @@
     };
 
     const discountBadge = computed(() => {
-        if (!props.product.old_price || props.product.old_price <= props.product.price_rub) {
+        if (
+            !defaultVariant.value?.old_price_rub ||
+            defaultVariant.value.old_price_rub <= defaultVariant.value.price
+        ) {
             return null;
         }
-        return Math.round(100 - (props.product.price_rub / props.product.old_price) * 100);
+
+        return Math.round(
+            100 - (defaultVariant.value.price / defaultVariant.value.old_price_rub) * 100,
+        );
     });
 </script>
 
@@ -87,7 +104,9 @@
                     >
                     <span class="text-[10px] font-bold text-red-500">-{{ discountBadge }}%</span>
                 </div>
-                <span class="ml-auto text-sm text-slate-400">/ {{ product.unit }}</span>
+                <span class="ml-auto text-sm text-slate-400"
+                    >/ {{ defaultVariant?.unit?.slug ?? 'pcs' }}</span
+                >
             </div>
 
             <div class="mt-auto space-y-2 border-t border-slate-50 pt-4">
@@ -98,16 +117,16 @@
                             >График сбора:</span
                         >
                         <span class="text-xs font-semibold text-slate-700">{{
-                            getDaysNames(product.schedule.days)
+                            getDaysNames(product.schedule?.days)
                         }}</span>
                     </div>
                 </div>
             </div>
 
             <BuyButton
-                :product="product"
+                v-if="defaultVariant"
                 :availability_type="product.availability_type"
-                :price="product.price_rub"
+                :variant="defaultVariant"
             />
         </div>
     </div>

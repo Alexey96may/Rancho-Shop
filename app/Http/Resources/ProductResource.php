@@ -14,8 +14,10 @@ class ProductResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        //Product::with(['variants.unit', 'category', 'seo', 'media'])
-        $variant = $this->whenLoaded('variants')->first();
+        //Product::with(['variants.unit', 'category', 'seo', 'media'])\
+        $variant = $this->relationLoaded('variants')
+            ? $this->variants->first()
+            : null;
 
         return [
             'id' => $this->id,
@@ -36,18 +38,18 @@ class ProductResource extends JsonResource
             'price_rub' => $variant ? $variant->price / 100 : null,
             'old_price_rub' => $variant?->old_price ? $variant->old_price / 100 : null,
 
-            'media' => $this->media->isNotEmpty() 
-                        ? MediaResource::collection($this->media) 
-                        : [MediaResource::fallback($this->resource)],
+            'media' => $this->relationLoaded('media') && $this->media->isNotEmpty()
+                ? MediaResource::collection($this->media)
+                : [MediaResource::fallback($this->resource)],
 
             // whenLoaded
             'variants' => ProductVariantResource::collection(
                 $this->whenLoaded('variants')
             ),
-
-            'unit' => new UnitResource(
-                $variant?->whenLoaded('unit')
-            ),
+            
+            'unit' => $variant?->unit
+                ? new UnitResource($variant->unit)
+                : null,
 
             'category' => new CategoryResource($this->whenLoaded('category')),
             'seo' => new SeoResource($this->whenLoaded('seo')),
