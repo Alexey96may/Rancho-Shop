@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\CheckoutController;
 use App\Http\Controllers\Api\AnimalApiController;
 use App\Http\Controllers\Api\CommentController;
 use App\Http\Controllers\Api\PageController;
+use App\Http\Controllers\Api\SettingController;
 
 // /api/landing
 Route::get('/landing', [ApiLandingController::class, 'index']);
@@ -34,6 +35,7 @@ Route::get('/comments', [CommentController::class, 'index']);
 Route::post('/comments', [CommentController::class, 'store']);
 Route::get('/pages/{slug}', [PageController::class, 'show']);
 
+Route::get('/settings', [SettingController::class, 'index']);
 
 Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     // Route::get('/admin/stats', [AdminController::class, 'index']);
