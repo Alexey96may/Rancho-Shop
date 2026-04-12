@@ -50,6 +50,7 @@
     "dependencies": {
         "@headlessui/vue": "^1.7.23",
         "@heroicons/vue": "^2.2.0",
+        "@turf/turf": "^7.3.4",
         "howler": "^2.2.4",
         "lucide-vue-next": "^1.0.0",
         "mapbox-gl": "^3.21.0",

@@ -1,73 +1,188 @@
 <script setup lang="ts">
-    import { onMounted, ref } from 'vue';
+    import { onMounted, ref, watch } from 'vue';
 
+    import type { Feature, LineString } from 'geojson';
     import mapboxgl from 'mapbox-gl';
 
     interface Props {
-        modelValue?: {
-            lat: number;
-            lng: number;
-        } | null;
-
-        farmCoords?: {
-            lat: number;
-            lng: number;
-        } | null;
+        modelValue?: { lat: number; lng: number } | null;
+        farmCoords?: { lat: number; lng: number } | null;
     }
 
     const props = defineProps<Props>();
     const emit = defineEmits(['update:modelValue']);
 
     const mapContainer = ref<HTMLDivElement | null>(null);
+
     let map: mapboxgl.Map;
     let marker: mapboxgl.Marker;
 
+    let isInternalUpdate = false;
+
     mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 
+    // 🧭 START
+    const farm = props.farmCoords || {
+        lat: 44.8445,
+        lng: 34.3381,
+    };
+
+    // 🚚 WAYPOINTS
+    const waypoints: [number, number][] = [
+        [34.32541, 44.83384],
+        [34.12673, 44.94398],
+        [34.11062, 44.95797],
+        [34.09723, 44.97342],
+        [34.07753, 44.9583],
+        [34.07865, 44.95596],
+        [34.09397, 44.94407],
+        [34.10249, 44.95186],
+        [34.11062, 44.95797],
+        [34.12673, 44.94398],
+        [34.32541, 44.83384],
+    ];
+
+    // ===============================
+    // 🚚 ROUTE
+    // ===============================
+    async function loadRoute() {
+        const url =
+            `https://api.mapbox.com/directions/v5/mapbox/driving/` +
+            waypoints.map((p) => `${p[0]},${p[1]}`).join(';') +
+            `?geometries=geojson&overview=full&access_token=${mapboxgl.accessToken}`;
+
+        const res = await fetch(url);
+        const data = await res.json();
+
+        const route = data?.routes?.[0]?.geometry;
+        if (!route || !map) return;
+
+        const geojson: Feature<LineString> = {
+            type: 'Feature',
+            geometry: route,
+            properties: {},
+        };
+
+        const source = map.getSource('delivery-route') as mapboxgl.GeoJSONSource;
+
+        if (source) {
+            source.setData(geojson);
+        }
+    }
+
+    // ===============================
+    // 🗺 INIT
+    // ===============================
     onMounted(() => {
-        const center = props.modelValue ||
-            props.farmCoords || {
-                lat: 55.75,
-                lng: 37.61,
-            };
+        const center = props.modelValue || farm;
 
         map = new mapboxgl.Map({
             container: mapContainer.value!,
             style: 'mapbox://styles/mapbox/streets-v11',
             center: [center.lng, center.lat],
-            zoom: 10,
+            zoom: 11,
         });
 
         marker = new mapboxgl.Marker({ draggable: true })
             .setLngLat([center.lng, center.lat])
             .addTo(map);
 
-        // 📍 drag event
+        // ===============================
+        // INIT SOURCES
+        // ===============================
+        map.on('load', () => {
+            map.addSource('delivery-route', {
+                type: 'geojson',
+                data: {
+                    type: 'Feature',
+                    geometry: {
+                        type: 'LineString',
+                        coordinates: [],
+                    },
+                    properties: {},
+                },
+            });
+
+            map.addLayer({
+                id: 'delivery-route-line',
+                type: 'line',
+                source: 'delivery-route',
+                layout: {
+                    'line-join': 'round',
+                    'line-cap': 'round',
+                },
+                paint: {
+                    'line-color': '#994000',
+                    'line-width': 4,
+                },
+            });
+
+            loadRoute();
+        });
+
+        // ===============================
+        // USER INTERACTION
+        // ===============================
         marker.on('dragend', () => {
             const lngLat = marker.getLngLat();
 
-            emit('update:modelValue', {
+            isInternalUpdate = true;
+
+            const val = {
                 lat: lngLat.lat,
                 lng: lngLat.lng,
-            });
+            };
+
+            emit('update:modelValue', val);
+
+            waypoints[0] = [lngLat.lng, lngLat.lat];
+            loadRoute();
+
+            map.setCenter([lngLat.lng, lngLat.lat]);
+
+            setTimeout(() => (isInternalUpdate = false), 0);
         });
 
-        // 🖱 click to move marker
         map.on('click', (e) => {
-            marker.setLngLat(e.lngLat);
+            isInternalUpdate = true;
 
-            emit('update:modelValue', {
+            const val = {
                 lat: e.lngLat.lat,
                 lng: e.lngLat.lng,
-            });
+            };
+
+            marker.setLngLat(e.lngLat);
+
+            emit('update:modelValue', val);
+
+            waypoints[0] = [e.lngLat.lng, e.lngLat.lat];
+            loadRoute();
+
+            map.setCenter([e.lngLat.lng, e.lngLat.lat]);
+
+            setTimeout(() => (isInternalUpdate = false), 0);
         });
     });
+
+    // ===============================
+    // 🔁 WATCH (FIX MARKER JUMP)
+    // ===============================
+    watch(
+        () => props.modelValue,
+        (val) => {
+            if (!val || !marker || !map) return;
+            if (isInternalUpdate) return;
+
+            marker.setLngLat([val.lng, val.lat]);
+            map.setCenter([val.lng, val.lat]);
+        },
+    );
 </script>
 
 <template>
     <div
         ref="mapContainer"
         class="h-full w-full rounded-xl"
-        aria-label="Интерактивная карта выбора точки доставки"
+        aria-label="Маршрут доставки по Симферополю"
     />
 </template>

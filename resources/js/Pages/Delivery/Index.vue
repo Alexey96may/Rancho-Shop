@@ -1,9 +1,10 @@
 <script setup lang="ts">
-    import { computed, ref } from 'vue';
+    import { computed, ref, watch } from 'vue';
 
     import MapboxPicker from '@/Components/Map/MapboxPicker.vue';
     import CommentsSection from '@/Components/Sections/CommentsSection.vue';
     import MainLayout from '@/Layouts/MainLayout.vue';
+    import { useYandexGeocoder } from '@/composables/useYandexGeocoder';
     import type { Comment, DeliveryInfo, Page, Paginated } from '@/types';
 
     interface Props {
@@ -16,12 +17,45 @@
 
     const props = defineProps<Props>();
 
-    const selectedPoint = ref<{ lat: number; lng: number } | null>(null);
-
     const farmCoords = computed(() => {
         if (!props.delivery.farm_coords) return null;
         const [lat, lng] = props.delivery.farm_coords.split(',').map(Number);
         return { lat, lng };
+    });
+
+    const address = ref('');
+    const selectedPoint = ref<{ lat: number; lng: number } | null>(null);
+    const isFromMap = ref(false);
+
+    const { suggestions, search } = useYandexGeocoder();
+
+    const selectSuggestion = (item: any) => {
+        address.value = item.place_name;
+
+        selectedPoint.value = {
+            lat: item.center[1],
+            lng: item.center[0],
+        };
+
+        isFromMap.value = false;
+        suggestions.value = [];
+    };
+
+    const select = (item: any) => {
+        address.value = item.name;
+
+        selectedPoint.value = {
+            lng: item.point[0],
+            lat: item.point[1],
+        };
+
+        suggestions.value = [];
+    };
+
+    watch(selectedPoint, (val) => {
+        if (!val) return;
+
+        isFromMap.value = true;
     });
 </script>
 
@@ -51,15 +85,33 @@
         >
             <!-- LEFT -->
             <div class="rounded-xl border bg-white p-6">
-                <label class="block text-sm font-medium"> Адрес доставки </label>
-
+                <label class="block text-sm font-medium" for="delivAdress"> Адрес доставки </label>
                 <input
+                    v-model="address"
+                    @input="search(address)"
                     type="text"
+                    id="delivAdress"
                     placeholder="Введите адрес..."
                     class="mt-2 w-full rounded-lg border px-3 py-2"
                     autocomplete="street-address"
-                    aria-label="Введите адрес доставки"
+                    aria-label="Адрес доставки"
                 />
+                <ul
+                    v-if="suggestions.length"
+                    class="shadow absolute z-10 mt-1 w-full rounded-lg border bg-white"
+                    role="listbox"
+                >
+                    <li
+                        v-for="(item, i) in suggestions"
+                        :key="i"
+                        @click="select(item)"
+                        class="cursor-pointer px-3 py-2 hover:bg-[#FCFAF5]"
+                        role="option"
+                    >
+                        <div class="font-medium">{{ item.name }}</div>
+                        <div class="text-xs text-gray-500">{{ item.description }}</div>
+                    </li>
+                </ul>
 
                 <div class="mt-6 text-sm">
                     <p>
