@@ -29,7 +29,9 @@ Route::get('/animals', [AnimalApiController::class, 'index']);
 Route::get('/animals/{animal:slug}', [AnimalApiController::class, 'show']);
 
 Route::get('/animals/{animal}/comments', [CommentController::class, 'index']);
+Route::get('/comments', [CommentController::class, 'index']);
 Route::post('/comments', [CommentController::class, 'store']);
+
 
 Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     // Route::get('/admin/stats', [AdminController::class, 'index']);
