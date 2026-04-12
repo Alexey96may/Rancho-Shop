@@ -37,7 +37,7 @@ class AnimalController extends Controller
         return Inertia::render('Animals/Show', [
             'animal' => new AnimalResource($animal),
             'comments' => [
-                'data' => CommentResource::collection($comments->items()),
+                'data' => CommentResource::collection($comments->items())->resolve(),
                 'meta' => [
                     'current_page' => $comments->currentPage(),
                     'last_page' => $comments->lastPage(),

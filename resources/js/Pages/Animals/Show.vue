@@ -1,22 +1,20 @@
 <script setup lang="ts" id="s1a9x2">
     import { computed, onMounted, ref } from 'vue';
 
-    import { Head, Link } from '@inertiajs/vue3';
-    import { router } from '@inertiajs/vue3';
+    import { Head, Link, router } from '@inertiajs/vue3';
 
     import CommentsSection from '@/Components/Sections/CommentsSection.vue';
     import MainLayout from '@/Layouts/MainLayout.vue';
-    import type { Comment, FarmAnimal, ResourceCollection, ResourceSingle } from '@/types';
+    import type { Comment, FarmAnimal, Paginated, ResourceSingle } from '@/types';
 
     defineOptions({ layout: MainLayout });
 
     const props = defineProps<{
         animal: ResourceSingle<FarmAnimal>;
-        comments: ResourceCollection<Comment>;
+        comments: Paginated<Comment>;
     }>();
 
     const animal = computed(() => props.animal.data);
-    const comments = computed(() => props.comments.data);
 
     // ----------------------
     // voice player

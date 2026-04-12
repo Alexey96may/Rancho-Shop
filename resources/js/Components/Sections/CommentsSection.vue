@@ -1,22 +1,28 @@
 <script setup lang="ts">
-    import { computed, ref } from 'vue';
+    import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 
-    import type { Comment } from '@/types';
+    import { router } from '@inertiajs/vue3';
+
+    import type { Comment, Paginated } from '@/types';
 
     const props = defineProps<{
-        comments: Comment[];
+        comments: Paginated<Comment>;
     }>();
 
     const emit = defineEmits<{
         (e: 'submit', content: string): void;
     }>();
 
+    const items = ref<Comment[]>([...props.comments.data]);
+    const page = ref(props.comments.meta.current_page);
+    const lastPage = ref(props.comments.meta.last_page);
+    const loading = ref(false);
+
     const content = ref('');
     const textareaId = `comment-form-${Math.random().toString(36).slice(2)}`;
 
-    const isEmpty = computed(() => props.comments.length === 0);
-
     const canSubmit = computed(() => content.value.trim().length > 0);
+    const isEmpty = computed(() => items.value.length === 0);
 
     const submit = () => {
         if (!canSubmit.value) return;
@@ -24,6 +30,49 @@
         emit('submit', content.value.trim());
         content.value = '';
     };
+
+    const loadMore = () => {
+        if (loading.value) return;
+        if (page.value >= lastPage.value) return;
+
+        loading.value = true;
+
+        router.get(
+            window.location.pathname,
+            { page: page.value + 1 },
+            {
+                preserveState: true,
+                preserveScroll: true,
+                only: ['comments'],
+                onSuccess: (res) => {
+                    const newComments = (res.props as any).comments.data;
+
+                    items.value.push(...newComments);
+                    page.value++;
+
+                    loading.value = false;
+                },
+            },
+        );
+    };
+
+    let observer: IntersectionObserver;
+
+    const sentinel = ref<HTMLElement | null>(null);
+
+    onMounted(() => {
+        observer = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting) {
+                loadMore();
+            }
+        });
+
+        if (sentinel.value) observer.observe(sentinel.value);
+    });
+
+    onBeforeUnmount(() => {
+        observer?.disconnect();
+    });
 </script>
 
 <template>
@@ -37,7 +86,7 @@
                 role="status"
                 aria-live="polite"
             >
-                {{ comments.length }}
+                {{ comments.data.length }}
             </span>
         </header>
 
@@ -91,7 +140,7 @@
             aria-label="Список комментариев"
         >
             <article
-                v-for="comment in comments"
+                v-for="comment in comments.data"
                 :key="comment.id"
                 class="shadow-sm rounded-2xl border border-slate-100 bg-white p-6"
                 role="listitem"
@@ -120,6 +169,11 @@
                     {{ comment.content }}
                 </p>
             </article>
+        </div>
+
+        <!-- loading trigger -->
+        <div ref="sentinel" class="flex h-10 items-center justify-center" aria-hidden="true">
+            <span v-if="loading" class="text-sm text-rancho-olive">Загрузка...</span>
         </div>
     </section>
 </template>

@@ -21,3 +21,11 @@ export interface ResourceCollection<T> {
 export interface ResourceSingle<T> {
     data: T;
 }
+
+export interface Paginated<T> {
+    data: T[];
+    meta: {
+        current_page: number;
+        last_page: number;
+    };
+}
