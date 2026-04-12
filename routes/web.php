@@ -33,7 +33,7 @@ Route::get('/checkout', [CheckoutPageController::class, 'index'])
 Route::post('/checkout', [CheckoutPageController::class, 'store'])
     ->name('checkout.store');
     
-Route::get('/delivery', [DeliveryController::class, 'index'])->name('delivery');
+Route::get('/delivery', [PageController::class, 'delivery'])->name('delivery');
 
 Route::get('/animals', [AnimalController::class, 'index'])->name('animals.index');
 Route::get('/animals/{animal:slug}', [AnimalController::class, 'show'])->name('animals.show');

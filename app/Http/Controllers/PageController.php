@@ -17,13 +17,39 @@ class PageController extends Controller
             ->with(['seo', 'media'])
             ->firstOrFail();
         
-        $reviews = $page->reviews()
+        $comments = $page->reviews()
             ->latest()
             ->paginate(10);
 
         return Inertia::render('AboutView', [
             'page' => new PageResource($page),
-            'reviews' => CommentResource::collection($reviews),
+            'comments' => CommentResource::collection($comments),
+        ]);
+    }
+
+    public function delivery()
+    {
+        $page = Page::query()
+            ->where('slug', 'delivery')
+            ->where('is_active', true)
+            ->with(['seo', 'media'])
+            ->firstOrFail();
+
+        $comments = $page->reviews()
+            ->latest()
+            ->paginate(10);
+
+        return Inertia::render('Pages/Delivery/Index', [
+            'page' => new PageResource($page),
+            'comments' => CommentResource::collection($comments),
+
+            // 🗺️ delivery-specific data
+            'delivery' => [
+                'farm_coords' => app(\App\Services\SettingService::class)->get('farm_coords'),
+                'delivery_cost' => app(\App\Services\SettingService::class)->get('delivery_cost'),
+                'free_delivery_from' => app(\App\Services\SettingService::class)->get('free_delivery_from'),
+                'address_farm' => app(\App\Services\SettingService::class)->get('address_farm'),
+            ],
         ]);
     }
 }
