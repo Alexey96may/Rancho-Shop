@@ -20,7 +20,10 @@ class ProductVariantResource extends JsonResource
 
             'name' => $this->name,
 
+            'price' => $this->price,
             'price_rub' => $this->price / 100,
+
+            'old_price' => $this->old_price,
             'old_price_rub' => $this->old_price ? $this->old_price / 100 : null,
 
             'stock' => $this->stock,
@@ -28,10 +31,22 @@ class ProductVariantResource extends JsonResource
             'is_default' => $this->is_default,
             'position' => $this->position,
 
-
             'attributes' => $this->attributes,
 
-            'unit' => new UnitResource($this->whenLoaded('unit')),
+            'unit' => [
+                'slug' => $this->unit?->slug,
+            ],
+
+            'amount' => $this->amount,
+
+            'product' => [
+                'name' => $this->product?->name,
+                'slug' => $this->product?->slug,
+            ],
+
+            'media' => $this->product && $this->product->media->isNotEmpty()
+                ? MediaResource::collection($this->product->media)
+                : [MediaResource::fallback($this->product)],
         ];
     }
 }

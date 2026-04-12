@@ -1,4 +1,4 @@
-import { Unit } from './';
+import { Media, Unit } from './';
 
 export interface ProductVariant {
     id: number;
@@ -21,4 +21,27 @@ export interface ProductVariant {
 
 export interface ProductVariantWithUnit extends ProductVariant {
     unit: Unit;
+}
+
+export interface ProductVariantDTO extends ProductVariant {
+    id: number;
+    product_id: number;
+
+    name: string;
+
+    price: number;
+    stock: number;
+
+    unit: {
+        slug: 'kg' | 'g' | 'l' | 'ml' | 'pcs';
+    };
+
+    amount: number;
+
+    product: {
+        name: string;
+        slug: string;
+    };
+
+    media?: Media[];
 }
