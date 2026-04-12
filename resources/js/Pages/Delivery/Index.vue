@@ -1,17 +1,16 @@
 <script setup lang="ts">
     import { computed, ref } from 'vue';
 
+    import MainLayout from '@/Layouts/MainLayout.vue';
+    import type { DeliveryInfo } from '@/types';
+
     interface Props {
-        settings: Record<string, any>;
-        delivery: {
-            farm_coords: string;
-            delivery_cost: number;
-            free_delivery_from: number;
-            address_farm: string;
-        };
+        delivery: DeliveryInfo;
     }
 
     const props = defineProps<Props>();
+
+    defineOptions({ layout: MainLayout });
 
     // 📍 user input state
     const address = ref<string>('');
