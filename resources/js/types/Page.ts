@@ -1,26 +1,21 @@
-import type { Comment } from './Comment';
+import type { Media } from './Media';
 import type { SeoData } from './Seo';
 
-interface BasePage {
+export type PageType = 'static' | 'blog' | 'news';
+
+export interface Page {
+    id: number;
+
     title: string;
     slug: string;
     content: string | null;
-    type: 'static' | 'blog' | 'news';
-}
 
-export interface PublicPage extends BasePage {
-    seo?: SeoData;
-    reviews?: Comment[];
-    published_at: string;
-}
-
-export interface AdminPage extends BasePage {
-    id: number;
+    type: PageType;
     is_active: boolean;
-    created_at: string;
-    updated_at: string;
 
-    reviews_count: number;
+    media?: Media[];
 
-    seo?: SeoData;
+    seo?: SeoData | null;
+
+    reviews_count?: number;
 }

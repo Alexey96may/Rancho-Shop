@@ -10,6 +10,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\CheckoutPageController;
 use App\Http\Controllers\AnimalController;
 use App\Http\Controllers\CommentController;
+use App\Http\Controllers\PageController;
 
 Route::get('/', [LandingController::class, 'index'])->name('home');
 
@@ -45,6 +46,8 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
+
+Route::get('/about', [PageController::class, 'about'])->name('about');
 
 Route::middleware(['auth', 'role:admin'])->group(function () {
     // Route::get('/admin/dashboard', function () {
