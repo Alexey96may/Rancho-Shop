@@ -36,8 +36,9 @@
 
 <template>
     <article
-        class="bg-white hover:shadow-2xl group relative flex flex-col overflow-hidden rounded-3xl border border-rancho-paper transition-all focus-within:ring-2 focus-within:ring-rancho-buttercup"
+        class="hover:shadow-2xl group relative flex flex-col overflow-hidden rounded-3xl border border-rancho-paper bg-white transition-all focus-within:ring-2 focus-within:ring-rancho-buttercup"
         :aria-labelledby="`animal-name-${animal.id}`"
+        style="border-color: #e3b44b33"
     >
         <div class="relative aspect-[4/5] overflow-hidden bg-rancho-paper/20">
             <AppImage
@@ -66,9 +67,11 @@
                 type="button"
                 :aria-pressed="isPlaying"
                 :aria-label="
-                    isPlaying ? `Остановить голос ${animal.name}` : `Послушать голос ${animal.name}`
+                    isPlaying
+                        ? `Остановить голос ${animal.name}`
+                        : `Включить звук животного ${animal.name}`
                 "
-                class="bg-white/95 shadow-lg absolute bottom-4 right-4 z-20 flex h-12 w-12 items-center justify-center rounded-full text-rancho-forest transition-all hover:bg-rancho-buttercup focus:outline-none"
+                class="shadow-lg absolute bottom-4 right-4 z-20 flex h-12 w-12 items-center justify-center rounded-full bg-white/95 text-rancho-forest transition-all hover:bg-rancho-buttercup focus:outline-none"
             >
                 <component :is="isPlaying ? VolumeX : Volume2" :size="24" aria-hidden="true" />
                 <span class="sr-only" aria-live="polite">
@@ -85,7 +88,7 @@
 
         <div class="flex flex-1 flex-col p-6">
             <h3 :id="`animal-name-${animal.id}`" class="text-2xl font-bold text-rancho-forest">
-                <Link :href="route('home')" class="focus:outline-none">
+                <Link :href="route('animals.show', animal.slug)" class="focus:outline-none">
                     <span class="absolute inset-0" aria-hidden="true"></span>
                     {{ animal.name }}
                 </Link>

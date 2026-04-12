@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\CartController;
 // use App\Http\Controllers\Api\Auth\SocialAuthController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\CheckoutController;
+use App\Http\Controllers\Api\AnimalApiController;
 
 // /api/landing
 Route::get('/landing', [ApiLandingController::class, 'index']);
@@ -22,6 +23,9 @@ Route::get('/products/{product:slug}', [ProductController::class, 'show']);
 Route::post('/cart/validate', [CartController::class, 'validate']);
 Route::get('/checkout', [CheckoutController::class, 'index']);
 Route::post('/checkout', [CheckoutController::class, 'store']);
+
+Route::get('/animals', [AnimalApiController::class, 'index']);
+Route::get('/animals/{animal:slug}', [AnimalApiController::class, 'show']);
 
 Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     // Route::get('/admin/stats', [AdminController::class, 'index']);

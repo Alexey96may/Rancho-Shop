@@ -12,7 +12,7 @@ export interface BaseAnimal {
     parent_id: number | null;
     name: string;
     type: AnimalType;
-    status: CowStatus | CatStatus | BirdStatus;
+    status: string;
     slug: string;
     bio: string | null;
     media: Media[];
@@ -36,10 +36,6 @@ export interface BaseAnimal {
 export interface Cow extends BaseAnimal {
     type: 'cow';
     status: CowStatus;
-    features: {
-        fat_content?: string;
-        daily_yield?: string;
-    } | null;
 }
 
 export interface Cat extends BaseAnimal {
