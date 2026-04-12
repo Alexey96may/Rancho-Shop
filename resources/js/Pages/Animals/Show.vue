@@ -2,17 +2,21 @@
     import { computed, onMounted, ref } from 'vue';
 
     import { Head, Link } from '@inertiajs/vue3';
+    import { router } from '@inertiajs/vue3';
 
+    import CommentsSection from '@/Components/Sections/CommentsSection.vue';
     import MainLayout from '@/Layouts/MainLayout.vue';
-    import type { BaseAnimal } from '@/types/Animal';
+    import type { Comment, FarmAnimal, ResourceCollection, ResourceSingle } from '@/types';
 
     defineOptions({ layout: MainLayout });
 
     const props = defineProps<{
-        animal: { data: BaseAnimal };
+        animal: ResourceSingle<FarmAnimal>;
+        comments: ResourceCollection<Comment>;
     }>();
 
     const animal = computed(() => props.animal.data);
+    const comments = computed(() => props.comments.data);
 
     // ----------------------
     // voice player
@@ -40,6 +44,14 @@
     onMounted(() => {
         activeImage.value = animal.value.media?.[0]?.url ?? null;
     });
+
+    const submitComment = (content: string) => {
+        router.post(route('comments.store'), {
+            content,
+            commentable_type: 'animal',
+            commentable_id: animal.value.id,
+        });
+    };
 </script>
 
 <template id="s9k2v4">
@@ -176,6 +188,8 @@
                         {{ animal.seo.description }}
                     </div>
                 </section>
+
+                <CommentsSection :comments="comments" @submit="submitComment" />
             </div>
         </div>
     </main>

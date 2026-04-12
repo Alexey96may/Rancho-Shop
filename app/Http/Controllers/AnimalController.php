@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\AnimalResource;
+use App\Http\Resources\CommentResource;
 use App\Models\Animal;
 use Inertia\Inertia;
 
@@ -29,8 +30,19 @@ class AnimalController extends Controller
             'seo',
         ]);
 
+        $comments = $animal->comments()
+            ->latest()
+            ->paginate(10);
+
         return Inertia::render('Animals/Show', [
             'animal' => new AnimalResource($animal),
+            'comments' => [
+                'data' => CommentResource::collection($comments->items()),
+                'meta' => [
+                    'current_page' => $comments->currentPage(),
+                    'last_page' => $comments->lastPage(),
+                ],
+            ],
         ]);
     }
 }
