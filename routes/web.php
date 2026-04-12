@@ -37,6 +37,8 @@ Route::get('/animals/{animal:slug}', [AnimalController::class, 'show'])->name('a
 
 Route::post('/comments', [CommentController::class, 'store'])->name('comments.store');
 
+Route::get('/about', [PageController::class, 'about'])->name('about');
+
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
@@ -47,7 +49,6 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-Route::get('/about', [PageController::class, 'about'])->name('about');
 
 Route::middleware(['auth', 'role:admin'])->group(function () {
     // Route::get('/admin/dashboard', function () {

@@ -12,7 +12,7 @@ class PageController extends Controller
     public function about()
     {
         $page = Page::query()
-            ->where('slug', 'farm')
+            ->where('slug', 'about')
             ->where('is_active', true)
             ->with(['seo', 'media'])
             ->firstOrFail();
@@ -21,7 +21,7 @@ class PageController extends Controller
             ->latest()
             ->paginate(10);
 
-        return Inertia::render('Pages/Farm', [
+        return Inertia::render('AboutView', [
             'page' => new PageResource($page),
             'reviews' => CommentResource::collection($reviews),
         ]);

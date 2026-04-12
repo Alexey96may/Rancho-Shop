@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\CheckoutController;
 use App\Http\Controllers\Api\AnimalApiController;
 use App\Http\Controllers\Api\CommentController;
+use App\Http\Controllers\Api\PageController;
 
 // /api/landing
 Route::get('/landing', [ApiLandingController::class, 'index']);
@@ -31,6 +32,7 @@ Route::get('/animals/{animal:slug}', [AnimalApiController::class, 'show']);
 Route::get('/animals/{animal}/comments', [CommentController::class, 'index']);
 Route::get('/comments', [CommentController::class, 'index']);
 Route::post('/comments', [CommentController::class, 'store']);
+Route::get('/pages/{slug}', [PageController::class, 'show']);
 
 
 Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
