@@ -9,7 +9,9 @@ export interface SiteSettings {
     contact_telegram: string; // Ссылка на личку или бота
     contact_vk: string; // Ссылка на группу ВК
     address_farm: string; // Адрес самой фермы (для самовывоза)
-    farm_coords: string;
+
+    // farm_coords: string;
+    farm_coords: { lat: number; lng: number };
 
     shop_status: ShopStatus;
 

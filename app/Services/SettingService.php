@@ -54,5 +54,38 @@ class SettingService
         );
 
         Cache::forget("setting.{$key}");
+        Cache::forget("settings.all");
+    }
+
+    public function all(): array
+    {
+        return Cache::remember("settings.all", 86400, function () {
+            return Setting::all()
+                ->mapWithKeys(fn ($s) => [
+                    $s->key => $this->castValue($s->value, $s->type)
+                ])
+                ->toArray();
+        });
+    }
+
+    public function group(array $keys): array
+    {
+        $all = $this->all();
+
+        return collect($keys)
+            ->mapWithKeys(fn ($key) => [$key => $all[$key] ?? null])
+            ->toArray();
+    }
+
+    private function parseCoords(?string $value): ?array
+    {
+        if (!$value) return null;
+
+        [$lat, $lng] = explode(',', $value);
+
+        return [
+            'lat' => (float) $lat,
+            'lng' => (float) $lng,
+        ];
     }
 }
