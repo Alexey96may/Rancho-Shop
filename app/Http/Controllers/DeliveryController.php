@@ -9,9 +9,7 @@ class DeliveryController extends Controller
 {
     public function index(SettingService $settings)
     {
-        return Inertia::render('Pages/Delivery/Index', [
-            'settings' => $settings->all(),
-
+        return Inertia::render('Delivery/Index', [
             'delivery' => [
                 'farm_coords' => $settings->get('farm_coords'),
                 'delivery_cost' => $settings->get('delivery_cost'),

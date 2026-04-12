@@ -11,6 +11,7 @@ use App\Http\Controllers\CheckoutPageController;
 use App\Http\Controllers\AnimalController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\PageController;
+use App\Http\Controllers\DeliveryController;
 
 Route::get('/', [LandingController::class, 'index'])->name('home');
 
@@ -31,6 +32,8 @@ Route::get('/checkout', [CheckoutPageController::class, 'index'])
 
 Route::post('/checkout', [CheckoutPageController::class, 'store'])
     ->name('checkout.store');
+    
+Route::get('/delivery', [DeliveryController::class, 'index'])->name('delivery');
 
 Route::get('/animals', [AnimalController::class, 'index'])->name('animals.index');
 Route::get('/animals/{animal:slug}', [AnimalController::class, 'show'])->name('animals.show');

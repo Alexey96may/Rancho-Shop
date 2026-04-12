@@ -29,3 +29,10 @@ export interface Paginated<T> {
         last_page: number;
     };
 }
+
+export interface DeliveryInfo {
+    farm_coords: string;
+    delivery_cost: number;
+    free_delivery_from: number;
+    address_farm: string;
+}
