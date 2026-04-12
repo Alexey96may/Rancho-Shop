@@ -68,6 +68,12 @@ class SettingService
         });
     }
 
+    //for api
+    public function allModels()
+    {
+        return Setting::all();
+    }
+
     public function group(array $keys): array
     {
         $all = $this->all();
