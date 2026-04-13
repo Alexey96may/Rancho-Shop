@@ -160,9 +160,7 @@
 
         <!-- 💬 COMMENTS -->
         <section class="mx-auto mt-12 max-w-3xl px-6 pb-16" aria-label="Отзывы о доставке">
-            <h2 class="mb-4 text-xl font-semibold">Отзывы о доставке</h2>
-
-            <CommentsSection :comments="comments" />
+            <CommentsSection :comments="comments" :title="'Отзывы о доставке'" />
         </section>
     </main>
 </template>

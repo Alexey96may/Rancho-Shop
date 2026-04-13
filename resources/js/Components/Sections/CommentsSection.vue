@@ -7,6 +7,7 @@
 
     const props = defineProps<{
         comments: Paginated<Comment>;
+        title?: string;
     }>();
 
     const emit = defineEmits<{
@@ -79,7 +80,9 @@
     <section class="mt-24 border-t border-slate-100 pt-16" aria-labelledby="comments-title">
         <!-- HEADER -->
         <header class="mb-10 flex items-center justify-between">
-            <h2 id="comments-title" class="text-2xl font-black text-rancho-forest">Отзывы</h2>
+            <h2 id="comments-title" class="text-2xl font-black text-rancho-forest">
+                {{ title || 'Отзывы' }}
+            </h2>
 
             <span
                 class="rounded-lg bg-rancho-paper px-3 py-1 font-bold text-rancho-olive"
