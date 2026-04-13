@@ -9,8 +9,7 @@ export interface DeliveryInfo {
 //From Frontend: use it in checkout, order table, admin panel
 export interface DeliveryDraft {
     address: string;
-    lat: number;
-    lng: number;
+    point: { lat: number; lng: number } | null;
     isValid: boolean;
     distance?: number;
 }

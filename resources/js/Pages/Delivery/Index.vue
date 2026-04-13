@@ -5,7 +5,7 @@
     import CommentsSection from '@/Components/Sections/CommentsSection.vue';
     import MainLayout from '@/Layouts/MainLayout.vue';
     import { useYandexGeocoder } from '@/composables/useYandexGeocoder';
-    import type { Comment, DeliveryInfo, Page, Paginated } from '@/types';
+    import type { Comment, DeliveryDraft, DeliveryInfo, Page, Paginated } from '@/types';
 
     interface Props {
         page: Page;
@@ -27,6 +27,12 @@
     const address = ref('');
     const selectedPoint = ref<{ lat: number; lng: number } | null>(null);
     const isFromMap = ref(false);
+
+    const deliveryDraft = ref<DeliveryDraft>({
+        address: '',
+        point: null as { lat: number; lng: number } | null,
+        isValid: false,
+    });
 
     const { suggestions, search, reverse } = useYandexGeocoder();
 
@@ -111,17 +117,62 @@
         }
     }
 
-    function confirmDeliveryPoint() {
+    async function saveDeliveryDraftToServer() {
+        if (!deliveryDraft.value) return;
+
+        await fetch('/api/delivery/draft', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                address: deliveryDraft.value.address,
+                lat: deliveryDraft.value.point?.lat,
+                lng: deliveryDraft.value.point?.lng,
+                is_valid: deliveryDraft.value.isValid,
+            }),
+        });
+    }
+
+    async function confirmDeliveryPoint() {
         if (!selectedPoint.value || !isDeliveryAllowed.value) return;
+
+        deliveryDraft.value = {
+            address: address.value,
+            point: selectedPoint.value,
+            isValid: isDeliveryAllowed.value,
+        };
 
         isConfirmed.value = true;
 
-        // here later: send to backend or store in cart/session
-        console.log('CONFIRMED DELIVERY:', {
-            address: address.value,
-            point: selectedPoint.value,
-        });
+        try {
+            await saveDeliveryDraftToServer();
+            console.log('Draft saved to server');
+        } catch (e) {
+            console.error('Failed to save draft', e);
+        }
     }
+
+    watch(
+        deliveryDraft,
+        (val) => {
+            if (!val) return;
+
+            localStorage.setItem('delivery_draft', JSON.stringify(val));
+        },
+        { deep: true },
+    );
+
+    onMounted(() => {
+        const saved = localStorage.getItem('delivery_draft');
+
+        if (saved) {
+            try {
+                deliveryDraft.value = JSON.parse(saved);
+                isConfirmed.value = true;
+            } catch (e) {}
+        }
+    });
 </script>
 
 <template>
