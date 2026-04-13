@@ -94,4 +94,9 @@ class SettingService
             'lng' => (float) $lng,
         ];
     }
+
+    public function deliveryZones(): array
+    {
+        return $this->get('delivery_zones', []);
+    }
 }

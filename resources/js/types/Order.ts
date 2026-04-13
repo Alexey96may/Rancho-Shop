@@ -6,7 +6,29 @@ export interface Order {
     id: number;
 
     customer_name: string;
+
+    /**
+     * Delivery snapshot (can be null if pickup)
+     */
     delivery_address: string | null;
+
+    delivery_lat?: number | null;
+    delivery_lng?: number | null;
+
+    /**
+     * Pickup flag
+     */
+    is_pickup?: boolean;
+
+    /**
+     * Delivery validation snapshot (zone check at order time)
+     */
+    delivery_validated?: boolean;
+
+    /**
+     * Delivery metadata snapshot (zone, distance, rules, etc.)
+     */
+    delivery_meta?: Record<string, any> | null;
 
     total_price: number;
     delivery_price: number;
@@ -14,11 +36,15 @@ export interface Order {
 
     status: OrderStatus;
 
-    // Связь: Order has many OrderItems
+    // Items relation
     items?: OrderItem[];
 
-    promo_code_id?: string | null; // Какой код применили
-    discount_total: number; // Сколько конкретно сэкономил клиент (в копейках) // всегда должно быть целым числом! floor() или round()
+    promo_code_id?: string | null;
+
+    /**
+     * Discount snapshot (stored in smallest currency unit)
+     */
+    discount_total: number;
 
     created_at: string;
 }
@@ -26,9 +52,8 @@ export interface Order {
 export interface AdminOrder extends Order {
     customer_phone: string;
     customer_comment: string | null;
-    admin_note: string | null; // Твои пометки: "Вредный клиент" или "Положить подарок"
+    admin_note: string | null;
 
-    // Полные метки времени для логов
     updated_at: string;
 }
 
@@ -37,8 +62,10 @@ export interface OrderItem {
     order_id: number;
     product_variant_id: number;
     product_name: string;
-    unit_price: number; //в копейках / финальная цена
-    old_unit_price: number | null; //в копейках / цена без скидки
+
+    unit_price: number;
+    old_unit_price: number | null;
+
     quantity: number;
 
     unit?: BaseUnit;
@@ -46,6 +73,5 @@ export interface OrderItem {
     created_at: string;
     updated_at: string;
 
-    // Virtual property (вычисляемое на фронте или в ресурсе Laravel)
     subtotal?: number;
 }

@@ -12,6 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('delivery_addresses', function (Blueprint $table) {
+            $table->id();
             // owner (nullable = guest drafts or future guest checkout)
             $table->foreignId('user_id')
                 ->nullable()

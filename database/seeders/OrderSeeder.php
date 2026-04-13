@@ -21,11 +21,10 @@ class OrderSeeder extends Seeder
         $variant = ProductVariant::whereHas('product', function ($q) {
             $q->where('slug', 'moloko-korovye-tselnoe');
         })->first();
+
         $promo = PromoCode::where('code', 'START2026')->first();
 
-        if (!$variant) {
-            return;
-        }
+        if (!$variant) return;
 
         $quantity = 3;
         $deliveryPrice = 20000;
@@ -37,10 +36,27 @@ class OrderSeeder extends Seeder
         $order = Order::create([
             'customer_name' => 'Алексей Тестовый',
             'customer_phone' => '+7 (978) 123-45-67',
+
             'delivery_address' => 'Симферополь, ул. Пушкина, 1',
+            'delivery_lat' => 44.9521,
+            'delivery_lng' => 34.1024,
+
+            'is_pickup' => false,
+            'delivery_validated' => true,
+
+            'delivery_meta' => [
+                'zone_id' => 1,
+                'zone_name' => 'Simferopol center',
+                'distance_km' => 2.8,
+                'route_time_min' => 12,
+                'pricing_rule' => 'base_v1',
+            ],
+
             'customer_comment' => 'Пожалуйста, привезите до 12:00',
+
             'delivery_price' => $deliveryPrice,
             'discount_total' => $discount,
+            
             // Total: (Price * Quantity) + Shipping - Discount
             'total_price' => ($unitPrice * $quantity) + $deliveryPrice - $discount,
             'status' => 'new',

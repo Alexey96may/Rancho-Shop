@@ -34,10 +34,31 @@ class SettingSeeder extends Seeder
             ['key' => 'delivery_schedule', 'value' => 'Вт, Пт, Вс: 09:00 - 14:00', 'type' => 'string'],
             ['key' => 'delivery_info', 'value' => 'Доставка по Симферополю бесплатная при заказе от 1500₽.', 'type' => 'string'],
 
+            ['key' => 'delivery_zones', 'value' => json_encode([
+                [
+                    'name' => 'Основной маршрут',
+
+                    // (polyline)
+                    'path' => [
+                        [44.8621, 34.2154],
+                        [44.9520, 34.1020],
+                        [44.9480, 34.0900],
+                    ],
+
+                    // corridor width (meters)
+                    'radius' => 700,
+
+                    'delivery_price' => 20000,
+                    'free_from' => 150000,
+
+                    'enabled' => true,
+                    'priority' => 1,
+                    'max_distance' => 20000, // for the future
+                ],
+            ]), 'type' => 'json'],
+
             // --- Economy (stored in kopecks) ---
             ['key' => 'min_order_amount', 'value' => '50000', 'type' => 'integer'],
-            ['key' => 'delivery_cost', 'value' => '20000', 'type' => 'integer'],
-            ['key' => 'free_delivery_from', 'value' => '150000', 'type' => 'integer'],
 
             // --- Interface limits (Pagination & UI) ---
             ['key' => 'products_per_page', 'value' => '12', 'type' => 'integer'],

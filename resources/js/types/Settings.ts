@@ -1,37 +1,56 @@
 export type ShopStatus = 'open' | 'closed' | 'maintenance';
 
+export interface DeliveryZone {
+    name: string;
+
+    path: [number, number][]; // [lat, lng]
+
+    radius: number; // meters
+
+    delivery_price: number; // копейки
+    free_from: number; // копейки
+
+    enabled: boolean;
+    priority: number;
+    max_distance?: number;
+}
+
 export interface SiteSettings {
-    // Основная информация
+    // --- Основная информация ---
     site_name: string;
     site_description: string;
+
     contact_phone: string;
     contact_email: string;
-    contact_telegram: string; // Ссылка на личку или бота
-    contact_vk: string; // Ссылка на группу ВК
-    address_farm: string; // Адрес самой фермы (для самовывоза)
+    contact_telegram: string;
+    contact_vk: string;
 
-    // farm_coords: string;
+    address_farm: string;
+
+    // координаты фермы
     farm_coords: { lat: number; lng: number };
 
+    // --- Статус ---
     shop_status: ShopStatus;
+    is_accepting_orders: boolean;
 
-    // Логика доставки (вместо работы магазина)
-    delivery_schedule: string; // Например: "Пт, Вс: 08:00 - 12:00"
-    delivery_info: string; // Текст: "Доставка по Симферополю бесплатная от 1000₽"
+    // --- Доставка ---
+    delivery_schedule: string;
+    delivery_info: string;
 
-    // Экономика (в копейках)
-    min_order_amount: number; // Минималка для заказа
-    delivery_cost: number; // Стоимость, если не набрали на бесплатную
-    free_delivery_from: number; // Порог бесплатной доставки
+    // ❗ НОВОЕ
+    delivery_zones: DeliveryZone[];
 
-    // Лимиты интерфейса
+    // --- Экономика ---
+    min_order_amount: number;
+
+    // --- UI ---
     products_per_page: number;
     cows_per_page: number;
-    featured_cows_limit: number; // Сколько коров показать на главной
-    featured_products_limit: number; // Сколько товаров на главной
-    featured_comments_limit: number; // Сколько комментов на главной
+    featured_cows_limit: number;
+    featured_products_limit: number;
+    featured_comments_limit: number;
 
-    // Маркетинг
-    header_announcement?: string; // Текст в шапке: "Свежий удой ожидается в четверг!"
-    is_accepting_orders: boolean; // Глобальный рубильник (вместо shop_status)
+    // --- Маркетинг ---
+    header_announcement?: string;
 }

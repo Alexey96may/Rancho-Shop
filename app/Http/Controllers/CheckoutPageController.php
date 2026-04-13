@@ -17,13 +17,22 @@ class CheckoutPageController extends Controller
 
     public function store(\App\Http\Requests\CheckoutRequest $request)
     {
-        $delivery = $request->attributes->get('delivery_draft');
+        $deliveryDraft  = $request->attributes->get('delivery_draft');
 
-        if (!$delivery || empty($delivery['address'])) {
+        if (!$deliveryDraft) {
             return back()->withErrors([
-                'delivery' => 'Не выбран адрес доставки',
+                'delivery' => 'Не выбран способ доставки',
             ]);
         }
+
+        $delivery = new \App\DTO\DeliveryDTO(
+            address: $deliveryDraft['address'] ?? null,
+            lat: $deliveryDraft['lat'] ?? null,
+            lng: $deliveryDraft['lng'] ?? null,
+            is_pickup: $deliveryDraft['is_pickup'] ?? false,
+            is_valid: $deliveryDraft['is_valid'] ?? false,
+            meta: $deliveryDraft['delivery_meta'] ?? null,
+        );
 
         $order = app(\App\Services\CheckoutService::class)
             ->handle(

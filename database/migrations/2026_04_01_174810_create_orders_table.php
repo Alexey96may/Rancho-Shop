@@ -23,8 +23,15 @@ return new class() extends Migration
             // Client Information
             $table->string('customer_name');
             $table->string('customer_phone');
-            $table->text('delivery_address')->nullable();
             $table->text('customer_comment')->nullable(); // Client's comment on the order
+
+            // Delivery
+            $table->boolean('is_pickup')->default(false); // true if is_pickup
+            $table->text('delivery_address')->nullable();
+            $table->decimal('delivery_lat', 10, 7)->nullable();
+            $table->decimal('delivery_lng', 10, 7)->nullable();
+            $table->boolean('delivery_validated')->default(true);
+            $table->json('delivery_meta')->nullable();
 
             $table->unsignedInteger('discount_total')->default(0);
 
