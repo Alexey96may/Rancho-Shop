@@ -49,7 +49,6 @@
         if (!map) return;
 
         const source = map.getSource('delivery-route') as mapboxgl.GeoJSONSource;
-
         if (!source) return;
 
         const url =
@@ -68,6 +67,8 @@
             geometry: route,
             properties: {},
         };
+
+        source.setData(geojson);
     }
 
     function getUserLocation(): Promise<{ lat: number; lng: number } | null> {

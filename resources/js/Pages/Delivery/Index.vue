@@ -56,8 +56,6 @@
 
                 const addr = await reverse(val.lat, val.lng);
 
-                console.log('INIT REVERSE', addr);
-
                 if (addr) {
                     address.value = addr;
                 }
