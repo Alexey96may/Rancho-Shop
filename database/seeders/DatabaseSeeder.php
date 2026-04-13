@@ -25,6 +25,7 @@ class DatabaseSeeder extends Seeder
         User::factory(10)->create();
 
         $this->call([
+            DeliveryAddressSeeder::class,
             CategorySeeder::class,
             AnimalSeeder::class,
             UnitSeeder::class,

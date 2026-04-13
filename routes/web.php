@@ -21,16 +21,13 @@ Route::get('/catalog', [ProductController::class, 'index'])->name('catalog.index
 Route::get('/catalog/{product:slug}', [ProductController::class, 'show'])->name('catalog.show');
 
 Route::get('/cart', function () {
-        return inertia('Cart/Index');
-    })->name('cart.index');
+    return inertia('Cart/Index');
+})->name('cart.index');
 
 Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
 
-Route::get('/checkout', [CheckoutPageController::class, 'index'])
-    ->name('checkout.index');
-
-Route::post('/checkout', [CheckoutPageController::class, 'store'])
-    ->name('checkout.store');
+Route::get('/checkout', [CheckoutPageController::class, 'index'])->name('checkout.index');
+Route::post('/checkout', [CheckoutPageController::class, 'store'])->name('checkout.store');
     
 Route::get('/delivery', [PageController::class, 'delivery'])->name('delivery');
 

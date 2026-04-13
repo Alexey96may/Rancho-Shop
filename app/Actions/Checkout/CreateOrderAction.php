@@ -7,12 +7,16 @@ use App\Models\Order;
 
 class CreateOrderAction
 {
-    public function handle(CheckoutDTO $dto, int $totalPrice): Order
+    public function handle(CheckoutDTO $dto, int $totalPrice, array $delivery): Order
     {
         return Order::create([
             'customer_name' => $dto->customerName,
             'customer_phone' => $dto->customerPhone,
-            'delivery_address' => $dto->deliveryAddress,
+            
+            'delivery_address' => $delivery['address'],
+            'delivery_lat' => $delivery['lat'],
+            'delivery_lng' => $delivery['lng'],
+
             'customer_comment' => $dto->customerComment,
             
             'total_price' => $totalPrice,

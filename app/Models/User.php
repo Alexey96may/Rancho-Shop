@@ -37,4 +37,9 @@ class User extends Authenticatable
     public function isAdmin(): bool {
         return $this->role === \App\Enums\UserRole::ADMIN;
     }
+
+    public function deliveryAddresses()
+    {
+        return $this->hasMany(DeliveryAddress::class);
+    }
 }

@@ -25,9 +25,9 @@ class CheckoutService
         protected DecrementStockAction $decrementStock,
     ) {}
 
-    public function handle(CheckoutDTO $dto): Order
+    public function handle(CheckoutDTO $dto, array $delivery): Order
     {
-        return DB::transaction(function () use ($dto) {
+        return DB::transaction(function () use ($dto, $delivery) {
             $products = $this->getProducts->handle($dto);
             
             Log::info('Checkout started', [
@@ -38,7 +38,7 @@ class CheckoutService
 
             $total = $this->calculatePrice->handle($dto, $products);
 
-            $order = $this->createOrder->handle($dto, $total);
+            $order = $this->createOrder->handle($dto, $total, $delivery);
 
             $this->createItems->handle($order, $dto, $products);
 
