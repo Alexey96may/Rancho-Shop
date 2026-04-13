@@ -46,6 +46,12 @@
     // 🚚 ROUTE
     // ===============================
     async function loadRoute() {
+        if (!map) return;
+
+        const source = map.getSource('delivery-route') as mapboxgl.GeoJSONSource;
+
+        if (!source) return;
+
         const url =
             `https://api.mapbox.com/directions/v5/mapbox/driving/` +
             waypoints.map((p) => `${p[0]},${p[1]}`).join(';') +
@@ -55,26 +61,55 @@
         const data = await res.json();
 
         const route = data?.routes?.[0]?.geometry;
-        if (!route || !map) return;
+        if (!route) return;
 
         const geojson: Feature<LineString> = {
             type: 'Feature',
             geometry: route,
             properties: {},
         };
+    }
 
-        const source = map.getSource('delivery-route') as mapboxgl.GeoJSONSource;
+    function getUserLocation(): Promise<{ lat: number; lng: number } | null> {
+        return new Promise((resolve) => {
+            if (!navigator.geolocation) {
+                resolve(null);
+                return;
+            }
 
-        if (source) {
-            source.setData(geojson);
-        }
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    resolve({
+                        lat: pos.coords.latitude,
+                        lng: pos.coords.longitude,
+                    });
+                },
+                () => resolve(null),
+                {
+                    enableHighAccuracy: true,
+                    timeout: 5000,
+                },
+            );
+        });
     }
 
     // ===============================
-    // 🗺 INIT
+    // INIT
     // ===============================
-    onMounted(() => {
-        const center = props.modelValue || farm;
+    onMounted(async () => {
+        let center = props.modelValue || farm;
+
+        if (!props.modelValue) {
+            const userLoc = await getUserLocation();
+
+            if (userLoc) {
+                center = userLoc;
+
+                waypoints[0] = [userLoc.lng, userLoc.lat];
+            }
+        }
+
+        emit('update:modelValue', center);
 
         map = new mapboxgl.Map({
             container: mapContainer.value!,
@@ -90,7 +125,7 @@
         // ===============================
         // INIT SOURCES
         // ===============================
-        map.on('load', () => {
+        map.on('load', async () => {
             map.addSource('delivery-route', {
                 type: 'geojson',
                 data: {
@@ -116,6 +151,8 @@
                     'line-width': 4,
                 },
             });
+
+            await new Promise((r) => setTimeout(r, 50));
 
             loadRoute();
         });

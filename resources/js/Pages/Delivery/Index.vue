@@ -1,5 +1,5 @@
 <script setup lang="ts">
-    import { computed, ref, watch } from 'vue';
+    import { computed, onMounted, ref, watch } from 'vue';
 
     import MapboxPicker from '@/Components/Map/MapboxPicker.vue';
     import CommentsSection from '@/Components/Sections/CommentsSection.vue';
@@ -27,21 +27,11 @@
     const selectedPoint = ref<{ lat: number; lng: number } | null>(null);
     const isFromMap = ref(false);
 
-    const { suggestions, search } = useYandexGeocoder();
-
-    const selectSuggestion = (item: any) => {
-        address.value = item.place_name;
-
-        selectedPoint.value = {
-            lat: item.center[1],
-            lng: item.center[0],
-        };
-
-        isFromMap.value = false;
-        suggestions.value = [];
-    };
+    const { suggestions, search, reverse } = useYandexGeocoder();
 
     const select = (item: any) => {
+        isFromMap.value = false;
+
         address.value = item.name;
 
         selectedPoint.value = {
@@ -52,11 +42,44 @@
         suggestions.value = [];
     };
 
-    watch(selectedPoint, (val) => {
-        if (!val) return;
+    let isFirstResolved = false;
+    let reverseTimeout: any = null;
 
-        isFromMap.value = true;
-    });
+    watch(
+        selectedPoint,
+        async (val) => {
+            if (!val) return;
+
+            // 🟢 ПЕРВЫЙ РАЗ
+            if (!isFirstResolved) {
+                isFirstResolved = true;
+
+                const addr = await reverse(val.lat, val.lng);
+
+                console.log('INIT REVERSE', addr);
+
+                if (addr) {
+                    address.value = addr;
+                }
+
+                return;
+            }
+
+            // 🟢 debounce
+            if (reverseTimeout) clearTimeout(reverseTimeout);
+
+            reverseTimeout = setTimeout(async () => {
+                const addr = await reverse(val.lat, val.lng);
+
+                console.log('UPDATE REVERSE', addr);
+
+                if (addr) {
+                    address.value = addr;
+                }
+            }, 400);
+        },
+        { immediate: true },
+    );
 </script>
 
 <template>

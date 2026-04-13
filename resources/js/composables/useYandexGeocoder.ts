@@ -67,9 +67,33 @@ export function useYandexGeocoder() {
         }, 300);
     };
 
+    async function reverse(lat: number, lng: number): Promise<string | null> {
+        try {
+            const key = import.meta.env.VITE_YANDEX_GEOCODER_KEY;
+
+            const res = await fetch(
+                `https://geocode-maps.yandex.ru/1.x/?format=json&apikey=${key}` +
+                    `&geocode=${lng},${lat}` +
+                    `&lang=ru_RU`,
+            );
+
+            const data = await res.json();
+
+            const item = data?.response?.GeoObjectCollection?.featureMember?.[0]?.GeoObject;
+
+            if (!item) return null;
+
+            return item.metaDataProperty.GeocoderMetaData.text;
+        } catch (e) {
+            console.error('reverse geocoder error', e);
+            return null;
+        }
+    }
+
     return {
         suggestions,
         loading,
         search,
+        reverse,
     };
 }
