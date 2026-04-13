@@ -27,6 +27,16 @@
         lng: 34.3381,
     };
 
+    let routeTimeout: any = null;
+
+    function scheduleRouteUpdate() {
+        if (routeTimeout) clearTimeout(routeTimeout);
+
+        routeTimeout = setTimeout(() => {
+            loadRoute();
+        }, 300);
+    }
+
     // 🚚 WAYPOINTS
     const waypoints: [number, number][] = [
         [34.32541, 44.83384],
@@ -174,6 +184,7 @@
             emit('update:modelValue', val);
 
             waypoints[0] = [lngLat.lng, lngLat.lat];
+            scheduleRouteUpdate();
             loadRoute();
 
             map.setCenter([lngLat.lng, lngLat.lat]);
