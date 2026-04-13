@@ -11,34 +11,34 @@
     }
 
     const props = defineProps<Props>();
-    const emit = defineEmits(['update:modelValue']);
+    const emit = defineEmits(['update:modelValue', 'delivery-valid']);
 
     const mapContainer = ref<HTMLDivElement | null>(null);
 
     let map: mapboxgl.Map;
     let marker: mapboxgl.Marker;
 
+    // Prevent circular updates between map <-> v-model
     let isInternalUpdate = false;
 
+    // Track readiness state
+    let mapReady = false;
+    let sourcesReady = false;
+
+    // Mapbox token
     mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 
-    // 🧭 START
+    // ==========================
+    // INITIAL CENTER (farm fallback)
+    // ==========================
     const farm = props.farmCoords || {
         lat: 44.8445,
         lng: 34.3381,
     };
 
-    let routeTimeout: any = null;
-
-    function scheduleRouteUpdate() {
-        if (routeTimeout) clearTimeout(routeTimeout);
-
-        routeTimeout = setTimeout(() => {
-            loadRoute();
-        }, 300);
-    }
-
-    // 🚚 WAYPOINTS
+    // ==========================
+    // WAYPOINTS (delivery route)
+    // ==========================
     const waypoints: [number, number][] = [
         [34.32541, 44.83384],
         [34.12673, 44.94398],
@@ -53,23 +53,52 @@
         [34.32541, 44.83384],
     ];
 
-    //zone 500m
+    // ==========================
+    // IN-MEMORY CACHE
+    // ==========================
+    const routeCache = new Map<string, Feature<LineString>>();
+    const zoneCache = new Map<string, Feature<Polygon>>();
+
+    // Create cache key based on route
+    function getCacheKey() {
+        return waypoints.map((p) => `${p[0].toFixed(5)},${p[1].toFixed(5)}`).join(';');
+    }
+
+    // ==========================
+    // BUFFER ZONE (500m)
+    // ==========================
     function buildDeliveryBuffer(line: Feature<LineString>) {
         return turf.buffer(line, 0.5, {
-            units: 'kilometers', // 0.5 km = 500m
+            units: 'kilometers', // 500 meters
         }) as Feature<Polygon>;
     }
 
-    // ===============================
-    // 🚚 ROUTE
-    // ===============================
+    let currentZone: Feature<Polygon> | null = null;
+
+    // ==========================
+    // GET ROUTE FROM MAPBOX
+    // ==========================
     async function loadRoute() {
-        if (!map) return;
+        if (!mapReady || !sourcesReady) return;
 
         const source = map.getSource('delivery-route') as mapboxgl.GeoJSONSource;
         const zoneSource = map.getSource('delivery-zone') as mapboxgl.GeoJSONSource;
-        if (!source) return;
 
+        if (!source || !zoneSource) return;
+
+        const key = getCacheKey();
+
+        // -------- CACHE HIT --------
+        const cachedRoute = routeCache.get(key);
+        const cachedZone = zoneCache.get(key);
+
+        if (cachedRoute && cachedZone) {
+            source.setData(cachedRoute);
+            zoneSource.setData(cachedZone);
+            return;
+        }
+
+        // -------- API REQUEST --------
         const url =
             `https://api.mapbox.com/directions/v5/mapbox/driving/` +
             waypoints.map((p) => `${p[0]},${p[1]}`).join(';') +
@@ -87,19 +116,25 @@
             properties: {},
         };
 
-        source?.setData(line);
-
         const buffer = buildDeliveryBuffer(line);
 
-        zoneSource?.setData(buffer);
+        currentZone = buffer;
+
+        // Save to cache
+        routeCache.set(key, line);
+        zoneCache.set(key, buffer);
+
+        // Render to map
+        source.setData(line);
+        zoneSource.setData(buffer);
     }
 
+    // ==========================
+    // GET USER LOCATION
+    // ==========================
     function getUserLocation(): Promise<{ lat: number; lng: number } | null> {
         return new Promise((resolve) => {
-            if (!navigator.geolocation) {
-                resolve(null);
-                return;
-            }
+            if (!navigator.geolocation) return resolve(null);
 
             navigator.geolocation.getCurrentPosition(
                 (pos) => {
@@ -117,24 +152,25 @@
         });
     }
 
-    // ===============================
-    // INIT
-    // ===============================
+    // ==========================
+    // INIT MAP
+    // ==========================
     onMounted(async () => {
         let center = props.modelValue || farm;
 
+        // Try browser geolocation if no saved value
         if (!props.modelValue) {
             const userLoc = await getUserLocation();
 
             if (userLoc) {
                 center = userLoc;
-
                 waypoints[0] = [userLoc.lng, userLoc.lat];
             }
         }
 
         emit('update:modelValue', center);
 
+        // Create map instance
         map = new mapboxgl.Map({
             container: mapContainer.value!,
             style: 'mapbox://styles/mapbox/streets-v11',
@@ -142,14 +178,17 @@
             zoom: 11,
         });
 
+        // Create draggable marker
         marker = new mapboxgl.Marker({ draggable: true })
             .setLngLat([center.lng, center.lat])
             .addTo(map);
 
-        // ===============================
-        // INIT SOURCES
-        // ===============================
         map.on('load', async () => {
+            mapReady = true;
+
+            // --------------------------
+            // ROUTE SOURCE
+            // --------------------------
             map.addSource('delivery-route', {
                 type: 'geojson',
                 data: {
@@ -176,6 +215,9 @@
                 },
             });
 
+            // --------------------------
+            // DELIVERY ZONE SOURCE
+            // --------------------------
             map.addSource('delivery-zone', {
                 type: 'geojson',
                 data: {
@@ -208,16 +250,24 @@
                 },
             });
 
-            await new Promise((r) => setTimeout(r, 50));
+            const lngLat = marker.getLngLat();
 
+            const allowed = checkDeliveryAvailability(lngLat.lat, lngLat.lng);
+            emit('delivery-valid', allowed);
+
+            sourcesReady = true;
+
+            // Initial route render
             loadRoute();
         });
 
-        // ===============================
-        // USER INTERACTION
-        // ===============================
+        // ==========================
+        // MARKER EVENTS
+        // ==========================
         marker.on('dragend', () => {
             const lngLat = marker.getLngLat();
+
+            const allowed = checkDeliveryAvailability(lngLat.lat, lngLat.lng);
 
             isInternalUpdate = true;
 
@@ -227,18 +277,21 @@
             };
 
             emit('update:modelValue', val);
+            emit('delivery-valid', allowed);
 
             waypoints[0] = [lngLat.lng, lngLat.lat];
-            scheduleRouteUpdate();
-            loadRoute();
 
             map.setCenter([lngLat.lng, lngLat.lat]);
+
+            // loadRoute();
 
             setTimeout(() => (isInternalUpdate = false), 0);
         });
 
         map.on('click', (e) => {
             isInternalUpdate = true;
+
+            const allowed = checkDeliveryAvailability(e.lngLat.lat, e.lngLat.lng);
 
             const val = {
                 lat: e.lngLat.lat,
@@ -248,19 +301,21 @@
             marker.setLngLat(e.lngLat);
 
             emit('update:modelValue', val);
+            emit('delivery-valid', allowed);
 
             waypoints[0] = [e.lngLat.lng, e.lngLat.lat];
-            loadRoute();
 
             map.setCenter([e.lngLat.lng, e.lngLat.lat]);
+
+            // loadRoute();
 
             setTimeout(() => (isInternalUpdate = false), 0);
         });
     });
 
-    // ===============================
-    // 🔁 WATCH (FIX MARKER JUMP)
-    // ===============================
+    // ==========================
+    // EXTERNAL MODEL SYNC
+    // ==========================
     watch(
         () => props.modelValue,
         (val) => {
@@ -272,15 +327,21 @@
         },
     );
 
+    // ==========================
+    // UTILITY (optional check)
+    // ==========================
+
     function isInsideDeliveryZone(point: [number, number], zone: Feature<Polygon>) {
         return turf.booleanPointInPolygon(turf.point(point), zone);
+    }
+
+    function checkDeliveryAvailability(lat: number, lng: number) {
+        if (!currentZone) return false;
+
+        return isInsideDeliveryZone([lng, lat], currentZone);
     }
 </script>
 
 <template>
-    <div
-        ref="mapContainer"
-        class="h-full w-full rounded-xl"
-        aria-label="Маршрут доставки по Симферополю"
-    />
+    <div ref="mapContainer" class="h-full w-full rounded-xl" aria-label="Delivery route map" />
 </template>

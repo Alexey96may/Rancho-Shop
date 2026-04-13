@@ -13,6 +13,7 @@ export * from './LandingBlock';
 export * from './Media';
 export * from './Unit';
 export * from './ProductVariant';
+export * from './Delivery';
 
 export interface ResourceCollection<T> {
     data: T[];
@@ -28,11 +29,4 @@ export interface Paginated<T> {
         current_page: number;
         last_page: number;
     };
-}
-
-export interface DeliveryInfo {
-    farm_coords: string;
-    delivery_cost: number;
-    free_delivery_from: number;
-    address_farm: string;
 }
