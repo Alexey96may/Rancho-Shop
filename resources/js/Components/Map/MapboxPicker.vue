@@ -1,7 +1,8 @@
 <script setup lang="ts">
     import { onMounted, ref, watch } from 'vue';
 
-    import type { Feature, LineString } from 'geojson';
+    import * as turf from '@turf/turf';
+    import type { Feature, LineString, Polygon } from 'geojson';
     import mapboxgl from 'mapbox-gl';
 
     interface Props {
@@ -52,6 +53,13 @@
         [34.32541, 44.83384],
     ];
 
+    //zone 500m
+    function buildDeliveryBuffer(line: Feature<LineString>) {
+        return turf.buffer(line, 0.5, {
+            units: 'kilometers', // 0.5 km = 500m
+        }) as Feature<Polygon>;
+    }
+
     // ===============================
     // 🚚 ROUTE
     // ===============================
@@ -59,6 +67,7 @@
         if (!map) return;
 
         const source = map.getSource('delivery-route') as mapboxgl.GeoJSONSource;
+        const zoneSource = map.getSource('delivery-zone') as mapboxgl.GeoJSONSource;
         if (!source) return;
 
         const url =
@@ -72,13 +81,17 @@
         const route = data?.routes?.[0]?.geometry;
         if (!route) return;
 
-        const geojson: Feature<LineString> = {
+        const line: Feature<LineString> = {
             type: 'Feature',
             geometry: route,
             properties: {},
         };
 
-        source.setData(geojson);
+        source?.setData(line);
+
+        const buffer = buildDeliveryBuffer(line);
+
+        zoneSource?.setData(buffer);
     }
 
     function getUserLocation(): Promise<{ lat: number; lng: number } | null> {
@@ -163,6 +176,38 @@
                 },
             });
 
+            map.addSource('delivery-zone', {
+                type: 'geojson',
+                data: {
+                    type: 'Feature',
+                    geometry: {
+                        type: 'Polygon',
+                        coordinates: [],
+                    },
+                    properties: {},
+                },
+            });
+
+            map.addLayer({
+                id: 'delivery-zone-fill',
+                type: 'fill',
+                source: 'delivery-zone',
+                paint: {
+                    'fill-color': '#3B7558',
+                    'fill-opacity': 0.25,
+                },
+            });
+
+            map.addLayer({
+                id: 'delivery-zone-border',
+                type: 'line',
+                source: 'delivery-zone',
+                paint: {
+                    'line-color': '#1C3F34',
+                    'line-width': 2,
+                },
+            });
+
             await new Promise((r) => setTimeout(r, 50));
 
             loadRoute();
@@ -226,6 +271,10 @@
             map.setCenter([val.lng, val.lat]);
         },
     );
+
+    function isInsideDeliveryZone(point: [number, number], zone: Feature<Polygon>) {
+        return turf.booleanPointInPolygon(turf.point(point), zone);
+    }
 </script>
 
 <template>
