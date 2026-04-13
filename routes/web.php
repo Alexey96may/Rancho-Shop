@@ -11,6 +11,7 @@ use App\Http\Controllers\CheckoutPageController;
 use App\Http\Controllers\AnimalController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\PageController;
+use App\Http\Controllers\DeliveryController;
 
 Route::get('/', [LandingController::class, 'index'])->name('home');
 
@@ -37,6 +38,8 @@ Route::get('/animals/{animal:slug}', [AnimalController::class, 'show'])->name('a
 Route::post('/comments', [CommentController::class, 'store'])->name('comments.store');
 
 Route::get('/about', [PageController::class, 'about'])->name('about');
+
+Route::post('/delivery/draft', [DeliveryController::class, 'store'])->name('delivery.draft.store');
 
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');

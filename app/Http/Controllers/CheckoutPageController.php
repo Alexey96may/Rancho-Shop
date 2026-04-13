@@ -12,7 +12,6 @@ class CheckoutPageController extends Controller
     public function index(Request $request): Response
     {
         return Inertia::render('Checkout/Index', [
-            'delivery' => $request->attributes->get('delivery'),
         ]);
     }
 
