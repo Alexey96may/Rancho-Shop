@@ -52,6 +52,8 @@
         "@heroicons/vue": "^2.2.0",
         "@turf/turf": "^7.3.4",
         "howler": "^2.2.4",
+        "lodash": "^4.18.1",
+        "lodash.debounce": "^4.0.8",
         "lucide-vue-next": "^1.0.0",
         "mapbox-gl": "^3.21.0",
         "pinia": "^3.0.4",

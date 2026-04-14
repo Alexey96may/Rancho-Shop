@@ -29,7 +29,7 @@ class CreateOrderAction
 
             'is_pickup' => $delivery->is_pickup,
             'delivery_validated' => $deliveryResult['is_valid'],
-            'delivery_meta' => $deliveryResult['zone'],
+            'delivery_meta' => $deliveryResult,
 
             'customer_comment' => $dto->customerComment,
             

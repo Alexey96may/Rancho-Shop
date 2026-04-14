@@ -5,6 +5,7 @@ namespace App\Actions\Checkout;
 use App\DTO\DeliveryDTO;
 use App\Services\SettingService;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Validation\ValidationException;
 
 class ValidateDeliveryAction
 {
@@ -14,69 +15,78 @@ class ValidateDeliveryAction
 
     public function handle(DeliveryDTO $delivery): array
     {
-        // Pickup is always valid and has no delivery fee
         if ($delivery->is_pickup) {
             return [
                 'is_valid' => true,
                 'delivery_price' => 0,
                 'zone' => null,
+                'distance' => 0,
             ];
         }
 
-        // Cache key depends on rounded coordinates + current zones snapshot
-        $lat = round((float) $delivery->lat, 5);
-        $lng = round((float) $delivery->lng, 5);
+        $lat = round($delivery->lat, 5);
+        $lng = round($delivery->lng, 5);
 
-        $zones = $this->settings->deliveryZones();
+        $cacheKey = "delivery_check:{$lat}:{$lng}";
 
-        $zonesSignature = md5(json_encode($zones, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+        return Cache::remember($cacheKey, 300, function () use ($delivery) {
 
-        $cacheKey = "delivery_check:{$zonesSignature}:{$lat}:{$lng}";
+            $zones = $this->settings->deliveryZones();
 
-        return Cache::remember($cacheKey, 600, function () use ($delivery, $zones) {
+            $farmCoords = $this->settings->get('farm_coords'); // "44.8621, 34.2154"
+            [$farmLat, $farmLng] = array_map('floatval', explode(',', $farmCoords));
+
             foreach ($zones as $zone) {
-                if (empty($zone['enabled'])) {
-                    continue;
-                }
 
-                $inside = $this->checkPointInPolylineZone(
-                    (float) $delivery->lat,
-                    (float) $delivery->lng,
-                    $zone['path'] ?? [],
-                    (float) ($zone['radius'] ?? 0)
+                if (!$zone['enabled']) continue;
+
+                $distanceToRoute = $this->checkPointInPolylineZoneDistance(
+                    $delivery->lat,
+                    $delivery->lng,
+                    $zone['path']
                 );
 
-                if ($inside) {
+                if ($distanceToRoute <= $zone['radius']) {
+
+                    $deliveryPrice = $zone['delivery_price'];
+
+                    $distanceToFarm = $this->haversineDistance(
+                        $delivery->lat,
+                        $delivery->lng,
+                        $farmLat,
+                        $farmLng
+                    );
+
                     return [
                         'is_valid' => true,
-                        'delivery_price' => (int) ($zone['delivery_price'] ?? 0),
+                        'delivery_price' => $deliveryPrice,
                         'zone' => $zone,
+
+                        // 🔥 ВОТ ОНО
+                        'distance_to_route' => $distanceToRoute,
+                        'distance_to_farm' => $distanceToFarm,
                     ];
                 }
             }
 
-            return [
-                'is_valid' => false,
-                'delivery_price' => 0,
-                'zone' => null,
-            ];
+            throw ValidationException::withMessages([
+                'delivery' => 'Адрес вне зоны доставки',
+            ]);
         });
     }
 
-    private function checkPointInPolylineZone(
+    /**
+     * Возвращает минимальную дистанцию до маршрута
+     */
+    private function checkPointInPolylineZoneDistance(
         float $lat,
         float $lng,
-        array $path,
-        float $radiusMeters
-    ): bool {
-        if (count($path) < 2) {
-            return false;
-        }
+        array $path
+    ): float {
+        $minDistance = INF;
 
         foreach ($path as $i => $point) {
-            if (!isset($path[$i + 1])) {
-                continue;
-            }
+            if (!isset($path[$i + 1])) continue;
 
             [$lat1, $lng1] = $point;
             [$lat2, $lng2] = $path[$i + 1];
@@ -84,20 +94,43 @@ class ValidateDeliveryAction
             $distance = $this->distancePointToSegment(
                 $lat,
                 $lng,
-                (float) $lat1,
-                (float) $lng1,
-                (float) $lat2,
-                (float) $lng2
+                $lat1,
+                $lng1,
+                $lat2,
+                $lng2
             );
 
-            if ($distance <= $radiusMeters) {
-                return true;
-            }
+            $minDistance = min($minDistance, $distance);
         }
 
-        return false;
+        return $minDistance;
     }
 
+    /**
+     * Реальное расстояние до фермы
+     */
+    private function haversineDistance($lat1, $lon1, $lat2, $lon2): float
+    {
+        $earthRadius = 6371000;
+
+        $dLat = deg2rad($lat2 - $lat1);
+        $dLon = deg2rad($lon2 - $lon1);
+
+        $a =
+            sin($dLat / 2) * sin($dLat / 2) +
+            cos(deg2rad($lat1)) *
+            cos(deg2rad($lat2)) *
+            sin($dLon / 2) *
+            sin($dLon / 2);
+
+        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+
+        return $earthRadius * $c;
+    }
+
+    /**
+     * расстояние до отрезка (как у тебя было)
+     */
     private function distancePointToSegment(
         float $px,
         float $py,
@@ -108,7 +141,7 @@ class ValidateDeliveryAction
     ): float {
         $earthRadius = 6371000;
 
-        $toRad = fn (float $deg): float => $deg * pi() / 180;
+        $toRad = fn($deg) => $deg * pi() / 180;
 
         $px = $toRad($px);
         $py = $toRad($py);
@@ -125,7 +158,7 @@ class ValidateDeliveryAction
         $dot = $A * $C + $B * $D;
         $lenSq = $C * $C + $D * $D;
 
-        $param = $lenSq !== 0.0 ? $dot / $lenSq : -1.0;
+        $param = $lenSq !== 0 ? $dot / $lenSq : -1;
 
         if ($param < 0) {
             $xx = $x1;

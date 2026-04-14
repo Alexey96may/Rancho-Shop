@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\ApiLandingController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\CartController;
+use Illuminate\Http\Request;
 // use App\Http\Controllers\Api\Auth\SocialAuthController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\CheckoutController;
@@ -11,6 +12,7 @@ use App\Http\Controllers\Api\CommentController;
 use App\Http\Controllers\Api\PageController;
 use App\Http\Controllers\Api\SettingController;
 use App\Http\Controllers\Api\DeliveryController;
+use App\Http\Controllers\Api\DeliveryCalculateController;
 
 // /api/landing
 Route::get('/landing', [ApiLandingController::class, 'index']);
@@ -35,6 +37,8 @@ Route::get('/animals/{animal}/comments', [CommentController::class, 'index']);
 Route::get('/comments', [CommentController::class, 'index']);
 Route::post('/comments', [CommentController::class, 'store']);
 Route::get('/pages/{slug}', [PageController::class, 'show']);
+
+Route::post('delivery/calculate', DeliveryCalculateController::class);
 
 Route::get('/settings', [SettingController::class, 'index']);
 Route::middleware('web')->post('/delivery/draft', [DeliveryController::class, 'store']);

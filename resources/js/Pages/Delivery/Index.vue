@@ -133,6 +133,8 @@
                 console.error('Reverse failed', e);
             }
         }, 300);
+
+        calculateDelivery();
     });
 
     /**
@@ -207,6 +209,45 @@
         isConfirmed.value = serverDraft.value.is_valid;
         isDeliveryAllowed.value = serverDraft.value.is_valid;
     });
+
+    const distance = ref<number | null>(null);
+    const price = ref<number | null>(null);
+
+    async function calculateDelivery() {
+        if (!selectedPoint.value) return;
+
+        try {
+            console.log(selectedPoint.value.lat, selectedPoint.value.lng, address.value);
+            const res = await fetch('/api/delivery/calculate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+                body: JSON.stringify({
+                    lat: selectedPoint.value.lat,
+                    lng: selectedPoint.value.lng,
+                    address: address.value,
+                }),
+            });
+
+            if (!res.ok) {
+                const text = await res.text();
+                console.error('API ERROR RESPONSE:', text);
+                throw new Error('HTTP ' + res.status);
+            }
+
+            const data = await res.json();
+
+            console.log('API RESULT:', data);
+
+            isDeliveryAllowed.value = data.is_valid;
+
+            distance.value = data.distance_to_farm;
+            price.value = data.delivery_price;
+        } catch (e) {
+            alert('Delivery API failed');
+            console.error(e);
+            isDeliveryAllowed.value = false;
+        }
+    }
 </script>
 
 <template>
@@ -284,6 +325,8 @@
                     Вы выбрали:
                     <span class="text-sm text-emerald-800">{{ serverDraft?.address }}</span>
                 </div>
+                <span>{{ distance }} </span>
+                <span>{{ price }} </span>
                 <div v-if="serverDraft?.distance">
                     Расстояние до нас:
                     <span class="text-sm text-emerald-800">{{ serverDraft?.distance }}</span>
