@@ -55,6 +55,9 @@ class SettingService
 
         Cache::forget("setting.{$key}");
         Cache::forget("settings.all");
+        if ($key === 'delivery_zones') {
+            Cache::forget('delivery_zones');
+        }
     }
 
     public function all(): array
@@ -97,6 +100,8 @@ class SettingService
 
     public function deliveryZones(): array
     {
-        return $this->get('delivery_zones', []);
+        return Cache::remember('delivery_zones', 3600, function () {
+            return $this->get('delivery_zones', []);
+        });
     }
 }

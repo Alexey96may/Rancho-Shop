@@ -4,7 +4,7 @@ namespace App\Actions\Checkout;
 
 use App\DTO\DeliveryDTO;
 use App\Services\SettingService;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Cache;
 
 class ValidateDeliveryAction
 {
@@ -14,7 +14,7 @@ class ValidateDeliveryAction
 
     public function handle(DeliveryDTO $delivery): array
     {
-        // 🟢 Самовывоз
+        // Pickup is always valid and has no delivery fee
         if ($delivery->is_pickup) {
             return [
                 'is_valid' => true,
@@ -23,33 +23,44 @@ class ValidateDeliveryAction
             ];
         }
 
+        // Cache key depends on rounded coordinates + current zones snapshot
+        $lat = round((float) $delivery->lat, 5);
+        $lng = round((float) $delivery->lng, 5);
+
         $zones = $this->settings->deliveryZones();
 
-        foreach ($zones as $zone) {
+        $zonesSignature = md5(json_encode($zones, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
 
-            if (!$zone['enabled']) continue;
+        $cacheKey = "delivery_check:{$zonesSignature}:{$lat}:{$lng}";
 
-            $inside = $this->checkPointInPolylineZone(
-                $delivery->lat,
-                $delivery->lng,
-                $zone['path'],
-                $zone['radius']
-            );
+        return Cache::remember($cacheKey, 600, function () use ($delivery, $zones) {
+            foreach ($zones as $zone) {
+                if (empty($zone['enabled'])) {
+                    continue;
+                }
 
-            if ($inside) {
-                $deliveryPrice = $zone['delivery_price'];
+                $inside = $this->checkPointInPolylineZone(
+                    (float) $delivery->lat,
+                    (float) $delivery->lng,
+                    $zone['path'] ?? [],
+                    (float) ($zone['radius'] ?? 0)
+                );
 
-                return [
-                    'is_valid' => true,
-                    'delivery_price' => $deliveryPrice,
-                    'zone' => $zone,
-                ];
+                if ($inside) {
+                    return [
+                        'is_valid' => true,
+                        'delivery_price' => (int) ($zone['delivery_price'] ?? 0),
+                        'zone' => $zone,
+                    ];
+                }
             }
-        }
 
-        throw ValidationException::withMessages([
-            'delivery' => 'Адрес вне зоны доставки',
-        ]);
+            return [
+                'is_valid' => false,
+                'delivery_price' => 0,
+                'zone' => null,
+            ];
+        });
     }
 
     private function checkPointInPolylineZone(
@@ -58,8 +69,14 @@ class ValidateDeliveryAction
         array $path,
         float $radiusMeters
     ): bool {
+        if (count($path) < 2) {
+            return false;
+        }
+
         foreach ($path as $i => $point) {
-            if (!isset($path[$i + 1])) continue;
+            if (!isset($path[$i + 1])) {
+                continue;
+            }
 
             [$lat1, $lng1] = $point;
             [$lat2, $lng2] = $path[$i + 1];
@@ -67,10 +84,10 @@ class ValidateDeliveryAction
             $distance = $this->distancePointToSegment(
                 $lat,
                 $lng,
-                $lat1,
-                $lng1,
-                $lat2,
-                $lng2
+                (float) $lat1,
+                (float) $lng1,
+                (float) $lat2,
+                (float) $lng2
             );
 
             if ($distance <= $radiusMeters) {
@@ -91,7 +108,7 @@ class ValidateDeliveryAction
     ): float {
         $earthRadius = 6371000;
 
-        $toRad = fn($deg) => $deg * pi() / 180;
+        $toRad = fn (float $deg): float => $deg * pi() / 180;
 
         $px = $toRad($px);
         $py = $toRad($py);
@@ -108,7 +125,7 @@ class ValidateDeliveryAction
         $dot = $A * $C + $B * $D;
         $lenSq = $C * $C + $D * $D;
 
-        $param = $lenSq !== 0 ? $dot / $lenSq : -1;
+        $param = $lenSq !== 0.0 ? $dot / $lenSq : -1.0;
 
         if ($param < 0) {
             $xx = $x1;
