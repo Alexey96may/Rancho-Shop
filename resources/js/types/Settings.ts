@@ -1,19 +1,6 @@
+import { DeliveryZone } from './';
+
 export type ShopStatus = 'open' | 'closed' | 'maintenance';
-
-export interface DeliveryZone {
-    name: string;
-
-    path: [number, number][]; // [lat, lng]
-
-    radius: number; // meters
-
-    delivery_price: number; // копейки
-    free_from: number; // копейки
-
-    enabled: boolean;
-    priority: number;
-    max_distance?: number;
-}
 
 export interface SiteSettings {
     // --- Основная информация ---

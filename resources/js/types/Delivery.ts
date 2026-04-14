@@ -1,11 +1,3 @@
-//From Backend
-export interface DeliveryInfo {
-    farm_coords: string;
-    delivery_cost: number;
-    free_delivery_from: number;
-    address_farm: string;
-}
-
 //From Frontend: use it in checkout, order table, admin panel
 export interface DeliveryDraft {
     address: string;
@@ -15,17 +7,29 @@ export interface DeliveryDraft {
     distance?: number;
 }
 
-/*
-1. Backend
-orders.delivery_address
-orders.delivery_lat
-orders.delivery_lng
-orders.delivery_price
-orders.is_delivery_valid
+export interface DeliveryZone {
+    name: string;
+    path: [number, number][];
+    radius: number;
 
-2. Session / cart (Laravel)
-session('delivery') or cart.delivery
+    delivery_price: number;
+    free_from: number;
 
-3. LocalStorage (fallback)
-localStorage.setItem('deliveryDraft', JSON.stringify({...}))
-*/
+    enabled: boolean;
+    priority: number;
+    max_distance?: number;
+}
+
+export interface DeliveryInfo {
+    farm_coords: {
+        lat: number;
+        lng: number;
+    } | null;
+
+    address_farm: string;
+
+    delivery_schedule: string;
+    delivery_info: string;
+
+    delivery_zones: DeliveryZone[];
+}

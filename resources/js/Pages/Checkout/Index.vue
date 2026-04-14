@@ -129,10 +129,6 @@
         });
     }
 
-    onMounted(() => {
-        console.log(delivery.value);
-    });
-
     const nameRef = ref<HTMLInputElement | null>(null);
     const phoneRef = ref<HTMLInputElement | null>(null);
     const commentRef = ref<HTMLTextAreaElement | null>(null);

@@ -29,7 +29,16 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
-        
+        $deliveryDraft = $request->user()
+                ? [
+                    'address' => $request->user()->last_delivery_address,
+                    'lat' => $request->user()->last_delivery_lat,
+                    'lng' => $request->user()->last_delivery_lng,
+                    'is_valid' => true,
+                ]
+                : session('delivery_draft');
+
+
         return [
             ...parent::share($request),
             'auth' => [

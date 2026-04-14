@@ -29,6 +29,8 @@ class PageController extends Controller
 
     public function delivery()
     {
+        $settings = app(\App\Services\SettingService::class);
+
         $page = Page::query()
             ->where('slug', 'delivery')
             ->where('is_active', true)
@@ -45,11 +47,24 @@ class PageController extends Controller
 
             // 🗺️ delivery-specific data
             'delivery' => [
-                'farm_coords' => app(\App\Services\SettingService::class)->get('farm_coords'),
-                'delivery_cost' => app(\App\Services\SettingService::class)->get('delivery_cost'),
-                'free_delivery_from' => app(\App\Services\SettingService::class)->get('free_delivery_from'),
-                'address_farm' => app(\App\Services\SettingService::class)->get('address_farm'),
+                'farm_coords' => $this->parseCoords($settings->get('farm_coords')),
+                'delivery_schedule' => $settings->get('delivery_schedule'),
+                'delivery_info' => $settings->get('delivery_info'),
+                'delivery_zones' => $settings->get('delivery_zones'),
+                'address_farm' => $settings->get('address_farm'),
             ],
         ]);
+    }
+
+    private function parseCoords(?string $value): ?array
+    {
+        if (!$value) return null;
+
+        [$lat, $lng] = explode(',', $value);
+
+        return [
+            'lat' => (float) $lat,
+            'lng' => (float) $lng,
+        ];
     }
 }

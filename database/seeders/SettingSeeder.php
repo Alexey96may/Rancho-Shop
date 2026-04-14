@@ -23,8 +23,8 @@ class SettingSeeder extends Seeder
             ['key' => 'contact_email', 'value' => 'info@moloko-dolina.ru', 'type' => 'string'],
             ['key' => 'contact_telegram', 'value' => 'https://t.me/Aleksei_Farm', 'type' => 'string'],
             ['key' => 'contact_vk', 'value' => 'https://vk.com/moloko_dolina', 'type' => 'string'],
-            ['key' => 'address_farm', 'value' => 'с. Доброе, ул. Центральная, 15', 'type' => 'string'],
-            ['key' => 'farm_coords', 'value' => '44.8621, 34.2154', 'type' => 'string'],
+            ['key' => 'address_farm', 'value' => 'с. Перевальное, ул. Речная, 7', 'type' => 'string'],
+            ['key' => 'farm_coords', 'value' => '44.85014, 34.30457', 'type' => 'string'],
 
             // --- Statuses ---
             ['key' => 'shop_status', 'value' => 'open', 'type' => 'string'], // open | closed | maintenance
@@ -40,10 +40,19 @@ class SettingSeeder extends Seeder
 
                     // (polyline)
                     'path' => [
-                        [44.8621, 34.2154],
-                        [44.9520, 34.1020],
-                        [44.9480, 34.0900],
-                    ],
+                                [34.30457, 44.85014],
+                                [34.32541, 44.83384],
+                                [34.12673, 44.94398],
+                                [34.11062, 44.95797],
+                                [34.09723, 44.97342],
+                                [34.07753, 44.9583],
+                                [34.07865, 44.95596],
+                                [34.09397, 44.94407],
+                                [34.10249, 44.95186],
+                                [34.11062, 44.95797],
+                                [34.12673, 44.94398],
+                                [34.30457, 44.85014],
+                            ],
 
                     // corridor width (meters)
                     'radius' => 700,

@@ -1,13 +1,18 @@
 <script setup lang="ts">
-    import { onMounted, ref, watch } from 'vue';
+    import { computed, onMounted, ref, watch } from 'vue';
 
     import * as turf from '@turf/turf';
     import type { Feature, LineString, Polygon } from 'geojson';
     import mapboxgl from 'mapbox-gl';
 
+    import type { DeliveryZone } from '@/types';
+    import { createShopMarkerEl, createUserMarkerEl } from '@/utils/mapMarkers';
+
     interface Props {
         modelValue?: { lat: number; lng: number } | null;
         farmCoords?: { lat: number; lng: number } | null;
+        userCoords?: { lat: number; lng: number } | null;
+        zones?: DeliveryZone[];
     }
 
     const props = defineProps<Props>();
@@ -17,6 +22,7 @@
 
     let map: mapboxgl.Map;
     let marker: mapboxgl.Marker;
+    let markerFarm: mapboxgl.Marker;
 
     // Prevent circular updates between map <-> v-model
     let isInternalUpdate = false;
@@ -32,14 +38,14 @@
     // INITIAL CENTER (farm fallback)
     // ==========================
     const farm = props.farmCoords || {
-        lat: 44.8445,
-        lng: 34.3381,
+        lat: 44.85014,
+        lng: 34.30457,
     };
 
     // ==========================
     // WAYPOINTS (delivery route)
     // ==========================
-    const waypoints: [number, number][] = [
+    const waypointsDefault: [number, number][] = [
         [34.32541, 44.83384],
         [34.12673, 44.94398],
         [34.11062, 44.95797],
@@ -53,6 +59,25 @@
         [34.32541, 44.83384],
     ];
 
+    const activeZone = computed<DeliveryZone | null>(() => {
+        return props.zones?.find((z) => z.enabled) ?? null;
+    });
+
+    const waypoints = ref<[number, number][]>(waypointsDefault);
+
+    const radius = ref<number>(500);
+
+    watch(
+        activeZone,
+        (z) => {
+            if (!z) return;
+
+            waypoints.value = z.path;
+            radius.value = z.radius;
+        },
+        { immediate: true },
+    );
+
     // ==========================
     // IN-MEMORY CACHE
     // ==========================
@@ -61,14 +86,14 @@
 
     // Create cache key based on route
     function getCacheKey() {
-        return waypoints.map((p) => `${p[0].toFixed(5)},${p[1].toFixed(5)}`).join(';');
+        return waypoints.value.map((p) => `${p[0].toFixed(5)},${p[1].toFixed(5)}`).join(';');
     }
 
     // ==========================
     // BUFFER ZONE (500m)
     // ==========================
     function buildDeliveryBuffer(line: Feature<LineString>) {
-        return turf.buffer(line, 0.5, {
+        return turf.buffer(line, radius.value / 1000 || 0.5, {
             units: 'kilometers', // 500 meters
         }) as Feature<Polygon>;
     }
@@ -101,7 +126,7 @@
         // -------- API REQUEST --------
         const url =
             `https://api.mapbox.com/directions/v5/mapbox/driving/` +
-            waypoints.map((p) => `${p[0]},${p[1]}`).join(';') +
+            waypoints.value.map((p) => `${p[0]},${p[1]}`).join(';') +
             `?geometries=geojson&overview=full&access_token=${mapboxgl.accessToken}`;
 
         const res = await fetch(url);
@@ -156,7 +181,9 @@
     // INIT MAP
     // ==========================
     onMounted(async () => {
-        let center = props.modelValue || farm;
+        let center = props.modelValue || props.userCoords || farm;
+
+        let centerFarm = farm;
 
         // Try browser geolocation if no saved value
         if (!props.modelValue) {
@@ -164,7 +191,7 @@
 
             if (userLoc) {
                 center = userLoc;
-                waypoints[0] = [userLoc.lng, userLoc.lat];
+                waypoints.value[0] = [userLoc.lng, userLoc.lat];
             }
         }
 
@@ -179,8 +206,21 @@
         });
 
         // Create draggable marker
-        marker = new mapboxgl.Marker({ draggable: true })
+        marker = new mapboxgl.Marker({
+            element: createUserMarkerEl(),
+            anchor: 'bottom',
+            draggable: true,
+        })
             .setLngLat([center.lng, center.lat])
+            .addTo(map);
+
+        markerFarm = new mapboxgl.Marker({ element: createShopMarkerEl(), anchor: 'bottom' })
+            .setLngLat([centerFarm.lng, centerFarm.lat])
+            .addTo(map);
+
+        new mapboxgl.Popup({ offset: 25 })
+            .setLngLat([centerFarm.lng, centerFarm.lat])
+            .setHTML('Мы здесь!')
             .addTo(map);
 
         map.on('load', async () => {
@@ -252,13 +292,13 @@
 
             const lngLat = marker.getLngLat();
 
-            const allowed = checkDeliveryAvailability(lngLat.lat, lngLat.lng);
-            emit('delivery-valid', allowed);
-
             sourcesReady = true;
 
             // Initial route render
-            loadRoute();
+            await loadRoute();
+            const allowed = checkDeliveryAvailability(lngLat.lat, lngLat.lng);
+
+            emit('delivery-valid', allowed);
         });
 
         // ==========================
@@ -279,7 +319,7 @@
             emit('update:modelValue', val);
             emit('delivery-valid', allowed);
 
-            waypoints[0] = [lngLat.lng, lngLat.lat];
+            waypoints.value[0] = [lngLat.lng, lngLat.lat];
 
             map.setCenter([lngLat.lng, lngLat.lat]);
 
@@ -303,7 +343,7 @@
             emit('update:modelValue', val);
             emit('delivery-valid', allowed);
 
-            waypoints[0] = [e.lngLat.lng, e.lngLat.lat];
+            waypoints.value[0] = [e.lngLat.lng, e.lngLat.lat];
 
             map.setCenter([e.lngLat.lng, e.lngLat.lat]);
 
@@ -345,3 +385,12 @@
 <template>
     <div ref="mapContainer" class="h-full w-full rounded-xl" aria-label="Delivery route map" />
 </template>
+
+<style>
+    .map-marker-shop,
+    .map-marker-user {
+        width: 42px;
+        height: 42px;
+        cursor: pointer;
+    }
+</style>
