@@ -1,18 +1,13 @@
 <script setup lang="ts">
-    import { computed } from 'vue';
+    import { computed, nextTick, onMounted, ref } from 'vue';
 
     import { Head, useForm, usePage } from '@inertiajs/vue3';
 
     import MainLayout from '@/Layouts/MainLayout.vue';
     import { useCartStore } from '@/stores/cart';
+    import { DeliveryDraft } from '@/types';
 
     defineOptions({ layout: MainLayout });
-
-    type DeliveryDraft = {
-        address: string;
-        point: { lat: number; lng: number } | null;
-        is_valid: boolean;
-    };
 
     type PageProps = {
         deliveryDraft: DeliveryDraft | null;
@@ -45,11 +40,22 @@
      */
     const isPickup = computed(() => !delivery.value);
 
+    const deliveryError = computed(() => {
+        if (!isPickup.value && !isDeliveryValid.value) {
+            return 'Выбранный адрес доставки недоступен';
+        }
+        return null;
+    });
+
     /**
      * UI ACTIONS
      */
     function usePickup() {
-        form.delivery_address = null;
+        if (form.delivery_address) {
+            form.delivery_address = null;
+        } else {
+            form.delivery_address = delivery.value?.address ?? null;
+        }
     }
 
     function goToDeliveryPage() {
@@ -64,10 +70,15 @@
     /**
      * ERRORS
      */
+
     const errors = computed(() => form.errors);
 
     function hasError(field: keyof CheckoutForm) {
         return !!errors.value[field];
+    }
+
+    function getError(field: keyof CheckoutForm) {
+        return errors.value[field];
     }
 
     /**
@@ -83,13 +94,48 @@
     function submit() {
         if (cart.items.length === 0) return;
 
-        form.post(route('checkout.store'), {
+        form.transform((data) => ({
+            ...data,
+            items: cart.items,
+        })).post(route('checkout.store'), {
             preserveScroll: true,
-            onSuccess: () => {
+            onSuccess: (data) => {
+                console.log('Ура!', data);
                 cart.clear();
+            },
+            onError: async (errors) => {
+                await nextTick();
+                console.log('submit error', errors);
+
+                const firstErrorField = Object.keys(errors)[0] as keyof CheckoutForm;
+
+                switch (firstErrorField) {
+                    case 'customer_name':
+                        nameRef.value?.focus();
+                        nameRef.value?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        break;
+
+                    case 'customer_phone':
+                        phoneRef.value?.focus();
+                        phoneRef.value?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        break;
+
+                    case 'customer_comment':
+                        commentRef.value?.focus();
+                        commentRef.value?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        break;
+                }
             },
         });
     }
+
+    onMounted(() => {
+        console.log(delivery.value);
+    });
+
+    const nameRef = ref<HTMLInputElement | null>(null);
+    const phoneRef = ref<HTMLInputElement | null>(null);
+    const commentRef = ref<HTMLTextAreaElement | null>(null);
 </script>
 
 <template>
@@ -109,20 +155,32 @@
                 <section class="space-y-6 lg:col-span-2">
                     <!-- NAME -->
                     <div>
-                        <label class="block text-sm font-medium">Имя</label>
+                        <label for="nameCheckout" class="block text-sm font-medium">Имя</label>
                         <input
+                            ref="nameRef"
+                            id="nameCheckout"
                             v-model="form.customer_name"
                             class="mt-1 w-full rounded-xl border p-3"
+                            :class="{ 'border-amber-700': hasError('customer_name') }"
                         />
+                        <p v-if="hasError('customer_name')" class="mt-1 text-sm text-amber-700">
+                            {{ getError('customer_name') }}
+                        </p>
                     </div>
 
                     <!-- PHONE -->
                     <div>
-                        <label class="block text-sm font-medium">Телефон</label>
+                        <label for="phoneCheckout" class="block text-sm font-medium">Телефон</label>
                         <input
+                            ref="phoneRef"
+                            id="phoneCheckout"
                             v-model="form.customer_phone"
                             class="mt-1 w-full rounded-xl border p-3"
+                            :class="{ 'border-amber-700': hasError('customer_phone') }"
                         />
+                        <p v-if="hasError('customer_phone')" class="mt-1 text-sm text-amber-700">
+                            {{ getError('customer_phone') }}
+                        </p>
                     </div>
 
                     <!-- DELIVERY BLOCK -->
@@ -148,7 +206,10 @@
                                 🚚 Доставка выбрана
                             </div>
 
-                            <p class="mt-1 text-sm">
+                            <p
+                                class="mt-1 text-sm"
+                                :class="{ 'line-through': !form.delivery_address }"
+                            >
                                 {{ delivery?.address }}
                             </p>
 
@@ -164,21 +225,34 @@
                                 <button
                                     type="button"
                                     @click="usePickup"
-                                    class="flex-1 rounded-lg border border-red-300 px-3 py-2 text-red-600"
+                                    class="flex-1 rounded-lg border border-red-300 px-3 py-2 text-red-700 transition-colors"
+                                    :class="{ 'bg-red-700 !text-white': !form.delivery_address }"
                                 >
                                     Самовывоз
                                 </button>
                             </div>
                         </div>
+
+                        <p v-if="hasError('delivery_address')" class="mt-1 text-sm text-amber-700">
+                            {{ getError('delivery_address') }}
+                        </p>
                     </div>
 
                     <!-- COMMENT -->
                     <div>
-                        <label class="block text-sm font-medium">Комментарий</label>
+                        <label for="commentCheckout" class="block text-sm font-medium"
+                            >Комментарий</label
+                        >
                         <textarea
+                            ref="commentRef"
+                            id="commentCheckout"
                             v-model="form.customer_comment"
                             class="mt-1 w-full rounded-xl border p-3"
+                            :class="{ 'border-amber-700': hasError('customer_comment') }"
                         />
+                        <p v-if="hasError('customer_comment')" class="mt-1 text-sm text-red-600">
+                            {{ getError('customer_comment') }}
+                        </p>
                     </div>
                 </section>
 

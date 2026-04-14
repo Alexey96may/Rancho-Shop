@@ -4,8 +4,11 @@ namespace App\Http\Controllers;
 
 use Inertia\Response;
 
+use App\Http\Requests\CheckoutRequest;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Services\CheckoutService;
+use App\DTO\DeliveryDTO;
 
 class CheckoutPageController extends Controller
 {
@@ -15,30 +18,12 @@ class CheckoutPageController extends Controller
         ]);
     }
 
-    public function store(\App\Http\Requests\CheckoutRequest $request)
+    public function store(CheckoutRequest $request, DeliveryDTO $delivery)
     {
-        $deliveryDraft  = $request->attributes->get('delivery_draft');
-
-        if (!$deliveryDraft) {
-            return back()->withErrors([
-                'delivery' => 'Не выбран способ доставки',
-            ]);
-        }
-
-        $delivery = new \App\DTO\DeliveryDTO(
-            address: $deliveryDraft['address'] ?? null,
-            lat: $deliveryDraft['lat'] ?? null,
-            lng: $deliveryDraft['lng'] ?? null,
-            is_pickup: $deliveryDraft['is_pickup'] ?? false,
-            is_valid: $deliveryDraft['is_valid'] ?? false,
-            meta: $deliveryDraft['delivery_meta'] ?? null,
+        $order = app(CheckoutService::class)->handle(
+            $request->toDTO(),
+            $delivery
         );
-
-        $order = app(\App\Services\CheckoutService::class)
-            ->handle(
-                $request->toDTO(),
-                $delivery
-            );
 
         return redirect()
             ->route('checkout.success', $order->id)

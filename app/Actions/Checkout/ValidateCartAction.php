@@ -13,15 +13,22 @@ class ValidateCartAction
     public function handle(CheckoutDTO $dto, Collection $products): void
     {
         foreach ($dto->items as $item) {
-            $product = $products->get($item->productId);
-            $variant = $product->variants
+            $variant = $products
+                ->pluck('variants')
+                ->flatten(1)
                 ->firstWhere('id', $item->variantId);
 
-            if (!$variant || !$variant->is_active) {
-                throw new ProductNotAvailableException($item->productId);
+            if (!$variant) {
+                throw new ProductNotAvailableException($item->variantId);
             }
 
-            if ($variant->stock < $item->quantity) {
+            $product = $variant->product;
+
+            if (!$product || !$product->is_active) {
+                throw new ProductNotAvailableException($item->variantId);
+            }
+
+            if ($variant->isInStock($item->quantity)) {
 
                 Log::warning('Insufficient stock', [
                     'variant_id' => $variant->id,
@@ -29,12 +36,8 @@ class ValidateCartAction
                     'available' => $variant->stock,
                 ]);
 
-                throw new InsufficientStockException($item->productId);
+                throw new InsufficientStockException($item->variantId);
             }
         }
-
-        Log::info('Cart validated', [
-            'items' => $dto->items->count(),
-        ]);
     }
 }

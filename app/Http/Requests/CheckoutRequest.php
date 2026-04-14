@@ -48,9 +48,8 @@ class CheckoutRequest extends FormRequest
 
             items: collect($data['items'])
                 ->map(fn ($item) => new CartItemDTO(
-                    productId: $item['product_id'],
                     quantity: $item['quantity'],
-                    variantId: $item['variantId'],
+                    variantId: $item['variant_id'],
                 )),
         );
     }
