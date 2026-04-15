@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use Inertia\Middleware;
 use App\Http\Resources\UserResource;
 
+use Illuminate\Support\Facades\Gate;
+
 class HandleInertiaRequests extends Middleware
 {
     /**
@@ -30,6 +32,8 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $address = $request->user()?->defaultDeliveryAddress;
+
         return [
             ...parent::share($request),
             'auth' => [
@@ -38,10 +42,23 @@ class HandleInertiaRequests extends Middleware
                     : null,
             ],
 
+            'can' => [
+                'adminPanel' => $request->user()
+                    ? Gate::allows('view-admin-panel')
+                    : false,
+
+                'manageUsers' => $request->user()
+                    ? Gate::allows('manage-users')
+                    : false,
+            ],
+
             'deliveryDraft' => $request->user()
-                ?   optional($request->user()->defaultDeliveryAddress)->only(['address', 'lat', 'lng']) + [
-                        'is_valid' => true,
-                    ]
+                ? [
+                    'address' => $address?->address,
+                    'lat' => $address?->lat,
+                    'lng' => $address?->lng,
+                    'is_valid' => (bool) $address,
+                ]
                 : session('delivery_draft'),
         ];
     }

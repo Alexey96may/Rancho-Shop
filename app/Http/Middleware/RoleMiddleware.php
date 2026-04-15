@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
+use App\Enums\UserRole;
 
 class RoleMiddleware
 {
@@ -15,21 +16,21 @@ class RoleMiddleware
      */
     public function handle(Request $request, Closure $next, ...$roles): Response
     {
+        $user = $request->user();
         //Route::middleware(['role:admin,moderator'])->group(...)
-        if (!$request->user()) {
+        if (!$user) {
             return redirect()->route('login');
         }
 
-        if (!in_array($request->user()->role->value, $roles)) {
+        $allowedRoles = array_map(
+            fn ($role) => UserRole::from($role),
+            $roles
+        );
+
+        if (!in_array($user->role, $allowedRoles)) {
             abort(403);
         }
-
-        if (!$request->user()) {
-            return $request->expectsJson()
-                ? response()->json(['message' => 'Unauthenticated.'], 401)
-                : redirect()->route('login');
-        }
-
+        
         return $next($request);
     }
 }

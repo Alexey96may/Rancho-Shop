@@ -37,6 +37,10 @@ class AppServiceProvider extends ServiceProvider
 
         Gate::define('manage-orders', fn ($user) => $user->canManageOrders());
 
+        Gate::define('manage-users', fn ($user) =>
+            $user->isAdmin()
+        );
+
         Relation::enforceMorphMap([
             'animal' => Animal::class,
             'product' => Product::class,

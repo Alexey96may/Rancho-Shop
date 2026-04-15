@@ -13,6 +13,9 @@ use App\Http\Controllers\CommentController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\DeliveryController;
 
+use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\UserController;
+
 Route::get('/', [LandingController::class, 'index'])->name('home');
 
 // Route::get('/auth/google', [SocialController::class, 'redirectToGoogle'])->name('auth.google');
@@ -50,6 +53,19 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
+
+Route::middleware(['auth', 'can:view-admin-panel'])
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function () {
+
+        Route::get('/', [DashboardController::class, 'index'])
+            ->name('dashboard');
+
+        Route::get('/users', [UserController::class, 'index'])
+            ->name('users.index');
+
+    });
 
 
 Route::middleware(['auth', 'role:admin'])->group(function () {
