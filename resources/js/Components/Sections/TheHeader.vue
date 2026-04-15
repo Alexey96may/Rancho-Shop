@@ -91,10 +91,10 @@
                     <span class="hidden font-sans text-sm font-bold sm:inline">Лукошко</span>
 
                     <div
-                        v-if="cartStore.totalItems > 0"
+                        v-if="cartStore.totalCleanItems > 0"
                         class="animate-bounce-short absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full border-2 border-rancho-paper bg-rancho-buttercup text-[10px] font-black text-rancho-forest"
                     >
-                        {{ cartStore.totalItems }}
+                        {{ cartStore.totalCleanItems }}
                     </div>
                 </Link>
             </div>

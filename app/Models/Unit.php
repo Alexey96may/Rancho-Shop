@@ -9,7 +9,7 @@ class Unit extends Model
 {
     protected $fillable = [
         'name',
-        'code',
+        'slug',
         'position',
     ];
 

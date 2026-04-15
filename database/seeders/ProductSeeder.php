@@ -27,9 +27,9 @@ class ProductSeeder extends Seeder
         $cheeseCat = Category::where('type', 'product')->where('slug', 'syry')->first();
         $sourCreamCat = Category::where('type', 'product')->where('slug', 'smetana')->first();
 
-        $kg = Unit::where('code', 'kg')->first();
-        $g = Unit::where('code', 'g')->first();
-        $l = Unit::where('code', 'l')->first();
+        $kg = Unit::where('slug', 'kg')->first();
+        $g = Unit::where('slug', 'g')->first();
+        $l = Unit::where('slug', 'l')->first();
 
         $products = [
             [

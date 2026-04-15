@@ -1,4 +1,4 @@
-import { Media, Unit } from './';
+import { BaseUnit, Media } from './';
 
 export interface ProductVariant {
     id: number;
@@ -42,9 +42,7 @@ export interface ProductVariantDTO {
 
     attributes: Record<string, string> | null;
 
-    unit: {
-        slug: 'kg' | 'g' | 'l' | 'ml' | 'pcs';
-    };
+    unit: BaseUnit;
 
     amount: number;
 

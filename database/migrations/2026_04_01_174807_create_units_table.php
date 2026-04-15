@@ -14,7 +14,8 @@ return new class extends Migration
         Schema::create('units', function (Blueprint $table) {
             $table->id();
             $table->string('name'); // килограмм
-            $table->string('code')->unique(); // kg
+            $table->string('short'); // кг
+            $table->string('slug')->unique(); // kg
             $table->unsignedInteger('position')->default(0); //for sorting
             $table->timestamps();
         });

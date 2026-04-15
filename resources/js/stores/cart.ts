@@ -21,6 +21,8 @@ export const useCartStore = defineStore(
         // ======================
         // GETTERS
         // ======================
+        const totalCleanItems = computed(() => items.value.length);
+
         const totalItems = computed(() =>
             items.value.reduce((acc, item) => acc + item.quantity, 0),
         );
@@ -191,19 +193,39 @@ export const useCartStore = defineStore(
             }
         }
 
-        function increment(variantId: number) {
+        function increment(variantId: number, step: number = 1) {
             const item = items.value.find((i) => i.variant_id === variantId);
-
             if (!item) return;
 
-            if (item.quantity < item.stock) {
-                item.quantity++;
+            const next = item.quantity + step;
+
+            if (next < item.stock) {
+                item.quantity = round(next);
             }
+        }
+
+        function decrement(variantId: number, step: number = 1) {
+            const item = items.value.find((i) => i.variant_id === variantId);
+            if (!item) return;
+
+            const next = item.quantity - step;
+
+            if (next <= 0) {
+                remove(variantId);
+                return;
+            }
+
+            item.quantity = round(next);
+        }
+
+        function round(value: number) {
+            return Math.round(value * 100) / 100;
         }
 
         return {
             items,
             totalItems,
+            totalCleanItems,
             totalPrice,
             totalPriceFormatted,
             hasInvalidItems,
@@ -214,6 +236,7 @@ export const useCartStore = defineStore(
             clear,
             validate,
             increment,
+            decrement,
         };
     },
     {

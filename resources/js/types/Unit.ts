@@ -1,6 +1,9 @@
+type unitSlug = 'kg' | 'g' | 'l' | 'ml' | 'pcs';
+
 export interface BaseUnit {
-    name: string; // килограмм
-    code: string; // kg
+    name?: string; // килограмм
+    slug: unitSlug; // kg
+    short: string; // кг
 }
 
 export interface Unit extends BaseUnit {

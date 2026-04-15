@@ -5,6 +5,8 @@
     import type { ProductVariantDTO } from '@/types';
     import type { AvailabilityType } from '@/types';
 
+    import QuantityControl from './QuantityControl.vue';
+
     interface Props {
         variant: ProductVariantDTO;
         availability_type: AvailabilityType;
@@ -19,70 +21,66 @@
 
     const cart = useCartStore();
 
-    // есть ли именно этот variant в корзине
     const isInCart = computed(() =>
         cart.items.some((item) => item.variant_id === props.variant.id),
     );
 
-    // stock
     const isOutOfStock = computed(() => props.variant.stock <= 0);
 
-    // логика действия кнопки
     const action = computed<'cart' | 'preorder'>(() => {
         if (props.availability_type === 'stock') return 'cart';
-        return 'preorder'; // daily + preorder
+        return 'preorder';
     });
 
-    // текст кнопки
     const buttonText = computed(() => {
-        if (isInCart.value) return 'В корзине';
-
         if (isOutOfStock.value && action.value === 'cart') {
             return 'Нет в наличии';
         }
 
-        switch (action.value) {
-            case 'cart':
-                return `В корзину`;
-
-            case 'preorder':
-                if (props.availability_type === 'daily') {
-                    return 'Предзаказ (сегодня нет)';
-                }
-                return 'Предзаказ';
+        if (action.value === 'preorder') {
+            return 'Предзаказ';
         }
+
+        return `В корзину — ${props.variant.price_rub}₽`;
     });
 
     const isDisabled = computed(() => {
         if (props.disabled) return true;
-
-        // в корзине блокируем кнопку (пока нет stepper)
-        if (isInCart.value) return true;
-
-        // нельзя добавить stock если нет товара
         if (action.value === 'cart' && isOutOfStock.value) return true;
-
         return false;
     });
+
+    const handleClick = () => {
+        if (isDisabled.value) return;
+
+        cart.add({
+            ...props.variant,
+            // quantity: 1,
+        });
+    };
 </script>
 
 <template>
-    <button
-        :disabled="isDisabled"
-        :aria-label="buttonText"
-        :aria-pressed="isInCart"
-        class="flex w-full items-center justify-center gap-3 rounded-2xl py-5 text-xl font-bold transition-all duration-300 active:scale-95"
-        :class="[
-            !isDisabled ? 'shadow-lg bg-slate-900 text-white hover:bg-orange-600' : '',
+    <div class="w-full">
+        <!-- STEP CONTROL -->
+        <QuantityControl v-if="isInCart" :variant="variant" />
 
-            isInCart ? 'cursor-default bg-emerald-50 text-emerald-700' : '',
+        <!-- BUTTON -->
+        <button
+            v-else
+            @click.stop="handleClick"
+            :disabled="isDisabled"
+            class="flex w-full items-center justify-center rounded-2xl py-5 text-xl font-bold transition-all duration-300 active:scale-95"
+            :class="[
+                !isDisabled
+                    ? 'shadow-lg bg-slate-900 text-white hover:bg-orange-600'
+                    : 'cursor-not-allowed bg-slate-200 text-slate-400',
 
-            isDisabled ? 'cursor-not-allowed bg-slate-200 text-slate-400' : '',
-
-            'focus:outline-none focus-visible:ring-4 focus-visible:ring-orange-500/20',
-            classes,
-        ]"
-    >
-        <span>{{ buttonText }}</span>
-    </button>
+                'focus:outline-none focus-visible:ring-4 focus-visible:ring-orange-500/20',
+                classes,
+            ]"
+        >
+            {{ buttonText }}
+        </button>
+    </div>
 </template>

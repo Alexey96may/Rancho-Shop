@@ -16,15 +16,15 @@ class UnitSeeder extends Seeder
     public function run(): void
     {
         $units = [
-            ['name' => 'килограмм', 'code' => 'kg'],
-            ['name' => 'грамм', 'code' => 'g'],
-            ['name' => 'литр', 'code' => 'l'],
-            ['name' => 'миллилитр', 'code' => 'ml'],
-            ['name' => 'штука', 'code' => 'pcs'],
+            ['name' => 'килограмм', 'slug' => 'kg', 'short' => 'кг'],
+            ['name' => 'грамм', 'slug' => 'g', 'short' => 'гр'],
+            ['name' => 'литр', 'slug' => 'l', 'short' => 'л'],
+            ['name' => 'миллилитр', 'slug' => 'ml', 'short' => 'мл'],
+            ['name' => 'штука', 'slug' => 'pcs', 'short' => 'шт'],
         ];
 
         foreach ($units as $unit) {
-            Unit::firstOrCreate(['code' => $unit['code']], $unit);
+            Unit::firstOrCreate(['slug' => $unit['slug']], $unit);
         }
     }
 }

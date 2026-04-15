@@ -5,6 +5,7 @@
 
     import BuyButton from '@/Components/UI/BuyButton.vue';
     import type { ProductVariantDTO, ProductWithCategory } from '@/types';
+    import { formatMoney } from '@/utils/format';
 
     const props = defineProps<{
         product: ProductWithCategory;
@@ -41,14 +42,14 @@
 
     const discountBadge = computed(() => {
         if (
-            !defaultVariant.value?.old_price_rub ||
-            defaultVariant.value.old_price_rub <= defaultVariant.value.price
+            !defaultVariant.value?.old_price ||
+            defaultVariant.value.old_price <= defaultVariant.value.price
         ) {
             return null;
         }
 
         return Math.round(
-            100 - (defaultVariant.value.price / defaultVariant.value.old_price_rub) * 100,
+            100 - (defaultVariant.value.price / defaultVariant.value.old_price) * 100,
         );
     });
 </script>
@@ -97,15 +98,17 @@
             </div>
 
             <div class="mb-4 flex items-center gap-3">
-                <span class="text-2xl font-black text-slate-900">{{ displayPrice }}₽</span>
+                <span class="text-2xl font-black text-slate-900">{{
+                    formatMoney(defaultVariant?.price)
+                }}</span>
                 <div v-if="displayOldPrice" class="flex flex-col">
-                    <span class="text-xs leading-none text-slate-400 line-through"
-                        >{{ displayOldPrice }}₽</span
-                    >
+                    <span class="text-xs leading-none text-slate-400 line-through">{{
+                        formatMoney(defaultVariant?.old_price)
+                    }}</span>
                     <span class="text-[10px] font-bold text-red-500">-{{ discountBadge }}%</span>
                 </div>
                 <span class="ml-auto text-sm text-slate-400"
-                    >/ {{ defaultVariant?.unit?.slug ?? 'pcs' }}</span
+                    >/ {{ defaultVariant?.unit?.short ?? 'шт' }}</span
                 >
             </div>
 

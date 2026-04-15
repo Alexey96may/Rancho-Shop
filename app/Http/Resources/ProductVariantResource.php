@@ -34,6 +34,8 @@ class ProductVariantResource extends JsonResource
             'attributes' => $this->attributes,
 
             'unit' => [
+                // 'name' => $this->unit->name,
+                'short' => $this->unit->short,
                 'slug' => $this->unit->slug,
             ],
 
