@@ -8,12 +8,14 @@
     import DropdownLink from '@/Components/DropdownLink.vue';
     import NavLink from '@/Components/NavLink.vue';
     import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
+    import SeoMeta from '@/Components/Shared/SeoMeta.vue';
     import Toast from '@/Components/Shared/Toast.vue';
 
     const showingNavigationDropdown = ref(false);
 </script>
 
 <template>
+    <SeoMeta />
     <Toast />
     <div>
         <div class="min-h-screen bg-gray-100">

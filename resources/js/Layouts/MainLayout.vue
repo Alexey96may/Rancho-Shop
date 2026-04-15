@@ -3,6 +3,7 @@
 
     import TheFooter from '@/Components/Sections/TheFooter.vue';
     import TheHeader from '@/Components/Sections/TheHeader.vue';
+    import SeoMeta from '@/Components/Shared/SeoMeta.vue';
     import Toast from '@/Components/Shared/Toast.vue';
     import { useCartStore } from '@/stores/cart';
 
@@ -42,6 +43,7 @@
 </script>
 
 <template>
+    <SeoMeta />
     <Toast />
     <div
         class="flex min-h-screen flex-col bg-rancho-paper selection:bg-rancho-buttercup selection:text-rancho-forest"
