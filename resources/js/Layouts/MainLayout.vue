@@ -3,6 +3,7 @@
 
     import TheFooter from '@/Components/Sections/TheFooter.vue';
     import TheHeader from '@/Components/Sections/TheHeader.vue';
+    import Toast from '@/Components/Shared/Toast.vue';
     import { useCartStore } from '@/stores/cart';
 
     const showScrollTop = ref(false);
@@ -41,6 +42,7 @@
 </script>
 
 <template>
+    <Toast />
     <div
         class="flex min-h-screen flex-col bg-rancho-paper selection:bg-rancho-buttercup selection:text-rancho-forest"
     >

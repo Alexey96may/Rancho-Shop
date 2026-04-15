@@ -30,3 +30,43 @@ export interface Paginated<T> {
         last_page: number;
     };
 }
+
+export interface FlashPayload {
+    success?: string;
+    error?: string;
+    message?: string;
+    warning?: string;
+}
+
+export type Role = 'admin' | 'moderator' | 'customer' | 'worker';
+export interface User {
+    id: number;
+    name: string;
+    email: string;
+    email_verified_at: string | null;
+    role: Role;
+    avatar: string | null;
+    avatar_url: string | null;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface AuthProps {
+    user: User;
+}
+
+export interface PageProps {
+    [key: string]: unknown;
+}
+
+export interface SharedData extends PageProps {
+    auth: AuthProps;
+    // settings: SiteSettings;
+    flash: {
+        success: string | null;
+        error: string | null;
+        message: string | null;
+        warning: string | null;
+    };
+    pending_comments_count: number;
+}
