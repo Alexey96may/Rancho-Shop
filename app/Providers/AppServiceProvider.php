@@ -32,10 +32,10 @@ class AppServiceProvider extends ServiceProvider
     {
         Vite::prefetch(concurrency: 3);
 
-        //Gate::authorize('admin-access');
-        Gate::define('admin-access', function ($user) {
-            return $user->role === UserRole::ADMIN;
-        });
+        //Gate::authorize('view-admin-panel');
+        Gate::define('view-admin-panel', fn ($user) => $user->isStaff());
+
+        Gate::define('manage-orders', fn ($user) => $user->canManageOrders());
 
         Relation::enforceMorphMap([
             'animal' => Animal::class,
