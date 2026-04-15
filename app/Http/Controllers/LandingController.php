@@ -22,7 +22,7 @@ class LandingController extends Controller
         $limit = Setting::where('key', 'featured_comments_limit')->value('value') ?? 6;
 
         return Inertia::render('HomeView', [
-            'products' => ProductResource::collection(Product::get()),
+            'products' => ProductResource::collection(Product::with(['variants', 'category', 'media'])->get()),
             
             'cows' => AnimalResource::collection(
                 Animal::where('type', 'cow')->get()

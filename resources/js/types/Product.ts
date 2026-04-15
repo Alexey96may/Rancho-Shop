@@ -28,7 +28,7 @@ export interface Product {
     media: Media[];
 
     seo?: SeoData | null;
-    variants: ProductVariantDTO[];
+    variants?: ProductVariantDTO[];
 }
 
 export interface AdminProduct extends Product {
