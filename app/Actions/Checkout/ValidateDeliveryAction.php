@@ -24,8 +24,8 @@ class ValidateDeliveryAction
             ];
         }
 
-        $lat = round($delivery->lat, 5);
-        $lng = round($delivery->lng, 5);
+        $lat = round($delivery->lat, 7);
+        $lng = round($delivery->lng, 7);
 
         $cacheKey = "delivery_check:{$lat}:{$lng}";
 
@@ -46,7 +46,7 @@ class ValidateDeliveryAction
                     $zone['path']
                 );
 
-                if ($distanceToRoute <= $zone['radius']) {
+                if ($distanceToRoute <= ($zone['radius'] * 2)) {
 
                     $deliveryPrice = $zone['delivery_price'];
 
@@ -70,7 +70,7 @@ class ValidateDeliveryAction
             }
 
             throw ValidationException::withMessages([
-                'delivery' => 'Адрес вне зоны доставки',
+                'delivery' => 'Адрес вне зоны доставки' . $farmCoords,
             ]);
         });
     }
@@ -92,8 +92,8 @@ class ValidateDeliveryAction
             [$lat2, $lng2] = $path[$i + 1];
 
             $distance = $this->distancePointToSegment(
-                $lat,
                 $lng,
+                $lat,
                 $lat1,
                 $lng1,
                 $lat2,

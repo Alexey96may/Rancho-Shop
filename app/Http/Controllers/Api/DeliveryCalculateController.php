@@ -5,12 +5,16 @@ namespace App\Http\Controllers\Api;
 use App\DTO\DeliveryDTO;
 use Illuminate\Http\Request;
 use App\Actions\Checkout\ValidateDeliveryAction;
+use App\Services\SettingService;
 
 class DeliveryCalculateController
 {
-    public function __invoke(Request $request, ValidateDeliveryAction $action)
+    public function __invoke(Request $request)
     {
-        dd($request->all());
+        $action = new ValidateDeliveryAction(
+            new SettingService()
+        );
+        
         $dto = new DeliveryDTO(
             address: $request->json('address'),
             lat: (float) $request->json('lat'),

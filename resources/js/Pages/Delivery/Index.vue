@@ -3,11 +3,14 @@
 
     import { useForm, usePage } from '@inertiajs/vue3';
 
+    import { debounce, toFinite } from 'lodash';
+
     import MapboxPicker from '@/Components/Map/MapboxPicker.vue';
     import CommentsSection from '@/Components/Sections/CommentsSection.vue';
     import MainLayout from '@/Layouts/MainLayout.vue';
     import { useYandexGeocoder } from '@/composables/useYandexGeocoder';
     import type { Comment, DeliveryDraft, DeliveryInfo, Page, Paginated } from '@/types';
+    import { formatDistance, formatMoney } from '@/utils/format';
 
     defineOptions({ layout: MainLayout });
 
@@ -134,7 +137,7 @@
             }
         }, 300);
 
-        calculateDelivery();
+        debouncedCalculateDelivert();
     });
 
     /**
@@ -213,6 +216,8 @@
     const distance = ref<number | null>(null);
     const price = ref<number | null>(null);
 
+    const debouncedCalculateDelivert = debounce(calculateDelivery, 500);
+
     async function calculateDelivery() {
         if (!selectedPoint.value) return;
 
@@ -230,13 +235,11 @@
 
             if (!res.ok) {
                 const text = await res.text();
-                console.error('API ERROR RESPONSE:', text);
+                alert('API ERROR RESPONSE');
                 throw new Error('HTTP ' + res.status);
             }
 
             const data = await res.json();
-
-            console.log('API RESULT:', data);
 
             isDeliveryAllowed.value = data.is_valid;
 
@@ -262,12 +265,6 @@
         <!-- CONTENT -->
         <section v-if="page.content" class="prose mx-auto mt-6 max-w-3xl px-6">
             <div v-html="page.content" />
-        </section>
-
-        <!-- DELIVERY INFO -->
-        <section class="mx-auto mt-6 max-w-3xl space-y-2 px-6 text-sm text-[#597D5B]">
-            <p>{{ delivery.delivery_info }}</p>
-            <p>🕒 {{ delivery.delivery_schedule }}</p>
         </section>
 
         <!-- MAIN -->
@@ -313,6 +310,12 @@
                     {{ isConfirmed ? '✔ Сохранено' : 'Подтвердить' }}
                 </button>
 
+                <!-- DELIVERY INFO -->
+                <section class="mx-auto mt-6 max-w-3xl space-y-2 text-sm text-[#597D5B]">
+                    <p>{{ delivery.delivery_info }}</p>
+                    <p>🕒 {{ delivery.delivery_schedule }}</p>
+                </section>
+
                 <div v-if="!isDeliveryAllowed" class="text-sm text-red-600">
                     Вы вне зоны доставки
                 </div>
@@ -325,11 +328,13 @@
                     Вы выбрали:
                     <span class="text-sm text-emerald-800">{{ serverDraft?.address }}</span>
                 </div>
-                <span>{{ distance }} </span>
-                <span>{{ price }} </span>
-                <div v-if="serverDraft?.distance">
+                <div v-if="price">
+                    Цена доставки:
+                    <span class="text-sm text-emerald-800">{{ formatMoney(price) }}</span>
+                </div>
+                <div v-if="distance">
                     Расстояние до нас:
-                    <span class="text-sm text-emerald-800">{{ serverDraft?.distance }}</span>
+                    <span class="text-sm text-emerald-800">~{{ formatDistance(distance) }}</span>
                 </div>
             </div>
 
