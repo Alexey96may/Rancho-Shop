@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Illuminate\Http\Request;
 use Inertia\Middleware;
+use App\Http\Resources\UserResource;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -29,29 +30,18 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
-        $deliveryDraft = $request->user()
-                ? [
-                    'address' => $request->user()->last_delivery_address,
-                    'lat' => $request->user()->last_delivery_lat,
-                    'lng' => $request->user()->last_delivery_lng,
-                    'is_valid' => true,
-                ]
-                : session('delivery_draft');
-
-
         return [
             ...parent::share($request),
             'auth' => [
-                'user' => $request->user(),
+                'user' => $request->user()
+                    ? UserResource::make($request->user())
+                    : null,
             ],
 
             'deliveryDraft' => $request->user()
-                ? [
-                    'address' => $request->user()->last_delivery_address,
-                    'lat' => $request->user()->last_delivery_lat,
-                    'lng' => $request->user()->last_delivery_lng,
-                    'is_valid' => true,
-                ]
+                ?   optional($request->user()->defaultDeliveryAddress)->only(['address', 'lat', 'lng']) + [
+                        'is_valid' => true,
+                    ]
                 : session('delivery_draft'),
         ];
     }

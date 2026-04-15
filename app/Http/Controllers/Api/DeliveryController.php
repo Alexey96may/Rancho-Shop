@@ -34,19 +34,20 @@ class DeliveryController extends Controller
             'address' => 'required|string',
             'lat' => 'required|numeric',
             'lng' => 'required|numeric',
-            'is_valid' => 'required|boolean',
         ]);
 
         $user = $request->user();
-        $sessionId = session()->getId();
 
         // 👤 AUTH USER
         if ($user) {
-            $address = $user->deliveryAddresses()->create([
-                'address' => $data['address'],
-                'lat' => $data['lat'],
-                'lng' => $data['lng'],
-            ]);
+            $address = $user->deliveryAddresses()->updateOrCreate(
+                ['is_default' => true],
+                [
+                    'address' => $data['address'],
+                    'lat' => $data['lat'],
+                    'lng' => $data['lng'],
+                ]
+            );
 
             return response()->json([
                 'status' => 'saved',
@@ -55,14 +56,13 @@ class DeliveryController extends Controller
             ]);
         }
 
-        // 👤 GUEST (session storage)
+        // 👻 GUEST
         session([
             'delivery_draft' => [
                 'address' => $data['address'],
                 'lat' => $data['lat'],
                 'lng' => $data['lng'],
-                'is_valid' => $data['is_valid'],
-                'session_id' => $sessionId,
+                'is_valid' => true,
             ],
         ]);
 

@@ -11,6 +11,10 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Http\Request;
 use App\DTO\DeliveryDTO;
 
+use Illuminate\Support\Facades\Gate;
+use App\Enums\UserRole;
+
+
 class AppServiceProvider extends ServiceProvider
 {
     /**
@@ -27,6 +31,11 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Vite::prefetch(concurrency: 3);
+
+        //Gate::authorize('admin-access');
+        Gate::define('admin-access', function ($user) {
+            return $user->role === UserRole::ADMIN;
+        });
 
         Relation::enforceMorphMap([
             'animal' => Animal::class,

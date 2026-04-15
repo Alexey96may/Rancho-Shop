@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password'])]
+#[Fillable(['name', 'email', 'password', 'role'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -41,5 +41,10 @@ class User extends Authenticatable
     public function deliveryAddresses()
     {
         return $this->hasMany(DeliveryAddress::class);
+    }
+
+    public function defaultDeliveryAddress()
+    {
+        return $this->hasOne(DeliveryAddress::class)->where('is_default', true);
     }
 }
