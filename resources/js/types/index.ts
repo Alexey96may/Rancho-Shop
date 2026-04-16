@@ -52,21 +52,27 @@ export interface User {
 }
 
 export interface AuthProps {
-    user: User;
+    user: User | null;
 }
 
 export interface PageProps {
     [key: string]: unknown;
 }
 
+export interface Permission {
+    key: string; // MANAGE_USERS
+    value: string; // manage-users
+    label: string; // Пользователи
+}
+
 export interface SharedData extends PageProps {
     auth: AuthProps;
-    // settings: SiteSettings;
+    can?: Record<string, boolean>;
     flash: {
         success: string | null;
         error: string | null;
         message: string | null;
         warning: string | null;
     };
-    pending_comments_count: number;
+    permissions: Permission[];
 }

@@ -15,6 +15,19 @@ use App\Http\Controllers\DeliveryController;
 
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\ProductController as AdminProductController;
+use App\Http\Controllers\Admin\OrderController as AdminOrderController;
+use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\CommentController as AdminCommentController;
+use App\Http\Controllers\Admin\DeliveryController as AdminDeliveryController;
+use App\Http\Controllers\Admin\AnimalController as AdminAnimalController;
+use App\Http\Controllers\Admin\CatalogController;
+use App\Http\Controllers\Admin\PageController as AdminPageController;
+use App\Http\Controllers\Admin\PromocodeController;
+use App\Http\Controllers\Admin\FaqController;
+use App\Http\Controllers\Admin\FeatureController;
+use App\Http\Controllers\Admin\SettingController;
+
 
 Route::get('/', [LandingController::class, 'index'])->name('home');
 
@@ -83,3 +96,51 @@ Route::middleware(['auth', 'role:worker'])->group(function () {
 });
 
 require __DIR__ . '/auth.php';
+
+Route::prefix('admin')
+    ->name('admin.')
+    ->middleware(['auth', 'role:admin,moderator,worker'])
+    ->group(function () {
+
+        // Dashboard
+        Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+
+        // Products
+        Route::resource('products', AdminProductController::class);
+
+        // Orders
+        Route::resource('orders', AdminOrderController::class);
+
+        // Users
+        Route::resource('users', UserController::class);
+
+        // Categories
+        Route::resource('categories', CategoryController::class);
+
+        // Comments
+        Route::resource('comments', AdminCommentController::class);
+
+        // Delivery
+        Route::resource('delivery', AdminDeliveryController::class);
+
+        // Animals
+        Route::resource('animals', AdminAnimalController::class);
+
+        // Catalog (SKU / variants)
+        Route::resource('catalog', CatalogController::class);
+
+        // Pages (CMS)
+        Route::resource('pages', AdminPageController::class);
+
+        // Promocodes
+        Route::resource('promocodes', PromocodeController::class);
+
+        // FAQ
+        Route::resource('faq', FaqController::class);
+
+        // Features
+        Route::resource('features', FeatureController::class);
+
+        // Settings
+        Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
+    });

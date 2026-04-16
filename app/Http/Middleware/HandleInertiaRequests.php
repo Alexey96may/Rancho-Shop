@@ -5,8 +5,9 @@ namespace App\Http\Middleware;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 use App\Http\Resources\UserResource;
-
+use App\Enums\Permission;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Str;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -34,6 +35,7 @@ class HandleInertiaRequests extends Middleware
     {
         $address = $request->user()?->defaultDeliveryAddress;
 
+
         return [
             ...parent::share($request),
             'auth' => [
@@ -42,14 +44,22 @@ class HandleInertiaRequests extends Middleware
                     : null,
             ],
 
-            'can' => [
-                'adminPanel' => $request->user()
-                    ? Gate::allows('view-admin-panel')
-                    : false,
+            'permissions' => Permission::options(),
 
-                'manageUsers' => $request->user()
-                    ? Gate::allows('manage-users')
-                    : false,
+            'can' => [
+                'manageProducts' => Gate::allows('manage-products'),
+                'manageOrders' => Gate::allows('manage-orders'),
+                'manageComments' => Gate::allows('manage-comments'),
+                'manageDelivery' => Gate::allows('manage-delivery'),
+                'manageAnimals' => Gate::allows('manage-animals'),
+                'manageUsers' => Gate::allows('manage-users'),
+                'manageCategories' => Gate::allows('manage-categories'),
+                'manageCatalog' => Gate::allows('manage-catalog'),
+                'managePages' => Gate::allows('manage-pages'),
+                'managePromocodes' => Gate::allows('manage-promocodes'),
+                'manageFaq' => Gate::allows('manage-faq'),
+                'manageFeatures' => Gate::allows('manage-features'),
+                'manageSettings' => Gate::allows('manage-settings'),
             ],
 
             'deliveryDraft' => $request->user()

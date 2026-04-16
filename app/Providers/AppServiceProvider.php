@@ -13,6 +13,7 @@ use App\DTO\DeliveryDTO;
 
 use Illuminate\Support\Facades\Gate;
 use App\Enums\UserRole;
+use App\Enums\Permission;
 
 
 class AppServiceProvider extends ServiceProvider
@@ -35,11 +36,32 @@ class AppServiceProvider extends ServiceProvider
         //Gate::authorize('view-admin-panel');
         Gate::define('view-admin-panel', fn ($user) => $user->isStaff());
 
-        Gate::define('manage-orders', fn ($user) => $user->canManageOrders());
+        foreach (Permission::cases() as $permission) {
 
-        Gate::define('manage-users', fn ($user) =>
-            $user->isAdmin()
-        );
+            Gate::define($permission->value, function ($user) use ($permission) {
+
+                return match ($permission) {
+
+                    Permission::MANAGE_PRODUCTS,
+                    Permission::MANAGE_DELIVERY,
+                    Permission::MANAGE_ANIMALS,
+                    Permission::MANAGE_USERS,
+                    Permission::MANAGE_CATEGORIES,
+                    Permission::MANAGE_CATALOG,
+                    Permission::MANAGE_PAGES,
+                    Permission::MANAGE_PROMOCODES,
+                    Permission::MANAGE_FAQ,
+                    Permission::MANAGE_FEATURES,
+                    Permission::MANAGE_SETTINGS
+                        => $user->isAdmin(),
+
+                    Permission::MANAGE_ORDERS,
+                    Permission::MANAGE_COMMENTS
+                        => $user->isStaff(),
+
+                };
+            });
+        }
 
         Relation::enforceMorphMap([
             'animal' => Animal::class,
