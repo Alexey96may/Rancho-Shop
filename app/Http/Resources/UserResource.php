@@ -18,8 +18,13 @@ class UserResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'email' => $this->email,
+            'phone' => $this->phone ?? 'Не указан',
             'role' => $this->role->value,
+            'avatar' => $this->avatar_url,
             'is_admin' => $this->isAdmin(),
+            'orders_count' => $this->whenCounted('orders'),
+            'addresses' => $this->whenLoaded('deliveryAddresses'),
+            'created_at' => $this->created_at->format('d.m.Y'),
         ];
     }
 }

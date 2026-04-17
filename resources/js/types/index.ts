@@ -43,12 +43,12 @@ export interface User {
     id: number;
     name: string;
     email: string;
-    email_verified_at: string | null;
-    role: Role;
-    avatar: string | null;
-    avatar_url: string | null;
+    phone: string;
+    role: string;
+    avatar?: string; // avatar_url
+    is_admin: boolean;
+    orders_count?: number;
     created_at: string;
-    updated_at: string;
 }
 
 export interface AuthProps {
@@ -67,7 +67,21 @@ export interface Permission {
 
 export interface SharedData extends PageProps {
     auth: AuthProps;
-    can?: Record<string, boolean>;
+    can: {
+        manageProducts: boolean;
+        manageOrders: boolean;
+        manageComments: boolean;
+        manageDelivery: boolean;
+        manageAnimals: boolean;
+        manageUsers: boolean;
+        manageCategories: boolean;
+        manageCatalog: boolean;
+        managePages: boolean;
+        managePromocodes: boolean;
+        manageFaq: boolean;
+        manageFeatures: boolean;
+        manageSettings: boolean;
+    };
     flash: {
         success: string | null;
         error: string | null;
@@ -75,4 +89,5 @@ export interface SharedData extends PageProps {
         warning: string | null;
     };
     permissions: Permission[];
+    [key: string]: any;
 }

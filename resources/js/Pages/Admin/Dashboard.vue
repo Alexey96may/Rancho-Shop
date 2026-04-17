@@ -1,152 +1,106 @@
 <script setup lang="ts">
-    import { computed } from 'vue';
-    import type { Component } from 'vue';
-
+    import { Head } from '@inertiajs/vue3';
     import { usePage } from '@inertiajs/vue3';
 
     import {
-        ClipboardList,
-        FileText,
-        Folder,
-        HelpCircle,
-        MessageSquare,
-        Package,
-        PawPrint,
-        Settings,
-        Sparkles,
-        Tags,
-        Ticket,
-        Truck,
-        User,
-    } from 'lucide-vue-next';
+        ChatBubbleLeftRightIcon,
+        InboxIcon,
+        PresentationChartLineIcon,
+        ShoppingCartIcon,
+        TruckIcon,
+        UsersIcon,
+    } from '@heroicons/vue/24/outline';
 
-    import DashboardCard from '@/Components/Admin/Cards/DashboardCard.vue';
+    import AdminDashboardCard from '@/Components/Admin/Cards/DashboardCard.vue';
     import AdminLayout from '@/Layouts/AdminLayout.vue';
-    import type { SharedData } from '@/types';
+    import { SharedData } from '@/types';
 
-    type CardConfig = {
-        href: string;
-        icon: Component;
-        description: string;
-        label: string;
-    };
+    const props = defineProps<{
+        stats: {
+            products_count: number;
+            orders_pending: number;
+            new_comments: number;
+            total_users: number;
+        };
+    }>();
 
-    type CanMap = Record<string, boolean>;
-
-    const page = usePage<SharedData>();
-
-    // 👇 ВАЖНО: НЕ computed, НЕ .value
-    const can: CanMap = (page.props.can ?? {}) as CanMap;
-
-    const config: Record<string, CardConfig> = {
-        manageProducts: {
-            href: '/admin/products',
-            icon: Package,
-            description: 'Управление товарами',
-            label: 'Продукты',
-        },
-        manageOrders: {
-            href: '/admin/orders',
-            icon: ClipboardList,
-            description: 'Заказы',
-            label: 'Заказы',
-        },
-        manageComments: {
-            href: '/admin/comments',
-            icon: MessageSquare,
-            description: 'Комментарии',
-            label: 'Комментарии',
-        },
-        manageDelivery: {
-            href: '/admin/delivery',
-            icon: Truck,
-            description: 'Доставка',
-            label: 'Доставка',
-        },
-        manageAnimals: {
-            href: '/admin/animals',
-            icon: PawPrint,
-            description: 'Животные',
-            label: 'Животные',
-        },
-        manageUsers: {
-            href: '/admin/users',
-            icon: User,
-            description: 'Пользователи',
-            label: 'Пользователи',
-        },
-        manageCategories: {
-            href: '/admin/categories',
-            icon: Folder,
-            description: 'Категории',
-            label: 'Категории',
-        },
-        manageCatalog: {
-            href: '/admin/catalog',
-            icon: Tags,
-            description: 'Номенклатура',
-            label: 'Номенклатура',
-        },
-        managePages: {
-            href: '/admin/pages',
-            icon: FileText,
-            description: 'Страницы',
-            label: 'Страницы',
-        },
-        managePromocodes: {
-            href: '/admin/promocodes',
-            icon: Ticket,
-            description: 'Промокоды',
-            label: 'Промокоды',
-        },
-        manageFaq: {
-            href: '/admin/faq',
-            icon: HelpCircle,
-            description: 'FAQ',
-            label: 'FAQ',
-        },
-        manageFeatures: {
-            href: '/admin/features',
-            icon: Sparkles,
-            description: 'Фичи',
-            label: 'Фичи',
-        },
-        manageSettings: {
-            href: '/admin/settings',
-            icon: Settings,
-            description: 'Настройки',
-            label: 'Настройки',
-        },
-    };
-
-    const cards = computed(() => {
-        return Object.entries(config)
-            .map(([key, conf]) => ({
-                key,
-                ...conf,
-                visible: Boolean(can[key]),
-            }))
-            .filter((card) => card.visible);
-    });
+    const can = usePage<SharedData>().props.can;
 </script>
 
 <template>
-    <AdminLayout>
-        <section class="space-y-6">
-            <header>
-                <h1 class="text-2xl font-bold text-[var(--forest)]">Dashboard</h1>
-                <p class="text-sm text-gray-500">Управление системой</p>
-            </header>
+    <Head title="Панель управления" />
 
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                <DashboardCard
-                    v-for="card in cards"
-                    :key="card.key"
-                    :title="card.label"
-                    :description="card.description"
-                    :href="card.href"
-                    :icon="card.icon"
+    <AdminLayout>
+        <template #header>Дашборд</template>
+
+        <section aria-labelledby="quick-stats-heading">
+            <h2 id="quick-stats-heading" class="sr-only">Быстрая статистика</h2>
+
+            <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+                <AdminDashboardCard
+                    v-if="can.manageOrders"
+                    title="Заказы"
+                    description="Управление продажами и статусами"
+                    :href="route('admin.orders.index')"
+                    :icon="ShoppingCartIcon"
+                    :count="stats.orders_pending"
                 />
+
+                <AdminDashboardCard
+                    v-if="can.manageProducts"
+                    title="Продукты"
+                    description="Склад, цены и наличие"
+                    :href="route('admin.products.index')"
+                    :icon="InboxIcon"
+                    :count="stats.products_count"
+                />
+
+                <AdminDashboardCard
+                    v-if="can.manageComments"
+                    title="Отзывы"
+                    description="Модерация обратной связи"
+                    :href="route('admin.comments.index')"
+                    :icon="ChatBubbleLeftRightIcon"
+                    :count="stats.new_comments"
+                />
+
+                <AdminDashboardCard
+                    v-if="can.manageUsers"
+                    title="Персонал"
+                    description="Права доступа и пользователи"
+                    :href="route('admin.users.index')"
+                    :icon="UsersIcon"
+                    :count="stats.total_users"
+                />
+            </div>
+        </section>
+
+        <section class="mt-12" aria-labelledby="activity-heading">
+            <div class="mb-6 flex items-center justify-between">
+                <h2
+                    id="activity-heading"
+                    class="text-xl font-black uppercase tracking-widest text-white"
+                >
+                    Аналитика Ранчо
+                </h2>
+                <div class="flex gap-2">
+                    <span
+                        class="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-emerald-400"
+                    >
+                        <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500"></span>
+                        Live
+                    </span>
+                </div>
+            </div>
+
+            <div
+                class="flex flex-col items-center justify-center rounded-3xl border border-dashed border-slate-800 bg-slate-900/30 p-12 text-center"
+            >
+                <PresentationChartLineIcon class="mb-4 h-12 w-12 text-slate-700" />
+                <p class="font-medium text-slate-500">
+                    Модуль аналитики будет доступен после <br />
+                    накопления первых данных о продажах.
+                </p>
             </div>
         </section>
     </AdminLayout>
