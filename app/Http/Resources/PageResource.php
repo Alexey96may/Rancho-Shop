@@ -31,6 +31,7 @@ class PageResource extends JsonResource
 
             // SEO
             'seo' => new SeoResource($this->whenLoaded('seo')),
+            'created_at' => $this->created_at?->format('d.m.Y'),
 
             'reviews_count' => $this->whenCounted('reviews'),
         ];
