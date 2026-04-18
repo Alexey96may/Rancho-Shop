@@ -107,14 +107,6 @@
                             label="Животные"
                         />
                     </li>
-                    <li>
-                        <AdminSidebarLink
-                            :href="route('admin.delivery.index')"
-                            :active="route().current('admin.delivery.*')"
-                            :icon="TruckIcon"
-                            label="Логистика"
-                        />
-                    </li>
 
                     <li
                         class="mb-2 mt-6 px-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-600"

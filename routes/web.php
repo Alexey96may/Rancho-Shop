@@ -147,9 +147,6 @@ Route::prefix('admin')
         Route::patch('units/reorder', [UnitController::class, 'reorder'])->name('units.reorder');
         Route::resource('units', UnitController::class)->except(['show', 'create']);
 
-        // Delivery
-        Route::resource('delivery', AdminDeliveryController::class);
-
         // Settings
         Route::prefix('settings')->name('settings.')->group(function () {
         Route::get('/', [SettingController::class, 'index'])->name('index');
