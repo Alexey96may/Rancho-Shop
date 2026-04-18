@@ -30,7 +30,7 @@ class UserController extends Controller
                 $q->where('role', $role);
             })
             ->latest()
-            ->paginate(12)
+            ->paginate(setting('users_per_page', 8))
             ->withQueryString();
 
         return Inertia::render('Admin/Users/Index', [

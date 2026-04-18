@@ -21,7 +21,7 @@ class ProductController extends Controller
         $products = Product::query()
             ->with(['variants.unit', 'category', 'media', 'animals', 'seo'])
             ->latest()
-            ->paginate(12);
+            ->paginate(setting('products_per_page', 12));
 
         
         return Inertia::render('Admin/Products/Index', [

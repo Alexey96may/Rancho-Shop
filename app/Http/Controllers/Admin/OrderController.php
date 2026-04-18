@@ -25,7 +25,7 @@ class OrderController extends Controller
                 $query->where('status', $status);
             })
             ->latest()
-            ->paginate(12)
+            ->paginate(setting('orders_per_page', 8))
             ->withQueryString();
 
             return Inertia::render('Admin/Orders/Index', [

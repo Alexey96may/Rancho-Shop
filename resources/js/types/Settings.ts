@@ -33,8 +33,12 @@ export interface SiteSettings {
 
     // --- UI ---
     products_per_page: number;
-    cows_per_page: number;
-    featured_cows_limit: number;
+    animals_per_page: number;
+    comments_per_page: number;
+    users_per_page: number;
+    orders_per_page: number;
+
+    featured_animals_limit: number;
     featured_products_limit: number;
     featured_comments_limit: number;
 

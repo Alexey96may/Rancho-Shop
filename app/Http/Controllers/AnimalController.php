@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Resources\AnimalResource;
 use App\Http\Resources\CommentResource;
 use App\Models\Animal;
+use App\Services\SettingService;
 use Inertia\Inertia;
 
 class AnimalController extends Controller
@@ -32,7 +33,7 @@ class AnimalController extends Controller
 
         $comments = $animal->comments()
             ->latest()
-            ->paginate(10);
+            ->paginate(setting('animals_per_page', 8));
 
         return Inertia::render('Animals/Show', [
             'animal' => new AnimalResource($animal),

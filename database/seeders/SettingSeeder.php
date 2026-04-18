@@ -71,8 +71,12 @@ class SettingSeeder extends Seeder
 
             // --- Interface limits (Pagination & UI) ---
             ['key' => 'products_per_page', 'value' => '12', 'type' => 'integer'],
-            ['key' => 'cows_per_page', 'value' => '8', 'type' => 'integer'],
-            ['key' => 'featured_cows_limit', 'value' => '4', 'type' => 'integer'],
+            ['key' => 'animals_per_page', 'value' => '8', 'type' => 'integer'],
+            ['key' => 'comments_per_page', 'value' => '8', 'type' => 'integer'],
+            ['key' => 'users_per_page', 'value' => '8', 'type' => 'integer'],
+            ['key' => 'orders_per_page', 'value' => '8', 'type' => 'integer'],
+            
+            ['key' => 'featured_animals_limit', 'value' => '4', 'type' => 'integer'],
             ['key' => 'featured_products_limit', 'value' => '6', 'type' => 'integer'],
             ['key' => 'featured_comments_limit', 'value' => '6', 'type' => 'integer'],
 

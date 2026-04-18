@@ -19,13 +19,16 @@ class LandingController extends Controller
 {
     public function index()
     {
-        $limit = Setting::where('key', 'featured_comments_limit')->value('value') ?? 6;
 
         return Inertia::render('HomeView', [
-            'products' => ProductResource::collection(Product::with(['variants', 'category', 'media'])->get()),
+            'products' => ProductResource::collection(Product::with(['variants', 'category', 'media'])
+                ->take(setting('featured_products_limit', 6))
+                ->get()),
             
             'cows' => AnimalResource::collection(
-                Animal::where('type', 'cow')->get()
+                Animal::where('type', 'cow')
+                    ->take(setting('featured_animals_limit', 4))
+                    ->get()
             ),
             
             'about'  => new LandingBlockResource(LandingBlock::getSafe('about')),
@@ -35,7 +38,7 @@ class LandingController extends Controller
                 Comment::where('is_published', true)
                         // ->where('commentable_type', 'page')
                         ->latest()
-                        ->take($limit) 
+                        ->take(setting('featured_comments_limit', 6)) 
                         ->get()
             ),
             

@@ -142,5 +142,9 @@ Route::prefix('admin')
         Route::resource('features', FeatureController::class);
 
         // Settings
-        Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
+        Route::prefix('settings')->name('settings.')->group(function () {
+        Route::get('/', [SettingController::class, 'index'])->name('index');
+        Route::post('/bulk', [SettingController::class, 'bulkUpdate'])->name('bulk');
+        Route::post('/clear-cache', [SettingController::class, 'clearCache'])->name('clear-cache');
+    });
     });

@@ -25,7 +25,7 @@ class CommentController extends Controller
             if ($status === 'draft') return $query->where('is_published', false);
         })
         ->latest()
-        ->paginate(12)
+        ->paginate(setting('comments_per_page', 8))
         ->withQueryString();
 
     return Inertia::render('Admin/Comments/Index', [

@@ -19,7 +19,7 @@ class PageController extends Controller
         
         $comments = $page->reviews()
             ->latest()
-            ->paginate(10);
+            ->paginate(setting('comments_per_page', 8));
 
         return Inertia::render('AboutView', [
             'page' => new PageResource($page),
@@ -39,7 +39,7 @@ class PageController extends Controller
 
         $comments = $page->reviews()
             ->latest()
-            ->paginate(10);
+            ->paginate(setting('comments_per_page', 8));
 
         return Inertia::render('Delivery/Index', [
             'page' => new PageResource($page),
