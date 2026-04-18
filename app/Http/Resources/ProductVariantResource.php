@@ -33,18 +33,16 @@ class ProductVariantResource extends JsonResource
 
             'attributes' => $this->attributes,
 
-            'unit' => [
-                // 'name' => $this->unit->name,
+           'unit' => $this->unit ? [
                 'short' => $this->unit->short,
                 'slug' => $this->unit->slug,
-            ],
+            ] : null,
 
-            'amount' => $this->amount,
-
-            'product' => [
-                'name' => $this->product->name,
-                'slug' => $this->product->slug,
-            ],
+            'product' => $this->product ? [
+                'id'    => $this->product->id,
+                'name'  => $this->product->name,
+                'slug'  => $this->product->slug,
+            ] : null,
 
             'media' => $this->product && $this->product->media->isNotEmpty()
                 ? MediaResource::collection($this->product->media)

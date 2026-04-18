@@ -140,6 +140,7 @@ Route::prefix('admin')
 
         // Catalog (SKU / variants)
         Route::resource('catalog', CatalogController::class);
+        Route::patch('catalog/{id}/quick', [CatalogController::class, 'quickUpdate'])->name('catalog.quick');
 
         // Delivery
         Route::resource('delivery', AdminDeliveryController::class);

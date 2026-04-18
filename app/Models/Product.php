@@ -30,8 +30,6 @@ class Product extends Model implements HasMedia
         'is_active' => 'boolean',
     ];
 
-    protected $appends = ['price_formatted'];
-
     /**
      * Connection with an animals (for example, whose milk is this)
      */
@@ -66,11 +64,6 @@ class Product extends Model implements HasMedia
         $default = $this->defaultVariant()->first();
 
         return $default ?? $this->variants->first();
-    }
-
-    public function getMinPriceAttribute(): int
-    {
-        return $this->variants->min('price');
     }
 
     /**
