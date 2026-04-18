@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\CommentResource;
+use App\Models\Comment;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -11,9 +13,25 @@ class CommentController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        return Inertia::render('Admin/Comments/Index');
+        $comments = Comment::query()
+        ->with(['user', 'commentable'])
+        ->when($request->type, function ($query, $type) {
+            return $query->where('commentable_type', $type);
+        })
+        ->when($request->status, function ($query, $status) {
+            if ($status === 'published') return $query->where('is_published', true);
+            if ($status === 'draft') return $query->where('is_published', false);
+        })
+        ->latest()
+        ->paginate(12)
+        ->withQueryString();
+
+    return Inertia::render('Admin/Comments/Index', [
+            'comments' => CommentResource::collection($comments),
+            'filters'  => $request->only(['type']),
+        ]);
     }
 
     /**
@@ -51,16 +69,19 @@ class CommentController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, Comment $comment)
     {
-        //
+        $comment->update($request->only('is_published'));
+        return back()->with('success', $comment->is_published ? 'Отзыв опубликован' : 'Отзыв скрыт');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Comment $comment)
     {
-        //
+        $comment->delete();
+        
+        return back()->with('warning', 'Отзыв удален');
     }
 }

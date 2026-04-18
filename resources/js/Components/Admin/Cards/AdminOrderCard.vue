@@ -3,7 +3,8 @@
 
     import {
         ChevronRightIcon,
-        PhoneIcon, // Добавили иконку телефона
+        PhoneIcon,
+        // Добавили иконку телефона
         ShoppingBagIcon,
         TruckIcon,
         UserIcon,
