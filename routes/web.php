@@ -120,14 +120,8 @@ Route::prefix('admin')
         // Comments
         Route::resource('comments', AdminCommentController::class);
 
-        // Delivery
-        Route::resource('delivery', AdminDeliveryController::class);
-
         // Animals
         Route::resource('animals', AdminAnimalController::class);
-
-        // Catalog (SKU / variants)
-        Route::resource('catalog', CatalogController::class);
 
         // Pages (CMS)
         Route::resource('pages', AdminPageController::class);
@@ -140,6 +134,12 @@ Route::prefix('admin')
 
         // Features
         Route::resource('features', FeatureController::class);
+
+        // Catalog (SKU / variants)
+        Route::resource('catalog', CatalogController::class);
+
+        // Delivery
+        Route::resource('delivery', AdminDeliveryController::class);
 
         // Settings
         Route::prefix('settings')->name('settings.')->group(function () {
