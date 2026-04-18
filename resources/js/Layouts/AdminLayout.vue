@@ -2,13 +2,25 @@
     import { usePage } from '@inertiajs/vue3';
 
     import {
+        // Для доставки
+        AcademicCapIcon,
         ChatBubbleBottomCenterTextIcon,
         Cog6ToothIcon,
         DocumentTextIcon,
-        HeartIcon,
         HomeIcon,
         InboxIcon,
+        // Для промокодов
+        QuestionMarkCircleIcon,
         ShoppingCartIcon,
+        // Для животных (или замени на подходящую)
+        Square3Stack3DIcon,
+        // Для FAQ
+        StarIcon, // Для фич/преимуществ
+        TagIcon,
+        // Для каталога/вариантов
+        TicketIcon,
+        // Для категорий
+        TruckIcon,
         UsersIcon,
     } from '@heroicons/vue/24/outline';
 
@@ -23,21 +35,17 @@
     <div class="flex min-h-screen bg-slate-950 font-sans text-slate-200">
         <aside
             id="admin-sidebar"
-            aria-label="Боковая панель администратора"
-            class="sticky top-0 flex h-screen w-72 flex-col gap-8 border-r border-slate-900 bg-slate-950 p-6"
+            class="sticky top-0 flex h-screen w-72 flex-col gap-8 overflow-y-auto border-r border-slate-900 bg-slate-950 p-6"
         >
             <div class="flex items-center gap-2 px-4">
-                <span
-                    class="text-2xl font-black uppercase tracking-tighter text-white"
-                    aria-label="Ранчо Админ"
-                >
-                    Ранчо <span class="text-orange-600" aria-hidden="true">Admin</span>
+                <span class="text-2xl font-black uppercase tracking-tighter text-white">
+                    Ранчо <span class="text-orange-600">Admin</span>
                 </span>
             </div>
 
-            <nav role="navigation" aria-label="Основное меню">
-                <ul role="menubar" class="flex flex-col gap-1">
-                    <li role="none">
+            <nav role="navigation">
+                <ul class="flex flex-col gap-1">
+                    <li>
                         <AdminSidebarLink
                             :href="route('admin.dashboard')"
                             :active="route().current('admin.dashboard')"
@@ -47,23 +55,11 @@
                     </li>
 
                     <li
-                        role="separator"
                         class="mb-2 mt-6 px-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-600"
-                        id="mgmt-heading"
                     >
-                        Управление
+                        Магазин
                     </li>
-
-                    <li role="none" v-if="can.manageProducts">
-                        <AdminSidebarLink
-                            :href="route('admin.products.index')"
-                            :active="route().current('admin.products.*')"
-                            :icon="InboxIcon"
-                            label="Продукты"
-                        />
-                    </li>
-
-                    <li role="none" v-if="can.manageOrders">
+                    <li v-if="can.manageOrders">
                         <AdminSidebarLink
                             :href="route('admin.orders.index')"
                             :active="route().current('admin.orders.*')"
@@ -71,8 +67,67 @@
                             label="Заказы"
                         />
                     </li>
+                    <li v-if="can.manageProducts">
+                        <AdminSidebarLink
+                            :href="route('admin.products.index')"
+                            :active="route().current('admin.products.*')"
+                            :icon="InboxIcon"
+                            label="Товары"
+                        />
+                    </li>
+                    <li>
+                        <AdminSidebarLink
+                            :href="route('admin.categories.index')"
+                            :active="route().current('admin.categories.*')"
+                            :icon="TagIcon"
+                            label="Категории"
+                        />
+                    </li>
+                    <li>
+                        <AdminSidebarLink
+                            :href="route('admin.catalog.index')"
+                            :active="route().current('admin.catalog.*')"
+                            :icon="Square3Stack3DIcon"
+                            label="Варианты (SKU)"
+                        />
+                    </li>
 
-                    <li role="none" v-if="can.manageComments">
+                    <li
+                        class="mb-2 mt-6 px-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-600"
+                    >
+                        Ферма
+                    </li>
+                    <li>
+                        <AdminSidebarLink
+                            :href="route('admin.animals.index')"
+                            :active="route().current('admin.animals.*')"
+                            :icon="AcademicCapIcon"
+                            label="Животные"
+                        />
+                    </li>
+                    <li>
+                        <AdminSidebarLink
+                            :href="route('admin.delivery.index')"
+                            :active="route().current('admin.delivery.*')"
+                            :icon="TruckIcon"
+                            label="Логистика"
+                        />
+                    </li>
+
+                    <li
+                        class="mb-2 mt-6 px-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-600"
+                    >
+                        Контент
+                    </li>
+                    <li>
+                        <AdminSidebarLink
+                            :href="route('admin.pages.index')"
+                            :active="route().current('admin.pages.*')"
+                            :icon="DocumentTextIcon"
+                            label="Страницы CMS"
+                        />
+                    </li>
+                    <li v-if="can.manageComments">
                         <AdminSidebarLink
                             :href="route('admin.comments.index')"
                             :active="route().current('admin.comments.*')"
@@ -80,16 +135,37 @@
                             label="Отзывы"
                         />
                     </li>
+                    <li>
+                        <AdminSidebarLink
+                            :href="route('admin.promocodes.index')"
+                            :active="route().current('admin.promocodes.*')"
+                            :icon="TicketIcon"
+                            label="Промокоды"
+                        />
+                    </li>
+                    <li>
+                        <AdminSidebarLink
+                            :href="route('admin.faq.index')"
+                            :active="route().current('admin.faq.*')"
+                            :icon="QuestionMarkCircleIcon"
+                            label="FAQ"
+                        />
+                    </li>
+                    <li>
+                        <AdminSidebarLink
+                            :href="route('admin.features.index')"
+                            :active="route().current('admin.features.*')"
+                            :icon="StarIcon"
+                            label="Преимущества"
+                        />
+                    </li>
 
                     <li
-                        role="separator"
                         class="mb-2 mt-6 px-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-600"
-                        id="sys-heading"
                     >
                         Система
                     </li>
-
-                    <li role="none" v-if="can.manageUsers">
+                    <li v-if="can.manageUsers">
                         <AdminSidebarLink
                             :href="route('admin.users.index')"
                             :active="route().current('admin.users.*')"
@@ -97,8 +173,7 @@
                             label="Персонал"
                         />
                     </li>
-
-                    <li role="none" v-if="can.manageSettings">
+                    <li v-if="can.manageSettings">
                         <AdminSidebarLink
                             :href="route('admin.settings.index')"
                             :active="route().current('admin.settings.*')"
@@ -112,18 +187,12 @@
 
         <div class="flex flex-1 flex-col">
             <header
-                role="banner"
                 class="sticky top-0 z-10 flex h-20 items-center justify-between border-b border-slate-900 bg-slate-950/50 px-10 backdrop-blur-md"
             >
                 <h1 id="page-title" class="text-xl font-black uppercase tracking-widest text-white">
                     <slot name="header" />
                 </h1>
-
-                <div
-                    class="flex items-center gap-4"
-                    role="region"
-                    aria-label="Профиль пользователя"
-                >
+                <div class="flex items-center gap-4">
                     <div class="hidden text-right sm:block">
                         <p class="text-sm font-bold leading-none text-white">
                             {{ page.props.auth.user?.name }}
@@ -135,13 +204,7 @@
                     </div>
                 </div>
             </header>
-
-            <main
-                id="main-content"
-                class="p-10 outline-none"
-                tabindex="-1"
-                aria-labelledby="page-title"
-            >
+            <main id="main-content" class="p-10 outline-none" tabindex="-1">
                 <slot />
             </main>
         </div>

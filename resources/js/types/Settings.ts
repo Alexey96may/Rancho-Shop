@@ -37,6 +37,7 @@ export interface SiteSettings {
     comments_per_page: number;
     users_per_page: number;
     orders_per_page: number;
+    categories_per_page: number;
 
     featured_animals_limit: number;
     featured_products_limit: number;

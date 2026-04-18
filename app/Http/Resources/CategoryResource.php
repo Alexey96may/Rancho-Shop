@@ -20,6 +20,7 @@ class CategoryResource extends JsonResource
             'name' => $this->name,
             'slug' => $this->slug,
             'icon' => $this->icon,
+            'type' => $this->type,
 
             $this->mergeWhen($request->user()?->is_admin, [
                 'sort_order' => $this->sort_order,
