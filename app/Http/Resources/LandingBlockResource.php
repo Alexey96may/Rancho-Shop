@@ -19,6 +19,7 @@ class LandingBlockResource extends JsonResource
             'key'      => $this->key,
             'title'    => $this->title,
             'subtitle' => $this->subtitle,
+            'is_visible' => (bool) $this->is_visible,
             
             'content'  => collect($this->content)->map(fn($item) => [
                 'title' => $item['title'] ?? '',

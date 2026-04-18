@@ -24,7 +24,7 @@ class LandingBlock extends Model
                 'key' => $key,
                 'title' => '',
                 'subtitle' => '',
-                'content' => [], // Пустой массив для контента
+                'content' => [],
             ]);
     }
 

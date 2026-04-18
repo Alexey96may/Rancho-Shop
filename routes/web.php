@@ -135,6 +135,9 @@ Route::prefix('admin')
         // Features
         Route::resource('features', FeatureController::class);
 
+        Route::patch('features/{feature}/toggle', [FeatureController::class, 'toggle'])
+            ->name('features.toggle');
+
         // Catalog (SKU / variants)
         Route::resource('catalog', CatalogController::class);
 

@@ -5,7 +5,7 @@
 
     defineProps<{
         show: boolean;
-        title: string;
+        title?: string;
     }>();
 
     const emit = defineEmits(['close']);
