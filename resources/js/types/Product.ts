@@ -1,6 +1,14 @@
 // Совет: В будущем можно добавить в attributes или отдельным полем is_infinite (бесконечный товар).
 // Если оно true, то stock игнорируется (например, для услуг или свежего удоя, который есть всегда).
-import type { Category, Comment, Media, ProductVariant, ProductVariantDTO, SeoData } from './';
+import type {
+    AdminFarmAnimal,
+    Category,
+    Comment,
+    Media,
+    ProductVariant,
+    ProductVariantDTO,
+    SeoData,
+} from './';
 
 export type AvailabilityType = 'stock' | 'daily' | 'preorder';
 
@@ -49,4 +57,27 @@ export interface ProductWithCategory extends Product {
 
 export interface ProductWithComments extends Product {
     comments: Comment;
+}
+
+export interface ProductAdmin {
+    id: number;
+    name: string;
+    slug: string;
+    description: string | null;
+
+    availability_type: 'stock' | 'daily' | 'preorder';
+
+    media: Media[];
+
+    variants: ProductVariantDTO[];
+
+    unit?: {
+        slug: 'kg' | 'g' | 'l' | 'ml' | 'pcs';
+    } | null;
+
+    category?: {
+        name: string;
+    } | null;
+
+    animals?: AdminFarmAnimal[] | null;
 }

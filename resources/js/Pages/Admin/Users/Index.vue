@@ -9,7 +9,6 @@
     import AdminRoleFilter from '@/Components/Admin/UI/AdminRoleFilter.vue';
     import AdminSearchInput from '@/Components/Admin/UI/AdminSearchInput.vue';
     import BaseModal from '@/Components/UI/BaseModal.vue';
-    // Наш новый компонент
     import AdminLayout from '@/Layouts/AdminLayout.vue';
     import { User } from '@/types';
 

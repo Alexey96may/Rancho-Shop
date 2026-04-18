@@ -18,17 +18,18 @@ class AnimalResource extends JsonResource
             'id' => $this->id,
             'parent_id' => $this->parent_id,
             'name' => $this->name,
-            'type' => $this->type,
             'status' => $this->status,
             'slug' => $this->slug,
             'bio' => $this->bio,
             'features' => $this->features,
 
-            'media' => $this->media->isNotEmpty() 
-                        ? MediaResource::collection($this->media) 
-                        : [MediaResource::fallback($this->resource)],
+            'media' => $this->getMedia('avatars')->isNotEmpty()
+                ? MediaResource::collection($this->getMedia('avatars'))
+                : [MediaResource::fallback($this->resource)],
 
-            'voice_url' => $this->media->first(fn($m) => str_contains($m->mime_type, 'audio'))?->getUrl(),
+            'voice_url' => $this->voice_url,
+
+            'category' => new CategoryResource($this->whenLoaded('category')),
 
             'parent' => $this->whenLoaded('parent', function() {
                 return [
@@ -45,6 +46,10 @@ class AnimalResource extends JsonResource
             }),
 
             'seo' => new SeoResource($this->whenLoaded('seo')),
+
+            'products' => ProductResource::collection(
+                $this->whenLoaded('products')
+            ),
         ];
     }
 }

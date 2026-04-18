@@ -4,6 +4,11 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Http\Resources\ProductResource;
+use App\Models\Product;
+use App\Models\Category;
+use App\Models\Animal;
+use App\Models\Unit;
 use Inertia\Inertia;
 
 class ProductController extends Controller
@@ -13,7 +18,15 @@ class ProductController extends Controller
      */
     public function index()
     {
-        return Inertia::render('Admin/Dashboard');
+        $products = Product::query()
+            ->with(['variants.unit', 'category', 'media', 'animals', 'seo'])
+            ->latest()
+            ->paginate(12);
+
+        
+        return Inertia::render('Admin/Products/Index', [
+            'products' => ProductResource::collection($products),
+        ]);
     }
 
     /**
@@ -21,7 +34,11 @@ class ProductController extends Controller
      */
     public function create()
     {
-        //
+        return Inertia::render('Admin/Products/Form', [
+            'categories' => Category::all(),
+            'animals' => Animal::all(),
+            'units' => Unit::all(),
+        ]);
     }
 
     /**
@@ -43,9 +60,16 @@ class ProductController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id)
+    public function edit(Product $product)
     {
-        //
+        $product->load(['variants.unit', 'category', 'media', 'animals', 'seo']);
+
+        return Inertia::render('Admin/Products/Form', [
+            'product' => ProductResource::make($product),
+            'categories' => Category::all(),
+            'animals' => Animal::all(),
+            'units' => Unit::all(),
+        ]);
     }
 
     /**

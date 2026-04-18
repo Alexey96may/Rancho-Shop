@@ -35,8 +35,8 @@ class ProductResource extends JsonResource
 
             'attributes' => $this->attributes,
 
-            'price_rub' => $variant ? $variant->price / 100 : null,
-            'old_price_rub' => $variant?->old_price ? $variant->old_price / 100 : null,
+            // 'price_rub' => $variant ? $variant->price / 100 : null,
+            // 'old_price_rub' => $variant?->old_price ? $variant->old_price / 100 : null,
 
             'media' => $this->relationLoaded('media') && $this->media->isNotEmpty()
                 ? MediaResource::collection($this->media)
@@ -53,6 +53,10 @@ class ProductResource extends JsonResource
 
             'category' => new CategoryResource($this->whenLoaded('category')),
             'seo' => new SeoResource($this->whenLoaded('seo')),
+
+            'animals' => AnimalResource::collection(
+                $this->whenLoaded('animals')
+            ),
         ];
     }
 }

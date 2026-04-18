@@ -38,6 +38,11 @@ class Animal extends Model implements HasMedia
         'is_active' => 'boolean',
     ];
 
+    public function products()
+    {
+        return $this->belongsToMany(Product::class);
+    }
+
     protected $appends = ['voice_url'];
 
     /**

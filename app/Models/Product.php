@@ -20,7 +20,7 @@ class Product extends Model implements HasMedia
     }
 
     protected $fillable = [
-        'category_id', 'animal_id', 'name', 'slug', 'description',
+        'category_id', 'name', 'slug', 'description',
         'availability_type', 'schedule', 'attributes', 'is_active',
     ];
 
@@ -33,11 +33,11 @@ class Product extends Model implements HasMedia
     protected $appends = ['price_formatted'];
 
     /**
-     * Connection with an animal (for example, whose milk is this)
+     * Connection with an animals (for example, whose milk is this)
      */
-    public function animal(): BelongsTo
+    public function animals()
     {
-        return $this->belongsTo(Animal::class);
+        return $this->belongsToMany(Animal::class);
     }
 
     /**
