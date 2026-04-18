@@ -24,6 +24,7 @@ use App\Http\Controllers\Admin\AnimalController as AdminAnimalController;
 use App\Http\Controllers\Admin\CatalogController;
 use App\Http\Controllers\Admin\PageController as AdminPageController;
 use App\Http\Controllers\Admin\PromocodeController;
+use App\Http\Controllers\Admin\UnitController;
 use App\Http\Controllers\Admin\FaqController;
 use App\Http\Controllers\Admin\FeatureController;
 use App\Http\Controllers\Admin\SettingController;
@@ -141,6 +142,10 @@ Route::prefix('admin')
         // Catalog (SKU / variants)
         Route::resource('catalog', CatalogController::class);
         Route::patch('catalog/{id}/quick', [CatalogController::class, 'quickUpdate'])->name('catalog.quick');
+
+        // Units
+        Route::patch('units/reorder', [UnitController::class, 'reorder'])->name('units.reorder');
+        Route::resource('units', UnitController::class)->except(['show', 'create']);
 
         // Delivery
         Route::resource('delivery', AdminDeliveryController::class);

@@ -4,6 +4,7 @@
     import {
         // Для доставки
         AcademicCapIcon,
+        AdjustmentsHorizontalIcon,
         ChatBubbleBottomCenterTextIcon,
         Cog6ToothIcon,
         DocumentTextIcon,
@@ -15,7 +16,8 @@
         // Для животных (или замени на подходящую)
         Square3Stack3DIcon,
         // Для FAQ
-        StarIcon, // Для фич/преимуществ
+        StarIcon,
+        // Для фич/преимуществ
         TagIcon,
         // Для каталога/вариантов
         TicketIcon,
@@ -171,6 +173,14 @@
                             :active="route().current('admin.users.*')"
                             :icon="UsersIcon"
                             label="Персонал"
+                        />
+                    </li>
+                    <li>
+                        <AdminSidebarLink
+                            :href="route('admin.units.index')"
+                            :active="route().current('admin.units.*')"
+                            :icon="AdjustmentsHorizontalIcon"
+                            label="Номенклатура"
                         />
                     </li>
                     <li v-if="can.manageSettings">
