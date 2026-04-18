@@ -65,7 +65,7 @@ export interface ProductAdmin {
     slug: string;
     description: string | null;
 
-    availability_type: 'stock' | 'daily' | 'preorder';
+    availability_type: AvailabilityType;
 
     media: Media[];
 

@@ -18,6 +18,7 @@ class OrderResource extends JsonResource
             'id' => $this->id,
 
             'customer_name' => $this->customer_name,
+            'customer_phone' => $this->customer_phone,
             // DELIVERY SNAPSHOT
             'delivery_address' => $this->delivery_address,
             'delivery_lat' => $this->delivery_lat,
@@ -37,13 +38,15 @@ class OrderResource extends JsonResource
 
             'promo_code_id' => $this->promo_code_id,
 
-            'created_at' => $this->created_at,
+            'created_at' => $this->created_at->format('d.m.Y H:i'),
             'total_items' => $this->items->sum('quantity'),
 
             // 👇 связь
             'items' => OrderItemResource::collection(
                 $this->whenLoaded('items')
             ),
+
+            'user' => new UserResource($this->whenLoaded('user')),
         ];
     }
 }

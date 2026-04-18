@@ -66,6 +66,7 @@ class OrderSeeder extends Seeder
         // 2. Create a position within the order
         OrderItem::create([
             'order_id' => $order->id,
+            'product_id' => $variant->product_id,
             'product_variant_id' => $variant->id,
             'product_name' => $variant->product->name,
             'unit_price' => $unitPrice,

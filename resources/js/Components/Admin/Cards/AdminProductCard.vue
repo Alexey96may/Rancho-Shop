@@ -3,8 +3,10 @@
 
     import { PencilSquareIcon, PhotoIcon, TrashIcon } from '@heroicons/vue/24/outline';
 
+    import { AvailabilityType, ProductAdmin } from '@/types';
+
     const props = defineProps<{
-        product: any; // В идеале заменить на интерфейс Product
+        product: ProductAdmin; // В идеале заменить на интерфейс Product
     }>();
 
     defineEmits(['edit', 'delete']);
