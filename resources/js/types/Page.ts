@@ -11,6 +11,7 @@ export interface Page {
     content: string | null;
 
     type: PageType;
+    template: string;
     is_active: boolean;
 
     media?: Media[];

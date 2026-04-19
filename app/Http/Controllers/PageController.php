@@ -21,16 +21,29 @@ class PageController extends Controller
             ->latest()
             ->paginate(setting('comments_per_page', 8));
 
-        $view = match($slug) {
-            'about' => 'AboutView',
-            'delivery' => 'Delivery/Index',
-            default => 'Pages/DefaultView', 
-        };
-
-        return Inertia::render($view, [
+        $data = [
             'page' => new PageResource($page),
             'comments' => CommentResource::collection($comments),
-        ]);
+        ];
+
+        if ($page->template === 'delivery') {
+            $settings = app(\App\Services\SettingService::class);
+            $data['delivery'] = [
+                'farm_coords' => $this->parseCoords($settings->get('farm_coords')),
+                'delivery_schedule' => $settings->get('delivery_schedule'),
+                'delivery_info' => $settings->get('delivery_info'),
+                'delivery_zones' => $settings->get('delivery_zones'),
+                'address_farm' => $settings->get('address_farm'),
+            ];
+        }
+
+        $view = match($page->template) {
+            'delivery' => 'Delivery/Index',
+            'about'    => 'AboutView',
+            default    => 'Pages/DefaultView',
+        };
+
+        return Inertia::render($view, $data);
     }
 
     public function about()

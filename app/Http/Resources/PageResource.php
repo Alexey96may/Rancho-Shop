@@ -23,6 +23,7 @@ class PageResource extends JsonResource
 
             'type' => $this->type,
             'is_active' => $this->is_active,
+            'template' => $this->template,
 
             // media (HasStandardMedia)
             'media' => $this->media->isNotEmpty() 

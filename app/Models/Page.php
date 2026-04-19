@@ -13,7 +13,7 @@ class Page extends Model
 {
     use HasActiveScope, HasInteractions, HasStandardMedia;
 
-    protected $fillable = ['title', 'slug', 'content', 'type', 'is_active'];
+    protected $fillable = ['title', 'slug', 'content', 'type', 'template', 'is_active'];
 
     public function seo(): MorphOne
     {
