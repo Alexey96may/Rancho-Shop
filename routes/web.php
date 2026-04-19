@@ -154,3 +154,5 @@ Route::prefix('admin')
         Route::post('/clear-cache', [SettingController::class, 'clearCache'])->name('clear-cache');
     });
 });
+
+Route::get('/{slug}', [PageController::class, 'show'])->name('pages.show');

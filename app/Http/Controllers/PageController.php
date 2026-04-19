@@ -9,6 +9,30 @@ use Inertia\Inertia;
 
 class PageController extends Controller
 {
+    public function show(string $slug)
+    {
+        $page = Page::query()
+            ->where('slug', $slug)
+            ->where('is_active', true)
+            ->with(['seo', 'media'])
+            ->firstOrFail(); // 404
+
+        $comments = $page->reviews()
+            ->latest()
+            ->paginate(setting('comments_per_page', 8));
+
+        $view = match($slug) {
+            'about' => 'AboutView',
+            'delivery' => 'Delivery/Index',
+            default => 'Pages/DefaultView', 
+        };
+
+        return Inertia::render($view, [
+            'page' => new PageResource($page),
+            'comments' => CommentResource::collection($comments),
+        ]);
+    }
+
     public function about()
     {
         $page = Page::query()
