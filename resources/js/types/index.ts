@@ -44,7 +44,7 @@ export interface User {
     name: string;
     email: string;
     phone: string;
-    role: string;
+    role: Role;
     avatar?: string; // avatar_url
     is_admin: boolean;
     orders_count?: number;

@@ -46,7 +46,9 @@ class OrderResource extends JsonResource
                 $this->whenLoaded('items')
             ),
 
-            'user' => new UserResource($this->whenLoaded('user')),
+            'user' => $this->when($this->relationLoaded('user') && $this->user, function() {
+                return new UserResource($this->user);
+            }),
         ];
     }
 }

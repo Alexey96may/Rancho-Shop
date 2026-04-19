@@ -4,16 +4,15 @@ export type OrderStatus = 'new' | 'confirmed' | 'delivering' | 'completed' | 'ca
 
 export interface Order {
     id: number;
-
     customer_name: string;
-
+    customer_phone: string;
     /**
      * Delivery snapshot (can be null if pickup)
      */
     delivery_address: string | null;
 
-    delivery_lat?: number | null;
-    delivery_lng?: number | null;
+    delivery_lat?: number | null; //todo
+    delivery_lng?: number | null; //todo
 
     /**
      * Pickup flag

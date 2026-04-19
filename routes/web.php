@@ -19,7 +19,6 @@ use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\CommentController as AdminCommentController;
-use App\Http\Controllers\Admin\DeliveryController as AdminDeliveryController;
 use App\Http\Controllers\Admin\AnimalController as AdminAnimalController;
 use App\Http\Controllers\Admin\CatalogController;
 use App\Http\Controllers\Admin\PageController as AdminPageController;
@@ -28,7 +27,7 @@ use App\Http\Controllers\Admin\UnitController;
 use App\Http\Controllers\Admin\FaqController;
 use App\Http\Controllers\Admin\FeatureController;
 use App\Http\Controllers\Admin\SettingController;
-
+use App\Http\Controllers\DashboardController as UserDashboardController;
 
 Route::get('/', [LandingController::class, 'index'])->name('home');
 
@@ -58,9 +57,11 @@ Route::get('/about', [PageController::class, 'about'])->name('about');
 
 Route::post('/delivery/draft', [DeliveryController::class, 'store'])->name('delivery.draft.store');
 
-Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::middleware(['auth', 'verified'])->name('user.')->group(function () {
+    Route::get('/dashboard', [UserDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+    Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+});
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
