@@ -103,7 +103,6 @@ Route::prefix('admin')
     ->name('admin.')
     ->middleware(['auth', 'role:admin,moderator,worker'])
     ->group(function () {
-
         // Dashboard
         Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
@@ -154,4 +153,4 @@ Route::prefix('admin')
         Route::post('/bulk', [SettingController::class, 'bulkUpdate'])->name('bulk');
         Route::post('/clear-cache', [SettingController::class, 'clearCache'])->name('clear-cache');
     });
-    });
+});
