@@ -62,6 +62,13 @@ class HandleInertiaRequests extends Middleware
                 'manageSettings' => Gate::allows('manage-settings'),
             ],
 
+            'flash' => [
+                'success' => fn() => $request->session()->get('success'),
+                'error'   => fn() => $request->session()->get('error'),
+                'message' => fn() => $request->session()->get('message'),
+                'warning' => fn() => $request->session()->get('warning'),
+            ],
+
             'deliveryDraft' => $request->user()
                 ? [
                     'address' => $address?->address,

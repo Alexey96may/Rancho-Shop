@@ -123,6 +123,8 @@ Route::prefix('admin')
 
         // Animals
         Route::resource('animals', AdminAnimalController::class);
+        Route::delete('animals/{animal}/media/{media}', [AnimalController::class, 'deleteMedia'])
+            ->name('animals.media.destroy');
 
         // Pages (CMS)
         Route::resource('pages', AdminPageController::class);

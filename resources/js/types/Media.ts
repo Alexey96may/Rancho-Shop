@@ -11,7 +11,7 @@ export interface Media {
         webp: string | null;
         avif: string | null;
     };
-    responsive: string[] | null;
+    responsive: Record<string, string> | null;
     name: string;
     mime_type: string;
     order_column: number;

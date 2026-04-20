@@ -27,6 +27,8 @@
     } from '@heroicons/vue/24/outline';
 
     import AdminSidebarLink from '@/Components/Admin/UI/AdminSidebarLink.vue';
+    import SeoMeta from '@/Components/Shared/SeoMeta.vue';
+    import Toast from '@/Components/Shared/Toast.vue';
     import { SharedData } from '@/types';
 
     const page = usePage<SharedData>();
@@ -34,6 +36,8 @@
 </script>
 
 <template>
+    <SeoMeta />
+    <Toast />
     <div class="flex min-h-screen bg-slate-950 font-sans text-slate-200">
         <aside
             id="admin-sidebar"

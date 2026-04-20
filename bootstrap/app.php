@@ -8,6 +8,8 @@ use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
+use Illuminate\Http\Exceptions\PostTooLargeException;
+use Illuminate\Support\Facades\Redirect;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -45,5 +47,15 @@ return Application::configure(basePath: dirname(__DIR__))
             }
 
             return null;
+        });
+
+        $exceptions->respond(function ($response, $e, $request) {
+            if ($e instanceof PostTooLargeException) {
+                return Redirect::back()->withErrors([
+                    'voice' => 'Файлы слишком тяжелые. Попробуйте загрузить файлы поменьше или по одному.',
+                    'gallery' => 'Превышен лимит размера данных (POST limit).'
+                ]);
+            }
+            return $response;
         });
     })->create();

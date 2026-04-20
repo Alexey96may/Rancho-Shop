@@ -5,8 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
-use App\Http\Resources\AnimalResource;
+use App\Http\Resources\Admin\AnimalResource as AdminAnimalResource;
 use App\Models\Animal;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Illuminate\Support\Str;
 use App\Models\Category;
 
@@ -42,7 +43,7 @@ class AnimalController extends Controller
             ->withQueryString();
 
         return Inertia::render('Admin/Animals/Index', [
-            'animals' => AnimalResource::collection($animals),
+            'animals' => AdminAnimalResource::collection($animals),
             'categories' => Category::where('type', 'animal')->get(['id', 'name', 'slug']),
             'filters' => $request->only(['search', 'category_id', 'status'])
         ]);
@@ -71,6 +72,8 @@ class AnimalController extends Controller
             'is_active'   => 'boolean',
             'avatar'      => 'nullable|image|max:2048', // 2MB max
             'voice'       => 'nullable|mimes:mp3,wav|max:5120', // 5MB max
+            'gallery'     => 'nullable|array',
+            'gallery.*'   => 'image|mimes:jpeg,png,jpg,webp|max:3072',
 
             'seo.title'       => 'nullable|string|max:255',
             'seo.description' => 'nullable|string',
@@ -88,6 +91,12 @@ class AnimalController extends Controller
         // Работа с медиа
         if ($request->hasFile('avatar')) {
             $animal->addMediaFromRequest('avatar')->toMediaCollection('avatars');
+        }
+
+        if ($request->hasFile('gallery')) {
+            foreach ($request->file('gallery') as $file) {
+                $animal->addMedia($file)->toMediaCollection('gallery');
+            }
         }
 
         if ($request->hasFile('voice')) {
@@ -126,6 +135,10 @@ class AnimalController extends Controller
             'bio'         => 'nullable|string',
             'features'    => 'nullable|array',
             'is_active'   => 'boolean',
+            'avatar'      => 'nullable|image|max:2048', // 2MB max
+            'voice'       => 'nullable|mimes:mp3,wav|max:5120', // 5MB max
+            'gallery'     => 'nullable|array',
+            'gallery.*'   => 'image|mimes:jpeg,png,jpg,webp|max:3072',
 
             'seo.title'       => 'nullable|string|max:255',
             'seo.description' => 'nullable|string',
@@ -136,7 +149,7 @@ class AnimalController extends Controller
 
         if ($request->has('seo')) {
             $animal->seo()->updateOrCreate(
-                ['model_id' => $animal->id, 'model_type' => Animal::class],
+                ['seoable_id' => $animal->id, 'seoable_type' => Animal::class],
                 $request->input('seo')
             );
         }
@@ -144,6 +157,15 @@ class AnimalController extends Controller
         if ($request->hasFile('avatar')) {
             $animal->clearMediaCollection('avatars');
             $animal->addMediaFromRequest('avatar')->toMediaCollection('avatars');
+        }
+
+        if ($request->hasFile('gallery')) {
+            // If you need to delete the OLD gallery before loading a new one, uncomment:
+            // $animal->clearMediaCollection('gallery');
+
+            foreach ($request->file('gallery') as $file) {
+                $animal->addMedia($file)->toMediaCollection('gallery');
+            }
         }
 
         if ($request->hasFile('voice')) {
@@ -176,5 +198,15 @@ class AnimalController extends Controller
             ->where('id', '!=', $request->current_id)
             ->where('category_id', $request->category_id)
             ->get(['id', 'name']);
+    }
+
+    public function deleteMedia(Animal $animal, Media $media)
+    {
+        if ($media->model_id !== $animal->id || $media->model_type !== Animal::class) {
+            return redirect()->back()->with('error', 'Доступ запрещен');
+        }
+        $media->delete();
+
+        return redirect()->back()->with('success', 'Фото удалено');
     }
 }

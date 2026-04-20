@@ -3,51 +3,36 @@ import type { SeoData } from './Seo';
 
 export type AnimalType = 'cow' | 'chicken' | 'goose' | 'turkey' | 'cat';
 
-export type CowStatus = 'pasture' | 'rest' | 'home' | 'vacation' | 'retired' | 'memorial';
-export type CatStatus = 'hunting' | 'sleeping' | 'home' | 'memorial';
-export type BirdStatus = 'nest' | 'pasture' | 'home';
-
-export interface BaseAnimal {
-    id: number;
-    parent_id: number | null;
-    name: string;
-    type: AnimalType;
-    status: string;
-    slug: string;
-    bio: string | null;
-    media: Media[];
-    features: Record<string, string> | null;
-
-    voice_url: string | null;
-
-    parent?: {
-        name: string;
-        slug: string;
-    } | null;
-
-    children?: Array<{
-        name: string;
-        slug: string;
-    }>;
-
-    seo?: SeoData | null;
-}
-
-export interface Cow extends BaseAnimal {
-    type: 'cow';
-    status: CowStatus;
-}
-
-export interface Cat extends BaseAnimal {
-    type: 'cat';
-    status: CatStatus;
-}
-
-export type FarmAnimal = Cow | Cat | BaseAnimal;
-
-export type AdminFarmAnimal = (Cow | Cat | BaseAnimal) & {
-    is_active: boolean;
+interface Timestamps {
     created_at: string;
     updated_at: string;
-    deleted_at: string | null;
-};
+}
+
+export interface Animal {
+    id: number;
+    name: string;
+    slug: string;
+    status: string;
+    bio: string | null;
+    features: Record<string, any> | null;
+    voice_url: string | null;
+    avatars: Media[];
+    gallery: Media[] | null;
+    category?: {
+        name: string;
+        slug: string;
+    };
+    family?: {
+        parent?: { name: string; slug: string };
+        children: Array<{ name: string; slug: string }>;
+    };
+    products?: Array<any>;
+    seo?: SeoData;
+}
+
+export interface AdminAnimal extends Animal, Timestamps {
+    parent_id: number | null;
+    category_id: number;
+    is_active: boolean;
+    media: Media[];
+}

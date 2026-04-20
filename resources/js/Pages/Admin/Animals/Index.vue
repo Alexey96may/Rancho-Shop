@@ -1,5 +1,5 @@
 <script setup lang="ts">
-    import { ref, watch } from 'vue';
+    import { computed, ref } from 'vue';
 
     import { Head, router, useForm } from '@inertiajs/vue3';
 
@@ -7,67 +7,68 @@
         AdjustmentsHorizontalIcon,
         ChevronLeftIcon,
         GlobeAltIcon,
-        MagnifyingGlassIcon,
+        IdentificationIcon,
         PhotoIcon,
         PlusIcon,
     } from '@heroicons/vue/24/outline';
-    import debounce from 'lodash/debounce';
 
     import AnimalCard from '@/Components/Admin/Cards/AdminAnimalCard.vue';
-    import AdminSelect from '@/Components/UI/BaseSelect.vue';
+    import ImageUpload from '@/Components/UI/ImageUploader.vue';
     import AdminLayout from '@/Layouts/AdminLayout.vue';
+    import { useFlash } from '@/composables/useFlash';
+    import { AdminAnimal, Category, Paginated } from '@/types';
+
+    import FeaturesSection from './FormSections/FeaturesSection.vue';
+    import MediaSection from './FormSections/MediaSection.vue';
+    import SEOSection from './FormSections/SEOSection.vue';
 
     const props = defineProps<{
-        animals: { data: any[] };
-        categories: any[];
-        filters: any;
+        animals: Paginated<AdminAnimal>;
+        categories: Category[];
     }>();
 
-    // Переключатель вида: 'list' или 'form'
+    const { notifyWithUndo, undoRequested } = useFlash();
+
     const view = ref<'list' | 'form'>('list');
     const activeTab = ref('main');
-    const editMode = ref(false);
-    const currentId = ref<number | null>(null);
+    const selectedAnimal = ref<AdminAnimal | null>(null);
 
     const form = useForm({
+        _method: 'PUT',
+        id: null as number | null,
         name: '',
         category_id: '',
-        parent_id: '',
-        status: 'healthy',
+        parent_id: null as number | null,
+        status: '',
         bio: '',
-        features: {} as any,
-        is_active: true,
-        seo: { title: '', description: '', keywords: '' },
+        features: {} as Record<string, string>,
         avatar: null as File | null,
+        voice: null as File | null,
+        gallery: [] as File[],
+        seo: {
+            title: '',
+            description: '',
+            keywords: '',
+        },
     });
 
-    // Фильтрация списка
-    const search = ref(props.filters.search || '');
-    const catFilter = ref(props.filters.category_id || '');
-
-    const debouncedFilter = debounce(() => {
-        router.get(
-            route('admin.animals.index'),
-            { search: search.value, category_id: catFilter.value },
-            { preserveState: true, replace: true },
-        );
-    }, 300);
-
-    watch([search, catFilter], debouncedFilter);
-
-    const openForm = (animal: any = null) => {
-        editMode.value = !!animal;
-        activeTab.value = 'main';
+    const openForm = (animal: AdminAnimal | null = null) => {
         if (animal) {
-            currentId.value = animal.id;
+            selectedAnimal.value = animal;
+            form.id = animal.id;
             form.name = animal.name;
-            form.category_id = animal.category?.id || '';
-            form.status = animal.status;
-            form.bio = animal.bio;
+            form.category_id = String(animal.category_id);
+            form.parent_id = animal.parent_id;
+            form.status = animal.status || 'active';
+            form.bio = animal.bio || '';
             form.features = animal.features || {};
-            form.is_active = animal.is_active;
-            form.seo = animal.seo || { title: '', description: '', keywords: '' };
+            form.seo = {
+                title: animal.seo?.title || '',
+                description: animal.seo?.description || '',
+                keywords: animal.seo?.keywords || '',
+            };
         } else {
+            selectedAnimal.value = null;
             form.reset();
         }
         view.value = 'form';
@@ -75,355 +76,295 @@
 
     const closeForm = () => {
         view.value = 'list';
+        selectedAnimal.value = null;
         form.reset();
     };
 
     const submit = () => {
-        const url = editMode.value
-            ? route('admin.animals.update', currentId.value!)
-            : route('admin.animals.store');
-
-        form.post(url, {
-            onSuccess: () => closeForm(),
-            forceFormData: true,
-        });
+        const url = form.id ? route('admin.animals.update', form.id) : route('admin.animals.store');
+        form.post(url, { forceFormData: form.id ? true : false, onSuccess: () => closeForm() });
     };
 
-    const handleFileChange = (event: Event) => {
-        const target = event.target as HTMLInputElement;
-        if (target.files?.length) {
-            form.avatar = target.files[0];
+    const deletingIds = ref<Set<number>>(new Set());
+
+    const deleteAnimal = async (id: number) => {
+        if (deletingIds.value.has(id)) return;
+        undoRequested.value = true;
+        deletingIds.value.add(id);
+
+        try {
+            const confirmed = await notifyWithUndo(`Удаление животного в корзину`, 2000);
+            if (confirmed) {
+                router.delete(route('admin.animals.destroy', id), {
+                    preserveScroll: true,
+                    onFinish: () => deletingIds.value.delete(id),
+                });
+            } else {
+                deletingIds.value.delete(id);
+            }
+        } catch (e) {
+            deletingIds.value.delete(id);
         }
     };
 
-    /**
-     * Добавляет новую пустую характеристику
-     */
-    const addFeature = () => {
-        // Используем временный ключ, пока пользователь не введет название
-        const newKey = `Параметр ${Object.keys(form.features).length + 1}`;
-        form.features[newKey] = '';
-    };
+    const tabs = [
+        { id: 'main', name: 'Основное', icon: IdentificationIcon },
+        { id: 'features', name: 'Параметры', icon: AdjustmentsHorizontalIcon },
+        { id: 'media', name: 'Медиа', icon: PhotoIcon },
+        { id: 'seo', name: 'SEO', icon: GlobeAltIcon },
+    ];
 
-    /**
-     * Удаляет характеристику по ключу
-     */
-    const removeFeature = (key: string) => {
-        delete form.features[key];
-    };
-
-    /**
-     * Переименовывает ключ в объекте (хитрая магия JS, чтобы сохранить реактивность)
-     */
-    const renameFeatureKey = (oldKey: string, newKey: string) => {
-        if (oldKey !== newKey) {
-            Object.defineProperty(
-                form.features,
-                newKey,
-                Object.getOwnPropertyDescriptor(form.features, oldKey)!,
-            );
-            delete form.features[oldKey];
+    const existingAvatarUrl = computed(() => {
+        if (selectedAnimal.value?.avatars && selectedAnimal.value.avatars.length > 0) {
+            return selectedAnimal.value.avatars[0].url;
         }
-    };
+        return null;
+    });
 </script>
 
 <template>
-    <Head title="Управление стадом" />
+    <Head title="Реестр животных" />
 
     <AdminLayout>
-        <template #header>
-            <div class="flex items-center gap-4">
-                <button
-                    v-if="view === 'form'"
-                    @click="closeForm"
-                    class="group flex h-10 w-10 items-center justify-center rounded-full border border-slate-800 bg-slate-900 transition-all hover:border-orange-500"
-                    aria-label="Вернуться к списку"
-                >
-                    <ChevronLeftIcon class="h-5 w-5 text-slate-500 group-hover:text-orange-500" />
-                </button>
-                <span>{{
-                    view === 'list'
-                        ? 'Наше Стадо'
-                        : editMode
-                          ? 'Редактирование: ' + form.name
-                          : 'Новое животное'
-                }}</span>
-            </div>
-        </template>
-
-        <div v-if="view === 'list'" class="animate-in fade-in duration-500">
-            <div class="mb-10 flex flex-col gap-4 lg:flex-row lg:items-end">
-                <div class="relative flex-1">
-                    <MagnifyingGlassIcon
-                        class="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-500"
-                    />
-                    <input
-                        v-model="search"
-                        type="text"
-                        placeholder="Поиск по кличке..."
-                        class="w-full rounded-2xl border-slate-800 bg-slate-900/50 py-3.5 pl-12 text-white focus:border-orange-500"
-                    />
+        <div class="p-8">
+            <header class="mb-12 flex items-center justify-between">
+                <div>
+                    <h1 class="text-4xl font-black uppercase tracking-tighter text-white">
+                        Список <span class="text-orange-500">Животных</span>
+                    </h1>
+                    <p class="mt-2 text-xs font-bold uppercase tracking-widest text-slate-500">
+                        {{
+                            view === 'list'
+                                ? 'Управление базой данных особей'
+                                : 'Редактирование профиля'
+                        }}
+                    </p>
                 </div>
 
-                <AdminSelect
-                    v-model="catFilter"
-                    :options="categories"
-                    placeholder="Все категории"
-                    width-class="lg:w-64"
-                />
+                <button
+                    v-if="view === 'list'"
+                    @click="openForm()"
+                    aria-label="Добавить новую особь"
+                    class="group flex items-center gap-3 rounded-2xl bg-orange-500 px-6 py-4 transition-all hover:bg-orange-600 active:scale-95"
+                >
+                    <PlusIcon class="h-5 w-5 text-white" aria-hidden="true" />
+                    <span class="text-xs font-black uppercase tracking-widest text-white"
+                        >Добавить особь</span
+                    >
+                </button>
 
                 <button
-                    @click="openForm()"
-                    class="shadow-lg flex h-[54px] items-center justify-center gap-2 rounded-2xl bg-orange-600 px-8 text-sm font-black uppercase tracking-widest text-white shadow-orange-900/20 transition-all hover:bg-orange-500"
+                    v-else
+                    @click="closeForm"
+                    aria-label="Вернуться к списку животных"
+                    class="group flex items-center gap-3 rounded-2xl bg-slate-800 px-6 py-4 transition-all hover:bg-slate-700"
                 >
-                    <PlusIcon class="h-5 w-5" /> Добавить
+                    <ChevronLeftIcon class="h-5 w-5 text-slate-400" aria-hidden="true" />
+                    <span class="text-xs font-black uppercase tracking-widest text-slate-400"
+                        >Назад к списку</span
+                    >
                 </button>
-            </div>
+            </header>
 
-            <div
-                role="list"
-                class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+            <main
+                v-if="view === 'list'"
+                class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3"
+                role="region"
+                aria-label="Список карточек животных"
             >
                 <AnimalCard
                     v-for="animal in animals.data"
                     :key="animal.id"
                     :animal="animal"
-                    @edit="openForm"
-                    @delete="(id) => router.delete(route('admin.animals.destroy', id))"
+                    :class="{
+                        'pointer-events-none scale-95 opacity-50': deletingIds.has(animal.id),
+                    }"
+                    @edit="openForm(animal)"
+                    @delete="deleteAnimal(animal.id)"
                 />
-            </div>
-        </div>
+            </main>
 
-        <div v-else class="animate-in slide-in-from-right-4 fade-in max-w-5xl duration-300">
-            <div
-                class="rounded-[2.5rem] border border-slate-800 bg-slate-900/30 p-8 backdrop-blur-sm"
-            >
-                <nav class="mb-10 flex gap-8 border-b border-slate-800" role="tablist">
-                    <button
-                        v-for="tab in [
-                            { id: 'main', name: 'Инфо', icon: PhotoIcon },
-                            {
-                                id: 'features',
-                                name: 'Характеристики',
-                                icon: AdjustmentsHorizontalIcon,
-                            },
-                            { id: 'seo', name: 'SEO оптимизация', icon: GlobeAltIcon },
-                        ]"
-                        :key="tab.id"
-                        @click="activeTab = tab.id"
-                        class="relative flex items-center gap-2 pb-4 text-xs font-black uppercase tracking-widest transition-all"
-                        :class="
-                            activeTab === tab.id
-                                ? 'text-orange-500'
-                                : 'text-slate-500 hover:text-slate-300'
-                        "
-                        role="tab"
-                        :aria-selected="activeTab === tab.id"
+            <div v-else class="mx-auto max-w-5xl">
+                <form @submit.prevent="submit" class="space-y-8" novalidate>
+                    <nav
+                        class="shadow-inner flex gap-2 rounded-[2rem] bg-slate-950 p-2"
+                        role="tablist"
                     >
-                        <component :is="tab.icon" class="h-4 w-4" />
-                        {{ tab.name }}
-                        <div
-                            v-if="activeTab === tab.id"
-                            class="absolute bottom-0 left-0 h-0.5 w-full bg-orange-500 shadow-[0_0_8px_#f97316]"
-                        ></div>
-                    </button>
-                </nav>
+                        <button
+                            v-for="tab in tabs"
+                            :key="tab.id"
+                            :id="`tab-${tab.id}`"
+                            type="button"
+                            role="tab"
+                            :aria-selected="activeTab === tab.id"
+                            :aria-controls="`panel-${tab.id}`"
+                            @click="activeTab = tab.id"
+                            :class="[
+                                activeTab === tab.id
+                                    ? 'shadow-lg bg-orange-500 text-white'
+                                    : 'text-slate-500 hover:text-slate-300',
+                                'flex flex-1 items-center justify-center gap-3 rounded-[1.5rem] py-4 transition-all',
+                            ]"
+                        >
+                            <component :is="tab.icon" class="h-5 w-5" aria-hidden="true" />
+                            <span class="text-[10px] font-black uppercase tracking-widest">{{
+                                tab.name
+                            }}</span>
+                        </button>
+                    </nav>
 
-                <form @submit.prevent="submit" class="space-y-8">
                     <div
-                        v-if="activeTab === 'main'"
-                        class="animate-in fade-in zoom-in-95 grid grid-cols-1 gap-8 lg:grid-cols-2"
+                        class="min-h-[400px] rounded-[3rem] border border-slate-800 bg-slate-900/30 p-10 backdrop-blur-sm"
+                        role="tabpanel"
+                        :id="`panel-${activeTab}`"
+                        :aria-labelledby="`tab-${activeTab}`"
                     >
-                        <div class="space-y-6">
-                            <div class="space-y-2">
-                                <label
-                                    class="ml-2 text-[10px] font-black uppercase tracking-widest text-slate-500"
-                                    >Кличка животного</label
-                                >
-                                <input
-                                    v-model="form.name"
-                                    type="text"
-                                    required
-                                    class="w-full rounded-2xl border-slate-800 bg-slate-950 p-4 text-white transition-all focus:border-orange-500"
-                                />
-                            </div>
-
-                            <AdminSelect
-                                label="Категория"
-                                v-model="form.category_id"
-                                :options="categories"
-                            />
-
-                            <div class="space-y-2">
-                                <label
-                                    class="ml-2 text-[10px] font-black uppercase tracking-widest text-slate-500"
-                                    >Фото (Аватар)</label
-                                >
-                                <div
-                                    class="relative flex items-center justify-center rounded-2xl border-2 border-dashed border-slate-800 bg-slate-950/50 p-8 transition-colors hover:border-orange-500/50"
-                                >
-                                    <input
-                                        type="file"
-                                        @change="handleFileChange"
-                                        accept="image/*"
-                                        class="absolute inset-0 cursor-pointer opacity-0"
-                                        aria-label="Загрузить фото"
+                        <div v-if="activeTab === 'main'" class="space-y-10">
+                            <div class="grid grid-cols-1 gap-10 lg:grid-cols-2">
+                                <div class="flex flex-col">
+                                    <ImageUpload
+                                        v-model="form.avatar"
+                                        label="Аватар особи"
+                                        :existing-image="existingAvatarUrl"
+                                        :error="form.errors.avatar"
                                     />
-                                    <div class="text-center">
-                                        <PhotoIcon class="mx-auto h-10 w-10 text-slate-700" />
-                                        <p class="mt-2 text-xs text-slate-500">
-                                            {{
-                                                form.avatar
-                                                    ? form.avatar.name
-                                                    : 'Нажмите или перетащите файл'
-                                            }}
+                                </div>
+
+                                <div class="space-y-6">
+                                    <div class="group space-y-2">
+                                        <label
+                                            for="animal_name"
+                                            class="ml-2 text-[10px] font-black uppercase tracking-widest text-slate-500"
+                                        >
+                                            Кличка / Название
+                                        </label>
+                                        <input
+                                            id="animal_name"
+                                            v-model="form.name"
+                                            type="text"
+                                            placeholder="Введите имя..."
+                                            :aria-invalid="!!form.errors.name"
+                                            aria-describedby="name-error"
+                                            class="w-full rounded-2xl border-slate-800 bg-slate-950 text-white focus:border-orange-500 focus:ring-orange-500/20"
+                                        />
+                                        <p
+                                            v-if="form.errors.name"
+                                            id="name-error"
+                                            role="alert"
+                                            class="ml-2 mt-1 text-[10px] font-bold text-red-500"
+                                        >
+                                            {{ form.errors.name }}
                                         </p>
+                                    </div>
+
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div class="group space-y-2">
+                                            <label
+                                                for="animal_status"
+                                                class="ml-2 text-[10px] font-black uppercase tracking-widest text-slate-500"
+                                                >Статус</label
+                                            >
+                                            <input
+                                                id="animal_status"
+                                                v-model="form.status"
+                                                type="text"
+                                                placeholder="active, draft..."
+                                                class="w-full rounded-2xl border-slate-800 bg-slate-950 text-white focus:border-orange-500 focus:ring-orange-500/20"
+                                            />
+                                        </div>
+
+                                        <div class="group space-y-2">
+                                            <label
+                                                for="animal_category"
+                                                class="ml-2 text-[10px] font-black uppercase tracking-widest text-slate-500"
+                                                >Категория</label
+                                            >
+                                            <select
+                                                id="animal_category"
+                                                v-model="form.category_id"
+                                                class="w-full rounded-2xl border-slate-800 bg-slate-950 text-white focus:border-orange-500 focus:ring-orange-500/20"
+                                            >
+                                                <option value="" disabled>
+                                                    Выберите категорию
+                                                </option>
+                                                <option
+                                                    v-for="cat in categories"
+                                                    :key="cat.id"
+                                                    :value="cat.id"
+                                                >
+                                                    {{ cat.name }}
+                                                </option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="group space-y-2">
+                                        <label
+                                            for="animal_parent"
+                                            class="ml-2 text-[10px] font-black uppercase tracking-widest text-slate-500"
+                                            >Родительская особь</label
+                                        >
+                                        <select
+                                            id="animal_parent"
+                                            v-model="form.parent_id"
+                                            class="w-full rounded-2xl border-slate-800 bg-slate-950 text-white focus:border-orange-500 focus:ring-orange-500/20"
+                                        >
+                                            <option :value="null">-- Без родителя --</option>
+                                            <option
+                                                v-for="a in animals.data"
+                                                :key="a.id"
+                                                :value="a.id"
+                                                v-show="a.id !== form.id"
+                                            >
+                                                {{ a.name }} (ID: {{ a.id }})
+                                            </option>
+                                        </select>
                                     </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <div class="space-y-6">
-                            <div class="space-y-2">
+                            <div class="group w-full space-y-4">
                                 <label
+                                    for="animal_bio"
                                     class="ml-2 text-[10px] font-black uppercase tracking-widest text-slate-500"
-                                    >Описание / Биография</label
+                                    >Краткая биография</label
                                 >
                                 <textarea
+                                    id="animal_bio"
                                     v-model="form.bio"
-                                    rows="10"
-                                    class="w-full rounded-2xl border-slate-800 bg-slate-950 p-4 text-white focus:border-orange-500"
-                                    placeholder="Расскажите об особенностях животного..."
+                                    rows="3"
+                                    placeholder="История, особенности происхождения..."
+                                    class="w-full rounded-xl border-slate-800 bg-slate-950 text-white focus:border-orange-500 focus:ring-orange-500/20"
                                 ></textarea>
                             </div>
                         </div>
+
+                        <FeaturesSection
+                            v-if="activeTab === 'features'"
+                            v-model:features="form.features"
+                        />
+                        <MediaSection
+                            v-if="activeTab === 'media'"
+                            v-model="form"
+                            :existing-voice-url="selectedAnimal?.voice_url"
+                        />
+                        <SEOSection v-if="activeTab === 'seo'" v-model="form.seo" />
                     </div>
 
-                    <div
-                        v-if="activeTab === 'seo'"
-                        class="animate-in fade-in zoom-in-95 max-w-2xl space-y-6"
-                    >
-                        <div
-                            class="rounded-2xl border border-orange-500/20 bg-orange-500/5 p-4 text-[11px] leading-relaxed text-orange-200/60"
-                        >
-                            Настройте отображение этой страницы в поисковых системах. Это поможет
-                            людям быстрее находить информацию о вашем хозяйстве.
-                        </div>
-                        <div class="space-y-2">
-                            <label
-                                class="ml-2 text-[10px] font-black uppercase tracking-widest text-slate-500"
-                                >Meta Title</label
-                            >
-                            <input
-                                v-model="form.seo.title"
-                                type="text"
-                                class="w-full rounded-2xl border-slate-800 bg-slate-950 p-4 text-white focus:border-orange-500"
-                            />
-                        </div>
-                        <div class="space-y-2">
-                            <label
-                                class="ml-2 text-[10px] font-black uppercase tracking-widest text-slate-500"
-                                >Meta Description</label
-                            >
-                            <textarea
-                                v-model="form.seo.description"
-                                rows="4"
-                                class="w-full rounded-2xl border-slate-800 bg-slate-950 p-4 text-white focus:border-orange-500"
-                            ></textarea>
-                        </div>
-                    </div>
-
-                    <div
-                        v-if="activeTab === 'features'"
-                        class="animate-in fade-in zoom-in-95 space-y-6"
-                    >
-                        <div class="flex items-center justify-between">
-                            <div class="space-y-1">
-                                <h3 class="text-sm font-black uppercase tracking-widest text-white">
-                                    Дополнительные параметры
-                                </h3>
-                                <p class="text-[10px] uppercase tracking-tighter text-slate-500">
-                                    Любые данные: вес, окрас, прививки и т.д.
-                                </p>
-                            </div>
-                            <button
-                                type="button"
-                                @click="addFeature"
-                                class="flex items-center gap-2 rounded-xl bg-slate-800 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-orange-500 transition-all hover:bg-slate-700"
-                            >
-                                <PlusIcon class="h-4 w-4" /> Добавить поле
-                            </button>
-                        </div>
-
-                        <div class="grid grid-cols-1 gap-4">
-                            <TransitionGroup name="list">
-                                <div
-                                    v-for="(value, key) in form.features"
-                                    :key="key"
-                                    class="group flex items-center gap-4 rounded-2xl border border-slate-800 bg-slate-950/50 p-2 pl-4 transition-all focus-within:border-orange-500/50"
-                                >
-                                    <input
-                                        type="text"
-                                        :value="key"
-                                        @change="
-                                            (e) =>
-                                                renameFeatureKey(
-                                                    String(key),
-                                                    (e.target as HTMLInputElement).value,
-                                                )
-                                        "
-                                        placeholder="Название (н-р: Вес)"
-                                        class="w-1/3 border-none bg-transparent p-2 text-[11px] font-bold uppercase tracking-wider text-orange-500 focus:ring-0"
-                                    />
-
-                                    <div class="h-6 w-px bg-slate-800"></div>
-
-                                    <input
-                                        v-model="form.features[key]"
-                                        type="text"
-                                        placeholder="Значение"
-                                        class="flex-1 border-none bg-transparent p-2 text-sm text-white focus:ring-0"
-                                    />
-
-                                    <button
-                                        type="button"
-                                        @click="removeFeature(String(key))"
-                                        class="mr-2 rounded-lg p-2 text-slate-600 opacity-0 transition-all hover:bg-red-500/10 hover:text-red-500 group-hover:opacity-100"
-                                        title="Удалить параметр"
-                                    >
-                                        <TrashIcon class="h-4 w-4" />
-                                    </button>
-                                </div>
-                            </TransitionGroup>
-
-                            <div
-                                v-if="Object.keys(form.features).length === 0"
-                                class="flex flex-col items-center justify-center rounded-[2rem] border-2 border-dashed border-slate-800 py-12"
-                            >
-                                <AdjustmentsHorizontalIcon class="h-12 w-12 text-slate-800" />
-                                <p
-                                    class="mt-4 text-[10px] font-black uppercase tracking-widest text-slate-600"
-                                >
-                                    Список параметров пуст
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="flex items-center gap-4 border-t border-slate-800 pt-8">
-                        <button
-                            type="submit"
-                            :disabled="form.processing"
-                            class="flex-1 rounded-2xl bg-orange-600 py-4 text-xs font-black uppercase tracking-[0.2em] text-white transition-all hover:bg-orange-500 disabled:opacity-50"
-                        >
-                            {{ editMode ? 'Сохранить изменения' : 'Внести в реестр' }}
-                        </button>
+                    <div class="flex items-center justify-end gap-4 border-t border-slate-800 pt-8">
                         <button
                             type="button"
                             @click="closeForm"
-                            class="px-8 py-4 text-xs font-black uppercase tracking-[0.2em] text-slate-500 transition-colors hover:text-white"
+                            class="text-xs font-black uppercase tracking-widest text-slate-500 hover:text-white"
                         >
-                            Отмена
+                            Отменить
+                        </button>
+                        <button
+                            type="submit"
+                            :disabled="form.processing"
+                            class="rounded-2xl bg-white px-10 py-4 text-xs font-black uppercase tracking-widest text-black transition-all hover:bg-orange-500 hover:text-white disabled:opacity-50"
+                        >
+                            {{ form.id ? 'Обновить данные' : 'Внести в реестр' }}
                         </button>
                     </div>
                 </form>

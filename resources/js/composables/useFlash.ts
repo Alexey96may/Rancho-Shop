@@ -15,22 +15,28 @@ const timerDuration = ref(4000);
 
 const lastProcessedKey = ref<string | null>(null);
 let timeoutId: ReturnType<typeof setTimeout> | null = null;
+let currentResolve: ((value: boolean) => void) | null = null;
+let activeInterval: ReturnType<typeof setInterval> | null = null;
 
 export function useFlash() {
     const page = usePage<SharedData>();
 
-    const clearExistingTimer = () => {
-        if (timeoutId) {
-            clearTimeout(timeoutId);
-            timeoutId = null;
+    const forceClose = (result: boolean) => {
+        if (timeoutId) clearTimeout(timeoutId);
+        if (activeInterval) clearInterval(activeInterval);
+
+        if (currentResolve) {
+            currentResolve(result);
+            currentResolve = null;
         }
+
+        show.value = false;
+        isCountingDown.value = false;
     };
 
     const notify = (msg: string, t: NotificationType = 'info') => {
-        clearExistingTimer();
+        forceClose(false);
 
-        isCountingDown.value = false;
-        undoRequested.value = false;
         message.value = msg;
         type.value = t;
         show.value = true;
@@ -41,7 +47,7 @@ export function useFlash() {
     };
 
     const notifyWithUndo = (msg: string, duration: number = 5000): Promise<boolean> => {
-        clearExistingTimer();
+        forceClose(true);
 
         lastProcessedKey.value = null;
 
@@ -53,19 +59,13 @@ export function useFlash() {
         timerDuration.value = duration;
 
         return new Promise((resolve) => {
+            currentResolve = resolve;
             const start = Date.now();
-            const interval = setInterval(() => {
+            activeInterval = setInterval(() => {
                 if (undoRequested.value) {
-                    clearInterval(interval);
-                    show.value = false;
-                    isCountingDown.value = false;
-                    lastProcessedKey.value = null;
-                    resolve(false);
+                    forceClose(false); // Пользователь нажал Undo
                 } else if (Date.now() - start >= duration) {
-                    clearInterval(interval);
-                    show.value = false;
-                    isCountingDown.value = false;
-                    resolve(true);
+                    forceClose(true); // Таймер истек — подтверждаем удаление
                 }
             }, 50);
         });

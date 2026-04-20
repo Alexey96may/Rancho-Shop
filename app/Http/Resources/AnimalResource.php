@@ -16,40 +16,41 @@ class AnimalResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'parent_id' => $this->parent_id,
+            // 'parent_id' => $this->parent_id,
             'name' => $this->name,
-            'status' => $this->status,
             'slug' => $this->slug,
+            'status' => $this->status,
             'bio' => $this->bio,
             'features' => $this->features,
 
-            'media' => $this->getMedia('avatars')->isNotEmpty()
+            'voice_url' => $this->voice_url,
+
+            'avatars' => $this->getMedia('avatars')->isNotEmpty()
                 ? MediaResource::collection($this->getMedia('avatars'))
                 : [MediaResource::fallback($this->resource)],
 
-            'voice_url' => $this->voice_url,
+            'gallery' => MediaResource::collection($this->getMedia('gallery')),
 
-            'category' => new CategoryResource($this->whenLoaded('category')),
+            'category' => $this->whenLoaded('category', fn() => [
+                'name' => $this->category->name,
+                'slug' => $this->category->slug,
+            ]),
 
-            'parent' => $this->whenLoaded('parent', function() {
-                return [
+            'family' => [
+                'parent' => $this->whenLoaded('parent', fn() => [
                     'name' => $this->parent->name,
                     'slug' => $this->parent->slug,
-                ];
-            }),
-            
-            'children' => $this->whenLoaded('children', function() {
-                return $this->children->map(fn($child) => [
-                    'name' => $child->name,
-                    'slug' => $child->slug,
-                ]);
-            }),
-
-            'seo' => new SeoResource($this->whenLoaded('seo')),
+                ]),
+                'children' => $this->whenLoaded('children', fn() => 
+                    $this->children->map(fn($c) => ['name' => $c->name, 'slug' => $c->slug])
+                ),
+            ],
 
             'products' => ProductResource::collection(
                 $this->whenLoaded('products')
             ),
+
+            'seo' => new SeoResource($this->whenLoaded('seo')),
         ];
     }
 }
