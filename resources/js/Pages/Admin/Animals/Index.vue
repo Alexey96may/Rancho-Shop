@@ -3,6 +3,7 @@
 
     import { Head, router, useForm } from '@inertiajs/vue3';
 
+    import { Switch } from '@headlessui/vue';
     import {
         AdjustmentsHorizontalIcon,
         ChevronLeftIcon,
@@ -13,10 +14,11 @@
     } from '@heroicons/vue/24/outline';
 
     import AnimalCard from '@/Components/Admin/Cards/AdminAnimalCard.vue';
+    import BaseSelect from '@/Components/UI/BaseSelect.vue';
     import ImageUpload from '@/Components/UI/ImageUploader.vue';
     import AdminLayout from '@/Layouts/AdminLayout.vue';
     import { useFlash } from '@/composables/useFlash';
-    import { AdminAnimal, Category, Paginated } from '@/types';
+    import { AdminAnimal, Category, Media, Paginated } from '@/types';
 
     import FeaturesSection from './FormSections/FeaturesSection.vue';
     import MediaSection from './FormSections/MediaSection.vue';
@@ -37,18 +39,21 @@
         _method: 'PUT',
         id: null as number | null,
         name: '',
-        category_id: '',
+        category_id: null as number | null,
         parent_id: null as number | null,
         status: '',
+        is_active: false,
         bio: '',
         features: {} as Record<string, string>,
         avatar: null as File | null,
         voice: null as File | null,
-        gallery: [] as File[],
+        gallery: [] as Array<Media | File>,
         seo: {
             title: '',
             description: '',
             keywords: '',
+            canonical: '',
+            is_noindex: false,
         },
     });
 
@@ -57,15 +62,21 @@
             selectedAnimal.value = animal;
             form.id = animal.id;
             form.name = animal.name;
-            form.category_id = String(animal.category_id);
+            form.category_id = animal.category_id;
             form.parent_id = animal.parent_id;
             form.status = animal.status || 'active';
+            form.is_active = animal.is_active || false;
             form.bio = animal.bio || '';
             form.features = animal.features || {};
+            form.gallery = animal.gallery || [];
+            // form.avatar = animal.avatar || [];
+            form.voice = null;
             form.seo = {
                 title: animal.seo?.title || '',
                 description: animal.seo?.description || '',
                 keywords: animal.seo?.keywords || '',
+                canonical: animal.seo?.canonical || '',
+                is_noindex: animal.seo?.is_noindex || false,
             };
         } else {
             selectedAnimal.value = null;
@@ -89,11 +100,10 @@
 
     const deleteAnimal = async (id: number) => {
         if (deletingIds.value.has(id)) return;
-        undoRequested.value = true;
         deletingIds.value.add(id);
 
         try {
-            const confirmed = await notifyWithUndo(`Удаление животного в корзину`, 2000);
+            const confirmed = await notifyWithUndo(`Удаление животного в корзину`, 4000);
             if (confirmed) {
                 router.delete(route('admin.animals.destroy', id), {
                     preserveScroll: true,
@@ -145,11 +155,11 @@
                     v-if="view === 'list'"
                     @click="openForm()"
                     aria-label="Добавить новую особь"
-                    class="group flex items-center gap-3 rounded-2xl bg-orange-500 px-6 py-4 transition-all hover:bg-orange-600 active:scale-95"
+                    class="group flex items-center gap-3 rounded-xl bg-orange-500 px-6 py-4 transition-all hover:bg-orange-600 active:scale-95"
                 >
                     <PlusIcon class="h-5 w-5 text-white" aria-hidden="true" />
                     <span class="text-xs font-black uppercase tracking-widest text-white"
-                        >Добавить особь</span
+                        >Добавить</span
                     >
                 </button>
 
@@ -157,11 +167,11 @@
                     v-else
                     @click="closeForm"
                     aria-label="Вернуться к списку животных"
-                    class="group flex items-center gap-3 rounded-2xl bg-slate-800 px-6 py-4 transition-all hover:bg-slate-700"
+                    class="group flex items-center gap-3 rounded-xl bg-slate-800 px-6 py-4 transition-all hover:bg-slate-700"
                 >
                     <ChevronLeftIcon class="h-5 w-5 text-slate-400" aria-hidden="true" />
                     <span class="text-xs font-black uppercase tracking-widest text-slate-400"
-                        >Назад к списку</span
+                        >Назад</span
                     >
                 </button>
             </header>
@@ -245,7 +255,7 @@
                                             placeholder="Введите имя..."
                                             :aria-invalid="!!form.errors.name"
                                             aria-describedby="name-error"
-                                            class="w-full rounded-2xl border-slate-800 bg-slate-950 text-white focus:border-orange-500 focus:ring-orange-500/20"
+                                            class="w-full rounded-xl border-slate-800 bg-slate-950 px-4 py-3 text-white focus:border-orange-500 focus:ring-orange-500/20"
                                         />
                                         <p
                                             v-if="form.errors.name"
@@ -269,56 +279,60 @@
                                                 v-model="form.status"
                                                 type="text"
                                                 placeholder="active, draft..."
-                                                class="w-full rounded-2xl border-slate-800 bg-slate-950 text-white focus:border-orange-500 focus:ring-orange-500/20"
+                                                class="w-full rounded-xl border-slate-800 bg-slate-950 px-4 py-3 text-white focus:border-orange-500 focus:ring-orange-500/20"
                                             />
                                         </div>
 
                                         <div class="group space-y-2">
                                             <label
-                                                for="animal_category"
                                                 class="ml-2 text-[10px] font-black uppercase tracking-widest text-slate-500"
                                                 >Категория</label
                                             >
-                                            <select
-                                                id="animal_category"
+                                            <BaseSelect
                                                 v-model="form.category_id"
-                                                class="w-full rounded-2xl border-slate-800 bg-slate-950 text-white focus:border-orange-500 focus:ring-orange-500/20"
-                                            >
-                                                <option value="" disabled>
-                                                    Выберите категорию
-                                                </option>
-                                                <option
-                                                    v-for="cat in categories"
-                                                    :key="cat.id"
-                                                    :value="cat.id"
-                                                >
-                                                    {{ cat.name }}
-                                                </option>
-                                            </select>
+                                                :options="categories"
+                                                :placeholder="'Выберите категорию'"
+                                                :description="'Выбор категории'"
+                                                :variant="'admin'"
+                                            />
                                         </div>
                                     </div>
 
                                     <div class="group space-y-2">
                                         <label
-                                            for="animal_parent"
                                             class="ml-2 text-[10px] font-black uppercase tracking-widest text-slate-500"
-                                            >Родительская особь</label
+                                            >Родитель</label
                                         >
-                                        <select
-                                            id="animal_parent"
+                                        <BaseSelect
                                             v-model="form.parent_id"
-                                            class="w-full rounded-2xl border-slate-800 bg-slate-950 text-white focus:border-orange-500 focus:ring-orange-500/20"
+                                            :options="animals.data"
+                                            :placeholder="'Без родителя'"
+                                            :description="'Выбор родителя'"
+                                            :variant="'admin'"
+                                        />
+                                    </div>
+                                    <div class="group flex items-center gap-4">
+                                        <label
+                                            class="ml-2 block text-[10px] font-black uppercase tracking-widest text-slate-500"
+                                            >Показывать на сайте</label
                                         >
-                                            <option :value="null">-- Без родителя --</option>
-                                            <option
-                                                v-for="a in animals.data"
-                                                :key="a.id"
-                                                :value="a.id"
-                                                v-show="a.id !== form.id"
-                                            >
-                                                {{ a.name }} (ID: {{ a.id }})
-                                            </option>
-                                        </select>
+                                        <Switch
+                                            v-model="form.is_active"
+                                            :class="
+                                                form.is_active ? 'bg-emerald-700' : 'bg-slate-800'
+                                            "
+                                            class="relative inline-flex h-5 w-10 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/75"
+                                        >
+                                            <span
+                                                aria-hidden="true"
+                                                :class="
+                                                    form.is_active
+                                                        ? 'translate-x-5'
+                                                        : 'translate-x-0'
+                                                "
+                                                class="shadow-lg pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white ring-0 transition duration-200 ease-in-out"
+                                            />
+                                        </Switch>
                                     </div>
                                 </div>
                             </div>
@@ -334,7 +348,7 @@
                                     v-model="form.bio"
                                     rows="3"
                                     placeholder="История, особенности происхождения..."
-                                    class="w-full rounded-xl border-slate-800 bg-slate-950 text-white focus:border-orange-500 focus:ring-orange-500/20"
+                                    class="min-h-24 w-full rounded-xl border-slate-800 bg-slate-950 px-4 py-3 text-white focus:border-orange-500 focus:ring-orange-500/20"
                                 ></textarea>
                             </div>
                         </div>
@@ -343,11 +357,13 @@
                             v-if="activeTab === 'features'"
                             v-model:features="form.features"
                         />
+
                         <MediaSection
                             v-if="activeTab === 'media'"
                             v-model="form"
                             :existing-voice-url="selectedAnimal?.voice_url"
                         />
+
                         <SEOSection v-if="activeTab === 'seo'" v-model="form.seo" />
                     </div>
 
@@ -362,7 +378,7 @@
                         <button
                             type="submit"
                             :disabled="form.processing"
-                            class="rounded-2xl bg-white px-10 py-4 text-xs font-black uppercase tracking-widest text-black transition-all hover:bg-orange-500 hover:text-white disabled:opacity-50"
+                            class="rounded-xl bg-white px-10 py-4 text-xs font-black uppercase tracking-widest text-black transition-all hover:bg-orange-500 hover:text-white disabled:opacity-50"
                         >
                             {{ form.id ? 'Обновить данные' : 'Внести в реестр' }}
                         </button>

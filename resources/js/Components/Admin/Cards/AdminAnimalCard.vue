@@ -1,10 +1,5 @@
 <script setup lang="ts">
-    import {
-        PencilSquareIcon,
-        SpeakerWaveIcon,
-        TrashIcon,
-        UserIcon,
-    } from '@heroicons/vue/24/outline';
+    import { PencilSquareIcon, SpeakerWaveIcon, TrashIcon } from '@heroicons/vue/24/outline';
 
     import AppImage from '@/Components/UI/AppImage.vue';
     import { AdminAnimal } from '@/types';
@@ -50,17 +45,13 @@
                 <span class="text-[10px] font-bold uppercase tracking-[0.2em] text-orange-500">
                     {{ animal.category?.name || 'Без категории' }}
                 </span>
-                <template v-if="animal?.is_active">
-                    <div
-                        class="h-2 w-2 rounded-full"
-                        :class="
-                            animal.is_active
-                                ? 'bg-emerald-500 shadow-[0_0_8px_#10b981]'
-                                : 'bg-slate-700'
-                        "
-                        :aria-label="animal.is_active ? 'Активен' : 'В архиве'"
-                    ></div
-                ></template>
+                <div
+                    class="h-2 w-2 rounded-full"
+                    :class="
+                        animal.is_active ? 'bg-emerald-500 shadow-[0_0_8px_#10b981]' : 'bg-red-500'
+                    "
+                    :aria-label="animal.is_active ? 'Активен' : 'В архиве'"
+                ></div>
             </div>
 
             <h4 class="mt-2 line-clamp-1 text-xl font-black uppercase tracking-tight text-white">

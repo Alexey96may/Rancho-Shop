@@ -30,15 +30,18 @@ trait HasStandardMedia
         $this->addMediaConversion('preview')
             ->fit(Fit::Max, 1200, 1200)
             ->optimize()
-            ->withResponsiveImages();
+            ->withResponsiveImages()
+            ->nonQueued();
 
         $this->addMediaConversion('preview_webp')
             ->fit(Fit::Max, 1200, 1200)
-            ->format('webp');
+            ->format('webp')
+            ->nonQueued();
 
         $this->addMediaConversion('preview_avif')
             ->fit(Fit::Max, 1200, 1200)
-            ->format('avif');
+            ->format('avif')
+            ->nonQueued();
     }
 
     public function getFallbackImage(): string

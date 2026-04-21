@@ -11,14 +11,27 @@ export interface SeoData {
     title: string | null;
     description: string | null;
     keywords: string | null;
-    robots?: string | null; //add
-    image?: string | null; //add
+    robots: string;
     canonical: string | null;
-    og_data: OpenGraphData | null;
+    og_data: OpenGraphData;
+    image?: string | null;
     is_noindex: boolean;
+
+    json_ld: Record<string, any>;
 }
 
-// Тип для моделей, у которых есть SEO (например, Product или Animal)
+// Type for models that have SEO (eg Product or Animal)
 export interface HasSeo {
     seo?: SeoData | null;
 }
+
+// <Head>
+//     <title>{{ seo.title }}</title>
+//     <component
+//         is="script"
+//         type="application/ld+json"
+//         v-if="seo.json_ld"
+//     >
+//         {{ JSON.stringify(seo.json_ld) }}
+//     </component>
+// </Head>

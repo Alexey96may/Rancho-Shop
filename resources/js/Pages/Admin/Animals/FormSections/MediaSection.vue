@@ -8,12 +8,12 @@
         XMarkIcon,
     } from '@heroicons/vue/24/outline';
 
+    import MediaGallery from '@/Components/Shared/MediaGallery.vue';
+
     const props = defineProps<{
         modelValue: any; // Форма useForm
         existingVoiceUrl?: string | null; // URL голоса из БД
     }>();
-
-    const selectedImage = ref<string | null>(null);
 
     // Проверка: загружает ли пользователь новый файл прямо сейчас
     const isNewVoiceSelected = computed(() => props.modelValue.voice instanceof File);
@@ -87,6 +87,20 @@
         }
 
         target.value = ''; // Очищаем инпут, чтобы можно было выбрать тот же файл повторно
+    };
+
+    const selectedImage = ref<string | null>(null);
+
+    const handleGalleryUpload = (e: Event) => {
+        const target = e.target as HTMLInputElement;
+        if (target.files) {
+            // Добавляем новые файлы к существующим (Media объектам)
+            props.modelValue.gallery = [...props.modelValue.gallery, ...Array.from(target.files)];
+        }
+    };
+
+    const removeImage = (index: number) => {
+        props.modelValue.gallery.splice(index, 1);
     };
 </script>
 
@@ -173,39 +187,11 @@
                 >
             </div>
 
-            <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-                <div
-                    v-for="(file, index) in modelValue.gallery"
-                    :key="index"
-                    class="group relative aspect-square cursor-pointer overflow-hidden rounded-[2rem] border border-slate-800 bg-slate-950 transition-all hover:-translate-y-1"
-                >
-                    <img
-                        :src="getPreview(file)"
-                        class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-                    />
-                    <div
-                        class="absolute inset-0 flex items-center justify-center bg-slate-950/60 opacity-0 transition-opacity group-hover:opacity-100"
-                    >
-                        <div class="flex gap-2">
-                            <button
-                                type="button"
-                                @click="openImage(file)"
-                                class="rounded-full bg-white/10 p-2 text-white backdrop-blur-md hover:bg-white/20"
-                            >
-                                <MagnifyingGlassPlusIcon class="h-5 w-5" />
-                            </button>
-                            <button
-                                type="button"
-                                @click="removeGalleryItem(+index)"
-                                class="rounded-full bg-red-500/20 p-2 text-red-500 backdrop-blur-md hover:bg-red-500 hover:text-white"
-                            >
-                                <XMarkIcon class="h-5 w-5" />
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <label
+            <MediaGallery
+                v-model="modelValue.gallery"
+                @remove="removeImage"
+                @preview="(url) => (selectedImage = url)"
+                ><label
                     class="relative flex aspect-square cursor-pointer flex-col items-center justify-center rounded-[2rem] border-2 border-dashed border-slate-800 bg-slate-950/20 transition-all hover:border-orange-500/50 hover:bg-slate-950/40"
                 >
                     <input
@@ -220,7 +206,7 @@
                         >Добавить</span
                     >
                 </label>
-            </div>
+            </MediaGallery>
 
             <p
                 v-if="modelValue.errors.gallery"

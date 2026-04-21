@@ -38,6 +38,7 @@ class AnimalController extends Controller
             ->when($request->status, function ($query, $status) {
                 $query->where('status', $status);
             })
+            ->orderBy('is_active', 'desc')
             ->latest()
             ->paginate(setting('per_page_animals', 12))
             ->withQueryString();
@@ -47,14 +48,6 @@ class AnimalController extends Controller
             'categories' => Category::where('type', 'animal')->get(['id', 'name', 'slug']),
             'filters' => $request->only(['search', 'category_id', 'status'])
         ]);
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
     }
 
     /**
@@ -73,28 +66,31 @@ class AnimalController extends Controller
             'avatar'      => 'nullable|image|max:2048', // 2MB max
             'voice'       => 'nullable|mimes:mp3,wav|max:5120', // 5MB max
             'gallery'     => 'nullable|array',
-            'gallery.*'   => 'image|mimes:jpeg,png,jpg,webp|max:3072',
+            'gallery.*'   => 'image|mimes:jpeg,png,jpg,webp|max:5120',
 
             'seo.title'       => 'nullable|string|max:255',
             'seo.description' => 'nullable|string',
             'seo.keywords'    => 'nullable|string',
+            'seo.canonical'   => 'nullable|string|url',
+            'seo.is_noindex'  => 'boolean',
         ]);
 
         $validated['slug'] = Str::slug($validated['name']);
 
-        $animal = Animal::create($validated);
+        $animal = Animal::create(collect($validated)->except(['avatar', 'gallery', 'voice', 'seo'])->toArray());
 
         if ($request->has('seo')) {
             $animal->seo()->create($request->input('seo'));
         }
 
-        // Работа с медиа
         if ($request->hasFile('avatar')) {
             $animal->addMediaFromRequest('avatar')->toMediaCollection('avatars');
         }
 
         if ($request->hasFile('gallery')) {
-            foreach ($request->file('gallery') as $file) {
+            $files = $request->file('gallery');
+
+            foreach (is_array($files) ? $files : [$files] as $file) {
                 $animal->addMedia($file)->toMediaCollection('gallery');
             }
         }
@@ -103,23 +99,7 @@ class AnimalController extends Controller
             $animal->addMediaFromRequest('voice')->toMediaCollection('voice');
         }
 
-        return redirect()->route('admin.animals.index')->with('success', 'Животное успешно добавлено');
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
+        return redirect()->route('admin.animals.index')->with('success', "Животное $animal->name успешно добавлено");
     }
 
     /**
@@ -138,20 +118,19 @@ class AnimalController extends Controller
             'avatar'      => 'nullable|image|max:2048', // 2MB max
             'voice'       => 'nullable|mimes:mp3,wav|max:5120', // 5MB max
             'gallery'     => 'nullable|array',
-            'gallery.*'   => 'image|mimes:jpeg,png,jpg,webp|max:3072',
+            'gallery.*'   => 'nullable',
 
             'seo.title'       => 'nullable|string|max:255',
             'seo.description' => 'nullable|string',
             'seo.keywords'    => 'nullable|string',
+            'seo.canonical'   => 'nullable|string|url',
+            'seo.is_noindex'  => 'boolean',
         ]);
 
-        $animal->update($validated);
+        $animal->update(collect($validated)->except(['avatar', 'gallery', 'voice', 'seo'])->toArray());
 
         if ($request->has('seo')) {
-            $animal->seo()->updateOrCreate(
-                ['seoable_id' => $animal->id, 'seoable_type' => Animal::class],
-                $request->input('seo')
-            );
+            $animal->seo()->updateOrCreate([], $request->input('seo'));
         }
 
         if ($request->hasFile('avatar')) {
@@ -159,20 +138,43 @@ class AnimalController extends Controller
             $animal->addMediaFromRequest('avatar')->toMediaCollection('avatars');
         }
 
-        if ($request->hasFile('gallery')) {
-            // If you need to delete the OLD gallery before loading a new one, uncomment:
-            // $animal->clearMediaCollection('gallery');
+        if ($request->has('gallery')) {
+            $currentMediaIds = collect($request->input('gallery'))
+                ->filter(fn($item) => is_array($item) && isset($item['id']))
+                ->pluck('id')
+                ->toArray();
 
-            foreach ($request->file('gallery') as $file) {
-                $animal->addMedia($file)->toMediaCollection('gallery');
+            // 1. Delete from the database those photos that are no longer in the array from the front
+            $animal->getMedia('gallery')
+                ->reject(fn($media) => in_array($media->id, $currentMediaIds))
+                ->each(fn($media) => $media->delete());
+
+            // 2. Add only NEW files
+            // In Laravel, files from the gallery array will be sent separately via $request->file()
+            if ($request->hasFile('gallery')) {
+                $files = $request->file('gallery');
+                
+                // If a single file was received, not an array (this happens with certain FormData settings)
+                if (!is_array($files)) {
+                    $files = [$files];
+                }
+
+                foreach ($files as $file) {
+                    if ($file->isValid()) {
+                        $animal->addMedia($file)->toMediaCollection('gallery');
+                    }
+                }
             }
+        } elseif ($request->exists('gallery')) {
+            // If the gallery key exists but is empty, it means the user has deleted all photos.
+            $animal->clearMediaCollection('gallery');
         }
 
         if ($request->hasFile('voice')) {
             $animal->addMediaFromRequest('voice')->toMediaCollection('voice');
         }
 
-        return redirect()->back()->with('success', 'Данные животного обновлены');
+        return redirect()->back()->with('success', "Данные животного $animal->name обновлены");
     }
 
     /**

@@ -48,6 +48,6 @@ class RegisteredUserController extends Controller
 
         $authService->login($user);
 
-        return redirect(route('dashboard', absolute: false));
+        return redirect(route('user.dashboard', absolute: false));
     }
 }

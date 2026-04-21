@@ -11,6 +11,7 @@ class Seo extends Model
         'title',
         'description',
         'keywords',
+        'canonical',
         'og_data',
         'is_noindex',
         'seoable_id',

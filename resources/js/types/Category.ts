@@ -1,8 +1,11 @@
+export type CategoryType = 'product' | 'animal';
+
 export interface Category {
     id: number;
     name: string;
     slug: string;
     icon: string | null;
+    type: CategoryType;
 }
 
 export interface AdminCategory extends Category {

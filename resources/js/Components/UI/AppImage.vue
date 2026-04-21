@@ -1,8 +1,26 @@
 <script setup lang="ts">
+    /**
+     * AppImage Component
+     * * A robust image handler that supports multiple input formats:
+     * - Remote URLs (strings)
+     * - Media Resource Objects (from Laravel Spatie Media Library)
+     * - Raw Browser File Objects (for instant upload previews)
+     * * Key Features:
+     * - Smart Fallbacks: Automatically switches to context-specific placeholders on error.
+     * - Modern Formats: Renders <picture> with AVIF/WebP support for Media objects.
+     * - Zero Latency: Handles URL.createObjectURL for immediate local file previews.
+     * - Accessible: Supports decorative images and ARIA-compliant alt text.
+     * @props {string | Media | File} src - The image source (URL, Media object, or File).
+     * @props {'thumbnails' | 'previews'} [type='previews'] - The Media object collection type.
+     * @props {'product' | 'animal' | 'general'} [context='general'] - Used to determine the error placeholder.
+     * @props {string} [alt=''] - Alt text for the image.
+     * @props {string} [className] - Additional CSS classes for the <img> tag.
+     * @props {boolean} [isDecorative=false] - If true, alt will be empty for screen readers.
+     * * @emits {Event} load - Fired when the image successfully loads.
+     */
     import { computed, ref } from 'vue';
 
     import { Media } from '@/types';
-    // The same interface that we described above
     import { handleImageError } from '@/utils';
 
     defineOptions({
@@ -12,7 +30,7 @@
     type ImageType = 'thumbnails' | 'previews';
 
     interface Props {
-        src: string | Media;
+        src: string | Media | File;
         type?: ImageType;
         context?: 'product' | 'animal' | 'general';
         alt?: string;
@@ -31,6 +49,8 @@
     const isMediaObject = computed(() => {
         return typeof props.src === 'object' && props.src !== null && 'url' in props.src;
     });
+
+    const isFileObject = computed(() => props.src instanceof File);
 
     // Extract formats for <source>
     const sources = computed(() => {
@@ -54,7 +74,13 @@
 
     const fallbackSrc = computed((): string => {
         if (typeof props.src === 'string') return props.src;
+
+        if (isFileObject.value) {
+            return URL.createObjectURL(props.src as File);
+        }
+
         if (isMediaObject.value) return (props.src as Media).url;
+
         return '';
     });
 
@@ -68,10 +94,14 @@
         isError.value = true;
         handleImageError(e, props.context);
     };
+
+    const shouldRenderPicture = computed(() => {
+        return isMediaObject.value && !isFileObject.value && !isError.value;
+    });
 </script>
 
 <template>
-    <picture v-if="isMediaObject && !isError">
+    <picture v-if="shouldRenderPicture">
         <source
             v-for="source in sources"
             :key="source.url + source.type"
@@ -91,12 +121,8 @@
 
     <img
         v-else
-        :src="
-            isError
-                ? `/images/no-${context === 'general' ? 'image' : context}.jpg`
-                : (src as string)
-        "
-        :alt="isDecorative ? '' : alt || 'Rancho Image'"
+        :src="isError ? `/images/no-${context === 'general' ? 'image' : context}.jpg` : fallbackSrc"
+        :alt="isDecorative ? '' : alt || 'Молочная долина'"
         @load="onImageLoad"
         @error="onError"
         loading="lazy"

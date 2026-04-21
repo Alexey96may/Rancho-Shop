@@ -17,6 +17,7 @@ return new class() extends Migration
             $table->string('title')->nullable();
             $table->text('description')->nullable();
             $table->string('keywords')->nullable();
+            $table->string('canonical')->nullable();
             $table->jsonb('og_data')->nullable(); // (Open Graph)
             $table->boolean('is_noindex')->default(false);
             $table->timestamps();

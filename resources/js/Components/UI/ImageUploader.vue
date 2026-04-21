@@ -81,7 +81,7 @@
                 <button
                     @click.stop="removeImage"
                     type="button"
-                    class="shadow-lg absolute -right-2 -top-2 flex h-8 w-8 items-center justify-center rounded-xl bg-red-500 text-white transition-transform hover:rotate-90 hover:bg-red-600"
+                    class="shadow-lg absolute -right-2 -top-2 z-10 flex h-8 w-8 items-center justify-center rounded-xl bg-red-500 text-white transition-transform hover:rotate-90 hover:bg-red-600"
                 >
                     <X class="h-4 w-4" />
                 </button>
