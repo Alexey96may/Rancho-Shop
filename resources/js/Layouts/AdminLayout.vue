@@ -36,7 +36,7 @@
 </script>
 
 <template>
-    <SeoMeta />
+    <SeoMeta :force-robots="'nofollow, noindex'" :seo="page.props?.seo" />
     <Toast />
     <div class="flex min-h-screen bg-slate-950 font-sans text-slate-200">
         <aside

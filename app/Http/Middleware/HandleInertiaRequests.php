@@ -77,6 +77,23 @@ class HandleInertiaRequests extends Middleware
                     'is_valid' => (bool) $address,
                 ]
                 : session('delivery_draft'),
+
+            'seo' => [
+                'title'       => 'Молочная Долина',
+                'description' => 'Крымский магазин натуральной молочной продукции.',
+                'keywords'    => 'домашнее молоко, крым, творог, масло, сыр',
+                'robots'      => $this->getRobotsForRoute($request),
+                'image'       => asset('images/og-default.png'),
+                'canonical'   => url()->current(),
+            ],
         ];
+    }
+
+    /**
+    * Automatically close the admin panel from indexing
+    */
+    private function getRobotsForRoute(Request $request): string
+    {
+        return $request->is('admin*') ? 'noindex, nofollow' : 'index, follow';
     }
 }

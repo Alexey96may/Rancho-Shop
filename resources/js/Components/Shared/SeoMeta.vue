@@ -16,18 +16,14 @@
     const faviconPath = computed(() => {
         const path = page.url.toLowerCase();
 
-        if (path.startsWith('/admin')) {
-            return '/images/favicon-admin.svg';
-        }
+        if (path.startsWith('/admin')) return '/images/logo/favicon-admin.svg';
 
         const cabinetPrefixes = ['/profile', '/dashboard', '/my-orders', '/account'];
-        const isCabinet = cabinetPrefixes.some((prefix) => path.startsWith(prefix));
-
-        if (isCabinet) {
-            return '/images/favicon-cabinet.svg';
+        if (cabinetPrefixes.some((prefix) => path.startsWith(prefix))) {
+            return '/images/logo/favicon-cabinet.svg';
         }
 
-        return '/images/favicon-main.svg';
+        return '/images/logo/favicon-main.svg';
     });
 
     const getSeoData = () => {
@@ -36,30 +32,26 @@
 
         return {
             title:
-                props.seo?.title || fromController?.title || settings?.site_name || 'Planto Shop',
+                props.seo?.title ||
+                fromController?.title ||
+                settings?.site_name ||
+                'Молочна Долина',
             description:
                 props.seo?.description ||
                 fromController?.description ||
-                'Welcome to the future of plants.',
+                'Добро пожаловать в крымский магазин молочной продукции.',
+            keywords: props.seo?.keywords || fromController?.keywords || '',
             robots:
                 props.forceRobots || props.seo?.robots || fromController?.robots || 'index, follow',
-            image: props.seo?.image || fromController?.image || '/images/og-default.png',
             canonical: props.seo?.canonical || fromController?.canonical || '',
-            keywords: props.seo?.keywords || fromController?.keywords || '',
+            image: props.seo?.image || fromController?.image || '/images/og-default-rancho.jpg',
+
+            og: props.seo?.og_data || fromController?.og_data || null,
+            jsonLd: props.seo?.json_ld || fromController?.json_ld || null,
         };
     };
 
-    const displayTitle = ref(getSeoData().title);
     const currentSeo = computed(() => getSeoData());
-
-    watch(
-        () => currentSeo.value.title,
-        (newTitle) => {
-            setTimeout(() => {
-                displayTitle.value = newTitle;
-            }, 50);
-        },
-    );
 </script>
 
 <template>
@@ -85,23 +77,47 @@
 
         <meta name="robots" :content="currentSeo.robots" head-key="robots" />
 
-        <meta property="og:title" :content="currentSeo.title" head-key="og:title" />
+        <meta
+            property="og:title"
+            :content="currentSeo.og?.title || currentSeo.title"
+            head-key="og:title"
+        />
         <meta
             property="og:description"
-            :content="currentSeo.description"
+            :content="currentSeo.og?.description || currentSeo.description"
             head-key="og:description"
         />
-        <meta property="og:image" :content="currentSeo.image" head-key="og:image" />
-        <meta property="og:type" content="website" head-key="og:type" />
-        <meta property="og:url" :content="currentSeo.canonical || ''" head-key="og:url" />
+        <meta
+            property="og:image"
+            :content="currentSeo.og?.image || currentSeo.image"
+            head-key="og:image"
+        />
+        <meta property="og:type" :content="currentSeo.og?.type || 'website'" head-key="og:type" />
+        <meta
+            property="og:url"
+            :content="currentSeo.og?.url || currentSeo.canonical || ''"
+            head-key="og:url"
+        />
 
         <meta name="twitter:card" content="summary_large_image" head-key="twitter:card" />
-        <meta name="twitter:title" :content="currentSeo.title" head-key="twitter:title" />
+        <meta
+            name="twitter:title"
+            :content="currentSeo.og?.title || currentSeo.title"
+            head-key="twitter:title"
+        />
         <meta
             name="twitter:description"
-            :content="currentSeo.description"
+            :content="currentSeo.og?.description || currentSeo.description"
             head-key="twitter:description"
         />
-        <meta name="twitter:image" :content="currentSeo.image" head-key="twitter:image" />
+        <meta
+            name="twitter:image"
+            :content="currentSeo.og?.image || currentSeo.image"
+            head-key="twitter:image"
+        />
+
+        <component is="script" v-if="currentSeo.jsonLd" type="application/ld+json">
+            {{ JSON.stringify(currentSeo.jsonLd) }}
+        </component>
     </Head>
 </template>

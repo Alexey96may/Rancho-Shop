@@ -24,14 +24,3 @@ export interface SeoData {
 export interface HasSeo {
     seo?: SeoData | null;
 }
-
-// <Head>
-//     <title>{{ seo.title }}</title>
-//     <component
-//         is="script"
-//         type="application/ld+json"
-//         v-if="seo.json_ld"
-//     >
-//         {{ JSON.stringify(seo.json_ld) }}
-//     </component>
-// </Head>

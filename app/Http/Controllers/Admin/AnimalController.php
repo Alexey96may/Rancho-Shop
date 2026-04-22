@@ -46,7 +46,8 @@ class AnimalController extends Controller
         return Inertia::render('Admin/Animals/Index', [
             'animals' => AdminAnimalResource::collection($animals),
             'categories' => Category::where('type', 'animal')->get(['id', 'name', 'slug']),
-            'filters' => $request->only(['search', 'category_id', 'status'])
+            'filters' => $request->only(['search', 'category_id', 'status']),
+            'seo' => $this->seo('Панель управления: Животные', robots: 'noindex, nofollow')
         ]);
     }
 
