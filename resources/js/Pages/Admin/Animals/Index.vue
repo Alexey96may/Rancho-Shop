@@ -14,15 +14,14 @@
     } from '@heroicons/vue/24/outline';
 
     import AnimalCard from '@/Components/Admin/Cards/AdminAnimalCard.vue';
+    import FeaturesSection from '@/Components/Admin/Sections/FeaturesSection.vue';
+    import MediaSection from '@/Components/Admin/Sections/MediaSection.vue';
+    import SEOSection from '@/Components/Admin/Sections/SEOSection.vue';
     import BaseSelect from '@/Components/UI/BaseSelect.vue';
     import ImageUpload from '@/Components/UI/ImageUploader.vue';
     import AdminLayout from '@/Layouts/AdminLayout.vue';
     import { useFlash } from '@/composables/useFlash';
     import { AdminAnimal, Category, Media, Paginated, SeoData } from '@/types';
-
-    import FeaturesSection from './FormSections/FeaturesSection.vue';
-    import MediaSection from './FormSections/MediaSection.vue';
-    import SEOSection from './FormSections/SEOSection.vue';
 
     const props = defineProps<{
         animals: Paginated<AdminAnimal>;
@@ -275,7 +274,7 @@
                                             id="animal_status"
                                             v-model="form.status"
                                             type="text"
-                                            placeholder="active, draft..."
+                                            placeholder="Дома, в поле..."
                                             class="w-full rounded-xl border-slate-800 bg-slate-950 px-4 py-3 text-white focus:border-orange-500 focus:ring-orange-500/20"
                                         />
                                     </div>
