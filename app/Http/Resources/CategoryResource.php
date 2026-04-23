@@ -21,13 +21,6 @@ class CategoryResource extends JsonResource
             'slug' => $this->slug,
             'icon' => $this->icon,
             'type' => $this->type,
-
-            $this->mergeWhen($request->user()?->is_admin, [
-                'sort_order' => $this->sort_order,
-                'is_active'  => (bool) $this->is_active,
-                'created_at' => $this->created_at?->toDateTimeString(),
-                'updated_at' => $this->updated_at?->toDateTimeString(),
-            ]),
         ];
     }
 }

@@ -23,11 +23,27 @@ export interface ResourceSingle<T> {
     data: T;
 }
 
+export interface PaginationLink {
+    url: string | null;
+    label: string;
+    active: boolean;
+}
+
 export interface Paginated<T> {
     data: T[];
+    links: {
+        first: string;
+        last: string;
+        prev: string | null;
+        next: string | null;
+    };
     meta: {
         current_page: number;
         last_page: number;
+        links: PaginationLink[];
+        per_page: number;
+        total: number;
+        path: string;
     };
 }
 

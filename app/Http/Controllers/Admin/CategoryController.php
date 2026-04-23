@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Http\Resources\CategoryResource;
+use App\Http\Resources\Admin\CategoryResource;
 use App\Models\Category;
 use Inertia\Inertia;
 use Illuminate\Support\Str;
@@ -23,13 +23,15 @@ class CategoryController extends Controller
             ->when($request->type, function ($query, $type) {
                 $query->where('type', $type);
             })
+            ->orderBy('is_active', 'desc')
             ->orderBy('sort_order')
             ->paginate(setting('categories_per_page', 12))
             ->withQueryString();
 
         return Inertia::render('Admin/Categories/Index', [
             'categories' => CategoryResource::collection($categories),
-            'filters' => $request->only(['search', 'type'])
+            'filters' => $request->only(['search', 'type']),
+            'seo' => $this->seo('Панель управления: Категории', robots: 'noindex, nofollow')
         ]);
     }
 
@@ -44,7 +46,7 @@ class CategoryController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(Request $request, Category $category)
     {
         $validated = $request->validate([
             'name'       => 'required|string|max:255',
@@ -55,7 +57,6 @@ class CategoryController extends Controller
             'is_active'  => 'boolean',
         ]);
 
-        // Авто-генерация слага, если не указан
         if (empty($validated['slug'])) {
             $validated['slug'] = Str::slug($validated['name']);
         }
@@ -63,7 +64,7 @@ class CategoryController extends Controller
         Category::create($validated);
 
         return redirect()->route('admin.categories.index')
-            ->with('success', 'Категория успешно создана');
+            ->with('success', "Категория $category->name успешно создана");
     }
 
     /**
@@ -89,16 +90,20 @@ class CategoryController extends Controller
     {
         $validated = $request->validate([
             'name'       => 'required|string|max:255',
-            'slug'       => 'required|string|max:255|unique:categories,slug,' . $category->id,
+            'slug'       => 'nullable|string|max:255|unique:categories,slug,' . $category->id,
             'icon'       => 'nullable|string|max:255',
             'type'       => 'required|string|in:product,animal',
             'sort_order' => 'integer',
             'is_active'  => 'boolean',
         ]);
 
+        if (empty($validated['slug'])) {
+            $validated['slug'] = Str::slug($validated['name']);
+        }
+
         $category->update($validated);
 
-        return redirect()->back()->with('success', 'Категория обновлена');
+        return redirect()->back()->with('success', "Категория $category->name обновлена");
     }
 
     /**
@@ -106,7 +111,6 @@ class CategoryController extends Controller
      */
     public function destroy(Category $category)
     {
-        // Проверяем, нет ли в категории товаров или животных перед удалением
         if ($category->products()->count() > 0 || $category->animals()->count() > 0) {
             return redirect()->back()->with('error', 'Нельзя удалить категорию, в которой есть товары или животные');
         }
@@ -114,6 +118,6 @@ class CategoryController extends Controller
         $category->delete();
 
         return redirect()->route('admin.categories.index')
-            ->with('success', 'Категория удалена');
+            ->with('success', "Категория $category->name удалена");
     }
 }

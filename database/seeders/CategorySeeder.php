@@ -17,8 +17,8 @@ class CategorySeeder extends Seeder
     {
         $categories = [
             ['name' => 'Молоко', 'icon' => 'Milk'],
-            ['name' => 'Сыры', 'icon' => 'Cheese'],
-            ['name' => 'Сметана', 'icon' => 'Beef'], // Lucide Beef 
+            ['name' => 'Сыры', 'icon' => 'Pizza'],
+            ['name' => 'Сметана', 'icon' => 'GlassWater'],
             ['name' => 'Яйца', 'icon' => 'Egg'],
             ['name' => 'Мёд', 'icon' => 'Hop'],
             ['name' => 'Масло', 'icon' => 'Container'],
@@ -38,8 +38,8 @@ class CategorySeeder extends Seeder
         $animalCategories = [
             ['name' => 'Коровы', 'icon' => 'Cow'],
             ['name' => 'Козы', 'icon' => 'Goat'],
-            ['name' => 'Овцы', 'icon' => 'Sheep'],
-            ['name' => 'Птица', 'icon' => 'Bird'],
+            ['name' => 'Овцы', 'icon' => 'Shell'],
+            ['name' => 'Птицы', 'icon' => 'Bird'],
         ];
 
         foreach ($animalCategories as $index => $cat) {

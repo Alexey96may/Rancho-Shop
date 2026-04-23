@@ -3,7 +3,6 @@
 namespace App\Http\Resources\Admin;
 
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\JsonResource;
 use App\Http\Resources\MediaResource;
 use App\Http\Resources\AnimalResource as UserAnimalResource;
 

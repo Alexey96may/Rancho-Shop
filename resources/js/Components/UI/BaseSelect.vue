@@ -13,16 +13,20 @@
     const model = defineModel<any>();
 
     const props = defineProps<{
-        options: Array<{ id: number | string; name: string; slug: string | number }>;
+        options: Array<any>;
         label?: string;
         placeholder?: string;
         description?: string;
         widthClass?: string;
         variant?: 'admin' | 'classic';
+        valueKey?: string;
+        labelKey?: string;
     }>();
 
     const labelId = useId();
     const descriptionId = useId();
+    const vKey = computed(() => props.valueKey || 'id');
+    const lKey = computed(() => props.labelKey || 'name');
 
     const styles = computed(() => {
         const isDark = props.variant === 'admin';
@@ -33,7 +37,7 @@
                 : 'mb-1.5 ml-1 block text-xs font-bold uppercase tracking-wider text-slate-500',
 
             button: isDark
-                ? 'relative w-full cursor-pointer rounded-2xl border border-slate-800 bg-slate-950/50 py-3 pl-4 pr-10 text-left text-slate-300 transition-all hover:border-orange-500/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500/20'
+                ? 'relative w-full cursor-pointer rounded-2xl border border-slate-800 bg-slate-950 py-3 pl-4 pr-10 text-left text-slate-300 transition-all hover:border-orange-500/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500/20'
                 : 'relative w-full cursor-pointer rounded-xl border border-slate-200 bg-white py-2.5 pl-4 pr-10 text-left transition-all hover:border-orange-300 focus:outline-none focus-visible:border-orange-500 focus-visible:ring-4 focus-visible:ring-orange-500/10 sm:text-sm',
 
             options: isDark
@@ -60,7 +64,7 @@
     <div :class="[widthClass || 'w-full', 'min-w-[200px]']">
         <Listbox v-model="model">
             <div class="relative mt-1">
-                <ListboxLabel v-if="label" :id="labelId" :class="styles.label">
+                <ListboxLabel v-if="label" :id="labelId" class="" :class="styles.label">
                     {{ label }}
                 </ListboxLabel>
 
@@ -70,7 +74,7 @@
                     :class="styles.button"
                 >
                     <span class="block truncate font-medium">
-                        {{ options.find((o) => o.id === model)?.name || placeholder }}
+                        {{ options.find((o) => o[vKey] === model)?.[lKey] || placeholder }}
                     </span>
                     <span
                         class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2"
@@ -117,8 +121,8 @@
                         <ListboxOption
                             v-slot="{ active, selected }"
                             v-for="opt in options"
-                            :key="opt.id"
-                            :value="opt.id"
+                            :key="opt[vKey]"
+                            :value="opt[vKey]"
                             as="template"
                         >
                             <li :class="styles.option(active, selected)">
@@ -128,7 +132,7 @@
                                         'block truncate',
                                     ]"
                                 >
-                                    {{ opt.name }}
+                                    {{ opt[lKey] }}
                                 </span>
                                 <span
                                     v-if="selected"

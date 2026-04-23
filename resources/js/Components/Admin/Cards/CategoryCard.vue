@@ -1,15 +1,11 @@
 <script setup lang="ts">
     import { PencilSquareIcon, TagIcon, TrashIcon } from '@heroicons/vue/24/outline';
 
+    import LucideIcon from '@/Components/UI/LucideIcon.vue';
+    import { AdminCategory } from '@/types';
+
     defineProps<{
-        category: {
-            id: number;
-            name: string;
-            slug: string;
-            type: string;
-            sort_order: number;
-            is_active: boolean;
-        };
+        category: AdminCategory;
     }>();
 
     defineEmits(['edit', 'delete']);
@@ -22,10 +18,16 @@
     >
         <div class="flex items-start justify-between">
             <div
-                class="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-800 text-orange-500 transition-colors group-hover:bg-orange-600 group-hover:text-white"
+                class="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-800 text-orange-300 transition-colors group-hover:bg-orange-600 group-hover:text-white"
                 aria-hidden="true"
             >
-                <TagIcon class="h-6 w-6" />
+                <LucideIcon
+                    v-if="category.icon"
+                    :name="category.icon"
+                    :size="24"
+                    class="text-orange-300"
+                />
+                <TagIcon v-else class="h-6 w-6" />
             </div>
             <div class="flex items-center gap-2">
                 <span
