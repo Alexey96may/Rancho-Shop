@@ -6,9 +6,8 @@ export interface Comment {
     content: string;
     rating: number | null; // From 1 to 5
 
-    user_avatar: string | null;
+    avatar: string | null;
 
-    // (from $table->nullableMorphs)
     commentable_id: number | null;
     commentable_type: CommentType;
 

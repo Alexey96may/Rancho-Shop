@@ -21,7 +21,6 @@ class CatalogController extends Controller
 
         return Inertia::render('Admin/Catalog/Index', [
             'variants' => ProductVariantResource::collection($variants),
-            // Передаем фильтры, если они есть (поиск, наличие)
             'filters' => request()->all(['search', 'stock']),
         ]);
     }

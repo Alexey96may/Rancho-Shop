@@ -34,7 +34,7 @@ class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         $address = $request->user()?->defaultDeliveryAddress;
-
+        $user = $request->user();
 
         return [
             ...parent::share($request),
@@ -61,6 +61,7 @@ class HandleInertiaRequests extends Middleware
                 'manageFeatures' => Gate::allows('manage-features'),
                 'manageSettings' => Gate::allows('manage-settings'),
                 'manageNomenclature' => Gate::allows('manage-nomenclature'),
+                'editAdminNote' => $user && $user->role === 'admin',
             ],
 
             'flash' => [

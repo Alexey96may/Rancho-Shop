@@ -19,7 +19,9 @@
     import { AdminOrder, OrderStatus, ResourceSingle } from '@/types';
     import { formatMoney } from '@/utils/format';
 
-    const can = usePage().props.can as { manageOrders: boolean };
+    const can = usePage().props.can as {
+        editAdminNote: boolean;
+    };
 
     const props = defineProps<{
         order: ResourceSingle<AdminOrder>;
@@ -49,7 +51,7 @@
     }, 600);
 
     const handleNoteInput = (e: Event) => {
-        if (!can.manageOrders) return;
+        if (!can.editAdminNote) return;
 
         const target = e.target as HTMLTextAreaElement;
         form.admin_note = target.value;
@@ -59,7 +61,7 @@
     const { notify, notifyWithUndo } = useFlash();
 
     const deleteOrder = async () => {
-        if (!can.manageOrders) return;
+        if (!can.editAdminNote) return;
 
         const orderDeleted = await notifyWithUndo(`Удаление заказа #${props.order.data.id}`, 5000);
 
@@ -216,7 +218,7 @@
                 </section>
 
                 <section
-                    v-if="can.manageOrders"
+                    v-if="can.editAdminNote"
                     class="space-y-4 rounded-3xl border border-red-500/20 bg-red-500/5 p-6"
                 >
                     <div class="flex items-start gap-3">
@@ -341,6 +343,8 @@
                                     order.data.status === key
                                         ? 'border-white bg-white text-slate-950'
                                         : 'border-slate-800 bg-slate-950 text-slate-500 hover:border-slate-600',
+                                    !can.editAdminNote &&
+                                        'cursor-not-allowed opacity-50 hover:border-slate-800',
                                 ]"
                             >
                                 {{ info.label }}
@@ -357,7 +361,7 @@
                         </h3>
                     </div>
 
-                    <div v-if="can.manageOrders" class="relative">
+                    <div v-if="can.editAdminNote" class="relative">
                         <textarea
                             :value="form.admin_note"
                             @input="handleNoteInput"

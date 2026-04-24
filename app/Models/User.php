@@ -63,6 +63,7 @@ class User extends Authenticatable
         return $this->role === UserRole::ADMIN;
     }
     
+    
     public function isWorker(): bool {
         return $this->role === UserRole::WORKER;
     }

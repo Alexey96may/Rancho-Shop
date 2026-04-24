@@ -12,8 +12,10 @@
         TrashIcon,
     } from '@heroicons/vue/24/solid';
 
+    import { AdminComment } from '@/types';
+
     const props = defineProps<{
-        comment: any;
+        comment: AdminComment;
     }>();
 
     // Маппинг типов для бейджей (используем morphMap ключи)
@@ -67,7 +69,13 @@
             v-if="!comment.is_published"
             class="absolute -right-2 -top-2 flex h-6 animate-pulse items-center rounded-full bg-orange-600 px-3 text-[10px] font-black uppercase tracking-tighter text-white"
         >
-            Новый / Черновик
+            Новый
+        </div>
+        <div
+            v-else
+            class="absolute -right-2 -top-2 flex h-6 animate-pulse items-center rounded-full bg-orange-600 px-3 text-[10px] font-black uppercase tracking-tighter text-white"
+        >
+            Черновик
         </div>
 
         <div class="flex items-start justify-between">
@@ -76,8 +84,8 @@
                     class="h-12 w-12 shrink-0 overflow-hidden rounded-2xl bg-slate-800 ring-2 ring-slate-800 transition-transform group-hover:scale-110"
                 >
                     <img
-                        v-if="comment.user_avatar"
-                        :src="comment.user_avatar"
+                        v-if="comment.avatar"
+                        :src="comment.avatar"
                         class="h-full w-full object-cover"
                         alt=""
                     />
@@ -100,7 +108,7 @@
 
             <div class="flex gap-0.5" aria-label="Рейтинг">
                 <template v-for="i in 5" :key="i">
-                    <StarIcon v-if="i <= comment.rating" class="h-4 w-4 text-orange-500" />
+                    <StarIcon v-if="i <= (comment.rating || 0)" class="h-4 w-4 text-orange-500" />
                     <StarOutline v-else class="shadow-sm h-4 w-4 text-slate-700" />
                 </template>
             </div>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-    import { computed, ref } from 'vue';
+    import { ref } from 'vue';
 
     import { Head, router } from '@inertiajs/vue3';
 
@@ -7,13 +7,13 @@
 
     import AdminCommentCard from '@/Components/Admin/Cards/AdminCommentCard.vue';
     import AdminLayout from '@/Layouts/AdminLayout.vue';
+    import { AdminComment, Paginated } from '@/types';
 
     const props = defineProps<{
-        comments: { data: any[] };
-        filters: any;
+        comments: Paginated<AdminComment>;
+        filters: { type: string; status: string };
     }>();
 
-    // Состояние фильтров
     const currentType = ref(props.filters.type || 'all');
     const currentStatus = ref(props.filters.status || 'all');
 
@@ -30,7 +30,6 @@
         { id: 'draft', label: 'Черновики' },
     ];
 
-    // Общая функция фильтрации
     const applyFilters = () => {
         router.get(
             route('admin.comments.index'),
@@ -62,8 +61,6 @@
 </script>
 
 <template>
-    <Head title="Отзывы - Админ" />
-
     <AdminLayout>
         <template #header>Модерация отзывов</template>
 
