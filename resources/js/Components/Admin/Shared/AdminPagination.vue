@@ -1,12 +1,10 @@
 <script setup lang="ts">
     import { Link } from '@inertiajs/vue3';
 
+    import type { PaginationLink } from '@/types';
+
     defineProps<{
-        links: Array<{
-            url: string | null;
-            label: string;
-            active: boolean;
-        }>;
+        links: PaginationLink[];
     }>();
 </script>
 
@@ -23,19 +21,22 @@
             <template v-for="(link, k) in links" :key="k">
                 <div
                     v-if="link.url === null"
-                    class="flex h-10 min-w-[40px] items-center justify-center px-3 text-[10px] font-black uppercase tracking-widest text-slate-600 opacity-50"
+                    class="flex h-10 min-w-[40px] select-none items-center justify-center px-3 text-[10px] font-black uppercase tracking-widest text-slate-600 opacity-50"
                     v-html="link.label"
+                    aria-hidden="true"
                 />
 
                 <Link
                     v-else
                     :href="link.url"
-                    class="flex h-10 min-w-[40px] items-center justify-center rounded-xl px-4 text-[10px] font-black uppercase tracking-widest transition-all"
+                    class="flex h-10 min-w-[40px] items-center justify-center rounded-xl px-4 text-[10px] font-black uppercase tracking-widest transition-all focus:outline-none focus:ring-2 focus:ring-orange-500"
                     :class="[
                         link.active
                             ? 'bg-orange-600 text-white shadow-[0_0_20px_rgba(234,88,12,0.4)]'
                             : 'text-slate-400 hover:bg-slate-800 hover:text-white',
                     ]"
+                    :aria-current="link.active ? 'page' : undefined"
+                    :aria-label="`Перейти на страницу ${link.label}`"
                     preserve-scroll
                     preserve-state
                     v-html="link.label"
@@ -47,7 +48,7 @@
 
 <style scoped>
     :deep(span) {
-        font-family: sans-serif;
-        font-size: 1.2rem;
+        font-family: inherit;
+        font-size: inherit;
     }
 </style>

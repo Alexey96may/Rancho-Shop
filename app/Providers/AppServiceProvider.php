@@ -39,24 +39,36 @@ class AppServiceProvider extends ServiceProvider
         foreach (Permission::cases() as $permission) {
             Gate::define($permission->value, function ($user) use ($permission) {
 
+                // ADMIN`s Superpower
+                if ($user->role === UserRole::ADMIN) {
+                    return true;
+                }
+
                 return match ($permission) {
+                    // MODERATOR + ADMIN
                     Permission::MANAGE_PRODUCTS,
-                    Permission::MANAGE_DELIVERY,
                     Permission::MANAGE_ANIMALS,
-                    Permission::MANAGE_USERS,
                     Permission::MANAGE_CATEGORIES,
+                    Permission::MANAGE_NOMENCLATURE,
                     Permission::MANAGE_CATALOG,
                     Permission::MANAGE_PAGES,
-                    Permission::MANAGE_PROMOCODES,
                     Permission::MANAGE_FAQ,
                     Permission::MANAGE_FEATURES,
-                    Permission::MANAGE_SETTINGS
-                        => $user->isAdmin(),
+                    Permission::MANAGE_COMMENTS 
+                        => $user->role === UserRole::MODERATOR,
 
-                    Permission::MANAGE_ORDERS,
-                    Permission::MANAGE_COMMENTS
-                        => $user->isStaff(),
+                    // WORKER + ADMIN
+                    Permission::MANAGE_DELIVERY,
+                    Permission::MANAGE_ORDERS 
+                        => $user->role === UserRole::WORKER,
 
+                    // ADMIN only
+                    Permission::MANAGE_USERS,
+                    Permission::MANAGE_SETTINGS,
+                    Permission::MANAGE_PROMOCODES 
+                        => false,
+
+                    default => false,
                 };
             });
         }

@@ -17,6 +17,7 @@ enum Permission: string
     case MANAGE_FAQ = 'manage-faq';
     case MANAGE_FEATURES = 'manage-features';
     case MANAGE_SETTINGS = 'manage-settings';
+    case MANAGE_NOMENCLATURE = 'manage-nomenclature';
 
     public function label(): string
     {
@@ -28,12 +29,13 @@ enum Permission: string
             self::MANAGE_ANIMALS => 'Животные',
             self::MANAGE_USERS => 'Пользователи',
             self::MANAGE_CATEGORIES => 'Категории',
-            self::MANAGE_CATALOG => 'Номенклатура',
+            self::MANAGE_CATALOG => 'Варианты',
             self::MANAGE_PAGES => 'Страницы',
             self::MANAGE_PROMOCODES => 'Промокоды',
             self::MANAGE_FAQ => 'FAQ',
             self::MANAGE_FEATURES => 'Фичи',
             self::MANAGE_SETTINGS => 'Настройки',
+            self::MANAGE_NOMENCLATURE => 'Номенклатура',
         };
     }
 

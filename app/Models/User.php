@@ -62,6 +62,18 @@ class User extends Authenticatable
     public function isAdmin(): bool {
         return $this->role === UserRole::ADMIN;
     }
+    
+    public function isWorker(): bool {
+        return $this->role === UserRole::WORKER;
+    }
+    
+    public function isModerator(): bool {
+        return $this->role === UserRole::MODERATOR;
+    }
+
+    public function isCustomer(): bool {
+        return $this->role === UserRole::CUSTOMER;
+    }
 
     public function isStaff(): bool
     {

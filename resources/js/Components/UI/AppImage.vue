@@ -115,7 +115,7 @@
             @load="onImageLoad"
             loading="lazy"
             v-bind="$attrs"
-            :class="['object-cover', className]"
+            :class="['h-full w-full object-cover', className]"
         />
     </picture>
 
@@ -127,6 +127,6 @@
         @error="onError"
         loading="lazy"
         v-bind="$attrs"
-        :class="['object-cover', className]"
+        :class="['h-full w-full object-cover', className]"
     />
 </template>

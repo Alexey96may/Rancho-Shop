@@ -1,9 +1,9 @@
 <script setup lang="ts">
-    import { onMounted, onUnmounted } from 'vue';
+    import { onMounted, onUnmounted, watch } from 'vue';
 
     import { XMarkIcon } from '@heroicons/vue/24/outline';
 
-    defineProps<{
+    const props = defineProps<{
         show: boolean;
         title?: string;
     }>();
@@ -12,13 +12,27 @@
 
     const close = () => emit('close');
 
-    // Закрытие по нажатию Esc
+    // Блокируем скролл основной страницы при открытой модалке
+    watch(
+        () => props.show,
+        (isVisible) => {
+            if (isVisible) {
+                document.body.style.overflow = 'hidden';
+            } else {
+                document.body.style.overflow = '';
+            }
+        },
+    );
+
     const handleEsc = (e: KeyboardEvent) => {
-        if (e.key === 'Escape') close();
+        if (e.key === 'Escape' && props.show) close();
     };
 
     onMounted(() => window.addEventListener('keydown', handleEsc));
-    onUnmounted(() => window.removeEventListener('keydown', handleEsc));
+    onUnmounted(() => {
+        window.removeEventListener('keydown', handleEsc);
+        document.body.style.overflow = ''; // На всякий случай возвращаем скролл
+    });
 </script>
 
 <template>
@@ -33,33 +47,51 @@
         >
             <div
                 v-if="show"
-                class="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-sm"
+                class="fixed inset-0 z-[60] flex items-start justify-center overflow-y-auto bg-slate-950/80 p-4 backdrop-blur-sm sm:items-center"
                 role="dialog"
                 aria-modal="true"
                 :aria-labelledby="title"
+                @click="close"
             >
                 <div
-                    class="shadow-2xl relative w-full max-w-md rounded-3xl border border-slate-800 bg-slate-900 p-8"
+                    class="shadow-2xl relative my-auto w-full max-w-md rounded-3xl border border-slate-800 bg-slate-900 p-6 sm:p-8"
                     @click.stop
                 >
                     <button
                         @click="close"
-                        class="absolute right-6 top-6 text-slate-500 transition-colors hover:text-white"
+                        class="absolute right-4 top-4 z-10 text-slate-500 transition-colors hover:text-white sm:right-6 sm:top-6"
                         aria-label="Закрыть модальное окно"
                     >
                         <XMarkIcon class="h-6 w-6" />
                     </button>
 
                     <h3
+                        v-if="title"
                         :id="title"
-                        class="mb-6 text-xl font-black uppercase tracking-tight text-white"
+                        class="mb-6 pr-8 text-xl font-black uppercase tracking-tight text-white"
                     >
                         {{ title }}
                     </h3>
 
-                    <slot />
+                    <div class="custom-scrollbar max-h-[70vh] overflow-y-auto">
+                        <slot />
+                    </div>
                 </div>
             </div>
         </transition>
     </teleport>
 </template>
+
+<style scoped>
+    /* Плавный скроллбар для эстетики */
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #1e293b;
+        border-radius: 10px;
+    }
+</style>

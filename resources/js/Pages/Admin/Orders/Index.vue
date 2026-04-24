@@ -1,119 +1,156 @@
 <script setup lang="ts">
-    import { computed, ref } from 'vue';
+    import { reactive, watch } from 'vue';
 
-    import { Head, router } from '@inertiajs/vue3';
+    import { router } from '@inertiajs/vue3';
 
-    import { ListBulletIcon, Squares2X2Icon } from '@heroicons/vue/20/solid';
+    import debounce from 'lodash/debounce';
 
     import AdminOrderCard from '@/Components/Admin/Cards/AdminOrderCard.vue';
-    import BaseModal from '@/Components/UI/BaseModal.vue';
+    import AdminEmptyState from '@/Components/Admin/Shared/AdminEmptyState.vue';
+    import AdminPageHeader from '@/Components/Admin/Shared/AdminPageHeader.vue';
+    import AdminPagination from '@/Components/Admin/Shared/AdminPagination.vue';
+    import AdminSearchInput from '@/Components/Admin/UI/AdminSearchInput.vue';
+    import BaseSelect from '@/Components/UI/BaseSelect.vue';
     import AdminLayout from '@/Layouts/AdminLayout.vue';
+    import type { AdminOrder, Paginated } from '@/types';
+    import { formatMoney } from '@/utils/format';
+
+    defineOptions({ layout: AdminLayout });
 
     const props = defineProps<{
-        orders: { data: any[] };
+        orders: Paginated<AdminOrder>;
+        filters: { search?: string; status?: string };
+        total_completed_revenue?: number;
+        total_pending_revenue?: number;
+        total_count?: number;
     }>();
 
-    const isModalOpen = ref(false);
-    const selectedOrder = ref<any>(null);
+    const form = reactive({
+        search: props.filters.search || '',
+        status: props.filters.status || '',
+    });
 
-    const openOrder = (order: any) => {
-        selectedOrder.value = order;
-        isModalOpen.value = true;
+    watch(
+        () => form,
+        debounce((newForm) => {
+            router.get(route('admin.orders.index'), newForm, {
+                preserveState: true,
+                preserveScroll: true,
+                replace: true,
+            });
+        }, 300),
+        { deep: true },
+    );
+
+    const clearFilters = () => {
+        form.search = '';
+        form.status = '';
     };
 
-    const updateStatus = (newStatus: string) => {
-        if (!selectedOrder.value) return;
+    const openOrder = (orderId: number) => {
+        if (!window) return;
 
-        router.patch(
-            route('admin.orders.update', selectedOrder.value.id),
-            {
-                status: newStatus,
-            },
-            {
-                preserveScroll: true,
-                onSuccess: () => {
-                    isModalOpen.value = false;
-                    // Здесь можно добавить уведомление, если оно у тебя есть в Layout
-                },
-            },
-        );
+        const searchParams = window.location.search;
+
+        router.visit(route('admin.orders.show', orderId), {
+            data: { back: searchParams },
+        });
     };
 </script>
 
 <template>
-    <Head title="Заказы - Админ" />
+    <AdminPageHeader
+        title-normal="Список"
+        title-orange="Заказов"
+        subtitle="Оперативное управление продажами"
+    />
 
-    <AdminLayout>
-        <template #header>Управление заказами</template>
-
-        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            <TransitionGroup name="order-list">
-                <AdminOrderCard
-                    v-for="order in orders.data"
-                    :key="order.id"
-                    :order="order"
-                    @open="openOrder"
-                />
-            </TransitionGroup>
+    <div class="mb-8 space-y-6">
+        <div
+            class="flex flex-col gap-4 sm:flex-row sm:items-center"
+            role="search"
+            aria-label="Фильтрация"
+        >
+            <AdminSearchInput
+                v-model="form.search"
+                placeholder="Поиск по имени или ID"
+                label="Поиск заказов"
+            />
+            <BaseSelect
+                v-model="form.status"
+                :options="[
+                    { name: 'new', label: 'Новый' },
+                    { name: 'confirmed', label: 'Подтвержден' },
+                    { name: 'delivering', label: 'В доставке' },
+                    { name: 'completed', label: 'Завершен' },
+                    { name: 'cancelled', label: 'Отменен' },
+                ]"
+                valueKey="name"
+                labelKey="label"
+                placeholder="Все статусы"
+                variant="admin"
+                class="lg:w-64"
+            />
+            <button
+                v-if="form.search || form.status"
+                @click="clearFilters"
+                class="text-xs font-bold text-orange-500 hover:text-orange-400"
+            >
+                Сбросить
+            </button>
         </div>
 
-        <BaseModal
-            :show="isModalOpen"
-            :title="selectedOrder ? `Заказ #${selectedOrder.id}` : ''"
-            @close="isModalOpen = false"
-        >
-            <div v-if="selectedOrder" class="space-y-6">
-                <section>
-                    <h4
-                        class="mb-4 text-center text-[10px] font-black uppercase tracking-widest text-slate-500"
-                    >
-                        Товары в заказе
-                    </h4>
-                    <div class="custom-scrollbar max-h-60 space-y-2 overflow-y-auto pr-2">
-                        <div
-                            v-for="item in selectedOrder.items"
-                            :key="item.id"
-                            class="flex items-center justify-between rounded-2xl border border-slate-800 bg-slate-950 p-3"
-                        >
-                            <div class="flex flex-col">
-                                <span class="text-xs font-bold text-white">{{
-                                    item.product_name
-                                }}</span>
-                                <span class="text-[10px] text-slate-500"
-                                    >{{ item.quantity }} шт. x {{ item.price / 100 }} ₽</span
-                                >
-                            </div>
-                            <span class="text-sm font-black text-orange-500"
-                                >{{ (item.price * item.quantity) / 100 }} ₽</span
-                            >
-                        </div>
-                    </div>
-                </section>
-
-                <div class="border-t border-slate-800 pt-4">
-                    <p
-                        class="mb-3 text-center text-[10px] font-black uppercase tracking-widest text-slate-600"
-                    >
-                        Изменить статус
-                    </p>
-                    <div class="grid grid-cols-2 gap-2" role="group">
-                        <button
-                            @click="updateStatus('processing')"
-                            class="rounded-xl bg-orange-600/10 py-3 text-[10px] font-black uppercase tracking-widest text-orange-500 transition-all hover:bg-orange-600 hover:text-white"
-                        >
-                            В работу
-                        </button>
-                        <button
-                            @click="updateStatus('completed')"
-                            class="rounded-xl bg-green-600/10 py-3 text-[10px] font-black uppercase tracking-widest text-green-500 transition-all hover:bg-green-600 hover:text-white"
-                        >
-                            Завершить
-                        </button>
-                    </div>
-                </div>
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div class="rounded-3xl border border-slate-800 bg-slate-900/50 p-5">
+                <p class="text-[10px] font-black uppercase tracking-widest text-green-500">
+                    Выручка (завершено)
+                </p>
+                <p class="mt-2 text-2xl font-black text-white">
+                    {{ formatMoney(total_completed_revenue || 0) }}
+                </p>
             </div>
-        </BaseModal>
-    </AdminLayout>
+            <div class="rounded-3xl border border-slate-800 bg-slate-900/50 p-5">
+                <p class="text-[10px] font-black uppercase tracking-widest text-orange-500">
+                    В обработке
+                </p>
+                <p class="mt-2 text-2xl font-black text-white">
+                    {{ formatMoney(total_pending_revenue || 0) }}
+                </p>
+            </div>
+            <div class="rounded-3xl border border-slate-800 bg-slate-900/50 p-5">
+                <p class="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                    Заказов всего
+                </p>
+                <p class="mt-2 text-2xl font-black text-white">{{ total_count || 0 }}</p>
+            </div>
+        </div>
+    </div>
+
+    <main aria-label="Список заказов">
+        <TransitionGroup
+            v-if="orders.data.length"
+            tag="div"
+            name="order-list"
+            class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+        >
+            <AdminOrderCard
+                v-for="order in orders.data"
+                :key="order.id"
+                :order="order"
+                @click="openOrder(order.id)"
+                class="cursor-pointer"
+            />
+        </TransitionGroup>
+        <Transition v-else name="fade-slide" mode="out-in">
+            <AdminEmptyState
+                title="Заказы не найдены"
+                @action="clearFilters"
+                :show-action="!!(form.search || form.status)"
+            />
+        </Transition>
+
+        <AdminPagination :links="orders.meta.links" />
+    </main>
 </template>
 
 <style scoped>
@@ -124,9 +161,26 @@
     .order-list-enter-from,
     .order-list-leave-to {
         opacity: 0;
-        transform: scale(0.9);
+        transform: translateY(20px);
     }
-
+    .order-list-move {
+        transition: transform 0.5s ease;
+    }
+    .order-list-leave-active {
+        position: absolute;
+    }
+    .fade-slide-enter-active,
+    .fade-slide-leave-active {
+        transition: all 0.4s ease-out;
+    }
+    .fade-slide-enter-from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    .fade-slide-leave-to {
+        opacity: 0;
+        transform: scale(1.05);
+    }
     .custom-scrollbar::-webkit-scrollbar {
         width: 4px;
     }

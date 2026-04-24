@@ -17,7 +17,7 @@ class RoleMiddleware
     public function handle(Request $request, Closure $next, ...$roles): Response
     {
         $user = $request->user();
-        //Route::middleware(['role:admin,moderator'])->group(...)
+        
         if (!$user) {
             return redirect()->route('login');
         }

@@ -23,9 +23,10 @@ return new class() extends Migration
             $table->integer('old_unit_price')->nullable();
             $table->integer('quantity'); // Сколько штук/литров взял
 
-            // snapshot unit 
+            // snapshot unit
             $table->string('unit_name')->nullable();
             $table->string('unit_code')->nullable();
+            $table->string('unit_short')->nullable();
 
             $table->timestamps();
         });

@@ -60,6 +60,7 @@ class HandleInertiaRequests extends Middleware
                 'manageFaq' => Gate::allows('manage-faq'),
                 'manageFeatures' => Gate::allows('manage-features'),
                 'manageSettings' => Gate::allows('manage-settings'),
+                'manageNomenclature' => Gate::allows('manage-nomenclature'),
             ],
 
             'flash' => [

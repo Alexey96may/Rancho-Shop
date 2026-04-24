@@ -28,6 +28,7 @@ use App\Http\Controllers\Admin\FaqController;
 use App\Http\Controllers\Admin\FeatureController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\DashboardController as UserDashboardController;
+use App\Enums\Permission;
 
 Route::get('/', [LandingController::class, 'index'])->name('home');
 
@@ -106,55 +107,46 @@ Route::prefix('admin')
         // Dashboard
         Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
-        // Products
-        Route::resource('products', AdminProductController::class);
+        // (Admin, Moderator)
+        Route::middleware('can:' . Permission::MANAGE_PRODUCTS->value)->group(function () {
+            Route::resource('products', AdminProductController::class);
+            Route::resource('categories', CategoryController::class);
 
-        // Orders
-        Route::resource('orders', AdminOrderController::class);
+            Route::resource('catalog', CatalogController::class);
+            Route::patch('catalog/{id}/quick', [CatalogController::class, 'quickUpdate'])->name('catalog.quick');
 
-        // Users
-        Route::resource('users', UserController::class);
+            Route::resource('animals', AdminAnimalController::class);
+            Route::delete('animals/{animal}/media/{media}', [AnimalController::class, 'deleteMedia'])
+                ->name('animals.media.destroy');
 
-        // Categories
-        Route::resource('categories', CategoryController::class);
+            Route::resource('pages', AdminPageController::class);
+            Route::resource('faq', FaqController::class);
 
-        // Comments
-        Route::resource('comments', AdminCommentController::class);
+            Route::resource('features', FeatureController::class);
+            Route::patch('features/{feature}/toggle', [FeatureController::class, 'toggle'])
+                ->name('features.toggle');
 
-        // Animals
-        Route::resource('animals', AdminAnimalController::class);
-        Route::delete('animals/{animal}/media/{media}', [AnimalController::class, 'deleteMedia'])
-            ->name('animals.media.destroy');
+            Route::resource('comments', AdminCommentController::class);
+        });
 
-        // Pages (CMS)
-        Route::resource('pages', AdminPageController::class);
+        // (Admin, Worker)
+        Route::middleware('can:' . Permission::MANAGE_ORDERS->value)->group(function () {
+            Route::resource('orders', AdminOrderController::class);
+            Route::resource('units', UnitController::class)->except(['show', 'create']);
+            Route::patch('units/reorder', [UnitController::class, 'reorder'])->name('units.reorder');
+        });
 
-        // Promocodes
-        Route::resource('promocodes', PromocodeController::class);
-
-        // FAQ
-        Route::resource('faq', FaqController::class);
-
-        // Features
-        Route::resource('features', FeatureController::class);
-
-        Route::patch('features/{feature}/toggle', [FeatureController::class, 'toggle'])
-            ->name('features.toggle');
-
-        // Catalog (SKU / variants)
-        Route::resource('catalog', CatalogController::class);
-        Route::patch('catalog/{id}/quick', [CatalogController::class, 'quickUpdate'])->name('catalog.quick');
-
-        // Units
-        Route::patch('units/reorder', [UnitController::class, 'reorder'])->name('units.reorder');
-        Route::resource('units', UnitController::class)->except(['show', 'create']);
-
-        // Settings
-        Route::prefix('settings')->name('settings.')->group(function () {
-        Route::get('/', [SettingController::class, 'index'])->name('index');
-        Route::post('/bulk', [SettingController::class, 'bulkUpdate'])->name('bulk');
-        Route::post('/clear-cache', [SettingController::class, 'clearCache'])->name('clear-cache');
-    });
+        // (Admin)
+        Route::middleware('can:' . Permission::MANAGE_USERS->value)->group(function () {
+            Route::resource('users', UserController::class);
+            Route::resource('promocodes', PromocodeController::class);
+            
+            Route::prefix('settings')->name('settings.')->group(function () {
+                Route::get('/', [SettingController::class, 'index'])->name('index');
+                Route::post('/bulk', [SettingController::class, 'bulkUpdate'])->name('bulk');
+                Route::post('/clear-cache', [SettingController::class, 'clearCache'])->name('clear-cache');
+            });
+        });
 });
 
 Route::get('/{slug}', [PageController::class, 'show'])->name('pages.show');

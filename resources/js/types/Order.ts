@@ -1,76 +1,60 @@
-import { BaseUnit } from './';
+import { BaseUnit, DeliveryDraft, Media, PromoCode, User } from './';
 
 export type OrderStatus = 'new' | 'confirmed' | 'delivering' | 'completed' | 'cancelled';
+export type OrderStatusLabel = 'Новый' | 'Подтвержден' | 'Доставка' | 'Завершен' | 'Отменен';
 
 export interface Order {
     id: number;
+    // Customer
     customer_name: string;
     customer_phone: string;
-    /**
-     * Delivery snapshot (can be null if pickup)
-     */
+    customer_comment: string | null;
+    // Delivery
+    is_pickup: boolean;
     delivery_address: string | null;
-
-    delivery_lat?: number | null; //todo
-    delivery_lng?: number | null; //todo
-
-    /**
-     * Pickup flag
-     */
-    is_pickup?: boolean;
-
-    /**
-     * Delivery validation snapshot (zone check at order time)
-     */
-    delivery_validated?: boolean;
-
-    /**
-     * Delivery metadata snapshot (zone, distance, rules, etc.)
-     */
-    delivery_meta?: Record<string, any> | null;
-
+    delivery_lat: number | null;
+    delivery_lng: number | null;
+    delivery_validated: boolean;
+    // Financial
+    discount_total: number;
     total_price: number;
     delivery_price: number;
-    total_items: number;
 
     status: OrderStatus;
+    status_label: OrderStatusLabel;
+
+    created_at: string;
+    updated_at: string;
 
     // Items relation
     items?: OrderItem[];
-
-    promo_code_id?: string | null;
-
-    /**
-     * Discount snapshot (stored in smallest currency unit)
-     */
-    discount_total: number;
-
-    created_at: string;
+    user?: User | null;
+    promo_code?: PromoCode | null;
 }
 
 export interface AdminOrder extends Order {
-    customer_phone: string;
-    customer_comment: string | null;
     admin_note: string | null;
-
-    updated_at: string;
+    delivery_meta: DeliveryDraft | null;
 }
 
 export interface OrderItem {
     id: number;
     order_id: number;
+    product_id: number;
     product_variant_id: number;
     product_name: string;
+    product_slug: string | null;
 
     unit_price: number;
     old_unit_price: number | null;
 
     quantity: number;
 
-    unit?: BaseUnit;
+    images: Media[];
+
+    unit: BaseUnit;
+    subtotal: number;
 
     created_at: string;
     updated_at: string;
-
-    subtotal?: number;
 }

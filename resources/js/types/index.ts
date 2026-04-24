@@ -97,6 +97,7 @@ export interface SharedData extends PageProps {
         manageFaq: boolean;
         manageFeatures: boolean;
         manageSettings: boolean;
+        manageNomenclature: boolean;
     };
     flash: {
         success: string | null;

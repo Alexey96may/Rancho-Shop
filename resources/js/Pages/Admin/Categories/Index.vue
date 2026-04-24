@@ -1,13 +1,10 @@
 <script setup lang="ts">
     import { ref, watch } from 'vue';
 
-    import { Head, router, useForm } from '@inertiajs/vue3';
-
-    import { InboxIcon } from '@heroicons/vue/24/outline';
-
-    // Иконка для пустого состояния
+    import { router, useForm } from '@inertiajs/vue3';
 
     import CategoryCard from '@/Components/Admin/Cards/CategoryCard.vue';
+    import AdminEmptyState from '@/Components/Admin/Shared/AdminEmptyState.vue';
     import AdminPageHeader from '@/Components/Admin/Shared/AdminPageHeader.vue';
     import AdminPagination from '@/Components/Admin/Shared/AdminPagination.vue';
     import AdminNumberInput from '@/Components/Admin/UI/AdminNumberInput.vue';
@@ -174,26 +171,11 @@
             </TransitionGroup>
 
             <Transition name="fade-slide">
-                <div
-                    v-if="categories.data.length === 0"
-                    class="flex flex-col items-center justify-center rounded-3xl border border-dashed border-slate-800 bg-slate-900/20 py-20 text-center"
-                    role="alert"
-                    aria-live="polite"
-                >
-                    <div class="shadow-inner rounded-full bg-slate-900 p-6 text-slate-700">
-                        <InboxIcon class="h-12 w-12" aria-hidden="true" />
-                    </div>
-                    <h3 class="mt-6 text-xl font-bold text-white">Категории не найдены</h3>
-                    <p class="mt-2 text-sm text-slate-500">
-                        Попробуйте изменить параметры поиска или создать новую категорию
-                    </p>
-                    <button
-                        @click="clearFilters()"
-                        class="mt-6 text-xs font-black uppercase tracking-widest text-orange-500 hover:text-orange-400"
-                    >
-                        Сбросить фильтры
-                    </button>
-                </div>
+                <AdminEmptyState
+                    title="Категории не найдены"
+                    @action="clearFilters"
+                    :show-action="true"
+                />
             </Transition>
         </div>
 

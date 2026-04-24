@@ -73,6 +73,7 @@ class OrderSeeder extends Seeder
             'old_unit_price' => $variant->old_price,
             'unit_name' => $variant->unit?->name,
             'unit_code' => $variant->unit?->code,
+            'unit_short' => $variant->unit?->short,
             'quantity' => $quantity,
         ]);
     }

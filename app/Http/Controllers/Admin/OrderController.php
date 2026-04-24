@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Http\Resources\OrderResource;
+use App\Http\Resources\Admin\OrderResource;
 use App\Models\Order;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -15,11 +15,19 @@ class OrderController extends Controller
      */
     public function index(Request $request)
     {
+        $totalCompleted = Order::where('status', 'completed')->sum('total_price');
+        $totalPending = Order::whereIn('status', ['confirmed', 'delivering'])
+        ->sum('total_price');
+
         $orders = Order::query()
-            ->with(['user', 'items.product.media'])
+            ->with(['user', 'promoCode', 'items.product.media'])
             ->when($request->search, function ($query, $search) {
-                $query->where('customer_name', 'like', "%{$search}%")
-                      ->orWhere('id', 'like', "%{$search}%");
+                $search = mb_strtolower($search, 'UTF-8');
+                
+                $query->where(function($q) use ($search) {
+                    $q->whereRaw('LOWER(customer_name) LIKE ?', ["%{$search}%"])
+                    ->orWhere('id', 'LIKE', "%{$search}%");
+                });
             })
             ->when($request->status, function ($query, $status) {
                 $query->where('status', $status);
@@ -31,43 +39,24 @@ class OrderController extends Controller
         return Inertia::render('Admin/Orders/Index', [
             'orders' => OrderResource::collection($orders),
             'filters' => $request->only(['search', 'status']),
+            'total_count' => Order::count(),
+            'total_completed_revenue' => (int) $totalCompleted,
+            'total_pending_revenue' => (int) $totalPending,
+            'seo' => $this->seo('Панель управления: Заказы', 'Просмотр заказов',  robots: 'noindex, nofollow')
         ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    public function show(Request $request, Order $order)
     {
-        //
-    }
+        $order->load(['user', 'promoCode', 'items.product.media']);
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(Order $order)
-    {
-        $order->load(['user', 'items.product.variants.unit', 'promoCode']);
-        
         return Inertia::render('Admin/Orders/Show', [
-            'order' => OrderResource::make($order)
+            'order' => new OrderResource($order),
+            'seo' => $this->seo("Заказ #{$order->id}", "Просмотр деталей заказа", robots: 'noindex, nofollow'),
+            'backUrl' => $request->query('back') 
+                ? route('admin.orders.index') . $request->query('back')
+                : route('admin.orders.index'),
         ]);
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
     }
 
     /**
@@ -76,22 +65,32 @@ class OrderController extends Controller
     public function update(Request $request, Order $order)
     {
         $validated = $request->validate([
-            'status' => 'required|in:new,processing,completed,cancelled',
-            'admin_note' => 'nullable|string|max:1000',
+            'status' => 'required|in:new,confirmed,delivering,completed,cancelled',
+            'admin_note' => 'nullable|string|max:2000',
         ]);
+
+        if ($request->filled('admin_note') && $request->admin_note !== $order->admin_note) {
+            if (!$request->user()->isAdmin()) {
+                abort(403, 'Только администратор может редактировать заметки.');
+            }
+        }
 
         $order->update($validated);
 
-        return back()->with('success', "Статус заказа #{$order->id} обновлен.");
+        return back()->with('success', "Данные заказа #{$order->id} обновлен.");
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Order $order)
+    public function destroy(Request $request, Order $order)
     {
+        if (!$request->user()->isAdmin()) {
+            abort(403, 'У вас недостаточно прав для удаления заказа.');
+        }
+
         $order->delete();
 
-        return back()->with('warning', "Заказ #{$order->id} удален из базы.");
+        return redirect()->route('admin.orders.index')->with('warning', "Заказ #{$order->id} удалён из базы.");
     }
 }

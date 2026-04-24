@@ -9,8 +9,6 @@
         ChevronLeftIcon,
         GlobeAltIcon,
         IdentificationIcon,
-        InboxIcon,
-        // Для пустого состояния
         PhotoIcon,
         PlusIcon,
     } from '@heroicons/vue/24/outline';
@@ -19,6 +17,7 @@
     import FeaturesSection from '@/Components/Admin/Sections/FeaturesSection.vue';
     import MediaSection from '@/Components/Admin/Sections/MediaSection.vue';
     import SEOSection from '@/Components/Admin/Sections/SEOSection.vue';
+    import AdminEmptyState from '@/Components/Admin/Shared/AdminEmptyState.vue';
     import AdminPageHeader from '@/Components/Admin/Shared/AdminPageHeader.vue';
     import AdminPagination from '@/Components/Admin/Shared/AdminPagination.vue';
     import AdminSearchInput from '@/Components/Admin/UI/AdminSearchInput.vue';
@@ -96,7 +95,6 @@
                 preserveScroll: true,
             },
         );
-        notify('Фильтры очищены', 'info');
     };
 
     const openForm = (animal: AdminAnimal | null = null) => {
@@ -246,25 +244,11 @@
                 </TransitionGroup>
 
                 <Transition name="fade-slide">
-                    <div
-                        v-if="animals.data.length === 0"
-                        class="flex flex-col items-center justify-center rounded-[3rem] border border-dashed border-slate-800 bg-slate-900/10 py-24 text-center"
-                        role="alert"
-                    >
-                        <div class="shadow-inner rounded-full bg-slate-900 p-6 text-slate-700">
-                            <InboxIcon class="h-12 w-12" />
-                        </div>
-                        <h3 class="mt-6 text-xl font-bold text-white">Животные не найдены</h3>
-                        <p class="mt-2 text-sm text-slate-500">
-                            По вашему запросу ничего не нашлось в реестре
-                        </p>
-                        <button
-                            @click="clearFilters"
-                            class="hover:orange-400 mt-8 text-xs font-black uppercase tracking-widest text-orange-500"
-                        >
-                            Сбросить фильтры
-                        </button>
-                    </div>
+                    <AdminEmptyState
+                        title="Животные не найдены"
+                        @action="clearFilters"
+                        :show-action="true"
+                    />
                 </Transition>
             </div>
 

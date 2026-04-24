@@ -44,7 +44,6 @@ return new class() extends Migration
 
             $table->text('admin_note')->nullable(); // Admin's comment on the order
             $table->timestamps();
-
         });
     }
 

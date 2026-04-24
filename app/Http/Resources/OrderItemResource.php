@@ -26,9 +26,17 @@ class OrderItemResource extends JsonResource
 
             'quantity' => $this->quantity,
 
+            'product_slug' => $this->product?->slug,
+            'images' => $this->whenLoaded('product', function() {
+                return $this->product->relationLoaded('media') && $this->product->media->isNotEmpty()
+                    ? MediaResource::collection($this->product->media)
+                    : [MediaResource::fallback($this->product)];
+            }),
+
             'unit' => [
                 'name' => $this->unit_name,
                 'code' => $this->unit_code,
+                'short' => $this->unit_short,
             ],
 
             'subtotal' => $this->getSubtotalAttribute(),

@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Enums\OrderStatus;
 
 class Order extends Model
 {
@@ -17,6 +18,7 @@ class Order extends Model
 
     protected $casts = [
         'delivery_meta' => 'array',
+        'status' => OrderStatus::class,
     ];
 
     /**
