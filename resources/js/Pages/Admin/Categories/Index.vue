@@ -70,9 +70,12 @@
     };
 
     const performSearch = (searchValue: string, typeValue: string) => {
+        const searchSanitize = searchValue.toLocaleLowerCase().trim();
+        const typeSanitize = typeValue.toLocaleLowerCase().trim();
+
         router.get(
             route('admin.categories.index'),
-            { search: searchValue, type: typeValue || typeFilter.value },
+            { search: searchSanitize, type: typeSanitize || typeFilter.value },
             {
                 preserveState: true,
                 replace: true,
@@ -84,8 +87,9 @@
     watch(typeFilter, (newVal) => {
         performSearch(search.value, newVal);
     });
+
     watch(search, (newVal) => {
-        performSearch(newVal, newVal);
+        performSearch(newVal, typeFilter.value);
     });
 
     const submit = () => {

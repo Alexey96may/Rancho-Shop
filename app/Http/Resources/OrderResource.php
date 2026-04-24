@@ -41,7 +41,7 @@ class OrderResource extends JsonResource
             'created_at' => $this->created_at->format('d.m.Y H:i'),
             'total_items' => $this->items->sum('quantity'),
 
-            // 👇 связь
+            // relations
             'items' => OrderItemResource::collection(
                 $this->whenLoaded('items')
             ),

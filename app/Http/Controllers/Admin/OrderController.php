@@ -16,7 +16,7 @@ class OrderController extends Controller
     public function index(Request $request)
     {
         $orders = Order::query()
-            ->with(['user', 'items.product.media']) // Подгружаем всё нужное для карточек
+            ->with(['user', 'items.product.media'])
             ->when($request->search, function ($query, $search) {
                 $query->where('customer_name', 'like', "%{$search}%")
                       ->orWhere('id', 'like', "%{$search}%");
@@ -28,7 +28,7 @@ class OrderController extends Controller
             ->paginate(setting('orders_per_page', 8))
             ->withQueryString();
 
-            return Inertia::render('Admin/Orders/Index', [
+        return Inertia::render('Admin/Orders/Index', [
             'orders' => OrderResource::collection($orders),
             'filters' => $request->only(['search', 'status']),
         ]);
@@ -82,7 +82,6 @@ class OrderController extends Controller
 
         $order->update($validated);
 
-        // Возвращаемся назад с уведомлением
         return back()->with('success', "Статус заказа #{$order->id} обновлен.");
     }
 

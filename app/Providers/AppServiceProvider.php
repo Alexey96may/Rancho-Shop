@@ -37,11 +37,9 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('view-admin-panel', fn ($user) => $user->isStaff());
 
         foreach (Permission::cases() as $permission) {
-
             Gate::define($permission->value, function ($user) use ($permission) {
 
                 return match ($permission) {
-
                     Permission::MANAGE_PRODUCTS,
                     Permission::MANAGE_DELIVERY,
                     Permission::MANAGE_ANIMALS,

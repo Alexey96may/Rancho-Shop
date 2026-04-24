@@ -18,7 +18,7 @@ class CategoryController extends Controller
     {
         $categories = Category::query()
             ->when($request->search, function ($query, $search) {
-                $query->where('name', 'like', "%{$search}%");
+                $query->whereRaw('LOWER(name) LIKE ?', ["%{$search}%"]);
             })
             ->when($request->type, function ($query, $type) {
                 $query->where('type', $type);

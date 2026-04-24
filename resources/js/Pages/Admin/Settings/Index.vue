@@ -13,7 +13,7 @@
         TruckIcon,
     } from '@heroicons/vue/24/outline';
 
-    import DeliveryZoneManager from '@/Components/Admin/Share/DeliveryZoneManager.vue';
+    import DeliveryZoneManager from '@/Components/Admin/Shared/DeliveryZoneManager.vue';
     import AdminLayout from '@/Layouts/AdminLayout.vue';
 
     const props = defineProps<{
