@@ -1,4 +1,6 @@
 type CommentType = 'animal' | 'product' | 'page'; // keys from MorphMap
+type CommentStatusLabel = 'Новый' | 'Одобрен' | 'Скрыт';
+type CommentStatus = 'pending' | 'approved' | 'hidden';
 
 export interface Comment {
     id: number;
@@ -7,6 +9,8 @@ export interface Comment {
     rating: number | null; // From 1 to 5
 
     avatar: string | null;
+    status: CommentStatus;
+    status_label: CommentStatusLabel;
 
     commentable_id: number | null;
     commentable_type: CommentType;
@@ -15,8 +19,8 @@ export interface Comment {
 }
 
 export interface AdminComment extends Comment {
-    is_published: boolean;
     updated_at: string;
+    deleted_at: string | null;
 
     commentable?: {
         name: string;

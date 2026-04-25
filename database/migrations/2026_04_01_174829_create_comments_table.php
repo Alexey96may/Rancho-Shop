@@ -18,10 +18,11 @@ return new class() extends Migration
 
             $table->text('content');
             $table->unsignedTinyInteger('rating')->nullable()->default(5);
-            $table->boolean('is_published')->default(false);
+            $table->enum('status', ['pending', 'approved', 'hidden'])->default('pending');
 
             $table->nullableMorphs('commentable');
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

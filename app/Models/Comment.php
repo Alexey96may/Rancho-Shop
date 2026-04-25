@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use App\Enums\CommentStatus;
 
 class Comment extends Model
 {
@@ -14,14 +15,14 @@ class Comment extends Model
         'guest_name',
         'content',
         'rating',
-        'is_published',
+        'status',
         'commentable_id',
         'commentable_type',
     ];
 
     protected $casts = [
         'user_id' => 'integer',
-        'is_published' => 'boolean',
+        'status' => CommentStatus::class,
         'rating' => 'integer',
     ];
 
@@ -47,6 +48,6 @@ class Comment extends Model
      */
     public function scopePublished(Builder $query): void
     {
-        $query->where('is_published', true);
+        $query->where('status', CommentStatus::APPROVED);
     }
 }

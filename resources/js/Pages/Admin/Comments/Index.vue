@@ -1,7 +1,7 @@
 <script setup lang="ts">
-    import { ref } from 'vue';
+    import { computed, ref } from 'vue';
 
-    import { Head, router } from '@inertiajs/vue3';
+    import { router } from '@inertiajs/vue3';
 
     import { ChatBubbleLeftRightIcon } from '@heroicons/vue/24/outline';
 
@@ -12,6 +12,7 @@
     const props = defineProps<{
         comments: Paginated<AdminComment>;
         filters: { type: string; status: string };
+        statuses: Array<{ value: string; label: string }>;
     }>();
 
     const currentType = ref(props.filters.type || 'all');
@@ -24,11 +25,10 @@
         { id: 'page', label: 'Страницы' },
     ];
 
-    const statusTabs = [
-        { id: 'all', label: 'Любой статус' },
-        { id: 'published', label: 'Опубликовано' },
-        { id: 'draft', label: 'Черновики' },
-    ];
+    const statusTabs = computed(() => [
+        { id: 'all', label: 'Все' },
+        ...props.statuses.map((s) => ({ id: s.value, label: s.label })),
+    ]);
 
     const applyFilters = () => {
         router.get(
@@ -96,7 +96,11 @@
                     <div
                         v-if="tab.id !== 'all'"
                         class="h-1.5 w-1.5 rounded-full"
-                        :class="tab.id === 'published' ? 'bg-green-500' : 'bg-orange-500'"
+                        :class="{
+                            'bg-orange-500': tab.id === 'pending',
+                            'bg-green-500': tab.id === 'approved',
+                            'bg-slate-500': tab.id === 'hidden',
+                        }"
                     ></div>
                     {{ tab.label }}
                 </button>

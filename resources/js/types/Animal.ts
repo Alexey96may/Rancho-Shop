@@ -33,6 +33,7 @@ export interface Animal {
 export interface AdminAnimal extends Animal, Timestamps {
     parent_id: number | null;
     category_id: number;
+    deleted_at: string;
     is_active: boolean;
     media: Media[];
 }

@@ -18,7 +18,6 @@
         comment: AdminComment;
     }>();
 
-    // Маппинг типов для бейджей (используем morphMap ключи)
     const typeLabels: Record<string, { label: string; color: string }> = {
         product: {
             label: 'Продукт',
@@ -36,13 +35,10 @@
             },
     );
 
-    // Методы управления
-    const toggleStatus = () => {
+    const updateStatus = (newStatus: 'approved' | 'hidden') => {
         router.patch(
             route('admin.comments.update', props.comment.id),
-            {
-                is_published: !props.comment.is_published,
-            },
+            { status: newStatus },
             { preserveScroll: true },
         );
     };
@@ -57,31 +53,30 @@
 </script>
 
 <template>
-    <div
+    <article
+        :aria-labelledby="`comment-author-${comment.id}`"
         class="group relative flex flex-col gap-4 rounded-3xl border p-6 transition-all duration-300"
         :class="[
-            comment.is_published
+            comment.status === 'approved'
                 ? 'shadow-lg border-slate-800 bg-slate-900 shadow-black/20'
                 : 'shadow-inner border-orange-500/30 bg-orange-500/5',
         ]"
     >
         <div
-            v-if="!comment.is_published"
-            class="absolute -right-2 -top-2 flex h-6 animate-pulse items-center rounded-full bg-orange-600 px-3 text-[10px] font-black uppercase tracking-tighter text-white"
+            v-if="comment.status !== 'approved'"
+            role="status"
+            aria-live="polite"
+            class="shadow-lg absolute -right-2 -top-2 z-20 flex h-6 items-center rounded-full px-3 text-[10px] font-black uppercase tracking-tighter text-white"
+            :class="comment.status === 'pending' ? 'animate-pulse bg-orange-600' : 'bg-slate-700'"
         >
-            Новый
-        </div>
-        <div
-            v-else
-            class="absolute -right-2 -top-2 flex h-6 animate-pulse items-center rounded-full bg-orange-600 px-3 text-[10px] font-black uppercase tracking-tighter text-white"
-        >
-            Черновик
+            {{ comment.status_label }}
         </div>
 
-        <div class="flex items-start justify-between">
+        <header class="flex items-start justify-between">
             <div class="flex items-center gap-3">
                 <div
                     class="h-12 w-12 shrink-0 overflow-hidden rounded-2xl bg-slate-800 ring-2 ring-slate-800 transition-transform group-hover:scale-110"
+                    aria-hidden="true"
                 >
                     <img
                         v-if="comment.avatar"
@@ -91,38 +86,57 @@
                     />
                     <div
                         v-else
-                        class="flex h-full w-full items-center justify-center bg-gradient-to-br from-slate-700 to-slate-800 text-lg font-black text-slate-500"
+                        class="flex h-full w-full items-center justify-center bg-gradient-to-br from-slate-700 to-slate-800 text-lg font-black uppercase text-slate-500"
                     >
                         {{ comment.user_name[0] }}
                     </div>
                 </div>
                 <div>
-                    <h3 class="text-sm font-black leading-tight text-white">
+                    <h3
+                        :id="`comment-author-${comment.id}`"
+                        class="text-sm font-black leading-tight text-white"
+                    >
                         {{ comment.user_name }}
                     </h3>
-                    <time class="text-[10px] font-medium text-slate-500">{{
-                        comment.created_at
-                    }}</time>
+                    <time
+                        :datetime="comment.created_at"
+                        class="text-[10px] font-medium text-slate-500"
+                    >
+                        {{ comment.created_at }}
+                    </time>
                 </div>
             </div>
 
-            <div class="flex gap-0.5" aria-label="Рейтинг">
+            <div
+                class="flex gap-0.5"
+                role="img"
+                :aria-label="`Рейтинг: ${comment.rating} из 5 звезд`"
+            >
                 <template v-for="i in 5" :key="i">
-                    <StarIcon v-if="i <= (comment.rating || 0)" class="h-4 w-4 text-orange-500" />
-                    <StarOutline v-else class="shadow-sm h-4 w-4 text-slate-700" />
+                    <StarIcon
+                        v-if="i <= (comment.rating || 0)"
+                        class="h-4 w-4 text-orange-500"
+                        aria-hidden="true"
+                    />
+                    <StarOutline v-else class="h-4 w-4 text-slate-700" aria-hidden="true" />
                 </template>
             </div>
-        </div>
+        </header>
 
-        <div class="relative">
-            <span class="absolute -left-2 -top-2 select-none text-4xl text-slate-800">“</span>
+        <blockquote class="relative m-0">
+            <span
+                class="absolute -left-2 -top-2 select-none text-4xl text-slate-800"
+                aria-hidden="true"
+                >“</span
+            >
             <p class="relative z-10 text-sm italic leading-relaxed text-slate-300">
                 {{ comment.content }}
             </p>
-        </div>
+        </blockquote>
 
-        <div
+        <section
             class="mt-2 flex items-center justify-between rounded-2xl border border-white/5 bg-black/20 p-3"
+            aria-label="Связанный контент"
         >
             <div class="flex flex-col gap-1">
                 <span class="text-[9px] font-black uppercase tracking-widest text-slate-600"
@@ -147,35 +161,49 @@
                 :href="`/product/${comment.commentable.slug}`"
                 target="_blank"
                 class="rounded-xl p-2 text-slate-500 transition-all hover:bg-slate-800 hover:text-white"
+                :aria-label="`Перейти к ${currentType.label}: ${comment.commentable.name}`"
             >
-                <ArrowTopRightOnSquareIcon class="h-4 w-4" />
+                <ArrowTopRightOnSquareIcon class="h-4 w-4" aria-hidden="true" />
             </a>
-        </div>
+        </section>
 
-        <div class="mt-auto flex items-center gap-2 border-t border-slate-800 pt-4">
+        <footer class="mt-auto flex items-center gap-2 border-t border-slate-800 pt-4">
             <button
-                @click="toggleStatus"
-                class="flex flex-1 items-center justify-center gap-2 rounded-2xl py-3 text-xs font-black uppercase tracking-widest transition-all active:scale-95"
-                :class="
-                    comment.is_published
-                        ? 'bg-slate-800 text-slate-400 hover:bg-orange-500/10 hover:text-orange-500'
-                        : 'shadow-lg bg-orange-600 text-white shadow-orange-900/40 hover:bg-orange-500'
+                v-if="comment.status !== 'approved'"
+                @click="updateStatus('approved')"
+                class="shadow-lg flex flex-1 items-center justify-center gap-2 rounded-2xl bg-orange-600 py-3 text-xs font-black uppercase tracking-widest text-white shadow-orange-900/40 transition-all hover:bg-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500 active:scale-95"
+                aria-label="Одобрить комментарий и опубликовать его"
+            >
+                <HandThumbUpIcon class="h-4 w-4" aria-hidden="true" />
+                <span>Одобрить</span>
+            </button>
+
+            <button
+                v-if="comment.status !== 'hidden'"
+                @click="updateStatus('hidden')"
+                class="flex items-center justify-center gap-2 rounded-2xl py-3 text-xs font-black uppercase tracking-widest transition-all focus:outline-none focus:ring-2 focus:ring-slate-700 active:scale-95"
+                :class="[
+                    comment.status === 'approved'
+                        ? 'flex-1 bg-slate-800 text-slate-400 hover:bg-red-500/10 hover:text-red-500'
+                        : 'bg-slate-800 px-4 text-slate-500',
+                ]"
+                :aria-label="
+                    comment.status === 'approved'
+                        ? 'Снять комментарий с публикации'
+                        : 'Скрыть комментарий'
                 "
             >
-                <component
-                    :is="comment.is_published ? HandThumbDownIcon : HandThumbUpIcon"
-                    class="h-4 w-4"
-                />
-                {{ comment.is_published ? 'Снять' : 'Одобрить' }}
+                <HandThumbDownIcon class="h-4 w-4" aria-hidden="true" />
+                <span v-if="comment.status === 'approved'">Снять</span>
             </button>
 
             <button
                 @click="deleteComment"
-                class="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-800 text-slate-500 transition-all hover:bg-red-500/20 hover:text-red-500 active:scale-90"
-                aria-label="Удалить отзыв"
+                class="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-800 text-slate-500 transition-all hover:bg-red-500/20 hover:text-red-500 focus:outline-none focus:ring-2 focus:ring-red-500 active:scale-90"
+                aria-label="Удалить отзыв безвозвратно"
             >
-                <TrashIcon class="h-5 w-5" />
+                <TrashIcon class="h-5 w-5" aria-hidden="true" />
             </button>
-        </div>
-    </div>
+        </footer>
+    </article>
 </template>

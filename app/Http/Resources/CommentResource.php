@@ -18,6 +18,8 @@ class CommentResource extends JsonResource
             'id'               => $this->id,
             'user_name'        => $this->author_name ?? 'Гость',
             'avatar'           => $this->user?->avatar_url,
+            'status'           => $this->status->value,
+            'status_label'     => $this->status->label(),
             'content'          => $this->content,
             'rating'           => $this->rating,
             'commentable_id'   => $this->commentable_id,

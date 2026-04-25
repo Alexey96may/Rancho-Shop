@@ -29,7 +29,7 @@ class CommentSeeder extends Seeder
                 'user_id' => User::inRandomOrder()->first()->id,
                 'content' => 'Очень вкусное молоко, дети в восторге! Будем брать еще.',
                 'rating' => 5,
-                'is_published' => true,
+                'status' => 'approved',
                 'commentable_id' => $product->id,
                 'commentable_type' => 'product',
             ]);
@@ -41,7 +41,7 @@ class CommentSeeder extends Seeder
                 'user_id' => User::inRandomOrder()->first()->id,
                 'content' => 'Видел эту корову на ферме — очень ухоженная и добрая.',
                 'rating' => 5,
-                'is_published' => true,
+                'status' => 'approved',
                 'commentable_id' => $cow->id,
                 'commentable_type' => 'animal',
             ]);
@@ -61,7 +61,7 @@ class CommentSeeder extends Seeder
                     'user_id' => User::inRandomOrder()->first()->id,
                     'content' => $review['text'],
                     'rating' => 5,
-                    'is_published' => true,
+                    'status' => 'approved',
                     'commentable_id' => $mainPage->id,
                     'commentable_type' => 'page',
                 ]);
@@ -72,7 +72,7 @@ class CommentSeeder extends Seeder
             'user_id' => User::inRandomOrder()->first()->id,
             'content' => 'Тестовый отзыв, который никто не должен видеть.',
             'rating' => 1,
-            'is_published' => false,
+            'status' => 'pending',
             'commentable_id' => $product?->id ?? 1,
             'commentable_type' => 'product',
         ]);

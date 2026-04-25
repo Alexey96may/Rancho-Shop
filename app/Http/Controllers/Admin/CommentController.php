@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\CommentStatus;
+use Illuminate\Validation\Rules\Enum;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Admin\AdminCommentResource;
 use App\Models\Comment;
@@ -21,8 +23,18 @@ class CommentController extends Controller
                 return $query->where('commentable_type', $type);
             })
             ->when($request->status, function ($query, $status) {
-                if ($status === 'published') return $query->where('is_published', true);
-                if ($status === 'draft') return $query->where('is_published', false);
+                return $query->where('status', $status);
+            })
+            ->orderBy(function ($query) {
+                $query->selectRaw("CASE 
+                    WHEN status = ? THEN 1 
+                    WHEN status = ? THEN 2 
+                    WHEN status = ? THEN 3 
+                    ELSE 4 END", [
+                        CommentStatus::PENDING->value,
+                        CommentStatus::APPROVED->value,
+                        CommentStatus::HIDDEN->value,
+                ]);
             })
             ->latest()
             ->paginate(setting('comments_per_page', 8))
@@ -31,6 +43,10 @@ class CommentController extends Controller
         return Inertia::render('Admin/Comments/Index', [
             'comments' => AdminCommentResource::collection($comments),
             'filters'  => $request->only(['type', 'status']),
+            'statuses' => collect(CommentStatus::cases())->map(fn($s) => [
+                'value' => $s->value,
+                'label' => $s->label()
+            ]),
             'seo' => $this->seo('Панель управления: Комментарии', robots: 'noindex, nofollow')
         ]);
     }
@@ -41,12 +57,12 @@ class CommentController extends Controller
     public function update(Request $request, Comment $comment)
     {
         $validated = $request->validate([
-            'is_published' => ['required', 'boolean'],
+            'status' => ['required', new Enum(CommentStatus::class)],
         ]);
 
         $comment->update($validated);
 
-        return back()->with('success', $comment->is_published ? 'Отзыв опубликован' : 'Отзыв скрыт');
+        return back()->with('success', 'Статус комментария изменен на: ' . $comment->status->label());
     }
 
     /**
@@ -56,6 +72,6 @@ class CommentController extends Controller
     {
         $comment->delete();
         
-        return back()->with('warning', 'Отзыв удален');
+        return back()->with('warning', 'Отзыв перемещен в корзину');
     }
 }
