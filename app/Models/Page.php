@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Traits\HasActiveScope;
 use App\Traits\HasInteractions;
 use App\Traits\HasStandardMedia;
+use App\Enums\PageType;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
@@ -22,6 +23,7 @@ class Page extends Model
 
     protected $casts = [
         'is_active' => 'boolean',
+        'type' => PageType::class,
     ];
 
     public function reviews(): MorphMany
@@ -32,5 +34,10 @@ class Page extends Model
     public function registerMediaCollections(): void
     {
         $this->addMediaCollection('content_images');
+    }
+
+    public function isDeletable(): bool
+    {
+        return $this->type !== PageType::SYSTEM && $this->type !== PageType::HOME;
     }
 }

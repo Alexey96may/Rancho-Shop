@@ -26,11 +26,12 @@ class PageController extends Controller
                 $query->where('title', 'ilike', "%{$search}%"); // ilike для Postgres (регистронезависимо)
             })
             ->latest()
-            ->paginate(15)
+            ->paginate(setting('admin_per_page', 10))
             ->withQueryString();
 
         return Inertia::render('Admin/Pages/Index', [
             'pages' => PageResource::collection($pages),
+            'filters' => $request->only(['search']),
             'filters' => $request->only(['search']),
         ]);
     }

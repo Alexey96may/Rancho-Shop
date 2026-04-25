@@ -40,7 +40,7 @@ class AnimalController extends Controller
             })
             ->orderBy('is_active', 'desc')
             ->latest()
-            ->paginate(setting('per_page_animals', 12))
+            ->paginate(setting('admin_per_page', 10))
             ->withQueryString();
 
         return Inertia::render('Admin/Animals/Index', [

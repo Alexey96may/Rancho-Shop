@@ -25,7 +25,7 @@ class CategoryController extends Controller
             })
             ->orderBy('is_active', 'desc')
             ->orderBy('sort_order')
-            ->paginate(setting('categories_per_page', 12))
+            ->paginate(setting('admin_per_page', 10))
             ->withQueryString();
 
         return Inertia::render('Admin/Categories/Index', [

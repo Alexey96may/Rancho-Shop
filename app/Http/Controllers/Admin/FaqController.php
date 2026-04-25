@@ -22,7 +22,7 @@ class FaqController extends Controller
             })
             ->orderBy('sort_order', 'asc')
             ->orderBy('created_at', 'desc')
-            ->paginate(20)
+            ->paginate(setting('admin_per_page', 10))
             ->withQueryString();
 
         return Inertia::render('Admin/Faq/Index', [

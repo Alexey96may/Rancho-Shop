@@ -32,12 +32,12 @@ export interface SiteSettings {
     min_order_amount: number;
 
     // --- UI ---
+    admin_per_page: number;
+
     products_per_page: number;
     animals_per_page: number;
     comments_per_page: number;
-    users_per_page: number;
     orders_per_page: number;
-    categories_per_page: number;
 
     featured_animals_limit: number;
     featured_products_limit: number;

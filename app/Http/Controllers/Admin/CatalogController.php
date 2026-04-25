@@ -17,7 +17,7 @@ class CatalogController extends Controller
     {
         $variants = ProductVariant::with(['product.media', 'unit'])
             ->orderBy('position', 'asc')
-            ->paginate(15);
+            ->paginate(setting('admin_per_page', 10));
 
         return Inertia::render('Admin/Catalog/Index', [
             'variants' => ProductVariantResource::collection($variants),

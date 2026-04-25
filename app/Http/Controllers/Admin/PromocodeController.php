@@ -20,7 +20,7 @@ class PromocodeController extends Controller
                 $query->where('code', 'ilike', "%{$search}%");
             })
             ->latest()
-            ->paginate(15)
+            ->paginate(setting('admin_per_page', 10))
             ->withQueryString();
 
         return Inertia::render('Admin/PromoCodes/Index', [
