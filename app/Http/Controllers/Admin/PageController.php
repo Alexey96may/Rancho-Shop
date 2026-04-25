@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\PageType;
 use App\Http\Controllers\Controller;
-use App\Http\Resources\PageResource;
+use App\Http\Resources\Admin\AdminPageResource;
 use App\Models\Page;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
+use Illuminate\Validation\Rules\Enum;
 
 use App\Services\SanitizeService;
 
@@ -19,20 +21,24 @@ class PageController extends Controller
     public function index(Request $request)
     {
         $pages = Page::query()
-            // Загружаем SEO и считаем отзывы, как того требует ресурс
             ->with(['seo', 'media'])
             ->withCount('reviews')
             ->when($request->search, function ($query, $search) {
-                $query->where('title', 'ilike', "%{$search}%"); // ilike для Postgres (регистронезависимо)
+                $search = mb_strtolower($search, 'UTF-8');
+                
+                $query->where(function($q) use ($search) {
+                    $q->whereRaw('LOWER(title) LIKE ?', ["%{$search}%"]);
+                });
             })
             ->latest()
             ->paginate(setting('admin_per_page', 10))
             ->withQueryString();
 
         return Inertia::render('Admin/Pages/Index', [
-            'pages' => PageResource::collection($pages),
+            'pages' => AdminPageResource::collection($pages),
             'filters' => $request->only(['search']),
-            'filters' => $request->only(['search']),
+            'seo' => $this->seo('Панель управления: Страницы', robots: 'noindex, nofollow'),
+            'page_types' => PageType::cases()
         ]);
     }
 
@@ -41,7 +47,21 @@ class PageController extends Controller
      */
     public function create()
     {
-        //
+        return Inertia::render('Admin/Pages/Create', [
+            'seo' => $this->seo('Создание новой страницы', robots: 'noindex, nofollow'),
+            
+            'page_types' => array_map(fn($case) => [
+                'id'    => $case->value,
+                'name'  => $case->label(),
+                'slug'  => $case->value
+            ], PageType::cases()),
+
+            'templates' => [
+                ['id' => 'default', 'name' => 'Стандартный'],
+                ['id' => 'about', 'name' => 'О компании'],
+                ['id' => 'delivery', 'name' => 'Доставка'],
+            ]
+        ]);
     }
 
     /**
@@ -52,27 +72,30 @@ class PageController extends Controller
         $validated = $request->validate([
             'title'     => 'required|string|max:255',
             'content'   => 'nullable|string',
-            'type'      => 'required|string',
+            'type'      => ['required', new Enum(PageType::class)],
             'is_active' => 'boolean',
             'template' => 'required|string|in:default,delivery,about',
+            'slug' => 'nullable|string|max:255|unique:pages,slug',
+
+            //todo
             'seo.title'       => 'nullable|string|max:255',
             'seo.description' => 'nullable|string',
             'seo.keywords'    => 'nullable|string',
         ]);
 
-        // Чистим контент через сервис перед созданием
         if (!empty($validated['content'])) {
             $validated['content'] = SanitizeService::cleanHtml($validated['content']);
         }
 
-        $validated['slug'] = Str::slug($validated['title']);
+        $validated['slug'] = Str::slug($validated['slug'] ?? $validated['title']);
+
         $page = Page::create($validated);
 
         if ($request->has('seo')) {
             $page->seo()->create($request->input('seo'));
         }
 
-        return redirect()->route('admin.pages.index')->with('success', 'Страница создана');
+        return redirect()->route('admin.pages.index')->with('success', 'Страница создана!');
     }
 
     /**
@@ -83,22 +106,22 @@ class PageController extends Controller
         $validated = $request->validate([
             'title'     => 'required|string|max:255',
             'content'   => 'nullable|string',
-            'type'      => 'required|string',
+            'type'      => ['required', new Enum(PageType::class)],
             'is_active' => 'boolean',
             'template' => 'required|string|in:default,delivery,about',
+            'slug' => 'nullable|string|max:255|unique:pages,slug,' . $page->id,
+            
+            //todo
             'seo.title'       => 'nullable|string|max:255',
             'seo.description' => 'nullable|string',
             'seo.keywords'    => 'nullable|string',
         ]);
 
-        // Чистим контент через сервис перед обновлением
         if (isset($validated['content'])) {
             $validated['content'] = SanitizeService::cleanHtml($validated['content']);
         }
 
-        if ($page->title !== $validated['title']) {
-            $validated['slug'] = Str::slug($validated['title']);
-        }
+        $validated['slug'] = Str::slug($validated['slug'] ?? $validated['title']);
 
         $page->update($validated);
 
@@ -109,7 +132,7 @@ class PageController extends Controller
             );
         }
 
-        return redirect()->back()->with('success', 'Контент страницы обновлен');
+        return redirect()->back()->with('success', 'Контент страницы обновлен!');
     }
 
     /**
@@ -123,9 +146,27 @@ class PageController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id)
+    public function edit(Page $page)
     {
-        //
+        $page->load(['seo', 'media'])->loadCount('reviews');
+
+        return Inertia::render('Admin/Pages/Edit', [
+            'page' => new AdminPageResource($page),
+            
+            'seo' => $this->seo("Редактирование: {$page->title}", robots: 'noindex, nofollow'),
+            
+            'page_types' => array_map(fn($case) => [
+                'id'    => $case->value,
+                'name'  => $case->label(),
+                'slug'  => $case->value
+            ], PageType::cases()),
+
+            'templates' => [
+                ['id' => 'default', 'name' => 'Стандартный'],
+                ['id' => 'about', 'name' => 'О компании'],
+                ['id' => 'delivery', 'name' => 'Доставка'],
+            ]
+        ]);
     }
 
     /**
@@ -133,9 +174,13 @@ class PageController extends Controller
      */
     public function destroy(Page $page)
     {
+        if (!$page->isDeletable()) {
+            return redirect()->back()->with('error', 'Эту страницу нельзя удалить, так как она является системной.');
+        }
+
         $page->seo()->delete();
         $page->delete();
 
-        return redirect()->route('admin.pages.index')->with('success', 'Страница удалена');
+        return redirect()->route('admin.pages.index')->with('success', "Страница $page->title удалена");
     }
 }

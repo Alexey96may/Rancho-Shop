@@ -194,7 +194,7 @@
     <div v-else>
         <Transition name="fade-slide">
             <AdminEmptyState
-                title="Животные не найдены"
+                title="Комменты не найдены"
                 @action="clearFilters"
                 :show-action="true"
             />

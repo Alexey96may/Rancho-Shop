@@ -7,10 +7,12 @@ use App\Traits\HasInteractions;
 use App\Traits\HasStandardMedia;
 use App\Enums\PageType;
 use Illuminate\Database\Eloquent\Model;
+use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\MediaLibrary\HasMedia;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 
-class Page extends Model
+class Page extends Model implements HasMedia
 {
     use HasActiveScope, HasInteractions, HasStandardMedia;
 

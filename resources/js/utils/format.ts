@@ -40,7 +40,10 @@ export function sanitizeNumber(num: number, numLength: number = 3): string {
 /**
  * Converts an ISO string to a readable date, taking into account the browser's time zone
  */
-export const formatDateTime = (dateString: string | null): string => {
+export const formatDateTime = (
+    dateString: string | null,
+    dateFormat: string = 'do MMMM yyyy HH:mm',
+): string => {
     if (!dateString) return '';
 
     const page = usePage();
@@ -58,7 +61,7 @@ export const formatDateTime = (dateString: string | null): string => {
 
     try {
         const date = parseISO(dateString);
-        return format(date, 'do MMMM yyyy HH:mm', { locale: selectedLocale });
+        return format(date, dateFormat, { locale: selectedLocale });
     } catch (e) {
         return dateString;
     }

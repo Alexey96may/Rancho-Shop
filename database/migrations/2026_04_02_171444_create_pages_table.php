@@ -16,7 +16,7 @@ return new class() extends Migration
             $table->string('title');
             $table->string('slug')->unique();
             $table->longText('content')->nullable();
-            $table->string('type')->default('static'); // 'static', 'blog', 'news', 'main'
+            $table->string('type')->default('default');
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });

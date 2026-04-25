@@ -21,7 +21,11 @@ class AnimalController extends Controller
         $animals = Animal::query()
             ->with(['category', 'parent', 'seo'])
             ->when($request->search, function ($query, $search) {
-                $query->where('name', 'like', "%{$search}%");
+                $search = mb_strtolower($search, 'UTF-8');
+                
+                $query->where(function($q) use ($search) {
+                    $q->whereRaw('LOWER(name) LIKE ?', ["%{$search}%"]);
+                });
             })
             ->when($request->category_id, function ($query, $catId) {
                 // For ID
