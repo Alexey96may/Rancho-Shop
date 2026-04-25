@@ -19,7 +19,7 @@ class PageSeeder extends Seeder
             [
                 'title' => 'Главная',
                 'slug' => 'main',
-                'type' => 'static',
+                'type' => 'main',
                 'content' => '<h1>Добро пожаловать в Молочную Долину!</h1>',
                 'is_active' => true,
             ],

@@ -21,7 +21,6 @@
     import AdminPageHeader from '@/Components/Admin/Shared/AdminPageHeader.vue';
     import AdminPagination from '@/Components/Admin/Shared/AdminPagination.vue';
     import AdminSearchInput from '@/Components/Admin/UI/AdminSearchInput.vue';
-    // Твой исправленный инпут
     import BaseSelect from '@/Components/UI/BaseSelect.vue';
     import ImageUpload from '@/Components/UI/ImageUploader.vue';
     import AdminLayout from '@/Layouts/AdminLayout.vue';
@@ -39,7 +38,6 @@
 
     const { notifyWithUndo, notify } = useFlash();
 
-    // Состояние страницы
     const view = ref<'list' | 'form'>('list');
     const activeTab = ref('main');
     const selectedAnimal = ref<AdminAnimal | null>(null);
@@ -243,7 +241,7 @@
                     />
                 </TransitionGroup>
 
-                <Transition name="fade-slide">
+                <Transition v-else name="fade-slide">
                     <AdminEmptyState
                         title="Животные не найдены"
                         @action="clearFilters"

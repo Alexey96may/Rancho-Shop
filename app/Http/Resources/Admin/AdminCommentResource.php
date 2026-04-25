@@ -15,8 +15,8 @@ class AdminCommentResource extends CommentResource
     public function toArray(Request $request): array
     {
         return array_merge(parent::toArray($request), [
-            'updated_at'   => $this->updated_at->format('d.m.Y H:i'),
-            'deleted_at' => $this->deleted_at ? $this->deleted_at->format('d.m.Y H:i') : null,
+            'updated_at'   => $this->updated_at->toIso8601String(),
+            'deleted_at' => $this->deleted_at ? $this->deleted_at->toIso8601String() : null,
             'commentable'  => $this->whenLoaded('commentable', function() {
                 return [
                     'name' => $this->commentable?->name ?? 'Сайт',

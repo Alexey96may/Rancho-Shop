@@ -18,7 +18,7 @@ class AdminOrderResource extends JsonResource
             'customer_phone' => $this->customer_phone,
             'customer_comment' => $this->customer_comment,
             'admin_note' => $this->admin_note,
-            'updated_at' => $this->updated_at,
+            'updated_at' => $this->updated_at->toIso8601String(),
         ]);
     }
 }

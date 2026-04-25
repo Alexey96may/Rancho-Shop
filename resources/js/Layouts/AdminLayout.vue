@@ -1,4 +1,6 @@
 <script setup lang="ts">
+    import { onMounted, ref } from 'vue';
+
     import { usePage } from '@inertiajs/vue3';
 
     import {
@@ -33,6 +35,11 @@
 
     const page = usePage<SharedData>();
     const can = page.props.can;
+
+    const isMounted = ref(false);
+    onMounted(() => {
+        isMounted.value = true;
+    });
 </script>
 
 <template>
@@ -195,9 +202,8 @@
             <header
                 class="sticky top-0 z-10 flex h-20 items-center justify-between border-b border-slate-900 bg-slate-950/50 px-10 backdrop-blur-md"
             >
-                <h1 id="page-title" class="text-xl font-black uppercase tracking-widest text-white">
-                    <slot name="header" />
-                </h1>
+                <div id="admin-header-content" class="flex-1"></div>
+
                 <div class="flex items-center gap-4">
                     <div class="hidden text-right sm:block">
                         <p class="text-sm font-bold leading-none text-white">
@@ -210,9 +216,9 @@
                     </div>
                 </div>
             </header>
-            <main id="main-content" class="p-10 outline-none" tabindex="-1">
-                <slot />
-            </main>
+            <div id="main-content" class="p-10">
+                <slot v-if="isMounted" />
+            </div>
         </div>
     </div>
 </template>

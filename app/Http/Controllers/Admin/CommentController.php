@@ -40,9 +40,16 @@ class CommentController extends Controller
             ->paginate(setting('comments_per_page', 8))
             ->withQueryString();
 
+        $stats = [
+            'avg_rating' => round(Comment::where('status', CommentStatus::APPROVED)->avg('rating') ?? 0, 1),
+            'total_count' => Comment::count(),
+            'pending_count' => Comment::where('status', CommentStatus::PENDING)->count(),
+        ];
+
         return Inertia::render('Admin/Comments/Index', [
             'comments' => AdminCommentResource::collection($comments),
             'filters'  => $request->only(['type', 'status']),
+            'stats'    => $stats,
             'statuses' => collect(CommentStatus::cases())->map(fn($s) => [
                 'value' => $s->value,
                 'label' => $s->label()

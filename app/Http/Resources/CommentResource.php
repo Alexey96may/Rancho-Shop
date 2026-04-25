@@ -24,7 +24,7 @@ class CommentResource extends JsonResource
             'rating'           => $this->rating,
             'commentable_id'   => $this->commentable_id,
             'commentable_type' => $this->commentable_type,
-            'created_at'       => $this->created_at->format('d.m.Y H:i'),
+            'created_at'       => $this->created_at->toIso8601String(),
         ];
     }
 }

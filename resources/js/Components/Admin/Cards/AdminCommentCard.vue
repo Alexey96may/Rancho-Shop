@@ -1,21 +1,27 @@
 <script setup lang="ts">
-    import { computed } from 'vue';
+    import { computed, ref } from 'vue';
 
-    import { router } from '@inertiajs/vue3';
+    import { Link } from '@inertiajs/vue3';
 
-    import { StarIcon as StarOutline } from '@heroicons/vue/24/outline';
     import {
         ArrowTopRightOnSquareIcon,
         HandThumbDownIcon,
         HandThumbUpIcon,
-        StarIcon,
         TrashIcon,
     } from '@heroicons/vue/24/solid';
 
+    import AppRating from '@/Components/UI/AppRating.vue';
     import { AdminComment } from '@/types';
+    import { formatDateTime, formatRelativeTime } from '@/utils/format';
+    import { getInitials } from '@/utils/user';
 
     const props = defineProps<{
         comment: AdminComment;
+    }>();
+
+    const emit = defineEmits<{
+        (e: 'update-status', id: number, status: 'approved' | 'hidden'): void;
+        (e: 'delete', id: number): void;
     }>();
 
     const typeLabels: Record<string, { label: string; color: string }> = {
@@ -35,20 +41,23 @@
             },
     );
 
-    const updateStatus = (newStatus: 'approved' | 'hidden') => {
-        router.patch(
-            route('admin.comments.update', props.comment.id),
-            { status: newStatus },
-            { preserveScroll: true },
-        );
+    const onUpdateStatus = (newStatus: 'approved' | 'hidden') => {
+        emit('update-status', props.comment.id, newStatus);
     };
 
-    const deleteComment = () => {
-        if (confirm('Удалить этот отзыв безвозвратно?')) {
-            router.delete(route('admin.comments.destroy', props.comment.id), {
-                preserveScroll: true,
-            });
-        }
+    const onDelete = () => {
+        emit('delete', props.comment.id);
+    };
+
+    const showExactDate = ref(false);
+    const toggleDate = () => {
+        showExactDate.value = !showExactDate.value;
+    };
+
+    const routeNames: Record<string, string> = {
+        product: 'catalog.show',
+        animal: 'animals.show',
+        page: 'pages.show',
     };
 </script>
 
@@ -59,7 +68,11 @@
         :class="[
             comment.status === 'approved'
                 ? 'shadow-lg border-slate-800 bg-slate-900 shadow-black/20'
-                : 'shadow-inner border-orange-500/30 bg-orange-500/5',
+                : '',
+            comment.status === 'pending' ? 'shadow-inner border-orange-500/30 bg-orange-500/5' : '',
+            comment.status === 'hidden'
+                ? 'border-slate-800/50 bg-slate-900/40 opacity-75 grayscale-[0.5]'
+                : '',
         ]"
     >
         <div
@@ -67,7 +80,7 @@
             role="status"
             aria-live="polite"
             class="shadow-lg absolute -right-2 -top-2 z-20 flex h-6 items-center rounded-full px-3 text-[10px] font-black uppercase tracking-tighter text-white"
-            :class="comment.status === 'pending' ? 'animate-pulse bg-orange-600' : 'bg-slate-700'"
+            :class="[comment.status === 'pending' ? 'animate-pulse bg-orange-600' : 'bg-slate-700']"
         >
             {{ comment.status_label }}
         </div>
@@ -75,20 +88,17 @@
         <header class="flex items-start justify-between">
             <div class="flex items-center gap-3">
                 <div
-                    class="h-12 w-12 shrink-0 overflow-hidden rounded-2xl bg-slate-800 ring-2 ring-slate-800 transition-transform group-hover:scale-110"
+                    class="h-12 w-12 shrink-0 overflow-hidden rounded-2xl bg-slate-800 ring-2 transition-transform group-hover:scale-110"
+                    :class="comment.status === 'pending' ? 'ring-orange-500/20' : 'ring-slate-800'"
                     aria-hidden="true"
                 >
-                    <img
-                        v-if="comment.avatar"
-                        :src="comment.avatar"
-                        class="h-full w-full object-cover"
-                        alt=""
-                    />
+                    <AppImage v-if="comment.avatar" :src="comment.avatar" alt="Аватар" />
+
                     <div
                         v-else
                         class="flex h-full w-full items-center justify-center bg-gradient-to-br from-slate-700 to-slate-800 text-lg font-black uppercase text-slate-500"
                     >
-                        {{ comment.user_name[0] }}
+                        {{ getInitials(comment.user_name) }}
                     </div>
                 </div>
                 <div>
@@ -98,44 +108,50 @@
                     >
                         {{ comment.user_name }}
                     </h3>
-                    <time
-                        :datetime="comment.created_at"
-                        class="text-[10px] font-medium text-slate-500"
-                    >
-                        {{ comment.created_at }}
-                    </time>
+
+                    <Transition name="fade-date" mode="out-in">
+                        <time
+                            :key="showExactDate.toString()"
+                            :datetime="comment.created_at"
+                            :title="
+                                showExactDate
+                                    ? 'Нажмите, чтобы увидеть время назад'
+                                    : 'Нажмите, чтобы увидеть точную дату'
+                            "
+                            @click="toggleDate"
+                            class="cursor-pointer select-none text-[10px] font-medium text-slate-500 transition-colors hover:text-slate-300"
+                        >
+                            {{
+                                showExactDate
+                                    ? formatDateTime(comment.created_at)
+                                    : formatRelativeTime(comment.created_at)
+                            }}
+                        </time>
+                    </Transition>
                 </div>
             </div>
 
-            <div
-                class="flex gap-0.5"
-                role="img"
-                :aria-label="`Рейтинг: ${comment.rating} из 5 звезд`"
-            >
-                <template v-for="i in 5" :key="i">
-                    <StarIcon
-                        v-if="i <= (comment.rating || 0)"
-                        class="h-4 w-4 text-orange-500"
-                        aria-hidden="true"
-                    />
-                    <StarOutline v-else class="h-4 w-4 text-slate-700" aria-hidden="true" />
-                </template>
-            </div>
+            <AppRating :rating="comment.rating" />
         </header>
 
         <blockquote class="relative m-0">
             <span
-                class="absolute -left-2 -top-2 select-none text-4xl text-slate-800"
+                class="absolute -left-2 -top-2 select-none text-4xl"
+                :class="comment.status === 'pending' ? 'text-orange-500/20' : 'text-slate-800'"
                 aria-hidden="true"
                 >“</span
             >
-            <p class="relative z-10 text-sm italic leading-relaxed text-slate-300">
+            <p
+                class="relative z-10 text-sm italic leading-relaxed"
+                :class="comment.status === 'hidden' ? 'text-slate-500' : 'text-slate-300'"
+            >
                 {{ comment.content }}
             </p>
         </blockquote>
 
         <section
-            class="mt-2 flex items-center justify-between rounded-2xl border border-white/5 bg-black/20 p-3"
+            class="mt-2 flex items-center justify-between rounded-2xl border border-white/5 p-3"
+            :class="comment.status === 'pending' ? 'bg-orange-500/10' : 'bg-black/20'"
             aria-label="Связанный контент"
         >
             <div class="flex flex-col gap-1">
@@ -156,21 +172,30 @@
                     }}</span>
                 </div>
             </div>
-            <a
-                v-if="comment.commentable?.slug"
-                :href="`/product/${comment.commentable.slug}`"
-                target="_blank"
+
+            <Link
+                v-if="comment.commentable?.slug === 'main'"
+                :href="route('home')"
                 class="rounded-xl p-2 text-slate-500 transition-all hover:bg-slate-800 hover:text-white"
                 :aria-label="`Перейти к ${currentType.label}: ${comment.commentable.name}`"
             >
                 <ArrowTopRightOnSquareIcon class="h-4 w-4" aria-hidden="true" />
-            </a>
+            </Link>
+
+            <Link
+                v-else-if="comment.commentable?.slug && routeNames[comment.commentable_type]"
+                :href="route(routeNames[comment.commentable_type], comment.commentable.slug)"
+                class="rounded-xl p-2 text-slate-500 transition-all hover:bg-slate-800 hover:text-white"
+                :aria-label="`Перейти к ${currentType.label}: ${comment.commentable.name}`"
+            >
+                <ArrowTopRightOnSquareIcon class="h-4 w-4" aria-hidden="true" />
+            </Link>
         </section>
 
         <footer class="mt-auto flex items-center gap-2 border-t border-slate-800 pt-4">
             <button
                 v-if="comment.status !== 'approved'"
-                @click="updateStatus('approved')"
+                @click="onUpdateStatus('approved')"
                 class="shadow-lg flex flex-1 items-center justify-center gap-2 rounded-2xl bg-orange-600 py-3 text-xs font-black uppercase tracking-widest text-white shadow-orange-900/40 transition-all hover:bg-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500 active:scale-95"
                 aria-label="Одобрить комментарий и опубликовать его"
             >
@@ -180,8 +205,8 @@
 
             <button
                 v-if="comment.status !== 'hidden'"
-                @click="updateStatus('hidden')"
-                class="flex items-center justify-center gap-2 rounded-2xl py-3 text-xs font-black uppercase tracking-widest transition-all focus:outline-none focus:ring-2 focus:ring-slate-700 active:scale-95"
+                @click="onUpdateStatus('hidden')"
+                class="flex items-center justify-center gap-2 rounded-2xl py-3 text-xs font-black uppercase tracking-widest transition-all active:scale-95"
                 :class="[
                     comment.status === 'approved'
                         ? 'flex-1 bg-slate-800 text-slate-400 hover:bg-red-500/10 hover:text-red-500'
@@ -198,7 +223,7 @@
             </button>
 
             <button
-                @click="deleteComment"
+                @click="onDelete"
                 class="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-800 text-slate-500 transition-all hover:bg-red-500/20 hover:text-red-500 focus:outline-none focus:ring-2 focus:ring-red-500 active:scale-90"
                 aria-label="Удалить отзыв безвозвратно"
             >
@@ -207,3 +232,22 @@
         </footer>
     </article>
 </template>
+
+<style scoped>
+    .fade-date-enter-active,
+    .fade-date-leave-active {
+        transition:
+            opacity 0.2s ease,
+            transform 0.2s ease;
+    }
+
+    .fade-date-enter-from {
+        opacity: 1;
+        transform: translateY(2px);
+    }
+
+    .fade-date-leave-to {
+        opacity: 0;
+        transform: translateY(-2px);
+    }
+</style>

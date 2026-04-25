@@ -48,13 +48,12 @@ Route::get('/checkout', [CheckoutPageController::class, 'index'])->name('checkou
 Route::post('/checkout', [CheckoutPageController::class, 'store'])->name('checkout.store');
     
 Route::get('/delivery', [PageController::class, 'delivery'])->name('delivery');
+Route::get('/about', [PageController::class, 'about'])->name('about');
 
 Route::get('/animals', [AnimalController::class, 'index'])->name('animals.index');
 Route::get('/animals/{animal:slug}', [AnimalController::class, 'show'])->name('animals.show');
 
 Route::post('/comments', [CommentController::class, 'store'])->name('comments.store');
-
-Route::get('/about', [PageController::class, 'about'])->name('about');
 
 Route::post('/delivery/draft', [DeliveryController::class, 'store'])->name('delivery.draft.store');
 
