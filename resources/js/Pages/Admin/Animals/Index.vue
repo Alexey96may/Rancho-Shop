@@ -221,28 +221,31 @@
             </section>
 
             <div class="relative min-h-[400px]">
-                <TransitionGroup
-                    v-if="animals.data.length > 0"
-                    :key="animals.data.length"
-                    tag="main"
-                    name="animal-grid"
-                    class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3"
-                    role="list"
-                >
-                    <AnimalCard
-                        v-for="animal in animals.data"
-                        :key="animal.id"
-                        :animal="animal"
-                        :class="{
-                            'pointer-events-none scale-95 opacity-50': deletingIds.has(animal.id),
-                        }"
-                        @edit="openForm(animal)"
-                        @delete="deleteAnimal(animal.id)"
-                    />
-                </TransitionGroup>
+                <Transition name="fade-slide">
+                    <TransitionGroup
+                        v-if="animals.data.length > 0"
+                        :key="animals.data.length"
+                        tag="main"
+                        name="animal-grid"
+                        class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3"
+                        role="list"
+                    >
+                        <AnimalCard
+                            v-for="animal in animals.data"
+                            :key="animal.id"
+                            :animal="animal"
+                            :class="{
+                                'pointer-events-none scale-95 opacity-50': deletingIds.has(
+                                    animal.id,
+                                ),
+                            }"
+                            @edit="openForm(animal)"
+                            @delete="deleteAnimal(animal.id)"
+                        />
+                    </TransitionGroup>
 
-                <Transition v-else name="fade-slide">
                     <AdminEmptyState
+                        v-else
                         title="Животные не найдены"
                         @action="clearFilters"
                         :show-action="true"

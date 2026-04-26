@@ -3,11 +3,18 @@
 
     import { Link, router } from '@inertiajs/vue3';
 
-    import { DocumentIcon, PencilIcon, PlusIcon, TrashIcon } from '@heroicons/vue/24/outline';
+    import {
+        DocumentIcon,
+        EyeSlashIcon,
+        PencilIcon,
+        PlusIcon,
+        TrashIcon,
+    } from '@heroicons/vue/24/outline';
     import debounce from 'lodash/debounce';
 
     import AdminEmptyState from '@/Components/Admin/Shared/AdminEmptyState.vue';
     import AdminSearchInput from '@/Components/Admin/UI/AdminSearchInput.vue';
+    import BaseDeleteButton from '@/Components/UI/BaseDeleteButton.vue';
     import AdminLayout from '@/Layouts/AdminLayout.vue';
     import { useFlash } from '@/composables/useFlash';
     import { AdminPage, Paginated } from '@/types';
@@ -33,13 +40,27 @@
 
     watch(search, debouncedFilter);
 
-    const deletePage = async (page: AdminPage) => {
-        const isDeleted = await notifyWithUndo(`Удаление страницы "${page.title}"`);
+    const deletingIds = ref(new Set<number>());
 
+    const deletePage = async (page: AdminPage) => {
+        if (deletingIds.value.has(page.id)) return;
         if (!page.can_delete) return;
 
+        deletingIds.value.add(page.id);
+
+        const isDeleted = await notifyWithUndo(`Удаление страницы "${page.title}"`);
+
         if (isDeleted) {
-            router.delete(route('admin.pages.destroy', page.id));
+            router.delete(route('admin.pages.destroy', page.id), {
+                preserveScroll: true,
+                preserveState: true,
+                onBefore: () => {},
+                onFinish: () => {
+                    deletingIds.value.delete(page.id);
+                },
+            });
+        } else {
+            deletingIds.value.delete(page.id);
         }
     };
 
@@ -134,14 +155,13 @@
                             >
                                 <PencilIcon class="h-5 w-5" />
                             </Link>
-                            <button
-                                @click="deletePage(page)"
+
+                            <BaseDeleteButton
                                 v-if="page.can_delete"
-                                aria-label="Удалить"
-                                class="p-2 text-slate-500 transition-all hover:text-red-500"
-                            >
-                                <TrashIcon class="h-5 w-5" />
-                            </button>
+                                :disabled="deletingIds.has(page.id)"
+                                @confirm="deletePage(page)"
+                                ><TrashIcon class="h-5 w-5" />
+                            </BaseDeleteButton>
                         </div>
                     </div>
                 </TransitionGroup>

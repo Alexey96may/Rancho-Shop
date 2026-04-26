@@ -9,6 +9,7 @@ export interface Page {
     slug: string;
     content?: string;
     template: string;
+    url: string;
     media: Media[];
     seo?: SeoData;
     reviews_count?: number;

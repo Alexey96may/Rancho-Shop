@@ -1,7 +1,7 @@
 <script setup lang="ts">
     import { ref } from 'vue';
 
-    import { Link, useForm } from '@inertiajs/vue3';
+    import { Link, router, useForm } from '@inertiajs/vue3';
 
     import {
         ChevronLeftIcon,
@@ -11,8 +11,12 @@
         GlobeAltIcon,
     } from '@heroicons/vue/24/outline';
 
-    import BaseSelect from '@/Components/UI/BaseSelect.vue';
+    import ContentSection from '@/Components/Admin/Sections/PageContentSection.vue';
+    import GeneralSection from '@/Components/Admin/Sections/PageGeneralSection.vue';
+    import SeoSection from '@/Components/Admin/Sections/PageSeoSection.vue';
+    import BaseDeleteButton from '@/Components/UI/BaseDeleteButton.vue';
     import AdminLayout from '@/Layouts/AdminLayout.vue';
+    import { useFlash } from '@/composables/useFlash';
     import { AdminPage, ResourceSingle } from '@/types';
     import { formatDateTime } from '@/utils/format';
 
@@ -47,9 +51,36 @@
     });
 
     const submit = () => form.put(route('admin.pages.update', props.page.data.id));
+    const { notifyWithUndo } = useFlash();
+
+    const isDeleting = ref(false);
+
+    const deletePage = async () => {
+        if (!props.page.data.can_delete) return;
+
+        if (isDeleting.value) return;
+        isDeleting.value = true;
+
+        const isDeleted = await notifyWithUndo(`Удаление страницы "${props.page.data.title}"`);
+
+        if (isDeleted) {
+            router.delete(route('admin.pages.destroy', props.page.data.id), {
+                onFinish: () => {
+                    isDeleting.value = false;
+                },
+            });
+        } else {
+            isDeleting.value = false;
+        }
+    };
 </script>
 
 <template>
+    <Teleport to="#admin-header-content">
+        <h1 class="flex items-center gap-2 text-xl font-black text-white">
+            Редактирование страницы "{{ page.data.title }}"
+        </h1>
+    </Teleport>
     <div class="mx-auto max-w-6xl space-y-6">
         <div class="flex items-center justify-between">
             <div class="flex items-center gap-4">
@@ -82,7 +113,7 @@
             </div>
 
             <a
-                :href="`/${page.data.slug}`"
+                :href="page.data.url"
                 target="_blank"
                 class="group flex items-center gap-2 text-[10px] font-black uppercase text-slate-500 transition-colors hover:text-orange-500"
             >
@@ -114,181 +145,116 @@
             </button>
         </div>
 
-        <form @submit.prevent="submit" class="grid grid-cols-1 gap-8 lg:grid-cols-12">
+        <form @submit.prevent="submit" class="grid grid-cols-1 gap-8">
             <div class="space-y-6 lg:col-span-8">
-                <div
-                    v-show="activeTab === 'general'"
-                    id="panel-general"
-                    role="tabpanel"
-                    aria-labelledby="tab-general"
-                    class="animate-in fade-in slide-in-from-bottom-2 space-y-6 duration-300"
+                <TransitionGroup
+                    enter-active-class="transition duration-300 ease-out"
+                    enter-from-class="transform translate-y-4 opacity-0"
+                    enter-to-class="transform translate-y-0 opacity-100"
+                    leave-active-class="transition duration-200 ease-in"
+                    leave-from-class="transform translate-y-0 opacity-100"
+                    leave-to-class="transform -translate-y-4 opacity-0"
+                    mode="out-in"
                 >
                     <div
-                        class="space-y-6 rounded-[2.5rem] border border-slate-800 bg-slate-900/30 p-8"
+                        v-if="activeTab === 'general'"
+                        key="general"
+                        role="tabpanel"
+                        class="space-y-6"
                     >
-                        <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-                            <div class="grid gap-2">
-                                <label class="ml-2 text-[10px] font-black uppercase text-slate-500"
-                                    >Заголовок страницы</label
-                                >
-                                <input
-                                    v-model="form.title"
-                                    type="text"
-                                    required
-                                    class="w-full rounded-2xl border-slate-800 bg-slate-950 p-4 text-white focus:border-orange-500"
-                                />
-                            </div>
-                            <div class="grid gap-2">
-                                <label class="ml-2 text-[10px] font-black uppercase text-slate-500"
-                                    >URL Путь (Slug)</label
-                                >
-                                <input
-                                    v-model="form.slug"
-                                    type="text"
-                                    class="w-full rounded-2xl border-slate-800 bg-slate-950 p-4 font-mono text-sm text-orange-500 focus:border-orange-500"
-                                />
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-                            <div class="grid gap-2">
-                                <BaseSelect
-                                    v-model="form.type"
-                                    :options="page_types"
-                                    label="Тип страницы"
-                                    variant="admin"
-                                />
-                            </div>
-                            <div class="grid gap-2">
-                                <BaseSelect
-                                    v-model="form.template"
-                                    :options="templates"
-                                    variant="admin"
-                                    label="Системный шаблон"
-                                />
-                            </div>
-                        </div>
+                        <GeneralSection
+                            v-model:title="form.title"
+                            v-model:slug="form.slug"
+                            v-model:type="form.type"
+                            v-model:template="form.template"
+                            :page_types="page_types"
+                            :templates="templates"
+                        />
                     </div>
-                </div>
 
-                <div
-                    v-show="activeTab === 'content'"
-                    id="panel-content"
-                    role="tabpanel"
-                    aria-labelledby="tab-content"
-                    class="animate-in fade-in slide-in-from-bottom-2 duration-300"
-                >
-                    <div class="rounded-[2.5rem] border border-slate-800 bg-slate-900/30 p-8">
-                        <div class="grid gap-2">
-                            <label class="ml-2 text-[10px] font-black uppercase text-slate-500"
-                                >Тело страницы (HTML/Markdown)</label
-                            >
-                            <textarea
-                                v-model="form.content"
-                                rows="20"
-                                class="w-full rounded-2xl border-slate-800 bg-slate-950 p-6 font-mono text-sm leading-relaxed text-slate-300 focus:border-orange-500 focus:ring-0"
-                            ></textarea>
-                        </div>
+                    <div v-else-if="activeTab === 'content'" key="content" role="tabpanel">
+                        <ContentSection v-model="form.content" />
                     </div>
-                </div>
 
-                <div
-                    v-show="activeTab === 'seo'"
-                    id="panel-seo"
-                    role="tabpanel"
-                    aria-labelledby="tab-seo"
-                    class="animate-in fade-in slide-in-from-bottom-2 space-y-6 duration-300"
-                >
-                    <div
-                        class="space-y-6 rounded-[2.5rem] border border-slate-800 bg-slate-900/30 p-8"
-                    >
-                        <div class="grid gap-2">
-                            <label class="ml-2 text-[10px] font-black uppercase text-slate-500"
-                                >Meta Title</label
-                            >
-                            <input
-                                v-model="form.seo.title"
-                                type="text"
-                                class="w-full rounded-2xl border-slate-800 bg-slate-950 p-4 text-white focus:border-orange-500"
-                            />
-                        </div>
-                        <div class="grid gap-2">
-                            <label class="ml-2 text-[10px] font-black uppercase text-slate-500"
-                                >Meta Description</label
-                            >
-                            <textarea
-                                v-model="form.seo.description"
-                                rows="4"
-                                class="w-full rounded-2xl border-slate-800 bg-slate-950 p-4 text-white focus:border-orange-500"
-                            ></textarea>
-                        </div>
-                        <div class="grid gap-2">
-                            <label class="ml-2 text-[10px] font-black uppercase text-slate-500"
-                                >Ключевые слова</label
-                            >
-                            <input
-                                v-model="form.seo.keywords"
-                                type="text"
-                                class="w-full rounded-2xl border-slate-800 bg-slate-950 p-4 text-white focus:border-orange-500"
-                            />
-                        </div>
+                    <div v-else-if="activeTab === 'seo'" key="seo" role="tabpanel">
+                        <SeoSection v-model="form.seo" />
                     </div>
-                </div>
-            </div>
+                </TransitionGroup>
 
-            <div class="space-y-6 lg:col-span-4">
-                <div class="sticky top-6 space-y-6">
-                    <div
-                        class="space-y-6 rounded-[2.5rem] border border-slate-800 bg-slate-900/30 p-8"
-                    >
+                <div class="space-y-6 lg:col-span-4">
+                    <div class="sticky top-6 space-y-6">
                         <div
-                            class="flex items-center justify-between rounded-2xl border border-slate-800 bg-slate-950 p-4"
+                            class="space-y-6 rounded-[2.5rem] border border-slate-800 bg-slate-900/30 p-8"
                         >
-                            <span class="text-[10px] font-black uppercase text-slate-500">
-                                {{ form.is_active ? 'Опубликовано' : 'В архиве' }}
-                            </span>
-                            <button
-                                type="button"
-                                @click="form.is_active = !form.is_active"
-                                :aria-checked="form.is_active"
-                                role="switch"
-                                :class="form.is_active ? 'bg-emerald-600' : 'bg-slate-700'"
-                                class="relative inline-flex h-6 w-11 items-center rounded-full transition-all"
+                            <div
+                                class="flex items-center justify-between rounded-2xl border border-slate-800 bg-slate-950 p-4"
                             >
-                                <span
-                                    :class="form.is_active ? 'translate-x-6' : 'translate-x-1'"
-                                    class="h-4 w-4 transform rounded-full bg-white transition-transform"
-                                />
+                                <span class="text-[10px] font-black uppercase text-slate-500">
+                                    {{ form.is_active ? 'Опубликовано' : 'В архиве' }}
+                                </span>
+                                <button
+                                    type="button"
+                                    @click="form.is_active = !form.is_active"
+                                    :aria-checked="form.is_active"
+                                    role="switch"
+                                    :class="form.is_active ? 'bg-emerald-600' : 'bg-slate-700'"
+                                    class="relative inline-flex h-6 w-11 items-center rounded-full transition-all"
+                                >
+                                    <span
+                                        :class="form.is_active ? 'translate-x-6' : 'translate-x-1'"
+                                        class="h-4 w-4 transform rounded-full bg-white transition-transform"
+                                    />
+                                </button>
+                            </div>
+
+                            <button
+                                type="submit"
+                                :disabled="form.processing"
+                                class="group relative w-full overflow-hidden rounded-2xl bg-orange-600 py-4 text-xs font-black uppercase text-white transition-all hover:bg-orange-500 disabled:opacity-50"
+                            >
+                                <span v-if="form.processing">Сохранение...</span>
+                                <span v-else>Применить изменения</span>
                             </button>
                         </div>
 
-                        <button
-                            type="submit"
-                            :disabled="form.processing"
-                            class="group relative w-full overflow-hidden rounded-2xl bg-orange-600 py-4 text-xs font-black uppercase text-white transition-all hover:bg-orange-500 disabled:opacity-50"
-                        >
-                            <span v-if="form.processing">Сохранение...</span>
-                            <span v-else>Применить изменения</span>
-                        </button>
-                    </div>
-
-                    <div
-                        class="space-y-4 rounded-[2.5rem] border border-slate-800 bg-slate-900/30 p-8"
-                    >
-                        <div class="flex justify-between text-[10px] font-black uppercase">
-                            <span class="text-slate-500">Отзывы</span>
-                            <span class="text-white">{{ page.data.reviews_count || 0 }}</span>
-                        </div>
-                        <div class="flex justify-between text-[10px] font-black uppercase">
-                            <span class="text-slate-500">Обновлено</span>
-                            <span class="text-slate-400">{{
-                                formatDateTime(page.data.updated_at, 'dd.MM.yyyy HH:mm')
-                            }}</span>
-                        </div>
                         <div
-                            v-if="!page.data.can_delete"
-                            class="rounded-xl bg-orange-500/10 p-3 text-center text-[9px] font-bold uppercase text-orange-500"
+                            class="space-y-4 rounded-[2.5rem] border border-slate-800 bg-slate-900/30 p-8"
                         >
-                            Системная страница: удаление запрещено
+                            <div class="flex justify-between text-[10px] font-black uppercase">
+                                <span class="text-slate-500">Отзывы</span>
+                                <Link
+                                    :href="
+                                        route('admin.comments.index', {
+                                            status: 'approved',
+                                            type: 'page',
+                                        })
+                                    "
+                                    ><span class="text-white">{{
+                                        page.data.reviews_count || 0
+                                    }}</span></Link
+                                >
+                            </div>
+                            <div class="flex justify-between text-[10px] font-black uppercase">
+                                <span class="text-slate-500">Обновлено</span>
+                                <span class="text-slate-400">{{
+                                    formatDateTime(page.data.updated_at, 'dd.MM.yyyy HH:mm')
+                                }}</span>
+                            </div>
+
+                            <BaseDeleteButton
+                                v-if="page.data.can_delete"
+                                :disabled="isDeleting"
+                                @confirm="deletePage"
+                                ><span v-if="isDeleting">Удаление...</span>
+                                <span v-else>Удалить страницу</span>
+                            </BaseDeleteButton>
+
+                            <div
+                                v-else
+                                class="rounded-xl bg-orange-500/10 p-3 text-center text-[9px] font-bold uppercase text-orange-500"
+                            >
+                                Системная страница: удаление запрещено
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -296,3 +262,5 @@
         </form>
     </div>
 </template>
+
+<style scoped></style>

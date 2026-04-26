@@ -22,6 +22,8 @@ class PageResource extends JsonResource
             'content' => $this->when($request->routeIs('pages.show'), $this->content),
             'template' => $this->template,
 
+            'url' => $this->url,
+
             'media' => $this->media->isNotEmpty() 
                         ? MediaResource::collection($this->media) 
                         : [MediaResource::fallback($this->resource)],
