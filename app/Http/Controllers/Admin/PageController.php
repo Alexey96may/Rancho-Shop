@@ -197,8 +197,12 @@ class PageController extends Controller
     public function uploadMedia(Request $request, Page $page)
     {
         $request->validate([
-            'image' => 'required|image|max:3072', // 3МБ
-        ]);
+                'image' => 'required|image|mimes:jpeg,png,webp,gif|max:3072',
+            ],
+            [
+                'image.max' => 'Изображение слишком тяжелое (не более 3 МБ).',
+                'image.image' => 'Файл должен быть картинкой.',
+            ]);
 
         $media = $page->addMediaFromRequest('image')->toMediaCollection('content_images');
         $url = $media->getFullUrl();
@@ -212,8 +216,12 @@ class PageController extends Controller
     public function uploadTemporaryMedia(Request $request)
     {
         $request->validate([
-            'image' => 'required|image|max:3072',
-        ]);
+                'image' => 'required|image|mimes:jpeg,png,webp,gif|max:3072',
+            ],
+            [
+                'image.max' => 'Изображение слишком тяжелое (не более 3 МБ).',
+                'image.image' => 'Файл должен быть картинкой.',
+            ]);
 
         $user = Auth::user();
         

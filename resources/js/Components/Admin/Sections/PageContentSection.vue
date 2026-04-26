@@ -11,6 +11,7 @@
     import { Underline } from '@tiptap/extension-underline';
     import StarterKit from '@tiptap/starter-kit';
     import { EditorContent, useEditor } from '@tiptap/vue-3';
+    import debounce from 'lodash/debounce';
     // Lucide Icons
     import {
         Bold,
@@ -37,6 +38,9 @@
     } from 'lucide-vue-next';
 
     import BaseModal from '@/Components/UI/BaseModal.vue';
+    import { useFlash } from '@/composables/useFlash';
+
+    const { notify } = useFlash();
 
     const props = defineProps<{
         modelValue?: string;
@@ -76,6 +80,21 @@
         const file = (event.target as HTMLInputElement).files?.[0];
         if (!file) return;
 
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+
+        if (!allowedTypes.includes(file.type)) {
+            notify('Неподдерживаемый формат файла', 'error');
+            return;
+        }
+
+        const maxSizeInBytes = 3 * 1024 * 1024;
+
+        if (file.size > maxSizeInBytes) {
+            notify('Ошибка! Файл слишком велик (макс. 3 МБ)', 'error');
+            if (fileInput.value) fileInput.value.value = '';
+            return;
+        }
+
         const uploadRoute = props.pageId
             ? route('admin.pages.upload-media', props.pageId)
             : route('admin.media.upload-temporary');
@@ -94,7 +113,16 @@
                         editor.value?.chain().focus().setImage({ src: url }).run();
                     }
                 },
-                onFinish: () => (isUploading.value = false),
+                onError: (e) => {
+                    console.log(e);
+
+                    const errorMessage = e.image || 'Произошла ошибка при загрузке файла';
+                    notify(errorMessage, 'error');
+                },
+                onFinish: () => {
+                    isUploading.value = false;
+                    if (fileInput.value) fileInput.value.value = '';
+                },
             },
         );
     };
@@ -104,7 +132,6 @@
         extensions: [
             StarterKit.configure({
                 heading: { levels: [1, 2, 3, 4, 5, 6] },
-                // dropCursor помогает визуально видеть, куда вставится картинка при перетаскивании
                 dropcursor: { color: '#f97316', width: 2 },
             }),
             Underline,
@@ -127,11 +154,11 @@
                 class: 'prose prose-invert max-w-none focus:outline-none min-h-[350px] p-8 text-slate-300',
             },
         },
-        onUpdate: ({ editor }) => {
+        onUpdate: debounce(({ editor }) => {
             if (!isHtmlMode.value) {
                 content.value = editor.getHTML();
             }
-        },
+        }, 300),
     });
 
     watch(isHtmlMode, (value) => {
@@ -348,7 +375,7 @@
                             ref="fileInput"
                             type="file"
                             class="hidden"
-                            accept="image/*"
+                            accept="image/jpeg,image/png,image/webp,image/gif"
                             @change="handleFileUpload"
                         />
                     </div>
@@ -390,11 +417,15 @@
     <BaseModal :show="isLinkModalShow" title="Управление ссылкой" @close="isLinkModalShow = false">
         <div class="space-y-4">
             <div>
-                <label class="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-500">
+                <label
+                    for="urllink"
+                    class="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-500"
+                >
                     URL адрес
                 </label>
                 <input
                     v-model="linkUrl"
+                    id="urllink"
                     type="url"
                     placeholder="https://example.com"
                     class="w-full rounded-2xl border border-slate-800 bg-slate-950 p-4 text-white outline-none transition-colors focus:border-orange-500"
