@@ -13,7 +13,7 @@
 
     import ContentSection from '@/Components/Admin/Sections/PageContentSection.vue';
     import GeneralSection from '@/Components/Admin/Sections/PageGeneralSection.vue';
-    import SeoSection from '@/Components/Admin/Sections/PageSeoSection.vue';
+    import SeoSection from '@/Components/Admin/Sections/SEOSection.vue';
     import BaseDeleteButton from '@/Components/UI/BaseDeleteButton.vue';
     import AdminLayout from '@/Layouts/AdminLayout.vue';
     import { useFlash } from '@/composables/useFlash';
@@ -43,10 +43,13 @@
         type: props.page.data.type,
         template: props.page.data.template,
         is_active: props.page.data.is_active,
+
         seo: {
             title: props.page.data.seo?.title || '',
             description: props.page.data.seo?.description || '',
             keywords: props.page.data.seo?.keywords || '',
+            canonical: props.page.data.seo?.canonical || '',
+            is_noindex: props.page.data.seo?.is_noindex || false,
         },
     });
 

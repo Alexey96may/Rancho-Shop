@@ -77,11 +77,11 @@ class PageController extends Controller
             'is_active' => 'boolean',
             'template' => 'required|string|in:default,delivery,about',
             'slug' => 'nullable|string|max:255|unique:pages,slug',
-
-            //todo
             'seo.title'       => 'nullable|string|max:255',
             'seo.description' => 'nullable|string',
             'seo.keywords'    => 'nullable|string',
+            'seo.canonical'   => 'nullable|string|url',
+            'seo.is_noindex'  => 'boolean',
         ]);
 
         if (!empty($validated['content'])) {
@@ -115,11 +115,11 @@ class PageController extends Controller
             'is_active' => 'boolean',
             'template' => 'required|string|in:default,delivery,about',
             'slug' => 'nullable|string|max:255|unique:pages,slug,' . $page->id,
-            
-            //todo
             'seo.title'       => 'nullable|string|max:255',
             'seo.description' => 'nullable|string',
             'seo.keywords'    => 'nullable|string',
+            'seo.canonical'   => 'nullable|string|url',
+            'seo.is_noindex'  => 'boolean',
         ]);
 
         if (isset($validated['content'])) {
@@ -203,7 +203,6 @@ class PageController extends Controller
         $media = $page->addMediaFromRequest('image')->toMediaCollection('content_images');
         $url = $media->getFullUrl();
 
-        // Возвращаем URL через бэк (в Inertia можно через сессию или кастомный Response)
         return back()->with('last_uploaded_url', $url);
     }
 
