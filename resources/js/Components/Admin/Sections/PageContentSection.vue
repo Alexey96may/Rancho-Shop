@@ -145,7 +145,7 @@
             }),
             Image.configure({
                 HTMLAttributes: {
-                    class: 'rounded-2xl border border-slate-800 max-w-full h-auto my-8',
+                    class: 'rounded-2xl border border-slate-800 max-w-full h-auto my-8 max-w-[250px] max-h-[250px]',
                 },
             }),
         ],

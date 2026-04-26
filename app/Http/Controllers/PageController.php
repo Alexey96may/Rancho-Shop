@@ -40,7 +40,7 @@ class PageController extends Controller
         $view = match($page->template) {
             'delivery' => 'Delivery/Index',
             'about'    => 'AboutView',
-            default    => 'Pages/DefaultView',
+            default    => 'DefaultView',
         };
 
         return Inertia::render($view, $data);

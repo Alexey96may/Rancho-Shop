@@ -9,13 +9,20 @@
     import CommentsSection from '@/Components/Sections/CommentsSection.vue';
     import MainLayout from '@/Layouts/MainLayout.vue';
     import { useYandexGeocoder } from '@/composables/useYandexGeocoder';
-    import type { Comment, DeliveryDraft, DeliveryInfo, Page, Paginated } from '@/types';
+    import type {
+        Comment,
+        DeliveryDraft,
+        DeliveryInfo,
+        Page,
+        Paginated,
+        ResourceSingle,
+    } from '@/types';
     import { formatDistance, formatMoney } from '@/utils/format';
 
     defineOptions({ layout: MainLayout });
 
     interface Props {
-        page: Page;
+        page: ResourceSingle<Page>;
         comments: Paginated<Comment>;
         delivery: DeliveryInfo;
     }
@@ -258,13 +265,13 @@
         <!-- HEADER -->
         <header class="mx-auto max-w-3xl px-6 pt-10">
             <h1 class="text-3xl font-bold">
-                {{ page.title }}
+                {{ page.data.title }}
             </h1>
         </header>
 
         <!-- CONTENT -->
-        <section v-if="page.content" class="prose mx-auto mt-6 max-w-3xl px-6">
-            <div v-html="page.content" />
+        <section v-if="page.data.content" class="prose mx-auto mt-6 max-w-3xl px-6">
+            <div v-html="page.data.content" />
         </section>
 
         <!-- MAIN -->

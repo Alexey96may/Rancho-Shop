@@ -161,7 +161,7 @@
                             :href="route('admin.features.index')"
                             :active="route().current('admin.features.*')"
                             :icon="StarIcon"
-                            label="Преимущества"
+                            label="Блоки"
                         />
                     </li>
 

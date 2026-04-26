@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Http\Resources\LandingBlockResource;
+use App\Http\Resources\Admin\AdminLandingBlockResource;
 use App\Models\LandingBlock;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -17,42 +17,22 @@ class FeatureController extends Controller
     {
         $blocks = LandingBlock::query()
             ->when($request->search, function ($query, $search) {
-                // Поиск по заголовку или ключу
-                $query->where('title', 'ilike', "%{$search}%")
-                      ->orWhere('key', 'ilike', "%{$search}%");
+                $search = mb_strtolower($search, 'UTF-8');
+
+                $query->where(function ($q) use ($search) {
+                    $q->whereRaw('LOWER(title) LIKE ?', ["%{$search}%"])
+                    ->orWhereRaw('LOWER(key) LIKE ?', ["%{$search}%"]);
+                });
             })
             ->orderBy('is_visible', 'desc')
             ->orderBy('id', 'asc')
             ->get();
 
         return Inertia::render('Admin/Features/Index', [
-            'blocks' => LandingBlockResource::collection($blocks),
+            'blocks' => AdminLandingBlockResource::collection($blocks),
             'filters' => $request->only(['search']),
+            'seo' => $this->seo('Панель управления: Блоки', robots: 'noindex, nofollow')
         ]);
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
     }
 
     /**
@@ -61,7 +41,8 @@ class FeatureController extends Controller
     public function edit(LandingBlock $feature)
     {
         return Inertia::render('Admin/Features/Edit', [
-            'block' => new LandingBlockResource($feature)
+            'block' => new AdminLandingBlockResource($feature),
+            'seo' => $this->seo("Редактирование: {$feature->key->label()}", robots: 'noindex, nofollow'),
         ]);
     }
 
@@ -91,19 +72,11 @@ class FeatureController extends Controller
     /**
      * Toggle block visibility on the landing page.
      */
-    public function toggle(int $id)
+    public function toggle(LandingBlock $feature)
     {
-        $feature = LandingBlock::findOrFail($id);
-        $feature->is_visible = !$feature->is_visible;
-        $feature->save(); 
-        return redirect()->back()->with('success', $feature->is_visible ? "Блок видно на сайте" : "Блок скрыт");
-    }
+        $feature->update(['is_visible' => !$feature->is_visible]);
+        $status = $feature->is_visible ? "отображается" : "скрыт";
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        return redirect()->back()->with('success', "Блок «{$feature->key->label()}» теперь {$status}");
     }
 }

@@ -1,14 +1,26 @@
+export enum LandingBlockKey {
+    VALUES = 'values',
+    ABOUT = 'about',
+    HOW_IT_WORKS = 'how_it_works',
+}
+
 export interface LandingContentItem {
     title: string;
     desc: string;
-    icon?: string;
-    step?: number;
+    icon?: string | null;
+    step?: number | null;
 }
 
 export interface LandingBlock {
-    id: number;
-    key: 'values' | 'how_it_works' | 'about' | 'hero';
+    key: LandingBlockKey;
     title: string;
-    subtitle: string | null;
+    subtitle: string;
     content: LandingContentItem[];
+}
+
+export interface AdminLandingBlock extends LandingBlock {
+    id: number;
+    is_visible: boolean;
+    label: string;
+    updated_at: string;
 }

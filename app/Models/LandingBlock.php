@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\LandingBlockKey;
 use Illuminate\Database\Eloquent\Model;
 
 class LandingBlock extends Model
@@ -11,6 +12,7 @@ class LandingBlock extends Model
     protected $casts = [
         'content' => 'array', // JSON -> Array
         'is_visible' => 'boolean',
+        'key' => LandingBlockKey::class,
     ];
 
     /**

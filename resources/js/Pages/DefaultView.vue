@@ -2,10 +2,10 @@
     import { Head } from '@inertiajs/vue3';
 
     import AppLayout from '@/Layouts/MainLayout.vue';
-    import type { Page } from '@/types';
+    import type { Page, ResourceSingle } from '@/types';
 
     defineProps<{
-        page: { data: Page };
+        page: ResourceSingle<Page>;
     }>();
 </script>
 
