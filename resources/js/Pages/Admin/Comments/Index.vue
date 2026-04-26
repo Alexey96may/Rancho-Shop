@@ -101,6 +101,7 @@
         if (isDeleted) {
             router.delete(route('admin.comments.destroy', id), {
                 preserveScroll: true,
+                preserveState: true,
                 onError() {
                     notify('Ошибка удаления!', 'error');
                 },
@@ -178,28 +179,32 @@
         </div>
     </div>
 
-    <div v-if="comments.data.length" class="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-        <TransitionGroup name="stagger">
-            <AdminCommentCard
-                v-for="(comment, index) in comments.data"
-                :key="comment.id"
-                :comment="comment"
-                :style="{ '--i': index }"
-                @update-status="handleUpdateStatus"
-                @delete="handleDelete"
-            />
-        </TransitionGroup>
-    </div>
+    <Transition name="fade-slide" mode="out-in">
+        <div
+            v-if="comments.data.length"
+            key="comments-list"
+            class="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3"
+        >
+            <TransitionGroup name="stagger">
+                <AdminCommentCard
+                    v-for="(comment, index) in comments.data"
+                    :key="comment.id"
+                    :comment="comment"
+                    :style="{ '--i': index }"
+                    @update-status="handleUpdateStatus"
+                    @delete="handleDelete"
+                />
+            </TransitionGroup>
+        </div>
 
-    <div v-else>
-        <Transition name="fade-slide">
-            <AdminEmptyState
-                title="Комменты не найдены"
-                @action="clearFilters"
-                :show-action="true"
-            />
-        </Transition>
-    </div>
+        <AdminEmptyState
+            v-else
+            key="empty-state"
+            title="Комменты не найдены"
+            @action="clearFilters"
+            :show-action="true"
+        />
+    </Transition>
 
     <AdminPagination :links="comments.meta.links" />
 </template>
@@ -212,6 +217,8 @@
 
     .stagger-leave-active {
         transition: all 0.3s ease;
+        position: absolute;
+        width: 100%;
     }
 
     .stagger-enter-from {

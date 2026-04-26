@@ -35,7 +35,7 @@ class LandingController extends Controller
             'values' => new LandingBlockResource(LandingBlock::getSafe('values')),
             'how_it_works' => new LandingBlockResource(LandingBlock::getSafe('how_it_works')),
             'comments' => CommentResource::collection(
-                Comment::where('is_published', true)
+                Comment::published()
                         // ->where('commentable_type', 'page')
                         ->latest()
                         ->take(setting('featured_comments_limit', 6)) 

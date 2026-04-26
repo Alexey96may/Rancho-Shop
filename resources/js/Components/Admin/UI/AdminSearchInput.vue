@@ -55,7 +55,7 @@
 
         <input
             id="admin-search"
-            v-model="innerValue"
+            v-model.trim="innerValue"
             type="search"
             role="searchbox"
             :placeholder="placeholder || 'Поиск...'"
