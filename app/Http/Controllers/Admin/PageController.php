@@ -8,6 +8,7 @@ use App\Http\Resources\Admin\AdminPageResource;
 use App\Models\Page;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Illuminate\Validation\Rules\Enum;
 
@@ -91,6 +92,10 @@ class PageController extends Controller
 
         $page = Page::create($validated);
 
+        if ($page->content) {
+            $this->moveTemporaryMedia($page->content, $page);
+        }
+
         if ($request->has('seo')) {
             $page->seo()->create($request->input('seo'));
         }
@@ -119,6 +124,8 @@ class PageController extends Controller
 
         if (isset($validated['content'])) {
             $validated['content'] = SanitizeService::cleanHtml($validated['content']);
+
+            $this->sanitizeMedia($validated['content'], $page);
         }
 
         $validated['slug'] = Str::slug($validated['slug'] ?? $validated['title']);
@@ -182,5 +189,71 @@ class PageController extends Controller
         $page->delete();
 
         return redirect()->route('admin.pages.index')->with('success', "Страница $page->title удалена");
+    }
+
+    /** 
+     * Upload Media files to pages (from text-editor or etc)
+    */
+    public function uploadMedia(Request $request, Page $page)
+    {
+        $request->validate([
+            'image' => 'required|image|max:3072', // 3МБ
+        ]);
+
+        $media = $page->addMediaFromRequest('image')->toMediaCollection('content_images');
+        $url = $media->getFullUrl();
+
+        // Возвращаем URL через бэк (в Inertia можно через сессию или кастомный Response)
+        return back()->with('last_uploaded_url', $url);
+    }
+
+    /** 
+     * Upload Unsociated Media files to pages (from text-editor or etc)
+    */
+    public function uploadTemporaryMedia(Request $request)
+    {
+        $request->validate([
+            'image' => 'required|image|max:3072',
+        ]);
+
+        $user = Auth::user();
+        
+        $media = $user->addMediaFromRequest('image')
+            ->toMediaCollection('tmp');
+
+        return back()->with('last_uploaded_url', $media->getFullUrl());
+    }
+    
+    /**
+     * Delete Unusable Media 
+     */
+    private function sanitizeMedia(string $content, Page $page): void
+    {
+        $mediaItems = $page->getMedia('content_images');
+
+        foreach ($mediaItems as $media) {
+            if (!str_contains($content, $media->getUrl())) {
+                $media->delete();
+            }
+        }
+    }
+
+    /** 
+     * Move Temporary Media files to the admin/moder tmp
+    */
+    private function moveTemporaryMedia(string $content, Page $page)
+    {
+        $user = Auth::user();
+        $temporaryMedia = $user->getMedia('tmp');
+
+        foreach ($temporaryMedia as $media) {
+            $url = $media->getUrl();
+            
+            if (str_contains($content, $url)) {
+                $media->move($page, 'content_images');
+            }
+        }
+        
+        $user->clearMediaCollectionExcept('tmp', $user->getMedia('tmp')->where('created_at', '>', now()->subDay()));
     }
 }

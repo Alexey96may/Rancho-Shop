@@ -48,7 +48,10 @@ trait HasStandardMedia
     {
         $className = strtolower(class_basename($this)); 
         
-        $subType = $this->category?->slug ?? 'default';
+        $subType = 'default';
+        if (method_exists($this, 'category') && $this->category) {
+            $subType = $this->category->slug;
+        }
         
         $path = "images/placeholders/{$className}/{$subType}.jpg";
 

@@ -173,7 +173,7 @@
                     </div>
 
                     <div v-else-if="activeTab === 'content'" key="content" role="tabpanel">
-                        <ContentSection v-model="form.content" />
+                        <ContentSection v-model="form.content" :page-id="page.data.id" />
                     </div>
 
                     <div v-else-if="activeTab === 'seo'" key="seo" role="tabpanel">

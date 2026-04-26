@@ -52,6 +52,8 @@ export interface FlashPayload {
     error?: string;
     message?: string;
     warning?: string;
+
+    last_uploaded_url?: string;
 }
 
 export type Role = 'admin' | 'moderator' | 'customer' | 'worker';
@@ -99,12 +101,7 @@ export interface SharedData extends PageProps {
         manageSettings: boolean;
         manageNomenclature: boolean;
     };
-    flash: {
-        success: string | null;
-        error: string | null;
-        message: string | null;
-        warning: string | null;
-    };
+    flash: FlashPayload;
     permissions: Permission[];
     [key: string]: any;
 }

@@ -119,6 +119,9 @@ Route::prefix('admin')
                 ->name('animals.media.destroy');
 
             Route::resource('pages', AdminPageController::class);
+            Route::post('pages/upload-media/{page}', [AdminPageController::class, 'uploadMedia'])->name('pages.upload-media');
+            Route::post('media/upload-temporary', [AdminPageController::class, 'uploadTemporaryMedia'])->name('media.upload-temporary');
+
             Route::resource('faq', FaqController::class);
 
             Route::resource('features', FeatureController::class);

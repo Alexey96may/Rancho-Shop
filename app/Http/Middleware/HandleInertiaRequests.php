@@ -69,6 +69,8 @@ class HandleInertiaRequests extends Middleware
                 'error'   => fn() => $request->session()->get('error'),
                 'message' => fn() => $request->session()->get('message'),
                 'warning' => fn() => $request->session()->get('warning'),
+
+                'last_uploaded_url' => fn() => $request->session()->get('last_uploaded_url'),
             ],
 
             'deliveryDraft' => $request->user()

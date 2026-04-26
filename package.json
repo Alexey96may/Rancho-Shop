@@ -10,6 +10,7 @@
     "devDependencies": {
         "@inertiajs/vue3": "^2.0.0",
         "@tailwindcss/forms": "^0.5.3",
+        "@tailwindcss/typography": "^0.5.19",
         "@tailwindcss/vite": "^4.0.0",
         "@trivago/prettier-plugin-sort-imports": "^6.0.2",
         "@types/howler": "^2.2.12",
@@ -50,6 +51,14 @@
     "dependencies": {
         "@headlessui/vue": "^1.7.23",
         "@heroicons/vue": "^2.2.0",
+        "@tiptap/extension-color": "^3.22.4",
+        "@tiptap/extension-image": "^3.22.4",
+        "@tiptap/extension-link": "^3.22.4",
+        "@tiptap/extension-text-style": "^3.22.4",
+        "@tiptap/extension-underline": "^3.22.4",
+        "@tiptap/pm": "^3.22.4",
+        "@tiptap/starter-kit": "^3.22.4",
+        "@tiptap/vue-3": "^3.22.4",
         "@turf/turf": "^7.3.4",
         "browser-image-compression": "^2.0.2",
         "date-fns": "^4.1.0",

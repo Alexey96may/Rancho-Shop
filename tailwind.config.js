@@ -58,5 +58,5 @@ export default {
         hoverOnlyWhenSupported: true,
     },
 
-    plugins: [forms],
+    plugins: [forms, require('@tailwindcss/typography')],
 };
