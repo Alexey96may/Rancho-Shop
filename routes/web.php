@@ -122,6 +122,11 @@ Route::prefix('admin')
             Route::post('pages/upload-media/{page}', [AdminPageController::class, 'uploadMedia'])->name('pages.upload-media');
             Route::post('media/upload-temporary', [AdminPageController::class, 'uploadTemporaryMedia'])->name('media.upload-temporary');
 
+            Route::prefix('faq')->name('faq.')->group(function () {
+                Route::patch('reorder', [FaqController::class, 'reorder'])->name('reorder');
+                
+                Route::patch('{faq}/toggle', [FaqController::class, 'toggle'])->name('toggle');
+            });
             Route::resource('faq', FaqController::class);
 
             Route::resource('features', FeatureController::class);

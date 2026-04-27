@@ -3,11 +3,12 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Http\Resources\FaqResource;
+use App\Http\Resources\Admin\AdminFaqResource;
 use App\Models\Faq;
 use App\Services\SanitizeService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\DB;
 
 class FaqController extends Controller
 {
@@ -18,31 +19,24 @@ class FaqController extends Controller
     {
         $faqs = Faq::query()
             ->when($request->search, function ($query, $search) {
-                $query->where('question', 'ilike', "%{$search}%");
+                $search = mb_strtolower($search, 'UTF-8');
+                $query->whereRaw('LOWER(question) LIKE ?', ["%{$search}%"]);
             })
             ->orderBy('sort_order', 'asc')
-            ->orderBy('created_at', 'desc')
             ->paginate(setting('admin_per_page', 10))
             ->withQueryString();
 
         return Inertia::render('Admin/Faq/Index', [
-            'faqs' => FaqResource::collection($faqs),
+            'faqs' => AdminFaqResource::collection($faqs),
             'filters' => $request->only(['search']),
+            'seo' => $this->seo('Панель управления: Вопросы и Ответы', robots: 'noindex, nofollow')
         ]);
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
     }
 
     /**
      * Store a newly created resource in storage.
      */
-public function store(Request $request)
+    public function store(Request $request)
     {
         $validated = $request->validate([
             'question'     => 'required|string|max:500',
@@ -51,34 +45,16 @@ public function store(Request $request)
             'sort_order'   => 'nullable|integer',
         ]);
 
-        // Очищаем HTML в ответе
         $validated['answer'] = SanitizeService::cleanHtml($validated['answer']);
 
-        // Если порядок не указан, ставим в конец
         if (!isset($validated['sort_order'])) {
-            $validated['sort_order'] = Faq::max('sort_order') + 1;
+            $validated['sort_order'] = (Faq::max('sort_order') ?? 0) + 1;
         }
 
         Faq::create($validated);
 
         return redirect()->route('admin.faq.index')
-            ->with('success', 'Вопрос добавлен в базу знаний');
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
+            ->with('success', "Вопрос добавлен в базу знаний");
     }
 
     /**
@@ -106,8 +82,11 @@ public function store(Request $request)
     */
     public function toggle(Faq $faq)
     {
-        $faq->update(['is_published' => !$faq->is_published]);
-        return redirect()->back();
+        $faq->update([
+            'is_published' => !$faq->is_published 
+        ]);
+
+        return redirect()->back()->with('success', $faq->is_published ? 'Вопрос опубликован' : 'Вопрос скрыт');
     }
 
     /**
@@ -116,12 +95,37 @@ public function store(Request $request)
     public function reorder(Request $request)
     {
         $request->validate(['ids' => 'required|array']);
+        $ids = $request->ids;
 
-        foreach ($request->ids as $index => $id) {
-            Faq::where('id', $id)->update(['sort_order' => $index]);
+        if (empty($ids)) return redirect()->back();
+
+        $cases = [];
+        $params = [];
+
+        foreach ($ids as $index => $id) {
+            $cases[] = "WHEN id = ? THEN ?::integer";
+            $params[] = $id;
+            $params[] = $index;
         }
 
-        return redirect()->back();
+        $params = array_merge($params, $ids);
+        $idsPlaceholder = implode(',', array_fill(0, count($ids), '?'));
+
+        $query = "
+            UPDATE faqs 
+            SET sort_order = (CASE " . implode(' ', $cases) . " END) 
+            WHERE id IN ($idsPlaceholder)
+        ";
+
+        try {
+            DB::transaction(function () use ($query, $params) {
+                DB::update($query, $params);
+            });
+
+            return redirect()->back()->with('success', 'Порядок вопросов обновлен');
+            } catch (\Exception $e) {
+                return redirect()->back()->withErrors(['error' => 'Ошибка базы данных: ' . $e->getMessage()]);
+            }
     }
 
     /**
@@ -131,6 +135,6 @@ public function store(Request $request)
     {   
         $faq->delete();
         return redirect()->route('admin.faq.index')
-            ->with('success', 'Вопрос удален');
+            ->with('success', 'Вопрос удален!');
     }
 }
