@@ -1,17 +1,11 @@
 <script setup lang="ts">
-    import { Head, Link, useForm } from '@inertiajs/vue3';
+    import { Link, useForm } from '@inertiajs/vue3';
 
-    import {
-        ChevronLeftIcon,
-        LayoutIcon,
-        MoveDownIcon,
-        MoveUpIcon,
-        PlusIcon,
-        SaveIcon,
-        Trash2Icon,
-    } from 'lucide-vue-next';
+    import { ChevronLeftIcon, LayoutIcon, PlusIcon, SaveIcon } from 'lucide-vue-next';
 
+    import ContentItemCard from '@/Components/Admin/Cards/AdminContentItemCard.vue';
     import AdminLayout from '@/Layouts/AdminLayout.vue';
+    import { useFlash } from '@/composables/useFlash';
     import { AdminLandingBlock, ResourceSingle } from '@/types';
 
     defineOptions({ layout: AdminLayout });
@@ -20,38 +14,53 @@
         block: ResourceSingle<AdminLandingBlock>;
     }>();
 
+    const generateId = () => {
+        return typeof window !== 'undefined' ? crypto.randomUUID() : Math.random().toString();
+    };
+
     const form = useForm({
         title: props.block.data.title,
         subtitle: props.block.data.subtitle,
         is_visible: props.block.data.is_visible,
-        content: JSON.parse(JSON.stringify(props.block.data.content)),
+        content: JSON.parse(JSON.stringify(props.block.data.content)).map((item: any) => ({
+            ...item,
+            id: item.id || generateId(),
+        })),
     });
 
+    const { notifyWithUndo } = useFlash();
+
     const addContentItem = () => {
-        form.content.push({ title: '', desc: '', icon: 'Circle', step: form.content.length + 1 });
+        form.content.push({
+            id: crypto.randomUUID(),
+            title: '',
+            desc: '',
+            icon: 'Circle',
+            step: form.content.length + 1,
+        });
     };
 
-    const removeContentItem = (index: number) => {
-        form.content.splice(index, 1);
+    const removeContentItem = async (index: number) => {
+        if (form.content.length <= 1) return;
+        const isDeleted = await notifyWithUndo('Удаление карточки #' + (index + 1), 2000);
+
+        if (isDeleted) {
+            form.content.splice(index, 1);
+        }
     };
 
     const moveItem = (index: number, direction: 'up' | 'down') => {
         const target = direction === 'up' ? index - 1 : index + 1;
-        if (target >= 0 && target < form.content.length) {
-            const currentItem = form.content[index];
-            const targetItem = form.content[target];
 
-            form.content[index] = targetItem;
-            form.content[target] = currentItem;
+        if (target >= 0 && target < form.content.length) {
+            const [movedItem] = form.content.splice(index, 1);
+            form.content.splice(target, 0, movedItem);
         }
     };
 
     const submit = () => {
         form.patch(route('admin.features.update', Number(props.block.data.id)), {
             preserveScroll: true,
-            onSuccess: () => {
-                // Можно добавить уведомление
-            },
         });
     };
 </script>
@@ -63,13 +72,14 @@
         </h1>
     </Teleport>
 
-    <div class="flex items-center gap-4">
+    <div class="mb-4 flex items-center justify-between gap-8">
         <Link
             :href="route('admin.features.index')"
-            class="rounded-xl bg-slate-800 p-2 text-slate-400 hover:text-white"
+            class="block rounded-xl bg-slate-800 p-2 text-slate-400 hover:text-white"
         >
             <ChevronLeftIcon class="h-5 w-5" />
         </Link>
+        <p class="text-[12px] text-slate-400">*Здесь можно использовать html разметку</p>
     </div>
 
     <form @submit.prevent="submit" class="max-w-5xl space-y-8 pb-20">
@@ -128,96 +138,19 @@
                 </button>
             </div>
 
-            <div class="grid gap-4">
+            <div class="v grid gap-4" v-if="form.content.length" key="cards">
                 <TransitionGroup name="list">
-                    <div
+                    <ContentItemCard
                         v-for="(item, index) in form.content"
-                        :key="index"
-                        class="group relative rounded-[2rem] border border-slate-800 bg-slate-900/20 p-6 transition-all hover:border-slate-700"
-                    >
-                        <div
-                            class="absolute -right-3 top-6 flex flex-col gap-2 opacity-0 transition-all group-hover:opacity-100"
-                        >
-                            <button
-                                type="button"
-                                @click="moveItem(Number(index), 'up')"
-                                class="shadow-xl rounded-lg bg-slate-800 p-2 text-slate-400 hover:text-white"
-                            >
-                                <MoveUpIcon class="h-4 w-4" />
-                            </button>
-                            <button
-                                type="button"
-                                @click="moveItem(Number(index), 'down')"
-                                class="shadow-xl rounded-lg bg-slate-800 p-2 text-slate-400 hover:text-white"
-                            >
-                                <MoveDownIcon class="h-4 w-4" />
-                            </button>
-                            <button
-                                type="button"
-                                @click="removeContentItem(Number(index))"
-                                class="shadow-xl rounded-lg bg-red-500/10 p-2 text-red-500/60 hover:text-red-500"
-                            >
-                                <Trash2Icon class="h-4 w-4" />
-                            </button>
-                        </div>
-
-                        <div class="grid gap-6 md:grid-cols-12">
-                            <div
-                                class="flex flex-col items-center justify-center border-r border-slate-800/50 md:col-span-1"
-                            >
-                                <span class="text-2xl font-black text-slate-800">{{
-                                    Number(index) + 1
-                                }}</span>
-                            </div>
-
-                            <div class="grid gap-4 md:col-span-11 md:grid-cols-3">
-                                <div class="space-y-1">
-                                    <label
-                                        class="ml-1 text-[9px] font-black uppercase text-slate-600"
-                                        >Иконка Lucide</label
-                                    >
-                                    <input
-                                        v-model="item.icon"
-                                        type="text"
-                                        class="w-full rounded-xl border-slate-800 bg-slate-950 p-3 text-xs text-white"
-                                    />
-                                </div>
-                                <div class="space-y-1">
-                                    <label
-                                        class="ml-1 text-[9px] font-black uppercase text-slate-600"
-                                        >Заголовок</label
-                                    >
-                                    <input
-                                        v-model="item.title"
-                                        type="text"
-                                        class="w-full rounded-xl border-slate-800 bg-slate-950 p-3 text-xs text-white"
-                                    />
-                                </div>
-                                <div class="space-y-1">
-                                    <label
-                                        class="ml-1 text-[9px] font-black uppercase text-slate-600"
-                                        >Шаг (если нужно)</label
-                                    >
-                                    <input
-                                        v-model="item.step"
-                                        type="number"
-                                        class="w-full rounded-xl border-slate-800 bg-slate-950 p-3 text-xs text-white"
-                                    />
-                                </div>
-                                <div class="space-y-1 md:col-span-3">
-                                    <label
-                                        class="ml-1 text-[9px] font-black uppercase text-slate-600"
-                                        >Описание</label
-                                    >
-                                    <textarea
-                                        v-model="item.desc"
-                                        rows="2"
-                                        class="w-full rounded-xl border-slate-800 bg-slate-950 p-3 text-xs leading-relaxed text-white"
-                                    ></textarea>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                        :key="item.id"
+                        :item="item"
+                        :index="Number(index)"
+                        :is-first="index === 0"
+                        :is-last="index === form.content.length - 1"
+                        :is-final="form.content.length <= 1"
+                        @move="moveItem"
+                        @remove="removeContentItem"
+                    />
                 </TransitionGroup>
             </div>
         </section>

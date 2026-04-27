@@ -7,6 +7,8 @@ use App\Http\Resources\Admin\AdminLandingBlockResource;
 use App\Models\LandingBlock;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Enums\LandingBlockKey;
+use App\Services\SanitizeService;
 
 class FeatureController extends Controller
 {
@@ -19,9 +21,16 @@ class FeatureController extends Controller
             ->when($request->search, function ($query, $search) {
                 $search = mb_strtolower($search, 'UTF-8');
 
-                $query->where(function ($q) use ($search) {
+                $matchingKeys = collect(LandingBlockKey::cases())
+                    ->filter(fn($case) => str_contains(
+                        mb_strtolower($case->label(), 'UTF-8'), 
+                        mb_strtolower($search, 'UTF-8')
+                    ))
+                    ->map(fn($case) => $case->value);
+
+                $query->where(function ($q) use ($search, $matchingKeys) {
                     $q->whereRaw('LOWER(title) LIKE ?', ["%{$search}%"])
-                    ->orWhereRaw('LOWER(key) LIKE ?', ["%{$search}%"]);
+                    ->orWhereIn('key', $matchingKeys);
                 });
             })
             ->orderBy('is_visible', 'desc')
@@ -63,6 +72,18 @@ class FeatureController extends Controller
             'content.*.icon'  => 'nullable|string',
             'content.*.step'  => 'nullable|integer',
         ]);
+
+        $validated['title'] = SanitizeService::cleanHtml($validated['title']);
+        $validated['subtitle'] = SanitizeService::cleanHtml($validated['subtitle']);
+
+        $validated['content'] = collect($validated['content'])->map(function ($item) {
+            return [
+                'title' => SanitizeService::cleanHtml($item['title'] ?? null),
+                'desc'  => SanitizeService::cleanHtml($item['desc'] ?? ''),
+                'icon'  => strip_tags($item['icon'] ?? null),
+                'step'  => (int) ($item['step'] ?? null),
+            ];
+        })->toArray();
 
         $feature->update($validated);
 

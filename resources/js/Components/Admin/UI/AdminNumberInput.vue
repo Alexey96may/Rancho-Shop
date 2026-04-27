@@ -3,7 +3,7 @@
 
     import { MinusIcon, PlusIcon } from '@heroicons/vue/24/outline';
 
-    const model = defineModel<number>({ default: 0 });
+    const model = defineModel<number | null | undefined>({ default: 0 });
 
     const props = defineProps<{
         label?: string;
@@ -15,13 +15,17 @@
     const inputId = useId();
 
     const increment = () => {
-        if (props.max !== undefined && model.value >= props.max) return;
-        model.value += props.step ?? 1;
+        const currentValue = model.value ?? 0;
+
+        if (props.max !== undefined && currentValue >= props.max) return;
+        model.value = currentValue + (props.step ?? 1);
     };
 
     const decrement = () => {
-        if (props.min !== undefined && model.value <= props.min) return;
-        model.value -= props.step ?? 1;
+        const currentValue = model.value ?? 0;
+
+        if (props.min !== undefined && currentValue <= props.min) return;
+        model.value = currentValue - (props.step ?? 1);
     };
 
     /**
@@ -76,7 +80,7 @@
                 :id="inputId"
                 type="text"
                 role="spinbutton"
-                :aria-valuenow="model"
+                :aria-valuenow="model || undefined"
                 :aria-valuemin="min"
                 :aria-valuemax="max"
                 :value="model"
