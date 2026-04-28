@@ -125,6 +125,7 @@
                         :key="promo.id"
                         :promo="promo"
                         :disabled="deletingIds.has(promo.id)"
+                        :return-page="promoCodes.meta.current_page"
                         @toggle="togglePromo"
                         @delete="deletePromo"
                 /></TransitionGroup>

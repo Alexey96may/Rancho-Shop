@@ -90,7 +90,7 @@ class PromocodeController extends Controller
             return redirect()->back()->with('success', 'Создано. Можете добавить следующий.');
         }
 
-        return redirect()->route('admin.promocodes.index')
+        return redirect()->route('admin.promocodes.index', ['page' => $request->input('return_page', 1)])
             ->with('success', "Промокод {$request->code} обновлен");
     }
 
@@ -107,7 +107,7 @@ class PromocodeController extends Controller
         ]);
     }
 
-    public function edit(PromoCode $promocode)
+    public function edit(PromoCode $promocode, Request $request)
     {
         $typeOptions = collect(PromoCodeType::cases())->map(fn($type) => [
             'value' => $type->value,
@@ -117,6 +117,9 @@ class PromocodeController extends Controller
         return Inertia::render('Admin/PromoCodes/Edit', [
             'promo' => new AdminPromoCodeResource($promocode),
             'typeOptions' => $typeOptions,
+            'filters' => [
+                'page' => $request->query('page', 1),
+            ],
             'seo' => $this->seo('Редактирование промокода ' . $promocode->code, robots: 'noindex, nofollow'),
         ]);
     }

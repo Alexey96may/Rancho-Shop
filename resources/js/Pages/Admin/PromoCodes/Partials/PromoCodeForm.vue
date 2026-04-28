@@ -11,6 +11,7 @@
     const props = defineProps<{
         promo?: AdminPromoCode;
         isEdit?: boolean;
+        returnPage?: number | string;
         typeOptions: Array<{ value: string; label: string }>;
     }>();
 
@@ -231,7 +232,7 @@
             </button>
 
             <Link
-                :href="route('admin.promocodes.index')"
+                :href="route('admin.promocodes.index', { page: returnPage })"
                 class="flex items-center gap-2 px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500 transition-all hover:text-white"
             >
                 <ChevronLeftIcon class="h-4 w-4" />

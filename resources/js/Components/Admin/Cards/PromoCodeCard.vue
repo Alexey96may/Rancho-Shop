@@ -1,5 +1,7 @@
 <script setup lang="ts">
-    import { Link, router } from '@inertiajs/vue3';
+    import { ref } from 'vue';
+
+    import { Link } from '@inertiajs/vue3';
 
     import {
         CalendarIcon,
@@ -11,22 +13,31 @@
         UserGroupIcon,
     } from '@heroicons/vue/24/outline';
 
+    import { useFlash } from '@/composables/useFlash';
     import { AdminPromoCode } from '@/types';
+    import { formatDateTime, formatMoney, formatRelativeTime } from '@/utils/format';
 
     const props = defineProps<{
         promo: AdminPromoCode;
         disabled: boolean;
+        returnPage?: string | number;
     }>();
 
     defineEmits(['edit', 'delete', 'toggle']);
 
-    const formatCurrency = (val: number) => (val / 100).toLocaleString('ru-RU');
+    const { notify } = useFlash();
 
-    // Функция для быстрого копирования
     const copyToClipboard = (text: string) => {
         navigator.clipboard.writeText(text);
-        // Тут можно добавить мелкий toast "Скопировано!"
+
+        notify(`Промокод «${text}» скопирован!` + props.returnPage, 'success');
     };
+
+    const isShortData = ref(false);
+
+    function toggleDataFormat() {
+        isShortData.value = !isShortData.value;
+    }
 </script>
 
 <template>
@@ -45,7 +56,7 @@
                     <div class="flex items-center gap-2">
                         <span
                             @click="copyToClipboard(promo.code)"
-                            class="cursor-pointer text-xl font-black uppercase tracking-widest text-white transition-colors hover:text-orange-400"
+                            class="cursor-pointer text-nowrap text-xl font-black uppercase tracking-widest text-white transition-colors hover:text-orange-400"
                             title="Нажмите, чтобы скопировать"
                         >
                             {{ promo.code }}
@@ -61,7 +72,7 @@
                         {{
                             promo.type === 'percent'
                                 ? `${promo.value}% скидка`
-                                : `${formatCurrency(promo.value)} ₽`
+                                : `${formatMoney(promo.value)}`
                         }}
                     </span>
                 </div>
@@ -102,9 +113,38 @@
                     </div>
 
                     <div class="flex min-w-0 flex-col">
-                        <span class="text-[9px] font-black uppercase text-slate-500">Истекает</span>
-                        <span class="truncate text-xs font-bold text-white">
-                            {{ new Date(promo.expires_at).toLocaleDateString('ru') }}
+                        <span
+                            class="text-[9px] font-black uppercase tracking-widest transition-colors"
+                            :class="
+                                new Date(promo.expires_at) < new Date()
+                                    ? 'text-red-500'
+                                    : 'text-slate-500'
+                            "
+                        >
+                            {{ new Date(promo.expires_at) < new Date() ? 'Истёк' : 'Истекает' }}
+                        </span>
+
+                        <span
+                            @click="toggleDataFormat"
+                            class="cursor-pointer text-xs font-bold transition-colors hover:text-orange-400"
+                            :class="
+                                new Date(promo.expires_at) < new Date()
+                                    ? 'text-red-400/80'
+                                    : 'text-white'
+                            "
+                            :title="
+                                isShortData ? 'Показать сколько осталось' : 'Показать полную дату'
+                            "
+                        >
+                            <Transition name="date-fade" mode="out-in">
+                                <span :key="isShortData ? 'short' : 'full'">
+                                    {{
+                                        isShortData
+                                            ? formatDateTime(promo.expires_at)
+                                            : formatRelativeTime(promo.expires_at)
+                                    }}
+                                </span>
+                            </Transition>
                         </span>
                     </div>
                 </template>
@@ -199,17 +239,17 @@
                     <span class="font-bold uppercase tracking-widest text-slate-500"
                         >Мин. заказ:</span
                     >
-                    <span class="font-mono text-slate-300"
-                        >{{ formatCurrency(promo.min_order_amount) }} ₽</span
-                    >
+                    <span class="font-mono text-slate-300">{{
+                        formatMoney(promo.min_order_amount)
+                    }}</span>
                 </div>
                 <div v-if="promo.max_discount" class="flex justify-between text-[10px]">
                     <span class="font-bold uppercase tracking-widest text-slate-500"
                         >Макс. скидка:</span
                     >
-                    <span class="font-mono text-slate-300"
-                        >{{ formatCurrency(promo.max_discount) }} ₽</span
-                    >
+                    <span class="font-mono text-slate-300">{{
+                        formatMoney(promo.max_discount)
+                    }}</span>
                 </div>
             </div>
 
@@ -217,7 +257,12 @@
                 class="mt-6 flex justify-end gap-2 border-t border-slate-800/50 pt-4 opacity-0 transition-all group-hover:opacity-100"
             >
                 <Link
-                    :href="route('admin.promocodes.edit', promo.id)"
+                    :href="
+                        route('admin.promocodes.edit', {
+                            promocode: promo.id,
+                            page: returnPage || '',
+                        })
+                    "
                     class="rounded-xl bg-slate-800 p-2.5 text-slate-400 transition-all hover:bg-slate-700 hover:text-orange-500"
                 >
                     <PencilSquareIcon class="h-5 w-5" />
@@ -267,5 +312,20 @@
     /* Убираем синюю обводку фокуса */
     :deep(.vc-focus) {
         box-shadow: none !important;
+    }
+
+    .date-fade-enter-active,
+    .date-fade-leave-active {
+        transition: all 0.2s ease;
+    }
+
+    .date-fade-enter-from {
+        opacity: 0;
+        transform: translateY(4px); /* Появляется чуть снизу */
+    }
+
+    .date-fade-leave-to {
+        opacity: 0;
+        transform: translateY(-4px); /* Уходит чуть вверх */
     }
 </style>
