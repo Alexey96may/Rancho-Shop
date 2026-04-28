@@ -1,10 +1,12 @@
 <script setup lang="ts">
+    import { InertiaForm } from '@inertiajs/vue3';
+
     import AdminLayout from '@/Layouts/AdminLayout.vue';
-    import { AdminPromoCode, ResourceSingle } from '@/types';
+    import { AdminPromoCode, PromoCodeFormState, ResourceSingle } from '@/types';
 
     import PromoCodeForm from './Partials/PromoCodeForm.vue';
 
-    defineProps<{
+    const props = defineProps<{
         promo: ResourceSingle<AdminPromoCode>;
         filters: { page: number | string };
         typeOptions: Array<{ value: string; label: string }>;
@@ -12,12 +14,11 @@
 
     defineOptions({ layout: AdminLayout });
 
-    const handleSubmit = () => {
-        // Добавляем return_page в данные формы перед отправкой
-        form.transform((data) => ({
+    const handleSubmit = (form: InertiaForm<PromoCodeFormState>) => {
+        form.transform((data: PromoCodeFormState) => ({
             ...data,
-            return_page: props.returnPage,
-        })).put(route('admin.promocodes.update', props.promo.id));
+            return_page: props.filters.page,
+        })).put(route('admin.promocodes.update', props.promo.data.id));
     };
 </script>
 
@@ -31,6 +32,6 @@
         :is-edit="true"
         :type-options="typeOptions"
         :return-page="filters.page"
-        @submit="(form) => form.put(route('admin.promocodes.update', promo.data.id))"
+        @submit="handleSubmit"
     />
 </template>

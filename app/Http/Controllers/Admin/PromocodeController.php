@@ -62,39 +62,41 @@ class PromocodeController extends Controller
 
         PromoCode::create($validated);
 
-        return redirect()->route('admin.promocodes.index')
+        return redirect()->route('admin.promocodes.index', ['page' => $request->input('return_page', 1)])
             ->with('success', "Промокод {$request->code} создан");
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, PromoCode $promoCode)
+    public function update(Request $request, PromoCode $promocode)
     {
         $validated = $request->validate([
-            'code'             => 'required|string|max:50|unique:promo_codes,code,' . $promoCode->id,
+            'code'             => "required|string|max:50|unique:promo_codes,code,{$promocode->id}",
             'type'             => ['required', new Enum(PromoCodeType::class)],
             'value'            => 'required|integer|min:1',
             'min_order_amount' => 'nullable|integer|min:0',
             'max_discount'     => 'nullable|integer|min:0',
             'usage_limit'      => 'nullable|integer|min:1',
-            'expires_at'       => 'nullable|date|after:today',
+            'expires_at'       => 'nullable|date',
             'is_active'        => 'boolean',
+            'return_page'      => 'nullable',
         ]);
 
         $validated['code'] = strtoupper($validated['code']);
 
-        $promoCode->update($validated);
+        $promocode->update($validated);
 
+        //todo
         if ($request->has('create_another')) {
             return redirect()->back()->with('success', 'Создано. Можете добавить следующий.');
         }
 
         return redirect()->route('admin.promocodes.index', ['page' => $request->input('return_page', 1)])
-            ->with('success', "Промокод {$request->code} обновлен");
+            ->with('success', "Промокод {$promocode->code} обновлен");
     }
 
-    public function create()
+    public function create(Request $request)
     {
         $typeOptions = collect(PromoCodeType::cases())->map(fn($type) => [
             'value' => $type->value,
@@ -103,6 +105,9 @@ class PromocodeController extends Controller
 
         return Inertia::render('Admin/PromoCodes/Create', [
             'typeOptions' => $typeOptions,
+            'filters' => [
+                'page' => $request->query('page', 1),
+            ],
             'seo' => $this->seo('Новый промокод', robots: 'noindex, nofollow'),
         ]);
     }
@@ -127,9 +132,9 @@ class PromocodeController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(PromoCode $promoCode)
+    public function destroy(PromoCode $promocode)
     {
-        $promoCode->delete();
+        $promocode->delete();
 
         return redirect()->route('admin.promocodes.index')
             ->with('success', 'Промокод удален');

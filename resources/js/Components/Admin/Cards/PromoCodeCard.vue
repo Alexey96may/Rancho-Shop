@@ -28,9 +28,11 @@
     const { notify } = useFlash();
 
     const copyToClipboard = (text: string) => {
+        if (!window) return;
+
         navigator.clipboard.writeText(text);
 
-        notify(`Промокод «${text}» скопирован!` + props.returnPage, 'success');
+        notify(`Промокод «${text}» скопирован!`, 'success');
     };
 
     const isShortData = ref(false);

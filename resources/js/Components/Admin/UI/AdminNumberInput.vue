@@ -83,7 +83,7 @@
                 :aria-valuenow="model || undefined"
                 :aria-valuemin="min"
                 :aria-valuemax="max"
-                :value="model"
+                :value="model || 0"
                 @input="handleInput"
                 @keydown="handleKeyDown"
                 inputmode="numeric"

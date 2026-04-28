@@ -1,12 +1,15 @@
 <script setup lang="ts">
     import { useForm } from '@inertiajs/vue3';
     import { Link } from '@inertiajs/vue3';
+    import { InertiaForm } from '@inertiajs/vue3';
 
     import { CalendarIcon, CheckIcon, ChevronLeftIcon } from '@heroicons/vue/24/outline';
     import { DatePicker } from 'v-calendar';
     import 'v-calendar/dist/style.css';
 
-    import { AdminPromoCode } from '@/types';
+    import AdminNumberInput from '@/Components/Admin/UI/AdminNumberInput.vue';
+    import BaseSelect from '@/Components/UI/BaseSelect.vue';
+    import type { AdminPromoCode, PromoCodeFormState } from '@/types';
 
     const props = defineProps<{
         promo?: AdminPromoCode;
@@ -16,17 +19,16 @@
     }>();
 
     const emit = defineEmits<{
-        (e: 'submit', form: any): void;
+        (e: 'submit', form: InertiaForm<PromoCodeFormState>): void;
     }>();
 
-    const form = useForm({
+    const form = useForm<PromoCodeFormState>({
         code: props.promo?.code ?? '',
         type: props.promo?.type ?? 'fixed',
         value: props.promo?.value ?? 0,
         min_order_amount: props.promo?.min_order_amount ?? 0,
         max_discount: props.promo?.max_discount ?? null,
         usage_limit: props.promo?.usage_limit ?? null,
-        // V-Calendar отлично работает с ISO строками или объектами Date
         expires_at: props.promo?.expires_at ?? null,
         is_active: props.promo?.is_active ?? true,
     });
@@ -70,54 +72,35 @@
             </div>
 
             <div class="space-y-2">
-                <label
-                    for="type"
-                    class="ml-4 text-[10px] font-black uppercase tracking-widest text-slate-500"
-                    >Тип скидки</label
-                >
-                <select
-                    id="type"
+                <BaseSelect
                     v-model="form.type"
-                    class="w-full appearance-none rounded-2xl border-slate-800 bg-slate-950 p-4 font-bold text-white transition-all focus:border-orange-500 focus:ring-0"
-                >
-                    <option v-for="opt in typeOptions" :key="opt.value" :value="opt.value">
-                        {{ opt.label }}
-                    </option>
-                </select>
-            </div>
-
-            <div class="space-y-2">
-                <label
-                    for="value"
-                    class="ml-4 text-[10px] font-black uppercase tracking-widest text-slate-500"
-                >
-                    Значение ({{ form.type === 'percent' ? '%' : 'в копейках' }})
-                </label>
-                <input
-                    id="value"
-                    v-model="form.value"
-                    type="number"
-                    min="0"
-                    class="w-full rounded-2xl border-slate-800 bg-slate-950 p-4 font-bold text-white transition-all focus:border-orange-500"
-                    :class="{ 'border-red-500/50': form.errors.value }"
-                    :aria-invalid="!!form.errors.value"
+                    :options="typeOptions"
+                    variant="admin"
+                    label="Тип скидки"
+                    labelKey="label"
+                    valueKey="value"
+                    class="lg:w-64"
                 />
             </div>
 
             <div class="space-y-2">
-                <label
-                    for="min_order_amount"
-                    class="ml-4 text-[10px] font-black uppercase tracking-widest text-slate-500"
-                >
-                    Мин. сумма заказа (в копейках)
-                </label>
-                <input
-                    id="min_order_amount"
+                <AdminNumberInput
+                    v-model="form.value"
+                    :min="0"
+                    :label="
+                        'Значение ' + '(' + (form.type === 'percent' ? '%' : 'в копейках') + ')'
+                    "
+                />
+                <p v-if="form.errors.value" class="ml-4 text-[10px] text-red-500">
+                    {{ form.errors.value }}
+                </p>
+            </div>
+
+            <div class="space-y-2">
+                <AdminNumberInput
                     v-model="form.min_order_amount"
-                    type="number"
-                    min="0"
-                    class="w-full rounded-2xl border-slate-800 bg-slate-950 p-4 font-bold text-white transition-all focus:border-orange-500"
-                    :class="{ 'border-red-500/50': form.errors.min_order_amount }"
+                    :min="0"
+                    label="Мин. сумма заказа (в копейках)"
                 />
                 <p v-if="form.errors.min_order_amount" class="ml-4 text-[10px] text-red-500">
                     {{ form.errors.min_order_amount }}
@@ -125,20 +108,10 @@
             </div>
 
             <div v-if="form.type === 'percent'" class="space-y-2">
-                <label
-                    for="max_discount"
-                    class="ml-4 text-[10px] font-black uppercase tracking-widest text-slate-500"
-                >
-                    Макс. сумма скидки (в копейках)
-                </label>
-                <input
-                    id="max_discount"
+                <AdminNumberInput
                     v-model="form.max_discount"
-                    type="number"
-                    min="0"
-                    placeholder="Без ограничений"
-                    class="w-full rounded-2xl border-slate-800 bg-slate-950 p-4 font-bold text-white transition-all focus:border-orange-500"
-                    :class="{ 'border-red-500/50': form.errors.max_discount }"
+                    :min="0"
+                    label="Макс. сумма скидки (в копейках)"
                 />
                 <p v-if="form.errors.max_discount" class="ml-4 text-[10px] text-red-500">
                     {{ form.errors.max_discount }}
@@ -178,18 +151,10 @@
             </div>
 
             <div class="space-y-2">
-                <label
-                    for="usage_limit"
-                    class="ml-4 text-[10px] font-black uppercase tracking-widest text-slate-500"
-                    >Лимит использований</label
-                >
-                <input
-                    id="usage_limit"
-                    v-model="form.usage_limit"
-                    type="number"
-                    class="w-full rounded-2xl border-slate-800 bg-slate-950 p-4 font-bold text-white transition-all focus:border-orange-500"
-                    placeholder="∞"
-                />
+                <AdminNumberInput v-model="form.usage_limit" :min="0" label="Лимит использований" />
+                <p v-if="form.errors.usage_limit" class="ml-4 text-[10px] text-red-500">
+                    {{ form.errors.usage_limit }}
+                </p>
             </div>
 
             <div class="col-span-full pt-4">

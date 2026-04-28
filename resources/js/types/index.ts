@@ -14,6 +14,7 @@ export * from './Media';
 export * from './Unit';
 export * from './ProductVariant';
 export * from './Delivery';
+export * from './Forms';
 
 export interface ResourceCollection<T> {
     data: T[];
