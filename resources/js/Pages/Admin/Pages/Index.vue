@@ -3,13 +3,7 @@
 
     import { Link, router } from '@inertiajs/vue3';
 
-    import {
-        DocumentIcon,
-        EyeSlashIcon,
-        PencilIcon,
-        PlusIcon,
-        TrashIcon,
-    } from '@heroicons/vue/24/outline';
+    import { DocumentIcon, PencilIcon, PlusIcon, TrashIcon } from '@heroicons/vue/24/outline';
     import debounce from 'lodash/debounce';
 
     import AdminEmptyState from '@/Components/Admin/Shared/AdminEmptyState.vue';

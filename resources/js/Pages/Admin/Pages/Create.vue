@@ -49,7 +49,6 @@
         },
     });
 
-    // Меняем метод на POST и роут на store
     const submit = () => form.post(route('admin.pages.store'));
 </script>
 

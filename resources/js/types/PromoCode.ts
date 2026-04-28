@@ -4,21 +4,33 @@
 //used_count < usage_limit (если лимит установлен).
 //total_price >= min_order_amount.
 
-export type PromoType = "fixed" | "percent";
+export type PromoType = 'fixed' | 'percent';
+export type PromoCodeStatusValue = 'active' | 'expired' | 'depleted' | 'inactive';
+
+export interface PromoCodeStatus {
+    value: PromoCodeStatusValue;
+    label: string;
+    color: 'green' | 'red' | 'orange' | 'slate' | 'gray';
+}
 
 export interface PromoCode {
-    id: number;
     code: string;
     type: PromoType;
-    value: number; // 50000 (500 руб) или 10 (10%)
+    symbol: string;
+    value: number;
     min_order_amount: number;
+    max_discount: number | null;
 }
 
 export interface AdminPromoCode extends PromoCode {
-    max_discount?: number;
-    usage_limit?: number;
+    id: number;
+    type_label: string;
+    usage_limit: number | null;
     used_count: number;
-    expires_at?: string;
+    expires_at: string | null;
     is_active: boolean;
+    is_valid: boolean;
+    status: PromoCodeStatus;
     created_at: string;
+    usage_percent: number;
 }

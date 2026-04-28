@@ -19,7 +19,7 @@ class PromoCodeSeeder extends Seeder
             [
                 'code' => 'ZORKA2026',
                 'type' => 'percent',
-                'value' => 1000,
+                'value' => 10,
                 'min_order_amount' => 100000,
                 'max_discount' => 50000,
                 'usage_limit' => 100,
@@ -44,5 +44,7 @@ class PromoCodeSeeder extends Seeder
         foreach ($codes as $code) {
             PromoCode::create($code);
         }
+
+        PromoCode::factory()->count(50)->create();
     }
 }

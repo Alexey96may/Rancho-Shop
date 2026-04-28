@@ -146,6 +146,9 @@ Route::prefix('admin')
         // (Admin)
         Route::middleware('can:' . Permission::MANAGE_USERS->value)->group(function () {
             Route::resource('users', UserController::class);
+
+            Route::patch('promocodes/{promoCode}/toggle', [PromocodeController::class, 'toggle'])
+                ->name('promocodes.toggle');
             Route::resource('promocodes', PromocodeController::class);
             
             Route::prefix('settings')->name('settings.')->group(function () {

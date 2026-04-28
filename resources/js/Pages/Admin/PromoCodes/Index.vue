@@ -1,234 +1,188 @@
 <script setup lang="ts">
     import { ref, watch } from 'vue';
 
-    import { Head, router, useForm } from '@inertiajs/vue3';
+    import { Link, router } from '@inertiajs/vue3';
 
-    import { MagnifyingGlassIcon, PlusIcon, TicketIcon } from '@heroicons/vue/24/outline';
+    import { PlusIcon } from '@heroicons/vue/24/outline';
     import debounce from 'lodash/debounce';
 
-    // Твоя стандартная модалка
     import PromoCodeCard from '@/Components/Admin/Cards/PromoCodeCard.vue';
-    import Modal from '@/Components/UI/BaseModal.vue';
+    import AdminEmptyState from '@/Components/Admin/Shared/AdminEmptyState.vue';
+    import AdminPagination from '@/Components/Admin/Shared/AdminPagination.vue';
+    import AdminLoader from '@/Components/Admin/UI/AdminLoader.vue';
+    import AdminSearchInput from '@/Components/Admin/UI/AdminSearchInput.vue';
+    import BaseSelect from '@/Components/UI/BaseSelect.vue';
     import AdminLayout from '@/Layouts/AdminLayout.vue';
+    import { useFlash } from '@/composables/useFlash';
+    import { AdminPromoCode, Paginated } from '@/types';
+
+    defineOptions({ layout: AdminLayout });
 
     const props = defineProps<{
-        promoCodes: { data: any[] };
-        filters: any;
+        promoCodes: Paginated<AdminPromoCode>;
+        filters: { search?: string; type?: string };
+        typeOptions: Array<{ value: string; label: string }>;
     }>();
 
-    const isModalOpen = ref(false);
-    const editMode = ref(false);
-    const currentId = ref<number | null>(null);
+    const search = ref(props.filters.search || '');
+    const typeFilter = ref(props.filters.type || '');
 
-    const form = useForm({
-        code: '',
-        type: 'fixed',
-        value: 0,
-        min_order_amount: 0,
-        max_discount: null,
-        usage_limit: null,
-        expires_at: '',
-        is_active: true,
+    const isFiltering = ref(false);
+    const deletingIds = ref(new Set<number>());
+
+    const { notifyWithUndo } = useFlash();
+
+    const updateFilters = debounce(() => {
+        router.get(
+            route('admin.promocodes.index'),
+            { search: search.value, type: typeFilter.value },
+            {
+                preserveState: true,
+                replace: true,
+                onFinish: () => {
+                    isFiltering.value = false;
+                },
+            },
+        );
+    }, 300);
+
+    watch([search, typeFilter], () => {
+        isFiltering.value = true;
+
+        updateFilters();
     });
 
-    // Фильтры
-    const search = ref(props.filters.search || '');
-    watch(
-        search,
-        debounce(() => {
-            router.get(
-                route('admin.promo-codes.index'),
-                { search: search.value },
-                { preserveState: true, replace: true },
-            );
-        }, 300),
-    );
-
-    const openModal = (promo: any = null) => {
-        editMode.value = !!promo;
-        if (promo) {
-            currentId.value = promo.id;
-            form.code = promo.code;
-            form.type = promo.type;
-            form.value = promo.value;
-            form.min_order_amount = promo.min_order_amount;
-            form.max_discount = promo.max_discount;
-            form.usage_limit = promo.usage_limit;
-            form.expires_at = promo.expires_at ? promo.expires_at.replace(' ', 'T') : '';
-            form.is_active = promo.is_active;
-        } else {
-            form.reset();
-        }
-        isModalOpen.value = true;
+    const clearFilters = () => {
+        search.value = '';
+        typeFilter.value = '';
     };
 
-    const submit = () => {
-        const action = editMode.value
-            ? route('admin.promo-codes.update', currentId.value!)
-            : route('admin.promo-codes.store');
+    const goToCreate = () => {
+        router.get(route('admin.promocodes.create'));
+    };
 
-        form.post(action, {
-            onSuccess: () => {
-                isModalOpen.value = false;
-                form.reset();
-            },
-        });
+    const togglePromo = (promo: AdminPromoCode) => {
+        router.patch(route('admin.promocodes.toggle', promo.id));
+    };
+
+    const deletePromo = async (promo: AdminPromoCode) => {
+        if (deletingIds.value.has(promo.id)) return;
+        deletingIds.value.add(promo.id);
+
+        const isTimeOut = await notifyWithUndo('Удаление промокода ' + promo.code);
+
+        if (isTimeOut) {
+            router.delete(route('admin.promocodes.destroy', promo.id), {
+                preserveScroll: true,
+                onFinish: () => {
+                    deletingIds.value.delete(promo.id);
+                },
+            });
+        } else {
+            deletingIds.value.delete(promo.id);
+        }
     };
 </script>
 
 <template>
-    <Head title="Промокоды" />
+    <Teleport to="#admin-header-content">
+        <h1 class="text-xl font-black text-white">Управление Промокодами</h1>
+    </Teleport>
 
-    <AdminLayout>
-        <template #header>
-            <h1 class="text-2xl font-black uppercase tracking-tighter">Промокоды</h1>
-        </template>
+    <div class="animate-in fade-in space-y-8 duration-500">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+            <div class="flex min-w-[300px] flex-1 items-center gap-4">
+                <AdminSearchInput v-model="search" placeholder="Поиск по коду..." />
 
-        <div class="animate-in fade-in space-y-8 duration-500">
-            <div class="flex items-center justify-between gap-4">
-                <div class="relative w-full max-w-md">
-                    <MagnifyingGlassIcon
-                        class="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-500"
-                    />
-                    <input
-                        v-model="search"
-                        type="text"
-                        placeholder="Найти по коду..."
-                        class="w-full rounded-[1.5rem] border-slate-800 bg-slate-900/50 py-3.5 pl-12 text-white transition-all focus:border-orange-500"
-                    />
-                </div>
-                <button
-                    @click="openModal()"
-                    class="shadow-lg flex h-[54px] items-center gap-2 rounded-[1.5rem] bg-orange-600 px-8 text-xs font-black uppercase tracking-[0.2em] text-white shadow-orange-900/20 transition-all hover:bg-orange-500"
-                >
-                    <PlusIcon class="h-5 w-5" /> Создать
-                </button>
-            </div>
-
-            <div
-                v-if="promoCodes.data.length"
-                class="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3"
-            >
-                <PromoCodeCard
-                    v-for="promo in promoCodes.data"
-                    :key="promo.id"
-                    :promo="promo"
-                    @edit="openModal"
-                    @toggle="(p) => router.patch(route('admin.promo-codes.toggle', p.id))"
-                    @delete="(p) => router.delete(route('admin.promo-codes.destroy', p.id))"
+                <BaseSelect
+                    v-model="typeFilter"
+                    :options="typeOptions"
+                    placeholder="Все типы"
+                    valueKey="value"
+                    labelKey="label"
+                    variant="admin"
+                    class="lg:w-64"
                 />
             </div>
 
-            <div
-                v-else
-                class="flex flex-col items-center justify-center rounded-[3rem] border-2 border-dashed border-slate-800 py-20"
+            <Link
+                :href="route('admin.promocodes.create')"
+                class="flex h-[54px] items-center gap-2 rounded-2xl bg-orange-600 px-8 text-xs font-black uppercase tracking-widest text-white transition-all hover:bg-orange-500"
             >
-                <TicketIcon class="mb-4 h-16 w-16 text-slate-800" />
-                <p class="text-[10px] font-black uppercase tracking-widest text-slate-500">
-                    Промокоды не найдены
-                </p>
-            </div>
+                <PlusIcon class="h-5 w-5" /> Создать код
+            </Link>
         </div>
 
-        <Modal :show="isModalOpen" @close="isModalOpen = false" max-width="2xl">
-            <div class="p-8">
-                <h3 class="mb-8 text-xl font-black uppercase tracking-tighter">
-                    {{ editMode ? 'Редактировать код' : 'Новый промокод' }}
-                </h3>
-
-                <form @submit.prevent="submit" class="space-y-6">
-                    <div class="grid grid-cols-2 gap-6">
-                        <div class="col-span-2 space-y-1">
-                            <label class="ml-2 text-[10px] font-black uppercase text-slate-500"
-                                >Код (Капсом)</label
-                            >
-                            <input
-                                v-model="form.code"
-                                type="text"
-                                required
-                                class="w-full rounded-2xl border-slate-800 bg-slate-950 p-4 font-bold uppercase text-white focus:border-orange-500"
-                                placeholder="AUTUMN2026"
-                            />
-                        </div>
-
-                        <div class="space-y-1">
-                            <label class="ml-2 text-[10px] font-black uppercase text-slate-500"
-                                >Тип скидки</label
-                            >
-                            <select
-                                v-model="form.type"
-                                class="w-full rounded-2xl border-slate-800 bg-slate-950 p-4 text-white focus:border-orange-500"
-                            >
-                                <option value="fixed">Фиксированная (₽)</option>
-                                <option value="percent">Процент (%)</option>
-                            </select>
-                        </div>
-
-                        <div class="space-y-1">
-                            <label class="ml-2 text-[10px] font-black uppercase text-slate-500"
-                                >Значение (в копейках/%)</label
-                            >
-                            <input
-                                v-model="form.value"
-                                type="number"
-                                required
-                                class="w-full rounded-2xl border-slate-800 bg-slate-950 p-4 text-white focus:border-orange-500"
-                            />
-                        </div>
-
-                        <div class="space-y-1">
-                            <label class="ml-2 text-[10px] font-black uppercase text-slate-500"
-                                >Мин. сумма заказа</label
-                            >
-                            <input
-                                v-model="form.min_order_amount"
-                                type="number"
-                                class="w-full rounded-2xl border-slate-800 bg-slate-950 p-4 text-white focus:border-orange-500"
-                            />
-                        </div>
-
-                        <div class="space-y-1">
-                            <label class="ml-2 text-[10px] font-black uppercase text-slate-500"
-                                >Лимит использований</label
-                            >
-                            <input
-                                v-model="form.usage_limit"
-                                type="number"
-                                class="w-full rounded-2xl border-slate-800 bg-slate-950 p-4 text-white focus:border-orange-500"
-                                placeholder="Без лимита"
-                            />
-                        </div>
-
-                        <div class="col-span-2 space-y-1">
-                            <label class="ml-2 text-[10px] font-black uppercase text-slate-500"
-                                >Срок действия</label
-                            >
-                            <input
-                                v-model="form.expires_at"
-                                type="datetime-local"
-                                class="w-full rounded-2xl border-slate-800 bg-slate-950 p-4 text-white focus:border-orange-500"
-                            />
-                        </div>
-                    </div>
-
-                    <div class="flex gap-4 pt-4">
-                        <button
-                            type="submit"
-                            :disabled="form.processing"
-                            class="flex-1 rounded-2xl bg-orange-600 py-4 text-[10px] font-black uppercase tracking-widest text-white hover:bg-orange-500"
-                        >
-                            {{ editMode ? 'Сохранить изменения' : 'Создать промокод' }}
-                        </button>
-                        <button
-                            @click="isModalOpen = false"
-                            type="button"
-                            class="flex-1 rounded-2xl bg-slate-800 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white"
-                        >
-                            Отмена
-                        </button>
-                    </div>
-                </form>
+        <Transition name="fade-slide" mode="out-in">
+            <div
+                v-if="promoCodes.data.length"
+                key="promos"
+                class="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3"
+            >
+                <TransitionGroup name="stagger">
+                    <PromoCodeCard
+                        v-for="promo in promoCodes.data"
+                        :key="promo.id"
+                        :promo="promo"
+                        :disabled="deletingIds.has(promo.id)"
+                        @toggle="togglePromo"
+                        @delete="deletePromo"
+                /></TransitionGroup>
             </div>
-        </Modal>
-    </AdminLayout>
+
+            <AdminLoader v-else-if="isFiltering" key="loading" text="Синхронизация" />
+
+            <AdminEmptyState
+                v-else
+                key="empty"
+                :title="search ? 'Промокоды не найдены' : 'Список промокодов пуст'"
+                @action="search ? clearFilters() : goToCreate()"
+                :action-text="search ? 'Очистить фильтр' : 'Добавить промокод'"
+                :show-action="true"
+                :description="
+                    search
+                        ? 'По запросу «' + search + '» совпадений нет'
+                        : 'Нет ни одного промокода'
+                "
+            />
+        </Transition>
+
+        <AdminPagination :links="promoCodes.meta.links" />
+    </div>
 </template>
+
+<style scoped>
+    .stagger-enter-active {
+        transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+        transition-delay: calc(var(--i) * 0.05s);
+    }
+
+    .stagger-leave-active {
+        transition: all 0.3s ease;
+        position: absolute;
+        width: 100%;
+    }
+
+    .stagger-enter-from {
+        opacity: 0;
+        transform: translateY(30px) scale(0.95);
+    }
+
+    .stagger-leave-to {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+
+    .stagger-move {
+        transition: transform 0.4s ease;
+    }
+
+    .fade-slide-enter-active {
+        transition: all 0.4s ease-out;
+    }
+
+    .fade-slide-enter-from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+</style>

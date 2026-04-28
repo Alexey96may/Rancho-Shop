@@ -2,13 +2,16 @@
 
 namespace App\Models;
 
+use App\Enums\PromoCodeType;
 use App\Traits\HasActiveScope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class PromoCode extends Model
 {
-    use HasActiveScope;
+    use HasActiveScope, HasFactory;
 
     protected $fillable = [
         'code', 'type', 'value', 'min_order_amount',
@@ -17,6 +20,7 @@ class PromoCode extends Model
     ];
 
     protected $casts = [
+        'type' => PromoCodeType::class,
         'expires_at' => 'datetime',
         'is_active' => 'boolean',
         'value' => 'integer',
@@ -59,5 +63,26 @@ class PromoCode extends Model
             ->where(function ($q) {
                 $q->whereNull('usage_limit')->orWhereRaw('used_count < usage_limit');
             });
+    }
+
+    protected function status(): Attribute
+    {
+        return Attribute::make(
+            get: function (): string {
+                if (!$this->is_active) {
+                    return 'inactive';
+                }
+
+                if ($this->expires_at && $this->expires_at->isPast()) {
+                    return 'expired';
+                }
+
+                if ($this->usage_limit && $this->used_count >= $this->usage_limit) {
+                    return 'depleted';
+                }
+
+                return 'active';
+            },
+        );
     }
 }
