@@ -50,6 +50,7 @@ class PromocodeController extends Controller
 
         $validated = $request->validate([
             'code'             => 'required|string|unique:promo_codes,code|max:50',
+            'description'      => 'nullable|string|max:1000',
             'type'             => ['required', new Enum(PromoCodeType::class)],
             'value'            => 'required|integer|min:1',
             'min_order_amount' => 'nullable|integer|min:0',
@@ -78,7 +79,8 @@ class PromocodeController extends Controller
     public function update(Request $request, PromoCode $promocode)
     {
         $validated = $request->validate([
-            'code'             => "required|string|max:50|unique:promo_codes,code,{$promocode->id}",
+            'code'             => 'required|string|max:50|unique:promo_codes,code,{$promocode->id}',
+            'description'      => 'nullable|string|max:1000',
             'type'             => ['required', new Enum(PromoCodeType::class)],
             'value'            => 'required|integer|min:1',
             'min_order_amount' => 'nullable|integer|min:0',

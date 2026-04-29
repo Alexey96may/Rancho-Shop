@@ -18,6 +18,7 @@ class PromoCodeSeeder extends Seeder
         $codes = [
             [
                 'code' => 'ZORKA2026',
+                'description' => 'Для любимого клиента',
                 'type' => 'percent',
                 'value' => 10,
                 'min_order_amount' => 100000,
@@ -27,6 +28,7 @@ class PromoCodeSeeder extends Seeder
             ],
             [
                 'code' => 'WELCOME',
+                'description' => 'Для постоянного клиента',
                 'type' => 'fixed',
                 'value' => 20000,
                 'min_order_amount' => 50000,

@@ -77,6 +77,13 @@
                                 : `${formatMoney(promo.value)}`
                         }}
                     </span>
+                    <p
+                        v-if="promo.description"
+                        class="mt-2 line-clamp-2 text-[11px] italic leading-relaxed text-slate-400"
+                        :title="promo.description"
+                    >
+                        {{ promo.description }}
+                    </p>
                 </div>
 
                 <button

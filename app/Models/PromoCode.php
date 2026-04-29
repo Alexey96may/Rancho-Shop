@@ -14,7 +14,7 @@ class PromoCode extends Model
     use HasActiveScope, HasFactory;
 
     protected $fillable = [
-        'code', 'type', 'value', 'min_order_amount',
+        'code', 'description', 'type', 'value', 'min_order_amount',
         'max_discount', 'usage_limit', 'used_count',
         'expires_at', 'is_active',
     ];

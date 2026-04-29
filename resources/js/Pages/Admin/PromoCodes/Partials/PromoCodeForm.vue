@@ -59,7 +59,6 @@
             />
 
             <BaseInput
-                v-if="form.description"
                 v-model="form.description"
                 v-model:error="form.errors.description"
                 label="Описание (необязательно)"

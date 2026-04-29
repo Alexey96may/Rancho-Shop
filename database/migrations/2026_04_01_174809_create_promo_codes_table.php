@@ -14,6 +14,7 @@ return new class() extends Migration
         Schema::create('promo_codes', function (Blueprint $table) {
             $table->id();
             $table->string('code')->unique(); // Сам код, например 'VESNA2026'
+            $table->text('description')->nullable();
 
             // Тип скидки: фиксированная (рубли) или процент (%)
             $table->enum('type', ['fixed', 'percent'])->default('fixed');

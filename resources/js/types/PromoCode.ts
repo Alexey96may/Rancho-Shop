@@ -24,7 +24,7 @@ export interface PromoCode {
 
 export interface AdminPromoCode extends PromoCode {
     id: number;
-    description: string;
+    description: string | null;
     type_label: string;
     usage_limit: number | null;
     used_count: number;

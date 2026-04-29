@@ -18,14 +18,14 @@ class AdminPromoCodeResource extends PromoCodeResource
 
         return array_merge($data, [
             'id'           => $this->id,
-            'type_label' => $this->type?->label() ?? 'Неизвестно',
+            'description'  => $this->description ?? '',
+            'type_label'   => $this->type?->label() ?? 'Неизвестно',
             'usage_limit'  => $this->usage_limit,
             'used_count'   => $this->used_count,
             'expires_at'   => $this->expires_at?->toIso8601String(),
             'is_active'    => $this->is_active,
             'is_valid'     => $this->isValid(),
             'created_at'   => $this->created_at?->toIso8601String(),
-            // Процент заполнения лимита (полезно для прогресс-бара в админке)
             'usage_percent' => $this->usage_limit > 0 
                 ? round(($this->used_count / $this->usage_limit) * 100) 
                 : 0,
