@@ -21,12 +21,16 @@
 
     const props = defineProps<{
         promoCodes: Paginated<AdminPromoCode>;
-        filters: { search?: string; type?: string };
+        filters: { search?: string; type?: string; status?: string; sort?: string };
         typeOptions: Array<{ value: string; label: string }>;
+        statusOptions: Array<{ value: string; label: string }>;
+        sortOptions: Array<{ value: string; label: string }>;
     }>();
 
     const search = ref(props.filters.search || '');
     const typeFilter = ref(props.filters.type || '');
+    const statusFilter = ref(props.filters.status || '');
+    const sortOrder = ref(props.filters.sort || 'latest');
 
     const isFiltering = ref(false);
     const deletingIds = ref(new Set<number>());
@@ -36,7 +40,12 @@
     const updateFilters = debounce(() => {
         router.get(
             route('admin.promocodes.index'),
-            { search: search.value, type: typeFilter.value },
+            {
+                search: search.value,
+                type: typeFilter.value,
+                status: statusFilter.value,
+                sort: sortOrder.value,
+            },
             {
                 preserveState: true,
                 replace: true,
@@ -47,7 +56,7 @@
         );
     }, 300);
 
-    watch([search, typeFilter], () => {
+    watch([search, typeFilter, statusFilter, sortOrder], () => {
         isFiltering.value = true;
 
         updateFilters();
@@ -56,6 +65,7 @@
     const clearFilters = () => {
         search.value = '';
         typeFilter.value = '';
+        statusFilter.value = '';
     };
 
     const goToCreate = () => {
@@ -92,7 +102,9 @@
 
     <div class="animate-in fade-in space-y-8 duration-500">
         <div class="flex flex-wrap items-center justify-between gap-4">
-            <div class="flex min-w-[300px] flex-1 items-center gap-4">
+            <BaseCreateButton :href="route('admin.promocodes.create')" label="Создать код" />
+
+            <div class="grid flex-1 grid-cols-1 gap-4 sm:grid-cols-2 lg:flex lg:items-center">
                 <AdminSearchInput v-model="search" placeholder="Поиск по коду..." />
 
                 <BaseSelect
@@ -104,9 +116,26 @@
                     variant="admin"
                     class="lg:w-64"
                 />
-            </div>
 
-            <BaseCreateButton :href="route('admin.promocodes.create')" label="Создать код" />
+                <BaseSelect
+                    v-model="statusFilter"
+                    :options="statusOptions"
+                    placeholder="Все статусы"
+                    valueKey="value"
+                    labelKey="label"
+                    variant="admin"
+                    class="w-full lg:w-56"
+                />
+
+                <BaseSelect
+                    v-model="sortOrder"
+                    :options="sortOptions"
+                    valueKey="value"
+                    labelKey="label"
+                    variant="admin"
+                    class="w-full lg:w-56"
+                />
+            </div>
         </div>
 
         <Transition name="fade-slide" mode="out-in">

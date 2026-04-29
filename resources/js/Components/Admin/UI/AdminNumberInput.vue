@@ -1,12 +1,9 @@
 <script setup lang="ts">
-    import { useId, watch } from 'vue';
+    import { onBeforeUnmount, ref, useId, watch } from 'vue';
 
     import { MinusIcon, PlusIcon } from '@heroicons/vue/24/outline';
 
-    // Основная модель для числа
     const model = defineModel<number | null | undefined>({ default: 0 });
-
-    // Модель для ошибки (позволяет компоненту "занулять" её в родителе)
     const error = defineModel<string | undefined>('error');
 
     const props = defineProps<{
@@ -18,6 +15,7 @@
     }>();
 
     const inputId = useId();
+    const timer = ref<ReturnType<typeof setInterval> | null>(null);
 
     watch(model, () => {
         if (error.value) {
@@ -37,6 +35,54 @@
         const currentValue = model.value ?? 0;
         if (props.min !== undefined && currentValue <= props.min) return;
         model.value = currentValue - (props.step ?? 1);
+    };
+
+    const startHold = (action: () => void) => {
+        if (props.disabled && !window) return;
+        action();
+
+        timer.value = setTimeout(() => {
+            timer.value = setInterval(action, 60);
+        }, 300) as any;
+
+        window.addEventListener('mouseup', stopHold, { once: true });
+    };
+
+    const stopHold = () => {
+        if (timer.value) {
+            clearTimeout(timer.value);
+            clearInterval(timer.value);
+            timer.value = null;
+        }
+    };
+
+    onBeforeUnmount(stopHold);
+
+    const onKeyDown = (event: KeyboardEvent) => {
+        const allowedKeys = [
+            'Backspace',
+            'Delete',
+            'Tab',
+            'Escape',
+            'Enter',
+            'ArrowLeft',
+            'ArrowRight',
+        ];
+
+        if (
+            allowedKeys.includes(event.key) ||
+            (event.key === '-' && props.min !== undefined && props.min < 0) ||
+            event.ctrlKey ||
+            event.metaKey
+        ) {
+            // Ctrl+A, Ctrl+C...
+            return;
+        }
+
+        // numbers only
+        if (!/^\d$/.test(event.key)) {
+            event.preventDefault();
+        }
     };
 
     const handleInput = (event: Event) => {
@@ -72,7 +118,8 @@
         >
             <button
                 type="button"
-                @click="decrement"
+                @mousedown="startHold(decrement)"
+                @mouseleave="stopHold"
                 tabindex="-1"
                 class="flex w-14 items-center justify-center border-r border-slate-800 py-3 text-slate-400 transition-colors hover:bg-slate-900 hover:text-white"
             >
@@ -84,12 +131,15 @@
                 type="text"
                 :value="model ?? 0"
                 @input="handleInput"
+                @keydown="onKeyDown"
+                inputmode="numeric"
                 class="w-full border-none bg-transparent px-3 py-2.5 text-center font-mono font-bold text-white focus:ring-0"
             />
 
             <button
                 type="button"
-                @click="increment"
+                @mousedown="startHold(increment)"
+                @mouseleave="stopHold"
                 tabindex="-1"
                 class="flex w-14 items-center justify-center border-l border-slate-800 text-slate-400 transition-colors hover:bg-slate-900 hover:text-white"
             >

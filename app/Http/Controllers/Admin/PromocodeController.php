@@ -19,25 +19,58 @@ class PromocodeController extends Controller
     {
         $promoCodes = PromoCode::query()
             ->when($request->search, function ($query, $search) {
-                $query->where('code', 'LIKE', "%" . strtoupper($search) . "%");
+                $search = mb_strtolower($search);
+                $query->where(function ($q) use ($search) {
+                    $q->whereRaw('LOWER(code) LIKE ?', ["%{$search}%"])
+                    ->orWhereRaw('LOWER(description) LIKE ?', ["%{$search}%"]);
+                });
             })
             ->when($request->type, function ($query, $type) {
                 $query->where('type', $type);
             })
-            ->orderBy('is_active', 'desc')
-            ->latest()
-            ->paginate(setting('admin_per_page', 10))
-            ->withQueryString();
+            ->when($request->status, function ($query, $status) {
+                if ($status === 'new') {
+                    $query->where('created_at', '>=', now()->subDays(7));
+                } elseif ($status === 'expiring') {
+                    $query->whereNotNull('expires_at')
+                        ->where('expires_at', '>', now())
+                        ->where('expires_at', '<=', now()->addDays(3));
+                }
+            });
+
+        $sort = $request->get('sort', 'latest');
+        $promoCodes->orderBy('is_active', 'desc');
+        
+        if ($sort === 'expires_at') {
+            $promoCodes->orderByRaw('expires_at IS NULL ASC')
+                    ->orderBy('expires_at', 'asc');
+        } else {
+            $promoCodes->latest();
+        }
+
+        $promoCodes = $promoCodes->paginate(setting('admin_per_page', 10))->withQueryString();
 
         $typeOptions = collect(PromoCodeType::cases())->map(fn($type) => [
             'value' => $type->value,
             'label' => $type->label(),
         ]);
 
+        $statusOptions = [
+            ['value' => 'new', 'label' => 'Новинки (7 дней)'],
+            ['value' => 'expiring', 'label' => 'Истекают скоро'],
+        ];
+
+        $sortOptions = [
+            ['value' => 'latest', 'label' => 'Сначала новые'],
+            ['value' => 'expires_at', 'label' => 'По дате истечения'],
+        ];
+
         return Inertia::render('Admin/PromoCodes/Index', [
             'promoCodes' => AdminPromoCodeResource::collection($promoCodes),
-            'filters'    => $request->only(['search', 'type']),
+            'filters'    => $request->only(['search', 'type', 'status']),
             'typeOptions' => $typeOptions,
+            'statusOptions' => $statusOptions,
+            'sortOptions' => $sortOptions,
             'seo' => $this->seo('Панель управления: Промокоды', robots: 'noindex, nofollow')
         ]);
     }
