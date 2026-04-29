@@ -1,6 +1,7 @@
 <script setup lang="ts">
     import { InertiaForm } from '@inertiajs/vue3';
 
+    import BaseCancelButton from '@/Components/UI/BaseCancelButton.vue';
     import AdminLayout from '@/Layouts/AdminLayout.vue';
     import { AdminPromoCode, PromoCodeFormState, ResourceSingle } from '@/types';
 
@@ -26,6 +27,12 @@
     <Teleport to="#admin-header-content">
         <h1 class="text-xl font-black text-white">Редактирование: {{ promo.data.code }}</h1>
     </Teleport>
+
+    <BaseCancelButton
+        :route-name="'admin.promocodes.index'"
+        :route-params="{ page: filters.page }"
+        label="Назад"
+    />
 
     <PromoCodeForm
         :promo="promo.data"

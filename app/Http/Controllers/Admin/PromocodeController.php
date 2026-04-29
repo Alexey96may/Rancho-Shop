@@ -47,6 +47,7 @@ class PromocodeController extends Controller
      */
     public function store(Request $request)
     {
+
         $validated = $request->validate([
             'code'             => 'required|string|unique:promo_codes,code|max:50',
             'type'             => ['required', new Enum(PromoCodeType::class)],
@@ -54,13 +55,18 @@ class PromocodeController extends Controller
             'min_order_amount' => 'nullable|integer|min:0',
             'max_discount'     => 'nullable|integer|min:0',
             'usage_limit'      => 'nullable|integer|min:1',
-            'expires_at'       => 'nullable|date|after:today',
+            'expires_at'       => 'nullable|date',
             'is_active'        => 'boolean',
+            'create_another'   => 'boolean',
         ]);
 
         $validated['code'] = strtoupper($validated['code']);
 
         PromoCode::create($validated);
+
+        if ($request->boolean('create_another')) {
+            return redirect()->back()->with('success', "Промокод {$validated['code']} создан. Можете добавить следующий.");
+        }
 
         return redirect()->route('admin.promocodes.index', ['page' => $request->input('return_page', 1)])
             ->with('success', "Промокод {$request->code} создан");
@@ -86,11 +92,6 @@ class PromocodeController extends Controller
         $validated['code'] = strtoupper($validated['code']);
 
         $promocode->update($validated);
-
-        //todo
-        if ($request->has('create_another')) {
-            return redirect()->back()->with('success', 'Создано. Можете добавить следующий.');
-        }
 
         return redirect()->route('admin.promocodes.index', ['page' => $request->input('return_page', 1)])
             ->with('success', "Промокод {$promocode->code} обновлен");
@@ -137,7 +138,7 @@ class PromocodeController extends Controller
         $promocode->delete();
 
         return redirect()->route('admin.promocodes.index')
-            ->with('success', 'Промокод удален');
+            ->with('success', 'Промокод ' . $promocode->code . ' удален');
     }
 
     /**

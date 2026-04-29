@@ -11,6 +11,7 @@
     import AdminSearchInput from '@/Components/Admin/UI/AdminSearchInput.vue';
     import AdminModal from '@/Components/UI/BaseModal.vue';
     import AdminSelect from '@/Components/UI/BaseSelect.vue';
+    import BaseStatusToggle from '@/Components/UI/BaseStatusToggle.vue';
     import AdminLayout from '@/Layouts/AdminLayout.vue';
     import { useFlash } from '@/composables/useFlash';
     import { AdminCategory, Paginated } from '@/types';
@@ -259,26 +260,11 @@
                     </div>
                 </div>
 
-                <button
-                    type="button"
-                    @click="form.is_active = !form.is_active"
-                    role="switch"
-                    :aria-checked="form.is_active"
-                    class="flex w-full items-center justify-between rounded-2xl border border-slate-800 bg-slate-950 p-4 transition-colors"
-                    :class="form.is_active ? 'border-emerald-500/30' : ''"
-                >
-                    <span class="text-[10px] font-black uppercase tracking-widest text-slate-500"
-                        >Доступность</span
-                    >
-                    <div
-                        class="h-2.5 w-2.5 rounded-full transition-all"
-                        :class="
-                            form.is_active
-                                ? 'bg-emerald-500 shadow-[0_0_10px_#10b981]'
-                                : 'bg-slate-700'
-                        "
-                    ></div>
-                </button>
+                <BaseStatusToggle
+                    v-model="form.is_active"
+                    label="Доступность"
+                    :disabled="form.processing"
+                />
 
                 <button
                     type="submit"

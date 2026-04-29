@@ -13,6 +13,7 @@
     import ContentSection from '@/Components/Admin/Sections/PageContentSection.vue';
     import GeneralSection from '@/Components/Admin/Sections/PageGeneralSection.vue';
     import SeoSection from '@/Components/Admin/Sections/SEOSection.vue';
+    import BaseSwitch from '@/Components/UI/BaseSwitch.vue';
     import AdminLayout from '@/Layouts/AdminLayout.vue';
 
     defineOptions({ layout: AdminLayout });
@@ -128,24 +129,13 @@
                     <div
                         class="space-y-6 rounded-[2.5rem] border border-slate-800 bg-slate-900/30 p-8"
                     >
-                        <div
-                            class="flex items-center justify-between rounded-2xl border border-slate-800 bg-slate-950 p-4"
-                        >
-                            <span class="text-[10px] font-black uppercase text-slate-500">
-                                {{ form.is_active ? 'Опубликовать сразу' : 'В черновик' }}
-                            </span>
-                            <button
-                                type="button"
-                                @click="form.is_active = !form.is_active"
-                                :class="form.is_active ? 'bg-emerald-600' : 'bg-slate-700'"
-                                class="relative inline-flex h-6 w-11 items-center rounded-full transition-all"
-                            >
-                                <span
-                                    :class="form.is_active ? 'translate-x-6' : 'translate-x-1'"
-                                    class="h-4 w-4 transform rounded-full bg-white transition-transform"
-                                />
-                            </button>
-                        </div>
+                        <BaseSwitch
+                            v-model="form.is_active"
+                            label="Статус страницы"
+                            active-text="Опубликовать сразу"
+                            inactive-text="В черновик"
+                            :disabled="form.processing"
+                        />
 
                         <button
                             type="submit"

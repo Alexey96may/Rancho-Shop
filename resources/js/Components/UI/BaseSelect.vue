@@ -1,5 +1,5 @@
 <script setup lang="ts">
-    import { computed, useId } from 'vue';
+    import { computed, useId, watch } from 'vue';
 
     import {
         Listbox,
@@ -11,6 +11,7 @@
     import { CheckIcon, ChevronUpDownIcon } from '@heroicons/vue/20/solid';
 
     const model = defineModel<any>();
+    const error = defineModel<string | undefined>('error');
 
     const props = defineProps<{
         options: Array<any>;
@@ -21,24 +22,53 @@
         variant?: 'admin' | 'classic';
         valueKey?: string;
         labelKey?: string;
+        disabled?: boolean;
     }>();
 
     const labelId = useId();
     const descriptionId = useId();
+    const errorId = useId();
+
     const vKey = computed(() => props.valueKey || 'id');
     const lKey = computed(() => props.labelKey || 'name');
 
+    watch(model, () => {
+        if (error.value) {
+            error.value = undefined;
+        }
+    });
+
     const styles = computed(() => {
         const isDark = props.variant === 'admin';
+        const hasError = !!error.value;
 
         return {
-            label: isDark
-                ? 'mb-1.5 ml-2 block text-[10px] font-black uppercase tracking-[0.15em] text-slate-500'
-                : 'mb-1.5 ml-1 block text-xs font-bold uppercase tracking-wider text-slate-500',
+            label: [
+                isDark
+                    ? 'mb-1.5 ml-2 block text-[10px] font-black uppercase tracking-[0.15em]'
+                    : 'mb-1.5 ml-1 block text-xs font-bold uppercase tracking-wider',
+                hasError ? 'text-red-500' : 'text-slate-500',
+            ],
 
-            button: isDark
-                ? 'relative w-full cursor-pointer rounded-2xl border border-slate-800 bg-slate-950 py-3 pl-4 pr-10 text-left text-slate-300 transition-all hover:border-orange-500/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500/20'
-                : 'relative w-full cursor-pointer rounded-xl border border-slate-200 bg-white py-2.5 pl-4 pr-10 text-left transition-all hover:border-orange-300 focus:outline-none focus-visible:border-orange-500 focus-visible:ring-4 focus-visible:ring-orange-500/10 sm:text-sm',
+            button: [
+                'relative w-full cursor-pointer transition-all focus:outline-none',
+                isDark
+                    ? 'rounded-2xl border bg-slate-950 py-3 pl-4 pr-10 text-left text-slate-300'
+                    : 'rounded-xl border bg-white py-2.5 pl-4 pr-10 text-left sm:text-sm',
+
+                // Логика состояний рамки
+                hasError
+                    ? isDark
+                        ? 'border-red-500/50 hover:border-red-500'
+                        : 'border-red-300 hover:border-red-500'
+                    : isDark
+                      ? 'border-slate-800 hover:border-orange-500/50'
+                      : 'border-slate-200 hover:border-orange-300',
+
+                isDark
+                    ? 'focus-visible:ring-2 focus-visible:ring-orange-500/20'
+                    : 'focus-visible:border-orange-500 focus-visible:ring-4 focus-visible:ring-orange-500/10',
+            ],
 
             options: isDark
                 ? 'absolute z-50 mt-2 max-h-60 w-full overflow-auto rounded-2xl border border-slate-800 bg-slate-900 py-1 text-base shadow-2xl ring-1 ring-white/5 focus:outline-none sm:text-sm'
@@ -61,16 +91,23 @@
 </script>
 
 <template>
-    <div :class="[widthClass || 'w-full', 'min-w-[200px]']">
-        <Listbox v-model="model">
-            <div class="relative mt-1">
-                <ListboxLabel v-if="label" :id="labelId" class="" :class="styles.label">
+    <div
+        :class="[
+            widthClass || 'w-full',
+            'min-w-[200px]',
+            { 'pointer-events-none opacity-50': disabled },
+        ]"
+    >
+        <Listbox v-model="model" :disabled="disabled">
+            <div class="relative">
+                <ListboxLabel v-if="label" :id="labelId" :class="styles.label">
                     {{ label }}
                 </ListboxLabel>
 
                 <ListboxButton
                     :aria-labelledby="label ? labelId : undefined"
-                    :aria-describedby="description ? descriptionId : undefined"
+                    :aria-describedby="error ? errorId : description ? descriptionId : undefined"
+                    :aria-invalid="!!error"
                     :class="styles.button"
                 >
                     <span class="block truncate font-medium">
@@ -84,7 +121,7 @@
                     </span>
                 </ListboxButton>
 
-                <span v-if="description" :id="descriptionId" class="sr-only">
+                <span v-if="description && !error" :id="descriptionId" class="sr-only">
                     {{ description }}
                 </span>
 
@@ -119,10 +156,10 @@
                         </ListboxOption>
 
                         <ListboxOption
-                            v-slot="{ active, selected }"
                             v-for="opt in options"
                             :key="opt[vKey]"
                             :value="opt[vKey]"
+                            v-slot="{ active, selected }"
                             as="template"
                         >
                             <li :class="styles.option(active, selected)">
@@ -146,5 +183,19 @@
                 </transition>
             </div>
         </Listbox>
+
+        <transition
+            enter-active-class="transition duration-200 ease-out"
+            enter-from-class="transform -translate-y-1 opacity-0"
+            enter-to-class="transform translate-y-0 opacity-100"
+        >
+            <p
+                v-if="error"
+                :id="errorId"
+                class="ml-2 mt-1.5 text-[10px] font-bold uppercase italic text-red-500"
+            >
+                {{ error }}
+            </p>
+        </transition>
     </div>
 </template>

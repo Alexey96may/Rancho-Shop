@@ -1,14 +1,15 @@
 <script setup lang="ts">
     import { useForm } from '@inertiajs/vue3';
-    import { Link } from '@inertiajs/vue3';
     import { InertiaForm } from '@inertiajs/vue3';
 
-    import { CalendarIcon, CheckIcon, ChevronLeftIcon } from '@heroicons/vue/24/outline';
-    import { DatePicker } from 'v-calendar';
-    import 'v-calendar/dist/style.css';
-
     import AdminNumberInput from '@/Components/Admin/UI/AdminNumberInput.vue';
+    import BaseCancelButton from '@/Components/UI/BaseCancelButton.vue';
+    import BaseDatePicker from '@/Components/UI/BaseDatePicker.vue';
+    import BaseInput from '@/Components/UI/BaseInput.vue';
     import BaseSelect from '@/Components/UI/BaseSelect.vue';
+    import BaseStatusToggle from '@/Components/UI/BaseStatusToggle.vue';
+    import BaseSubmitButton from '@/Components/UI/BaseSubmitButton.vue';
+    import BaseSwitch from '@/Components/UI/BaseSwitch.vue';
     import type { AdminPromoCode, PromoCodeFormState } from '@/types';
 
     const props = defineProps<{
@@ -24,6 +25,7 @@
 
     const form = useForm<PromoCodeFormState>({
         code: props.promo?.code ?? '',
+        description: props.promo?.description ?? '',
         type: props.promo?.type ?? 'fixed',
         value: props.promo?.value ?? 0,
         min_order_amount: props.promo?.min_order_amount ?? 0,
@@ -31,6 +33,8 @@
         usage_limit: props.promo?.usage_limit ?? null,
         expires_at: props.promo?.expires_at ?? null,
         is_active: props.promo?.is_active ?? true,
+
+        create_another: false,
     });
 
     const handleSubmit = () => {
@@ -45,164 +49,100 @@
         aria-labelledby="form-title"
     >
         <div class="grid grid-cols-1 gap-8 md:grid-cols-2">
-            <div class="col-span-full space-y-2">
-                <label
-                    for="code"
-                    class="ml-4 text-[10px] font-black uppercase tracking-widest text-slate-500"
-                >
-                    Код купона
-                </label>
-                <input
-                    id="code"
-                    v-model="form.code"
-                    type="text"
-                    placeholder="SUMMER2026"
-                    class="w-full rounded-2xl border-slate-800 bg-slate-950 p-4 font-black uppercase text-white transition-all focus:border-orange-500 focus:ring-0"
-                    :class="{ 'border-red-500/50': form.errors.code }"
-                    :aria-invalid="!!form.errors.code"
-                    aria-describedby="code-error"
-                />
-                <p
-                    v-if="form.errors.code"
-                    id="code-error"
-                    class="ml-4 text-[10px] font-bold uppercase italic text-red-500"
-                >
-                    {{ form.errors.code }}
-                </p>
-            </div>
+            <BaseInput
+                v-model="form.code"
+                v-model:error="form.errors.code"
+                label="Код купона"
+                placeholder="SUMMER2026"
+                uppercase
+                :disabled="form.processing"
+            />
 
-            <div class="space-y-2">
-                <BaseSelect
-                    v-model="form.type"
-                    :options="typeOptions"
-                    variant="admin"
-                    label="Тип скидки"
-                    labelKey="label"
-                    valueKey="value"
-                    class="lg:w-64"
-                />
-            </div>
+            <BaseInput
+                v-if="form.description"
+                v-model="form.description"
+                v-model:error="form.errors.description"
+                label="Описание (необязательно)"
+                placeholder="Скидка для постоянных клиентов"
+            />
 
-            <div class="space-y-2">
-                <AdminNumberInput
-                    v-model="form.value"
-                    :min="0"
-                    :label="
-                        'Значение ' + '(' + (form.type === 'percent' ? '%' : 'в копейках') + ')'
-                    "
-                />
-                <p v-if="form.errors.value" class="ml-4 text-[10px] text-red-500">
-                    {{ form.errors.value }}
-                </p>
-            </div>
+            <BaseSelect
+                v-model="form.type"
+                v-model:error="form.errors.type"
+                :options="typeOptions"
+                variant="admin"
+                label="Тип скидки"
+                labelKey="label"
+                valueKey="value"
+                class="lg:w-64"
+            />
 
-            <div class="space-y-2">
-                <AdminNumberInput
-                    v-model="form.min_order_amount"
-                    :min="0"
-                    label="Мин. сумма заказа (в копейках)"
-                />
-                <p v-if="form.errors.min_order_amount" class="ml-4 text-[10px] text-red-500">
-                    {{ form.errors.min_order_amount }}
-                </p>
-            </div>
+            <AdminNumberInput
+                v-model="form.value"
+                v-model:error="form.errors.value"
+                :min="0"
+                :label="'Значение ' + '(' + (form.type === 'percent' ? '%' : 'в копейках') + ')'"
+                :disabled="form.processing"
+            />
 
-            <div v-if="form.type === 'percent'" class="space-y-2">
-                <AdminNumberInput
-                    v-model="form.max_discount"
-                    :min="0"
-                    label="Макс. сумма скидки (в копейках)"
-                />
-                <p v-if="form.errors.max_discount" class="ml-4 text-[10px] text-red-500">
-                    {{ form.errors.max_discount }}
-                </p>
-            </div>
+            <AdminNumberInput
+                v-model="form.min_order_amount"
+                v-model:error="form.errors.min_order_amount"
+                :min="0"
+                label="Мин. сумма заказа (в копейках)"
+            />
 
-            <div class="space-y-2">
-                <label
-                    for="expires_at"
-                    class="ml-4 text-[10px] font-black uppercase tracking-widest text-slate-500"
-                    >Срок действия</label
-                >
-                <DatePicker
-                    v-model="form.expires_at"
-                    mode="dateTime"
-                    is-dark
-                    is24hr
-                    hide-time-header
-                    :popover="{ visibility: 'click', placement: 'bottom' }"
-                >
-                    <template #default="{ inputValue, inputEvents }">
-                        <div class="relative">
-                            <input
-                                id="expires_at"
-                                class="w-full rounded-2xl border-slate-800 bg-slate-950 p-4 font-bold text-white transition-all focus:border-orange-500"
-                                :value="inputValue"
-                                v-on="inputEvents"
-                                readonly
-                                placeholder="Выберите дату и время"
-                            />
-                            <CalendarIcon
-                                class="pointer-events-none absolute right-4 top-4 h-5 w-5 text-slate-500"
-                            />
-                        </div>
-                    </template>
-                </DatePicker>
-            </div>
+            <AdminNumberInput
+                v-model="form.max_discount"
+                v-model:error="form.errors.max_discount"
+                :min="0"
+                label="Макс. сумма скидки (в копейках)"
+            />
 
-            <div class="space-y-2">
-                <AdminNumberInput v-model="form.usage_limit" :min="0" label="Лимит использований" />
-                <p v-if="form.errors.usage_limit" class="ml-4 text-[10px] text-red-500">
-                    {{ form.errors.usage_limit }}
-                </p>
-            </div>
+            <BaseDatePicker
+                v-model="form.expires_at"
+                v-model:error="form.errors.expires_at"
+                label="Срок действия"
+                placeholder="Выберите дату окончания"
+                :disabled="form.processing"
+            />
+
+            <AdminNumberInput
+                v-model="form.usage_limit"
+                v-model:error="form.errors.usage_limit"
+                :min="0"
+                label="Лимит использований"
+            />
 
             <div class="col-span-full pt-4">
-                <label class="flex cursor-pointer items-center gap-4">
-                    <div class="relative">
-                        <input
-                            v-model="form.is_active"
-                            type="checkbox"
-                            class="peer sr-only"
-                            id="is_active"
-                        />
-                        <div
-                            class="h-6 w-11 rounded-full bg-slate-800 transition-all peer-checked:bg-orange-600 peer-focus:ring-2 peer-focus:ring-orange-500/50"
-                        ></div>
-                        <div
-                            class="absolute left-1 top-1 h-4 w-4 rounded-full bg-white transition-all peer-checked:left-6"
-                        ></div>
-                    </div>
-                    <span
-                        class="text-[10px] font-black uppercase tracking-widest text-slate-400 peer-checked:text-white"
-                    >
-                        Промокод активен
-                    </span>
-                </label>
+                <BaseSwitch
+                    v-model="form.is_active"
+                    label="Статус промокода"
+                    active-text="Промокод активен"
+                    inactive-text="В черновик"
+                    :disabled="form.processing"
+                />
             </div>
         </div>
 
         <div class="flex items-center gap-4 border-t border-slate-800/50 pt-8">
-            <button
-                type="submit"
-                :disabled="form.processing"
-                class="group flex items-center gap-3 rounded-2xl bg-orange-600 px-12 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-white transition-all hover:bg-orange-500 disabled:opacity-50"
-            >
-                <CheckIcon v-if="!form.processing" class="h-4 w-4" />
-                <span
-                    v-else
-                    class="h-4 w-4 animate-spin rounded-full border-2 border-white/20 border-t-white"
-                ></span>
-                {{ isEdit ? 'Сохранить изменения' : 'Создать промокод' }}
-            </button>
+            <BaseCancelButton
+                :route-name="'admin.promocodes.index'"
+                :route-params="{ page: returnPage }"
+            />
 
-            <Link
-                :href="route('admin.promocodes.index', { page: returnPage })"
-                class="flex items-center gap-2 px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500 transition-all hover:text-white"
-            >
-                <ChevronLeftIcon class="h-4 w-4" />
-                Отмена
-            </Link>
+            <BaseSubmitButton
+                :processing="form.processing"
+                :is-edit="isEdit"
+                :label="isEdit ? 'Сохранить изменения' : 'Создать промокод'"
+            />
+
+            <BaseStatusToggle
+                v-if="!isEdit"
+                v-model="form.create_another"
+                label="Создать еще один"
+                :disabled="form.processing"
+            />
         </div>
     </form>
 </template>

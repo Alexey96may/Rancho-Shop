@@ -11,6 +11,7 @@
     import AdminPagination from '@/Components/Admin/Shared/AdminPagination.vue';
     import AdminLoader from '@/Components/Admin/UI/AdminLoader.vue';
     import AdminSearchInput from '@/Components/Admin/UI/AdminSearchInput.vue';
+    import BaseCreateButton from '@/Components/UI/BaseCreateButton.vue';
     import BaseSelect from '@/Components/UI/BaseSelect.vue';
     import AdminLayout from '@/Layouts/AdminLayout.vue';
     import { useFlash } from '@/composables/useFlash';
@@ -105,12 +106,7 @@
                 />
             </div>
 
-            <Link
-                :href="route('admin.promocodes.create')"
-                class="flex h-[54px] items-center gap-2 rounded-2xl bg-orange-600 px-8 text-xs font-black uppercase tracking-widest text-white transition-all hover:bg-orange-500"
-            >
-                <PlusIcon class="h-5 w-5" /> Создать код
-            </Link>
+            <BaseCreateButton :href="route('admin.promocodes.create')" label="Создать код" />
         </div>
 
         <Transition name="fade-slide" mode="out-in">

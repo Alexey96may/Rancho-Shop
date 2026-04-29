@@ -1,44 +1,42 @@
 <script setup lang="ts">
-    import { useId } from 'vue';
+    import { useId, watch } from 'vue';
 
     import { MinusIcon, PlusIcon } from '@heroicons/vue/24/outline';
 
+    // Основная модель для числа
     const model = defineModel<number | null | undefined>({ default: 0 });
+
+    // Модель для ошибки (позволяет компоненту "занулять" её в родителе)
+    const error = defineModel<string | undefined>('error');
 
     const props = defineProps<{
         label?: string;
         min?: number;
         max?: number;
         step?: number;
+        disabled?: boolean;
     }>();
 
     const inputId = useId();
 
-    const increment = () => {
-        const currentValue = model.value ?? 0;
+    watch(model, () => {
+        if (error.value) {
+            error.value = undefined;
+        }
+    });
 
+    const increment = () => {
+        if (props.disabled) return;
+        const currentValue = model.value ?? 0;
         if (props.max !== undefined && currentValue >= props.max) return;
         model.value = currentValue + (props.step ?? 1);
     };
 
     const decrement = () => {
+        if (props.disabled) return;
         const currentValue = model.value ?? 0;
-
         if (props.min !== undefined && currentValue <= props.min) return;
         model.value = currentValue - (props.step ?? 1);
-    };
-
-    /**
-     * Handling keyboard arrow keys (up/down) for input
-     */
-    const handleKeyDown = (e: KeyboardEvent) => {
-        if (e.key === 'ArrowUp') {
-            e.preventDefault();
-            increment();
-        } else if (e.key === 'ArrowDown') {
-            e.preventDefault();
-            decrement();
-        }
     };
 
     const handleInput = (event: Event) => {
@@ -54,51 +52,53 @@
 </script>
 
 <template>
-    <div>
+    <div class="w-full" :class="{ 'pointer-events-none opacity-50': disabled }">
         <label
             v-if="label"
             :for="inputId"
-            class="mb-1.5 ml-2 mt-1 text-[10px] font-black uppercase tracking-widest text-slate-500"
+            class="mb-1.5 ml-2 mt-1 block text-[10px] font-black uppercase tracking-widest transition-colors"
+            :class="error ? 'text-red-500' : 'text-slate-500'"
         >
             {{ label }}
         </label>
 
         <div
-            class="group relative mt-1 flex max-h-60 w-full overflow-hidden rounded-2xl border border-slate-800 bg-slate-950 transition-all focus-within:border-orange-500/50"
+            class="group relative flex w-full overflow-hidden rounded-2xl border bg-slate-950 transition-all"
+            :class="[
+                error
+                    ? 'border-red-500/50 focus-within:border-red-500'
+                    : 'border-slate-800 focus-within:border-orange-500/50',
+            ]"
         >
             <button
                 type="button"
                 @click="decrement"
                 tabindex="-1"
-                class="flex w-14 items-center justify-center border-r border-slate-800 py-3 text-slate-400 transition-colors hover:bg-slate-900 hover:text-white active:bg-orange-500/10"
-                aria-label="Уменьшить значение"
+                class="flex w-14 items-center justify-center border-r border-slate-800 py-3 text-slate-400 transition-colors hover:bg-slate-900 hover:text-white"
             >
-                <MinusIcon class="h-5 w-5" aria-hidden="true" />
+                <MinusIcon class="h-5 w-5" />
             </button>
 
             <input
                 :id="inputId"
                 type="text"
-                role="spinbutton"
-                :aria-valuenow="model || undefined"
-                :aria-valuemin="min"
-                :aria-valuemax="max"
-                :value="model || 0"
+                :value="model ?? 0"
                 @input="handleInput"
-                @keydown="handleKeyDown"
-                inputmode="numeric"
-                class="w-full border-none bg-transparent px-3 py-2.5 text-center font-mono font-bold font-medium text-white focus:ring-0"
+                class="w-full border-none bg-transparent px-3 py-2.5 text-center font-mono font-bold text-white focus:ring-0"
             />
 
             <button
                 type="button"
                 @click="increment"
                 tabindex="-1"
-                class="flex w-14 items-center justify-center border-l border-slate-800 text-slate-400 transition-colors hover:bg-slate-900 hover:text-white active:bg-orange-500/10"
-                aria-label="Увеличить значение"
+                class="flex w-14 items-center justify-center border-l border-slate-800 text-slate-400 transition-colors hover:bg-slate-900 hover:text-white"
             >
-                <PlusIcon class="h-5 w-5" aria-hidden="true" />
+                <PlusIcon class="h-5 w-5" />
             </button>
         </div>
+
+        <p v-if="error" class="ml-2 mt-1.5 text-[10px] font-bold uppercase text-red-500">
+            {{ error }}
+        </p>
     </div>
 </template>
