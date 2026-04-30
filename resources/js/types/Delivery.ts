@@ -33,3 +33,12 @@ export interface DeliveryInfo {
 
     delivery_zones: DeliveryZone[];
 }
+
+export interface Delivery {
+    id: number;
+    address: string;
+    label: string;
+    lat: number | null;
+    lng: number | null;
+    is_default: boolean;
+}

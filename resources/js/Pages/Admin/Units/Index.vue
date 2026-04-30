@@ -13,6 +13,8 @@
     import AdminLoader from '@/Components/Admin/UI/AdminLoader.vue';
     import AdminSearchInput from '@/Components/Admin/UI/AdminSearchInput.vue';
     import BaseCreateButton from '@/Components/UI/BaseCreateButton.vue';
+    import BaseInput from '@/Components/UI/BaseInput.vue';
+    import BaseSubmitButton from '@/Components/UI/BaseSubmitButton.vue';
     import AdminLayout from '@/Layouts/AdminLayout.vue';
     import { useFlash } from '@/composables/useFlash';
     import { Paginated, UnitAdmin } from '@/types';
@@ -263,53 +265,33 @@
             </h2>
 
             <form @submit.prevent="submit" class="space-y-5">
-                <div class="space-y-1.5">
-                    <label
-                        class="ml-2 text-[10px] font-black uppercase tracking-widest text-slate-500"
-                        >Название</label
-                    >
-                    <input
-                        v-model="form.name"
-                        type="text"
-                        required
-                        class="w-full rounded-2xl border-slate-800 bg-slate-950 px-4 py-3 text-white focus:border-orange-500 focus:ring-0"
+                <BaseInput
+                    v-model="form.name"
+                    v-model:error="form.errors.name"
+                    label="Название"
+                    placeholder="Килограмм"
+                    :disabled="form.processing"
+                />
+
+                <div class="grid grid-cols-2 gap-4">
+                    <BaseInput
+                        v-model="form.short"
+                        v-model:error="form.errors.short"
+                        label="Сокращение"
+                        placeholder="кг"
+                        :disabled="form.processing"
+                    />
+
+                    <BaseInput
+                        v-model="form.slug"
+                        v-model:error="form.errors.slug"
+                        label="Slug"
+                        placeholder="kg"
+                        :disabled="form.processing"
                     />
                 </div>
 
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="space-y-1.5">
-                        <label
-                            class="ml-2 text-[10px] font-black uppercase tracking-widest text-slate-500"
-                            >Сокращение</label
-                        >
-                        <input
-                            v-model="form.short"
-                            type="text"
-                            required
-                            class="w-full rounded-2xl border-slate-800 bg-slate-950 px-4 py-3 text-white focus:border-orange-500 focus:ring-0"
-                        />
-                    </div>
-                    <div class="space-y-1.5">
-                        <label
-                            class="ml-2 text-[10px] font-black uppercase tracking-widest text-slate-500"
-                            >Slug</label
-                        >
-                        <input
-                            v-model="form.slug"
-                            type="text"
-                            placeholder="auto"
-                            class="w-full rounded-2xl border-slate-800 bg-slate-950 px-4 py-3 text-white focus:border-orange-500 focus:ring-0"
-                        />
-                    </div>
-                </div>
-
-                <button
-                    type="submit"
-                    :disabled="form.processing"
-                    class="w-full rounded-2xl bg-orange-600 py-4 font-black uppercase tracking-[0.2em] text-white hover:bg-orange-500 disabled:opacity-50"
-                >
-                    {{ form.processing ? 'Сохранение...' : 'Подтвердить' }}
-                </button>
+                <BaseSubmitButton :processing="form.processing" label="Подтвердить" />
             </form>
         </div>
     </div>

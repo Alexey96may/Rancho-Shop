@@ -19,12 +19,14 @@ class UserResource extends JsonResource
             'name' => $this->name,
             'email' => $this->email,
             'phone' => $this->phone ?? 'Не указан',
-            'role' => $this->role->value,
+            'role' => [
+                'value' => $this->role->value,
+                'label' => $this->role->label(),
+                'color' => $this->role->color(),
+            ],
             'avatar' => $this->avatar_url,
             'is_admin' => $this->isAdmin(),
-            'orders_count' => $this->whenCounted('orders'),
-            'addresses' => $this->whenLoaded('deliveryAddresses'),
-            'created_at' => $this->created_at->format('d.m.Y'),
+            'created_at' => $this->created_at->toIso8601String(),
         ];
     }
 }

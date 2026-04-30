@@ -175,7 +175,7 @@
                             :href="route('admin.users.index')"
                             :active="route().current('admin.users.*')"
                             :icon="UsersIcon"
-                            label="Персонал"
+                            label="Люди"
                         />
                     </li>
                     <li>

@@ -3,7 +3,6 @@
 
     import { Link, router } from '@inertiajs/vue3';
 
-    import { PlusIcon } from '@heroicons/vue/24/outline';
     import debounce from 'lodash/debounce';
 
     import PromoCodeCard from '@/Components/Admin/Cards/PromoCodeCard.vue';
@@ -80,7 +79,7 @@
         if (deletingIds.value.has(promo.id)) return;
         deletingIds.value.add(promo.id);
 
-        const isTimeOut = await notifyWithUndo('Удаление промокода ' + promo.code);
+        const isTimeOut = await notifyWithUndo(`Удаление промокода «${promo.code}»`);
 
         if (isTimeOut) {
             router.delete(route('admin.promocodes.destroy', promo.id), {

@@ -1,3 +1,5 @@
+import { User } from './User';
+
 export * from './Animal';
 export * from './Product';
 export * from './Comment';
@@ -14,6 +16,7 @@ export * from './Media';
 export * from './Unit';
 export * from './ProductVariant';
 export * from './Delivery';
+export * from './User';
 export * from './Forms';
 
 export interface ResourceCollection<T> {
@@ -57,31 +60,18 @@ export interface FlashPayload {
     last_uploaded_url?: string;
 }
 
-export type Role = 'admin' | 'moderator' | 'customer' | 'worker';
-export interface User {
-    id: number;
-    name: string;
-    email: string;
-    phone: string;
-    role: Role;
-    avatar?: string; // avatar_url
-    is_admin: boolean;
-    orders_count?: number;
-    created_at: string;
-}
-
-export interface AuthProps {
-    user: User | null;
-}
-
 export interface PageProps {
     [key: string]: unknown;
 }
 
 export interface Permission {
-    key: string; // MANAGE_USERS
-    value: string; // manage-users
-    label: string; // Пользователи
+    key: string;
+    value: string;
+    label: string;
+}
+
+export interface AuthProps {
+    user: User | null;
 }
 
 export interface SharedData extends PageProps {

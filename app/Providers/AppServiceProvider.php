@@ -79,6 +79,8 @@ class AppServiceProvider extends ServiceProvider
             'animal' => Animal::class,
             'product' => Product::class,
             'page' => Page::class,
+            'user' => \App\Models\User::class,
+            'order' => \App\Models\Order::class,
         ]);
 
         $this->app->bind(DeliveryDTO::class, function ($app) {
