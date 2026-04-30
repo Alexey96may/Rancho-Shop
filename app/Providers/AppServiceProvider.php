@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Http\Request;
 use App\DTO\DeliveryDTO;
+use Illuminate\Support\Str;
+use Illuminate\Support\Pluralizer;
 
 use Illuminate\Support\Facades\Gate;
 use App\Enums\UserRole;
@@ -86,7 +88,7 @@ class AppServiceProvider extends ServiceProvider
 
             $draft = null;
 
-            // 👤 USER
+            // USER
             if ($request->user()) {
                 $address = $request->user()
                     ->deliveryAddresses()
@@ -104,12 +106,12 @@ class AppServiceProvider extends ServiceProvider
                 }
             }
 
-            // 👤 GUEST
+            // GUEST
             if (!$draft) {
                 $draft = session('delivery_draft');
             }
 
-            // ❗ fallback → самовывоз
+            // fallback → самовывоз
             if (!$draft) {
                 return new DeliveryDTO(
                     address: null,
@@ -129,6 +131,27 @@ class AppServiceProvider extends ServiceProvider
                 is_valid: $draft['is_valid'] ?? false,
                 meta: $draft['delivery_meta'] ?? null,
             );
+        });
+
+        Str::macro('customSlug', function ($title, $separator = '-', $language = 'en') {
+            $dictionary = [
+                'шт' => 'pc',
+                'кг' => 'kg',
+                'гр' => 'g',
+                'мл' => 'ml',
+                'м'  => 'm',
+                'см' => 'cm',
+                'мм' => 'mm',
+                'л'  => 'l',
+            ];
+
+            $title = mb_strtolower($title);
+
+            foreach ($dictionary as $key => $value) {
+                $title = preg_replace('/\b' . preg_quote($key, '/') . '\b/u', $value, $title);
+            }
+            
+            return Str::slug($title, $separator, $language);
         });
     }
 }

@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Unit;
-use App\Http\Resources\UnitResource;
+use App\Http\Resources\Admin\AdminUnitResource;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -14,12 +14,26 @@ class UnitController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $units = Unit::orderBy('position', 'asc')->get();
+        $units = Unit::query()
+            ->when($request->search, function ($query, $search) {
+                $search = mb_strtolower($search);
+                $query->where(function ($q) use ($search) {
+                    $q->whereRaw('LOWER(name) LIKE ?', ["%{$search}%"])
+                        ->orWhereRaw('LOWER(short) LIKE ?', ["%{$search}%"])
+                        ->orWhereRaw('LOWER(slug) LIKE ?', ["%{$search}%"]);
+                });
+            })
+            ->withCount('productVariants')
+            ->orderBy('position', 'asc')
+            ->paginate(setting('admin_per_page', 10))
+            ->withQueryString();
 
         return Inertia::render('Admin/Units/Index', [
-            'units' => UnitResource::collection($units)
+            'units' => AdminUnitResource::collection($units),
+            'filters' => $request->only(['search']),
+            'seo' => $this->seo('Панель управления: Номенклатура', robots: 'noindex, nofollow')
         ]);
     }
 
@@ -39,14 +53,21 @@ class UnitController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'short' => 'required|string|max:50',
-            'position' => 'nullable|integer',
+            'slug' => 'nullable|string|max:255',
+            'position' => 'nullable|integer|min:0',
         ]);
 
-        $validated['slug'] = Str::slug($validated['name']);
+        $unitName = $validated['name'];
+
+        $slugSource = $validated['slug'] ?: $validated['short'];
+        $slug = Str::customSlug($slugSource);
+
+        $count = Unit::where('slug', 'LIKE', "{$slug}%")->count();
+        $validated['slug'] = $count ? "{$slug}-{$count}" : $slug;
 
         Unit::create($validated);
 
-        return redirect()->back()->with('success', 'Единица измерения добавлена');
+        return redirect()->back()->with('success', "Единица «{$unitName}» измерения  создана");
     }
     /**
      * Display the specified resource.
@@ -72,12 +93,15 @@ class UnitController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'short' => 'required|string|max:50',
-            'position' => 'nullable|integer',
+            'slug' => 'nullable|string|unique:units,slug,' . $unit->id,
+            'position' => 'nullable|integer|min:0',
         ]);
+        
+        $validated['slug'] = Str::customSlug($validated['slug'] ?? $validated['short']);
 
         $unit->update($validated);
 
-        return redirect()->back()->with('success', 'Обновлено');
+        return redirect()->back()->with('success', "Данные «{$unit->name}» обновлены");
     }
 
     /**
@@ -86,11 +110,11 @@ class UnitController extends Controller
     public function destroy(Unit $unit)
     {
         if ($unit->productVariants()->exists()) {
-            return redirect()->back()->with('error', 'Нельзя удалить: единица используется в товарах');
+            return redirect()->back()->with('error', "Нельзя удалить  «{$unit->name}»: единица используется в товарах");
         }
 
         $unit->delete();
-        return redirect()->back();
+        return redirect()->back()->with('success', "Единица измерения «{$unit->name}» удалена");
     }
 
     public function reorder(Request $request)

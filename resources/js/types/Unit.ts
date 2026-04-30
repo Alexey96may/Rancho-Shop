@@ -1,9 +1,7 @@
-type unitSlug = 'kg' | 'g' | 'l' | 'ml' | 'pcs';
-
 export interface BaseUnit {
-    name?: string; // килограмм
-    slug: unitSlug; // kg
-    short: string; // кг
+    name: string;
+    short: string;
+    slug: string;
 }
 
 export interface Unit extends BaseUnit {
@@ -13,5 +11,11 @@ export interface Unit extends BaseUnit {
 
 export interface UnitAdmin extends Unit {
     created_at: string;
-    updated_at: string;
+    product_variants_count?: number;
+    can_delete: boolean;
+}
+
+export interface UnitFilters {
+    search?: string;
+    sort?: 'latest' | 'position';
 }

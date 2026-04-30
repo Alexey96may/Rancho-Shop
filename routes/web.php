@@ -139,8 +139,9 @@ Route::prefix('admin')
         // (Admin, Worker)
         Route::middleware('can:' . Permission::MANAGE_ORDERS->value)->group(function () {
             Route::resource('orders', AdminOrderController::class);
-            Route::resource('units', UnitController::class)->except(['show', 'create']);
+            
             Route::patch('units/reorder', [UnitController::class, 'reorder'])->name('units.reorder');
+            Route::resource('units', UnitController::class)->except(['show', 'create']);
         });
 
         // (Admin)

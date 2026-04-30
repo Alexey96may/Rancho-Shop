@@ -127,7 +127,7 @@ class PageController extends Controller
 
             $this->sanitizeMedia($validated['content'], $page);
         }
-
+        
         $validated['slug'] = Str::slug($validated['slug'] ?? $validated['title']);
 
         $page->update($validated);

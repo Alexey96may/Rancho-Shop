@@ -1,232 +1,389 @@
 <script setup lang="ts">
-    import { ref } from 'vue';
+    import { ref, watch } from 'vue';
 
-    import { Head, router, useForm } from '@inertiajs/vue3';
+    import { router, useForm } from '@inertiajs/vue3';
 
-    // Импорт библиотеки
-    import {
-        AlertCircleIcon,
-        GripVerticalIcon,
-        Loader2Icon,
-        PlusIcon,
-        RulerIcon,
-        Trash2Icon,
-    } from 'lucide-vue-next';
-    // Добавили router
+    import debounce from 'lodash/debounce';
+    import { Loader2Icon, XIcon } from 'lucide-vue-next';
     import draggable from 'vuedraggable';
 
+    import UnitCard from '@/Components/Admin/Cards/AdminUnitCard.vue';
+    import AdminEmptyState from '@/Components/Admin/Shared/AdminEmptyState.vue';
+    import AdminPagination from '@/Components/Admin/Shared/AdminPagination.vue';
+    import AdminLoader from '@/Components/Admin/UI/AdminLoader.vue';
+    import AdminSearchInput from '@/Components/Admin/UI/AdminSearchInput.vue';
+    import BaseCreateButton from '@/Components/UI/BaseCreateButton.vue';
     import AdminLayout from '@/Layouts/AdminLayout.vue';
+    import { useFlash } from '@/composables/useFlash';
+    import { Paginated, UnitAdmin } from '@/types';
+
+    defineOptions({ layout: AdminLayout });
+
+    interface DraggableEvent {
+        oldIndex: number;
+        newIndex: number;
+        item: HTMLElement;
+        from: HTMLElement;
+        to: HTMLElement;
+    }
 
     const props = defineProps<{
-        units: { data: any[] };
+        units: Paginated<UnitAdmin>;
+        filters: { search: string };
     }>();
 
-    const isDragging = ref(false);
+    const isModalOpen = ref(false);
+    const editingUnit = ref<UnitAdmin | null>(null);
     const isSavingOrder = ref(false);
+
+    const search = ref(props.filters.search || '');
+    const { notifyWithUndo } = useFlash();
+
+    const isFiltering = ref(false);
+
+    watch(search, () => {
+        isFiltering.value = true;
+
+        performSearch();
+    });
+
+    const performSearch = debounce(() => {
+        router.get(
+            route('admin.units.index'),
+            { search: search.value },
+            {
+                preserveState: true,
+                replace: true,
+                onFinish: () => {
+                    isFiltering.value = false;
+                },
+            },
+        );
+    }, 300);
 
     const form = useForm({
         name: '',
         short: '',
+        slug: '',
         position: 0,
     });
 
-    // Сохранение новой единицы
+    const openModal = (unit: UnitAdmin | null = null) => {
+        editingUnit.value = unit;
+
+        if (unit) {
+            form.name = unit.name;
+            form.short = unit.short;
+            form.slug = unit.slug;
+            form.position = unit.position;
+        } else {
+            form.reset();
+        }
+        isModalOpen.value = true;
+    };
+
+    const closeModal = () => {
+        isModalOpen.value = false;
+        form.reset();
+    };
+
     const submit = () => {
-        form.post(route('admin.units.store'), {
-            onSuccess: () => form.reset(),
-        });
-    };
-
-    // Удаление
-    const deleteUnit = (unit: any) => {
-        if (confirm(`Вы уверены, что хотите удалить "${unit.name}"?`)) {
-            useForm({}).delete(route('admin.units.destroy', unit.id));
+        if (editingUnit.value) {
+            form.put(route('admin.units.update', editingUnit.value.id), {
+                onError: (e) => console.log(e),
+                onSuccess: () => closeModal(),
+            });
+        } else {
+            form.post(route('admin.units.store'), {
+                onSuccess: () => closeModal(),
+            });
         }
     };
 
-    const onDragStart = () => {
-        isDragging.value = true;
+    const deletingIds = ref(new Set<number>());
 
-        // Вибрируем 10 миллисекунд (легкий щелчок)
-        if ('vibrate' in navigator) {
-            navigator.vibrate(10);
+    const deleteUnit = async (unit: UnitAdmin) => {
+        if (deletingIds.value.has(unit.id)) return;
+        deletingIds.value.add(unit.id);
+
+        const isTimeOut = await notifyWithUndo('Удаление единицы «' + unit.name + '»');
+
+        if (isTimeOut) {
+            router.delete(route('admin.units.destroy', unit.id), {
+                preserveScroll: true,
+                onFinish: () => {
+                    deletingIds.value.delete(unit.id);
+                },
+            });
+        } else {
+            deletingIds.value.delete(unit.id);
         }
     };
 
-    // Сохранение нового порядка в БД
-    const onDragEnd = () => {
-        isDragging.value = false;
+    const onDragEnd = (e: DraggableEvent) => {
+        if (e.oldIndex === e.newIndex) {
+            return;
+        }
+
+        const droppedItem = e.item;
+        droppedItem.classList.remove('drop-highlight');
+
+        void droppedItem.offsetWidth;
+
+        droppedItem.classList.add('drop-highlight');
+
+        setTimeout(() => {
+            droppedItem.classList.remove('drop-highlight');
+        }, 2000);
+
         isSavingOrder.value = true;
-
-        // Собираем массив ID в текущем порядке (после перетаскивания)
-        const ids = props.units.data.map((u) => u.id);
 
         router.patch(
             route('admin.units.reorder'),
-            { ids },
             {
-                preserveScroll: true,
-                onSuccess: () => {
-                    if ('vibrate' in navigator) {
-                        navigator.vibrate([10, 30, 10]);
-                    }
-                },
+                ids: props.units.data.map((u) => u.id),
+            },
+            {
                 onFinish: () => (isSavingOrder.value = false),
+                preserveScroll: true,
+                preserveState: true,
             },
         );
+    };
+
+    const clearFilters = () => {
+        search.value = '';
+    };
+
+    const vibrate = () => {
+        if (!window) return;
+
+        if (window.navigator && window.navigator.vibrate) {
+            window.navigator.vibrate(10);
+        }
     };
 </script>
 
 <template>
-    <Head title="Номенклатура: Единицы измерения" />
+    <Teleport to="#admin-header-content">
+        <div class="flex items-center gap-4">
+            <h1 class="text-xl font-black uppercase tracking-wider text-white">
+                Единицы измерения
+            </h1>
+            <span
+                v-if="isSavingOrder"
+                class="flex animate-pulse items-center gap-2 text-[10px] font-bold text-orange-500"
+            >
+                <Loader2Icon class="h-3 w-3 animate-spin" /> СОХРАНЕНИЕ ПОРЯДКА
+            </span>
+        </div>
+    </Teleport>
 
-    <AdminLayout>
-        <template #header>
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <div
-                        class="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-500/10 text-orange-500"
-                        aria-hidden="true"
-                    >
-                        <RulerIcon class="h-6 w-6" />
-                    </div>
-                    <div>
-                        <h1 class="text-2xl font-black uppercase tracking-tighter text-white">
-                            Единицы измерения
-                        </h1>
-                        <p
-                            v-if="isSavingOrder"
-                            class="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-orange-500"
-                        >
-                            <Loader2Icon class="h-3 w-3 animate-spin" /> Обновление порядка...
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </template>
+    <div class="space-y-6">
+        <div class="flex justify-end">
+            <AdminSearchInput v-model="search" placeholder="Поиск вопроса..." />
 
-        <div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
-            <section class="space-y-4 lg:col-span-2">
-                <h2 class="sr-only">Список единиц измерения</h2>
+            <BaseCreateButton @click="openModal(null)" label="Добавить" />
+        </div>
 
+        <div class="animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <Transition name="fade-slide" mode="out-in">
                 <draggable
+                    v-if="units.data.length"
                     v-model="units.data"
                     item-key="id"
+                    tag="div"
+                    key="units"
+                    :animation="300"
+                    fallback-tolerance="3"
+                    :force-fallback="true"
                     handle=".drag-handle"
-                    @start="isDragging = true"
+                    @start="vibrate"
                     @end="onDragEnd"
-                    ghost-class="opacity-0"
-                    drag-class="scale-105"
-                    class="space-y-4"
+                    ghost-class="ghost-card"
+                    chosen-class="chosen-card"
+                    drag-class="drag-card"
+                    class="space-y-3"
                 >
                     <template #item="{ element: unit }">
-                        <div
-                            role="listitem"
-                            class="group flex items-center gap-4 rounded-3xl border border-slate-800 bg-slate-900/40 p-4 transition-all hover:border-slate-600 active:border-orange-500/50"
-                        >
-                            <div
-                                class="drag-handle cursor-grab p-2 text-slate-700 transition-colors hover:text-slate-400 active:cursor-grabbing"
-                                title="Перетащить для изменения порядка"
-                            >
-                                <GripVerticalIcon class="h-5 w-5" />
-                            </div>
-
-                            <div class="grid flex-1 grid-cols-2 gap-4">
-                                <div class="flex flex-col">
-                                    <span
-                                        class="text-[10px] font-black uppercase tracking-widest text-slate-500"
-                                        >Название</span
-                                    >
-                                    <span class="text-sm font-bold uppercase text-white">{{
-                                        unit.name
-                                    }}</span>
-                                </div>
-                                <div class="flex flex-col">
-                                    <span
-                                        class="text-[10px] font-black uppercase tracking-widest text-slate-500"
-                                        >Сокращение</span
-                                    >
-                                    <span class="text-sm font-bold text-orange-500">{{
-                                        unit.short
-                                    }}</span>
-                                </div>
-                            </div>
-
-                            <div class="flex items-center gap-2">
-                                <button
-                                    @click="deleteUnit(unit)"
-                                    class="rounded-xl p-3 text-slate-600 transition-all hover:bg-rose-500/10 hover:text-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-2 focus:ring-offset-slate-900"
-                                    :aria-label="`Удалить ${unit.name}`"
-                                >
-                                    <Trash2Icon class="h-5 w-5" aria-hidden="true" />
-                                </button>
-                            </div>
-                        </div>
+                        <UnitCard
+                            class="sortable-item"
+                            :key="unit.id"
+                            :unit="unit"
+                            @edit="openModal"
+                            @delete="deleteUnit"
+                            :disabled="deletingIds.has(unit.id)"
+                        />
                     </template>
                 </draggable>
 
-                <div
-                    v-if="units.data.length === 0"
-                    class="rounded-[2.5rem] border-2 border-dashed border-slate-800 p-12 text-center"
-                >
-                    <AlertCircleIcon
-                        class="mx-auto mb-2 h-8 w-8 text-slate-700"
-                        aria-hidden="true"
-                    />
-                    <p class="text-sm font-bold uppercase text-slate-500">Список пуст</p>
-                </div>
-            </section>
+                <AdminLoader v-else-if="isFiltering" key="loading" text="Синхронизация" />
 
-            <aside aria-labelledby="form-title">
-                <div
-                    class="shadow-2xl sticky top-6 rounded-[2.5rem] border border-slate-800 bg-slate-900/40 p-8"
-                >
-                    <h2
-                        id="form-title"
-                        class="mb-6 text-sm font-black uppercase tracking-[0.2em] text-white"
-                    >
-                        Новая единица
-                    </h2>
-                    <form @submit.prevent="submit" class="space-y-5">
-                        <div class="space-y-2">
-                            <label
-                                for="unit-name"
-                                class="ml-2 text-[10px] font-black uppercase tracking-widest text-slate-500"
-                                >Полное название <span class="text-orange-500">*</span></label
-                            >
-                            <input
-                                id="unit-name"
-                                v-model="form.name"
-                                type="text"
-                                required
-                                class="w-full rounded-2xl border-slate-800 bg-slate-950 px-4 py-3 text-sm text-white focus:border-orange-500 focus:ring-0"
-                            />
-                        </div>
-                        <div class="space-y-2">
-                            <label
-                                for="unit-short"
-                                class="ml-2 text-[10px] font-black uppercase tracking-widest text-slate-500"
-                                >Сокращение <span class="text-orange-500">*</span></label
-                            >
-                            <input
-                                id="unit-short"
-                                v-model="form.short"
-                                type="text"
-                                required
-                                class="w-full rounded-2xl border-slate-800 bg-slate-950 px-4 py-3 text-sm text-white focus:border-orange-500 focus:ring-0"
-                            />
-                        </div>
-                        <button
-                            type="submit"
-                            :disabled="form.processing"
-                            class="group relative flex w-full items-center justify-center gap-2 rounded-2xl bg-orange-600 py-4 text-xs font-black uppercase tracking-[0.2em] text-white transition-all hover:bg-orange-500 disabled:opacity-50"
-                        >
-                            <PlusIcon v-if="!form.processing" class="h-4 w-4" />
-                            {{ form.processing ? 'Сохранение...' : 'Добавить в список' }}
-                        </button>
-                    </form>
-                </div>
-            </aside>
+                <AdminEmptyState
+                    v-else
+                    key="empty"
+                    :title="
+                        search ? 'Единицы измерения не найдены' : 'Список единиц измерения пуст'
+                    "
+                    @action="search ? clearFilters() : openModal()"
+                    :action-text="search ? 'Очистить фильтр' : 'Добавить единицу измерения'"
+                    :show-action="true"
+                    :description="
+                        search
+                            ? 'По запросу «' + search + '» совпадений нет'
+                            : 'Нет ни одной единицы измерения'
+                    "
+                />
+            </Transition>
         </div>
-    </AdminLayout>
+
+        <AdminPagination :links="units.meta.links" />
+    </div>
+
+    <div
+        v-if="isModalOpen"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4"
+        role="dialog"
+        aria-modal="true"
+    >
+        <div class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" @click="closeModal"></div>
+
+        <div
+            class="shadow-2xl animate-in zoom-in-95 relative w-full max-w-md rounded-[2.5rem] border border-slate-800 bg-slate-900 p-8 duration-200"
+        >
+            <button
+                @click="closeModal"
+                class="absolute right-6 top-6 text-slate-500 hover:text-white"
+            >
+                <XIcon class="h-6 w-6" />
+            </button>
+
+            <h2 class="mb-8 text-lg font-black uppercase tracking-widest text-white">
+                {{ editingUnit ? 'Редактировать' : 'Новая единица' }}
+            </h2>
+
+            <form @submit.prevent="submit" class="space-y-5">
+                <div class="space-y-1.5">
+                    <label
+                        class="ml-2 text-[10px] font-black uppercase tracking-widest text-slate-500"
+                        >Название</label
+                    >
+                    <input
+                        v-model="form.name"
+                        type="text"
+                        required
+                        class="w-full rounded-2xl border-slate-800 bg-slate-950 px-4 py-3 text-white focus:border-orange-500 focus:ring-0"
+                    />
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-1.5">
+                        <label
+                            class="ml-2 text-[10px] font-black uppercase tracking-widest text-slate-500"
+                            >Сокращение</label
+                        >
+                        <input
+                            v-model="form.short"
+                            type="text"
+                            required
+                            class="w-full rounded-2xl border-slate-800 bg-slate-950 px-4 py-3 text-white focus:border-orange-500 focus:ring-0"
+                        />
+                    </div>
+                    <div class="space-y-1.5">
+                        <label
+                            class="ml-2 text-[10px] font-black uppercase tracking-widest text-slate-500"
+                            >Slug</label
+                        >
+                        <input
+                            v-model="form.slug"
+                            type="text"
+                            placeholder="auto"
+                            class="w-full rounded-2xl border-slate-800 bg-slate-950 px-4 py-3 text-white focus:border-orange-500 focus:ring-0"
+                        />
+                    </div>
+                </div>
+
+                <button
+                    type="submit"
+                    :disabled="form.processing"
+                    class="w-full rounded-2xl bg-orange-600 py-4 font-black uppercase tracking-[0.2em] text-white hover:bg-orange-500 disabled:opacity-50"
+                >
+                    {{ form.processing ? 'Сохранение...' : 'Подтвердить' }}
+                </button>
+            </form>
+        </div>
+    </div>
 </template>
+
+<style scoped>
+    .sortable-item {
+        user-select: none;
+        -webkit-user-select: none;
+        transition: opacity 0.2s ease;
+    }
+
+    .faq-answer-content {
+        user-select: text;
+    }
+
+    .chosen-card {
+        opacity: 0.4;
+        background-color: rgba(249, 115, 22, 0.05);
+    }
+
+    .drag-card {
+        opacity: 1 !important;
+        transform: scale(1.02);
+        cursor: grabbing;
+        box-shadow:
+            0 20px 25px -5px rgb(0 0 0 / 0.5),
+            0 8px 10px -6px rgb(0 0 0 / 0.5);
+        z-index: 9999;
+        transition: none !important;
+    }
+
+    .ghost-card {
+        background-color: rgba(249, 115, 22, 0.1) !important;
+        border: 1px dashed rgb(92, 92, 92) !important;
+        border-radius: 1.5rem;
+        opacity: 0.4 !important;
+    }
+
+    .drag-handle {
+        touch-action: none;
+        cursor: grab;
+    }
+
+    .drop-highlight {
+        animation: pulse-border 2s cubic-bezier(0.4, 0, 0.6, 1);
+        border-radius: 1.5rem;
+        position: relative;
+        z-index: 10;
+    }
+
+    @keyframes pulse-border {
+        0% {
+            outline: 1px solid #22c55e; /* green-500 */
+            box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.5);
+            transform: scale(1.005);
+        }
+        30% {
+            outline: 1px solid #ffffff;
+            box-shadow: 0 0 0 10px rgba(255, 255, 255, 0);
+            transform: scale(1);
+        }
+        100% {
+            outline: 1px solid rgba(255, 255, 255, 0);
+            box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+        }
+    }
+
+    .fade-slide-enter-active {
+        transition: all 0.4s ease-out;
+    }
+
+    .fade-slide-enter-from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+</style>
