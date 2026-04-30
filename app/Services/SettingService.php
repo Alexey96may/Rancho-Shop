@@ -27,10 +27,14 @@ class SettingService
     /**
      * Dynamic type casting
      */
-    private function castValue(?string $value, string $type): mixed
+    private function castValue(?string $value, string $type, string $key = ''): mixed
     {
         if (is_null($value)) {
             return null;
+        }
+
+        if ($key === 'farm_coords' && $type === 'string') {
+            return $this->parseCoords($value);
         }
 
         return match ($type) {

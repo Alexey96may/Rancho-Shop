@@ -19,10 +19,12 @@ class SettingController extends Controller
 
     public function index()
     {
-        $settings = $this->settingService->allModels();
+        $settingsModels = $this->settingService->allModels();
 
         return Inertia::render('Admin/Settings/Index', [
-            'settings' => SettingResource::collection($settings)
+            'settings' => SettingResource::collection($settingsModels),
+            'values' => $this->settingService->all(),
+            'seo' => $this->seo('Панель управления: Настройки', robots: 'noindex, nofollow')
         ]);
     }
 
