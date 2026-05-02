@@ -1,16 +1,22 @@
 <script setup lang="ts">
     import { ref, watch } from 'vue';
 
-    import { MapPinIcon, PlusIcon, TrashIcon } from '@heroicons/vue/24/outline';
+    import AdminBaseTextarea from '@/Components/Admin/UI/AdminBaseTextarea.vue';
+    import AdminNumberInput from '@/Components/Admin/UI/AdminNumberInput.vue';
+    import BaseInput from '@/Components/UI/BaseInput.vue';
+    import BaseStatusToggle from '@/Components/UI/BaseStatusToggle.vue';
+    import type { DeliveryZone } from '@/types';
 
     const props = defineProps<{
-        modelValue: any; // Это массив зон из настроек
+        modelValue: DeliveryZone[]; // Это массив зон из настроек
     }>();
 
     const emit = defineEmits(['update:modelValue']);
 
     // Берем первую зону (так как в сидере она одна, но закладываем массив)
-    const zones = ref(Array.isArray(props.modelValue) ? props.modelValue : []);
+    const zones = ref<DeliveryZone[]>(
+        Array.isArray(props.modelValue) ? JSON.parse(JSON.stringify(props.modelValue)) : [],
+    );
 
     // Если зон нет, создаем пустой скелет по структуре сидера
     if (zones.value.length === 0) {
@@ -26,20 +32,23 @@
         });
     }
 
-    // Вспомогательная переменная для текстового редактирования путей
-    // Превращаем [[lng, lat], [lng, lat]] в "lng, lat\nlng, lat"
-    const getPathText = (path: number[][]) => path.map((point) => point.join(', ')).join('\n');
+    const getPathText = (path: [number, number][]) => {
+        return path.map((point) => point.join(', ')).join('\n');
+    };
 
     const updatePath = (index: number, text: string) => {
         const points = text
             .split('\n')
-            .map((line) => line.split(',').map((coord) => parseFloat(coord.trim())))
-            .filter((point) => point.length === 2 && !isNaN(point[0]));
+            .map((line): [number, number] => {
+                const coords = line.split(',').map((coord) => parseFloat(coord.trim()));
+
+                return [coords[0] || 0, coords[1] || 0] as [number, number];
+            })
+            .filter((point) => !isNaN(point[0]) && !isNaN(point[1]));
 
         zones.value[index].path = points;
     };
 
-    // Следим за изменениями и отправляем наверх в форму
     watch(
         zones,
         (newVal) => {
@@ -57,93 +66,39 @@
     >
         <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
             <div class="space-y-4">
-                <div>
-                    <label class="text-[10px] font-bold uppercase text-slate-500"
-                        >Название маршрута</label
-                    >
-                    <input
-                        v-model="zone.name"
-                        type="text"
-                        class="mt-1 w-full rounded-xl border-slate-800 bg-slate-900 text-sm text-white focus:ring-orange-500"
+                <BaseInput
+                    label="Название маршрута"
+                    :model-value="String(zone.name)"
+                    @update:model-value="zone.name = String($event)"
+                />
+
+                <div class="grid grid-cols-2 gap-4">
+                    <AdminNumberInput v-model="zone.radius" :min="0" label="Радиус (м)" />
+
+                    <AdminNumberInput v-model="zone.priority" :min="0" label="Приоритет" />
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <AdminNumberInput
+                        v-model="zone.delivery_price"
+                        :min="0"
+                        label="Цена"
+                        :is-money="true"
                     />
-                </div>
-
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="text-[10px] font-bold uppercase text-slate-500"
-                            >Радиус (м)</label
-                        >
-                        <input
-                            v-model.number="zone.radius"
-                            type="number"
-                            class="mt-1 w-full rounded-xl border-slate-800 bg-slate-900 text-sm text-white"
-                        />
-                    </div>
-                    <div>
-                        <label class="text-[10px] font-bold uppercase text-slate-500"
-                            >Приоритет</label
-                        >
-                        <input
-                            v-model.number="zone.priority"
-                            type="number"
-                            class="mt-1 w-full rounded-xl border-slate-800 bg-slate-900 text-sm text-white"
-                        />
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="text-[10px] font-bold uppercase text-slate-500"
-                            >Цена (коп)</label
-                        >
-                        <input
-                            v-model.number="zone.delivery_price"
-                            type="number"
-                            class="mt-1 w-full rounded-xl border-slate-800 bg-slate-900 text-sm text-orange-400"
-                        />
-                    </div>
-                    <div>
-                        <label class="text-[10px] font-bold uppercase text-slate-500"
-                            >Бесплатно от (коп)</label
-                        >
-                        <input
-                            v-model.number="zone.free_from"
-                            type="number"
-                            class="mt-1 w-full rounded-xl border-slate-800 bg-slate-900 text-sm text-green-400"
-                        />
-                    </div>
                 </div>
 
                 <div class="flex items-center gap-2">
-                    <input
-                        type="checkbox"
-                        v-model="zone.enabled"
-                        :id="'enabled' + zIndex"
-                        class="rounded border-slate-800 bg-slate-900 text-orange-600 focus:ring-orange-500"
-                    />
-                    <label :for="'enabled' + zIndex" class="text-xs text-slate-400"
-                        >Зона активна</label
-                    >
+                    <BaseStatusToggle v-model="zone.enabled" label="Зона активна" />
                 </div>
             </div>
 
             <div class="flex flex-col gap-2">
-                <label
-                    class="flex items-center justify-between text-[10px] font-bold uppercase text-slate-500"
-                >
-                    <span>Точки маршрута (lng, lat)</span>
-                    <span class="text-orange-500">{{ zone.path.length }} точек</span>
-                </label>
-                <textarea
-                    :value="getPathText(zone.path)"
-                    @input="(e) => updatePath(zIndex, (e.target as HTMLTextAreaElement).value)"
+                <AdminBaseTextarea
+                    :label="zone.path.length + ' точек'"
+                    :model-value="getPathText(zone.path)"
+                    @update:model-value="(e) => updatePath(zIndex, e)"
                     rows="10"
-                    placeholder="34.30457, 44.85014"
-                    class="w-full rounded-xl border-slate-800 bg-slate-900 font-mono text-xs text-slate-300 focus:ring-orange-500"
-                ></textarea>
-                <p class="text-[9px] text-slate-600">
-                    Каждая точка с новой строки. Формат: Долгота, Широта
-                </p>
+                />
             </div>
         </div>
     </div>

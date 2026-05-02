@@ -13,10 +13,12 @@
     } from '@heroicons/vue/24/outline';
 
     import DeliveryZoneManager from '@/Components/Admin/Shared/DeliveryZoneManager.vue';
+    import AdminBaseTextarea from '@/Components/Admin/UI/AdminBaseTextarea.vue';
     import AdminNumberInput from '@/Components/Admin/UI/AdminNumberInput.vue';
     import BaseCreateButton from '@/Components/UI/BaseCreateButton.vue';
     import BaseInput from '@/Components/UI/BaseInput.vue';
     import BaseSelect from '@/Components/UI/BaseSelect.vue';
+    import BaseSwitch from '@/Components/UI/BaseSwitch.vue';
     import AdminLayout from '@/Layouts/AdminLayout.vue';
     import type { DeliveryZone, ResourceCollection } from '@/types';
 
@@ -101,9 +103,6 @@
     const submit = () => {
         form.post(route('admin.settings.bulk'), {
             preserveScroll: true,
-            onSuccess: () => {
-                // Уведомление об успехе
-            },
         });
     };
 
@@ -113,10 +112,10 @@
         header_announcement: 'Текст в шапке',
         contact_phone: 'Телефон',
         contact_email: 'Email',
-        contact_telegram: 'Telegram (username)',
-        contact_vk: 'VK (ID или ник)',
+        contact_telegram: 'Telegram (ссылка)',
+        contact_vk: 'VK (ссылка)',
         address_farm: 'Адрес фермы',
-        farm_coords: 'Координаты (JSON)',
+        farm_coords: 'Координаты (Через запятую: шир., дол.)',
         shop_status: 'Статус магазина',
         is_accepting_orders: 'Прием заказов',
         min_order_amount: 'Мин. сумма заказа (коп.)',
@@ -135,14 +134,15 @@
 
     const formatLabel = (key: string) => labels[key] || key;
 
-    const ensurePrimitive = (value: any): string | number => {
-        if (typeof value === 'string' || typeof value === 'number') {
-            return value;
-        }
-        return String(value);
-    };
+    const typeOptions = [
+        { value: 'open', label: 'Открыт (Принимаем заказы)' },
+        { value: 'closed', label: 'Закрыт' },
+        { value: 'maintenance', label: 'Технические работы' },
+    ];
 
-    const asAny = (obj: any) => obj;
+    const asZones = (value: any): DeliveryZone[] => {
+        return value as DeliveryZone[];
+    };
 </script>
 
 <template>
@@ -151,7 +151,6 @@
     </Teleport>
 
     <div class="space-y-6">
-        <!-- Верхняя навигация (Табсы) -->
         <nav class="no-scrollbar flex items-center gap-2 overflow-x-auto pb-2" role="tablist">
             <button
                 v-for="section in sections"
@@ -171,98 +170,94 @@
             </button>
         </nav>
 
-        <!-- Основная область формы -->
         <main class="min-h-[500px] rounded-3xl border border-slate-800 bg-slate-900/50 p-6 md:p-8">
-            <form @submit.prevent="submit" class="space-y-6">
-                <TransitionGroup name="fade-slide">
-                    <div
-                        v-for="field in currentFields"
-                        :key="field.key"
-                        class="group flex flex-col gap-2 border-b border-slate-800/50 pb-6 last:border-0"
-                    >
-                        <label
-                            :for="field.key"
-                            class="text-xs font-black uppercase tracking-widest text-slate-500 transition-colors group-focus-within:text-orange-500"
+            <form @submit.prevent="submit" class="space-y-6 overflow-hidden">
+                <Transition name="fade-slide">
+                    <div :key="activeSection" class="space-y-6">
+                        <div
+                            v-for="(field, index) in currentFields"
+                            :key="field.key"
+                            class="group flex flex-col gap-2 border-b border-slate-800/50 pb-6 last:border-0"
                         >
-                            {{ formatLabel(field.key) }}
-                        </label>
+                            <BaseSwitch
+                                v-if="field.type === 'boolean'"
+                                :model-value="!!field.value"
+                                @update:model-value="field.value = $event"
+                                :label="formatLabel(field.key)"
+                                active-text="Включено"
+                                inactive-text="Выключено"
+                                :disabled="form.processing"
+                            />
 
-                        <!-- Поля ввода (логика без изменений) -->
-                        <div v-if="field.type === 'boolean'" class="flex items-center gap-3 py-1">
-                            <button
-                                type="button"
-                                @click="field.value = !field.value"
-                                class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent ring-offset-slate-900 transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-orange-500"
-                                :class="field.value ? 'bg-orange-600' : 'bg-slate-700'"
-                            >
-                                <span
-                                    class="shadow pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white ring-0 transition duration-200 ease-in-out"
-                                    :class="field.value ? 'translate-x-5' : 'translate-x-0'"
+                            <BaseSelect
+                                v-else-if="field.key === 'shop_status'"
+                                v-model="field.value"
+                                :options="typeOptions"
+                                :label="formatLabel(field.key)"
+                                valueKey="value"
+                                labelKey="label"
+                                variant="admin"
+                                class="lg:w-64"
+                            />
+
+                            <div v-else-if="field.key === 'delivery_zones'">
+                                <DeliveryZoneManager
+                                    :model-value="asZones(field.value)"
+                                    @update:model-value="field.value = $event"
                                 />
-                            </button>
-                            <span class="text-sm text-slate-300">
-                                {{ field.value ? 'Включено' : 'Выключено' }}
-                            </span>
+                            </div>
+
+                            <AdminBaseTextarea
+                                v-else-if="field.type === 'json'"
+                                :id="field.key"
+                                :label="formatLabel(field.key)"
+                                :model-value="String(field.value)"
+                                @update:model-value="field.value = $event"
+                                :error="form.errors[`settings.${index}.value`]"
+                                :disabled="form.processing"
+                                rows="6"
+                            />
+
+                            <AdminNumberInput
+                                v-else-if="field.type === 'integer'"
+                                :model-value="Number(field.value)"
+                                @update:model-value="field.value = Number($event)"
+                                :id="field.key"
+                                :label="formatLabel(field.key)"
+                                v-model:error="form.errors.settings"
+                                :min="0"
+                                :disabled="form.processing"
+                            />
+
+                            <BaseInput
+                                v-else
+                                :id="field.key"
+                                :label="formatLabel(field.key)"
+                                :model-value="String(field.value)"
+                                @update:model-value="field.value = String($event)"
+                                v-model:error="form.errors.settings"
+                                :disabled="form.processing"
+                            />
+
+                            <p class="text-[10px] italic text-slate-600">
+                                Ключ в БД: {{ field.key }}
+                            </p>
                         </div>
-
-                        <select
-                            v-else-if="field.key === 'shop_status'"
-                            v-model="field.value"
-                            class="w-full rounded-2xl border-slate-800 bg-slate-950 text-white focus:border-orange-500 focus:ring-orange-500"
-                        >
-                            <option value="open">Открыт (Принимаем заказы)</option>
-                            <option value="closed">Закрыт</option>
-                            <option value="maintenance">Технические работы</option>
-                        </select>
-
-                        <div v-else-if="field.key === 'delivery_zones'">
-                            <DeliveryZoneManager v-model="field.value" />
-                        </div>
-
-                        <textarea
-                            v-else-if="field.type === 'json'"
-                            :id="field.key"
-                            v-model="field.value as string"
-                            rows="5"
-                            class="w-full rounded-2xl border-slate-800 bg-slate-950 font-mono text-sm text-orange-400 focus:border-orange-500 focus:ring-orange-500"
-                        ></textarea>
-
-                        <AdminNumberInput
-                            v-else-if="field.type === 'integer'"
-                            v-model="asAny(field).value"
-                            :id="field.key"
-                            v-model:error="form.errors.settings"
-                            :min="0"
-                            :disabled="form.processing"
-                        />
-
-                        <BaseInput
-                            v-else
-                            :id="field.key"
-                            v-model="asAny(field).value"
-                            v-model:error="form.errors.settings"
-                            :disabled="form.processing"
-                        />
-
-                        <p class="text-[10px] italic text-slate-600">Ключ в БД: {{ field.key }}</p>
                     </div>
-                </TransitionGroup>
+                </Transition>
 
-                <!-- Подвал -->
                 <div
                     class="mt-8 flex flex-col gap-4 border-t border-slate-800 pt-8 sm:flex-row sm:items-center sm:justify-between"
                 >
                     <div class="text-xs text-slate-500">
                         Изменения применяются сразу ко всей системе
                     </div>
-                    <button
+
+                    <BaseCreateButton
                         type="submit"
+                        :label="form.processing ? 'Сохраняем...' : 'Сохранить всё'"
                         :disabled="form.processing"
-                        class="hover:shadow-lg flex items-center justify-center gap-2 rounded-2xl bg-orange-600 px-8 py-4 text-sm font-black uppercase tracking-widest text-white transition-all hover:bg-orange-500 hover:shadow-orange-900/20 disabled:opacity-50"
-                    >
-                        <CloudArrowUpIcon class="h-5 w-5" />
-                        {{ form.processing ? 'Сохраняем...' : 'Сохранить всё' }}
-                    </button>
+                    />
                 </div>
             </form>
         </main>
@@ -270,26 +265,25 @@
 </template>
 
 <style scoped>
-    /* Плавность переключения */
     .fade-slide-enter-active,
     .fade-slide-leave-active {
-        transition: all 0.25s ease;
-    }
-    .fade-slide-enter-from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    .fade-slide-leave-to {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
-    .fade-slide-leave-active {
-        position: absolute;
-        width: 100%;
-        pointer-events: none;
+        transition: all 0.3s ease;
     }
 
-    /* Скрытие стандартного скроллбара для табсов, сохраняя функционал */
+    .fade-slide-leave-active {
+        width: 100%;
+    }
+
+    .fade-slide-enter-from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    .fade-slide-leave-to {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
     .no-scrollbar::-webkit-scrollbar {
         display: none;
     }
