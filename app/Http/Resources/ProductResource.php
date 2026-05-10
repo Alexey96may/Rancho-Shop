@@ -14,7 +14,7 @@ class ProductResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        //Product::with(['variants.unit', 'category', 'seo', 'media'])\
+        //Product::with(['variants.unit', 'category', 'seo', 'media'])
         $variant = $this->relationLoaded('variants')
             ? $this->variants->first()
             : null;
@@ -34,9 +34,6 @@ class ProductResource extends JsonResource
             'next_delivery_date' => $this->next_delivery_date?->format('Y-m-d'),
 
             'attributes' => $this->attributes,
-
-            // 'price_rub' => $variant ? $variant->price / 100 : null,
-            // 'old_price_rub' => $variant?->old_price ? $variant->old_price / 100 : null,
 
             'media' => $this->relationLoaded('media') && $this->media->isNotEmpty()
                 ? MediaResource::collection($this->media)

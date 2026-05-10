@@ -1,5 +1,5 @@
 <script setup lang="ts">
-    import { reactive, watch } from 'vue';
+    import { computed, reactive, watch } from 'vue';
 
     import { router } from '@inertiajs/vue3';
 
@@ -10,6 +10,7 @@
     import AdminPageHeader from '@/Components/Admin/Shared/AdminPageHeader.vue';
     import AdminPagination from '@/Components/Admin/Shared/AdminPagination.vue';
     import AdminSearchInput from '@/Components/Admin/UI/AdminSearchInput.vue';
+    import AdminStatCard from '@/Components/Admin/UI/AdminStatCard.vue';
     import BaseSelect from '@/Components/UI/BaseSelect.vue';
     import AdminLayout from '@/Layouts/AdminLayout.vue';
     import type { AdminOrder, Paginated } from '@/types';
@@ -56,6 +57,11 @@
             data: { back: searchParams },
         });
     };
+
+    const computedCompletedRevenue = computed(() =>
+        formatMoney(props.total_completed_revenue || 0),
+    );
+    const computedPendingRevenue = computed(() => formatMoney(props.total_pending_revenue || 0));
 </script>
 
 <template>
@@ -101,28 +107,19 @@
         </div>
 
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <div class="rounded-3xl border border-slate-800 bg-slate-900/50 p-5">
-                <p class="text-[10px] font-black uppercase tracking-widest text-green-500">
-                    Выручка (завершено)
-                </p>
-                <p class="mt-2 text-2xl font-black text-white">
-                    {{ formatMoney(total_completed_revenue || 0) }}
-                </p>
-            </div>
-            <div class="rounded-3xl border border-slate-800 bg-slate-900/50 p-5">
-                <p class="text-[10px] font-black uppercase tracking-widest text-orange-500">
-                    В обработке
-                </p>
-                <p class="mt-2 text-2xl font-black text-white">
-                    {{ formatMoney(total_pending_revenue || 0) }}
-                </p>
-            </div>
-            <div class="rounded-3xl border border-slate-800 bg-slate-900/50 p-5">
-                <p class="text-[10px] font-black uppercase tracking-widest text-slate-500">
-                    Заказов всего
-                </p>
-                <p class="mt-2 text-2xl font-black text-white">{{ total_count || 0 }}</p>
-            </div>
+            <AdminStatCard
+                label="Выручка (завершено)"
+                :value="computedCompletedRevenue"
+                labelColor="text-green-500"
+            />
+
+            <AdminStatCard
+                label="В обработке"
+                :value="computedPendingRevenue"
+                labelColor="text-orange-500"
+            />
+
+            <AdminStatCard label="Заказов всего" :value="total_count || 0" />
         </div>
     </div>
 
@@ -136,6 +133,7 @@
             <AdminOrderCard
                 v-for="order in orders.data"
                 :key="order.id"
+                v-memo="[order.id, order.updated_at]"
                 :order="order"
                 @click="openOrder(order.id)"
                 class="cursor-pointer"

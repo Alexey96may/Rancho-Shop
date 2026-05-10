@@ -73,6 +73,7 @@
             </button>
         </section>
 
+        <div v-for="num in 6">{{ num }}</div>
         <main
             v-if="products.data.length"
             class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"

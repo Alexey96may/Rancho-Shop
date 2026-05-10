@@ -19,7 +19,12 @@
 
     defineEmits(['open']);
 
-    const statusInfo = computed(() => ORDER_STATUSES[props.order.status] || ORDER_STATUSES.new);
+    const computedFormatMoney = computed(() => formatMoney(props.order.total_price));
+
+    const statusInfo = computed(() => {
+        if (!props.order) return ORDER_STATUSES.new;
+        return ORDER_STATUSES[props.order.status] || ORDER_STATUSES.new;
+    });
 </script>
 
 <template>
@@ -84,9 +89,7 @@
         <div class="mt-auto flex items-center justify-between border-t border-slate-800 pt-4">
             <div class="flex flex-col">
                 <span class="text-[9px] font-black uppercase text-slate-600">Итого</span>
-                <span class="text-lg font-black text-white">{{
-                    formatMoney(order.total_price)
-                }}</span>
+                <span class="text-lg font-black text-white">{{ computedFormatMoney }}</span>
             </div>
 
             <button

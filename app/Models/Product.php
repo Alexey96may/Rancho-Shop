@@ -5,7 +5,6 @@ namespace App\Models;
 use App\Traits\HasActiveScope;
 use App\Traits\HasInteractions;
 use App\Traits\HasStandardMedia;
-use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
