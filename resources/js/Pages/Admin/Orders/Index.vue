@@ -82,6 +82,7 @@
                 placeholder="Поиск по имени или ID"
                 label="Поиск заказов"
             />
+
             <BaseSelect
                 v-model="form.status"
                 :options="[
@@ -97,6 +98,7 @@
                 variant="admin"
                 class="lg:w-64"
             />
+
             <button
                 v-if="form.search || form.status"
                 @click="clearFilters"

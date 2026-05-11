@@ -14,14 +14,10 @@ class ProductResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        //Product::with(['variants.unit', 'category', 'seo', 'media'])
-        $variant = $this->relationLoaded('variants')
-            ? $this->variants->first()
-            : null;
+        $mainVariant = $this->relationLoaded('variants') ? $this->mainVariant() : null;
 
         return [
             'id' => $this->id,
-            'animal_id' => $this->animal_id,
             'category_id' => $this->category_id,
 
             'name' => $this->name,
@@ -29,31 +25,27 @@ class ProductResource extends JsonResource
             'description' => $this->description,
             
             'availability_type' => $this->availability_type,
-            
-            'schedule' => $this->schedule,
-            'next_delivery_date' => $this->next_delivery_date?->format('Y-m-d'),
+            'schedule' => $this->schedule ?? [],
 
             'attributes' => $this->attributes,
 
-            'media' => $this->relationLoaded('media') && $this->media->isNotEmpty()
+            'main_photo' => $this->getMedia('main')->isNotEmpty()
+                ? MediaResource::collection($this->getMedia('main'))
+                : [MediaResource::fallback($this->resource)],
+
+            'gallery' => $this->relationLoaded('media') && $this->media->isNotEmpty()
                 ? MediaResource::collection($this->media)
                 : [MediaResource::fallback($this->resource)],
 
             // whenLoaded
-            'variants' => ProductVariantResource::collection(
-                $this->whenLoaded('variants')
-            ),
-            
-            'unit' => $variant?->unit
-                ? new UnitResource($variant->unit)
-                : null,
-
+            'variants' => ProductVariantResource::collection($this->whenLoaded('variants')),
             'category' => new CategoryResource($this->whenLoaded('category')),
             'seo' => new SeoResource($this->whenLoaded('seo')),
+            'animals' => AnimalResource::collection($this->whenLoaded('animals')),
 
-            'animals' => AnimalResource::collection(
-                $this->whenLoaded('animals')
-            ),
+            'unit' => $mainVariant?->unit ? new UnitResource($mainVariant->unit) : null,
+
+            'next_delivery_date' => $this->next_delivery_date?->format('Y-m-d'),
         ];
     }
 }

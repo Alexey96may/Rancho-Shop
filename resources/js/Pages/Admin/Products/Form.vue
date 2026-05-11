@@ -1,262 +1,433 @@
 <script setup lang="ts">
-    import { ref } from 'vue';
+    import { computed, ref, watch } from 'vue';
 
-    import { Head, useForm } from '@inertiajs/vue3';
+    import { router, useForm } from '@inertiajs/vue3';
 
-    import { PhotoIcon, PlusIcon, TrashIcon } from '@heroicons/vue/24/outline';
+    import {
+        AdjustmentsHorizontalIcon,
+        ChevronLeftIcon,
+        DocumentTextIcon,
+        MagnifyingGlassIcon,
+        PhotoIcon,
+    } from '@heroicons/vue/24/outline';
 
+    import FeaturesSection from '@/Components/Admin/Sections/FeaturesSection.vue';
+    import SEOSection from '@/Components/Admin/Sections/SEOSection.vue';
+    import AdminBaseTextarea from '@/Components/Admin/UI/AdminBaseTextarea.vue';
+    import MediaGallery from '@/Components/Shared/MediaGallery.vue';
+    import BaseCreateButton from '@/Components/UI/BaseCreateButton.vue';
+    import BaseDeleteButton from '@/Components/UI/BaseDeleteButton.vue';
+    import BaseInput from '@/Components/UI/BaseInput.vue';
+    import BaseSelect from '@/Components/UI/BaseSelect.vue';
+    import BaseSwitch from '@/Components/UI/BaseSwitch.vue';
+    import ImageUpload from '@/Components/UI/ImageUploader.vue';
     import AdminLayout from '@/Layouts/AdminLayout.vue';
+    import { useFlash } from '@/composables/useFlash';
+    import type {
+        AdminProduct,
+        Animal,
+        AvailabilityType,
+        Category,
+        Media,
+        ResourceSingle,
+    } from '@/types';
+    import { formatDateTime, formatRelativeTime } from '@/utils/format';
+
+    defineOptions({ layout: AdminLayout });
 
     const props = defineProps<{
-        product?: any;
-        categories: any[];
-        animals: any[];
-        units: any[];
+        product?: ResourceSingle<AdminProduct> | null;
+        categories: { data: Category[] };
+        animals: { data: Animal[] };
     }>();
 
-    const tabs = [
-        { id: 'main', name: 'Основное' },
-        { id: 'variants', name: 'Цены и фасовка' },
-        { id: 'seo', name: 'SEO оптимизация' },
-    ];
+    const isEdit = computed(() => !!props.product);
 
-    const activeTab = ref('main');
+    const tabs = [
+        { id: 'general', name: 'Основное', icon: DocumentTextIcon },
+        { id: 'gallery', name: 'Галерея', icon: PhotoIcon },
+        { id: 'features', name: 'Параметры', icon: AdjustmentsHorizontalIcon },
+        { id: 'seo', name: 'SEO данные', icon: MagnifyingGlassIcon },
+    ];
+    const activeTab = ref('general');
 
     const form = useForm({
-        name: props.product?.name ?? '',
-        category_id: props.product?.category_id ?? '',
-        description: props.product?.description ?? '',
-        availability_type: props.product?.availability_type ?? 'in_stock',
-        // SEO
-        seo: {
-            title: props.product?.seo?.title ?? '',
-            description: props.product?.seo?.description ?? '',
-            keywords: props.product?.seo?.keywords ?? '',
-        },
-        // Динамические варианты
-        variants: props.product?.variants ?? [
-            { price: '', old_price: '', weight: '', unit_id: '' },
-        ],
+        name: props.product?.data?.name ?? '',
+        slug: props.product?.data?.slug ?? '',
+        description: props.product?.data?.description ?? '',
+        category_id: props.product?.data?.category_id ?? null,
+        availability_type: props.product?.data?.availability_type ?? ('stock' as AvailabilityType),
+        is_active: props.product?.data?.is_active ?? true,
+        attributes: props.product?.data?.attributes ?? {},
+        schedule: props.product?.data?.schedule ?? { days: [] },
+        animal_ids: props.product?.data?.animals?.map((a) => a.id) ?? [],
+        // Spatie Media
+        main_photo: props.product?.data?.main_photo
+            ? [...props.product.data?.main_photo]
+            : ([] as Array<Media | File>),
+        gallery: props.product?.data?.gallery
+            ? [...props.product.data?.gallery]
+            : ([] as Array<Media | File>),
+        remove_media: [] as number[],
+        // Seo
+        seo: props.product?.data?.seo
+            ? { ...props.product.data?.seo }
+            : {
+                  title: '',
+                  description: '',
+                  keywords: '',
+                  canonical: '',
+                  is_noindex: false,
+              },
     });
 
-    const addVariant = () => {
-        form.variants.push({ price: '', old_price: '', weight: '', unit_id: '' });
-    };
-
-    const removeVariant = (index: number) => {
-        form.variants.splice(index, 1);
-    };
-
     const submit = () => {
-        if (props.product) {
-            form.put(route('admin.products.update', props.product.id));
+        if (isEdit.value) {
+            form.transform((data) => ({
+                ...data,
+                _method: 'PUT',
+            })).post(route('admin.products.update', props.product!.data?.id), {
+                preserveScroll: true,
+            });
         } else {
             form.post(route('admin.products.store'));
         }
     };
+
+    const { notifyWithUndo } = useFlash();
+    const isDeleting = ref(false);
+
+    const showExactDate = ref(false);
+    const toggleDate = () => {
+        showExactDate.value = !showExactDate.value;
+    };
+
+    const deletePage = async () => {
+        if (!props.product?.data.can_delete) return;
+
+        if (isDeleting.value) return;
+        isDeleting.value = true;
+
+        const isDeleted = await notifyWithUndo(`Удаление товара "${props.product?.data.name}"`);
+
+        if (isDeleted) {
+            router.delete(route('admin.products.destroy', props.product?.data.id), {
+                onFinish: () => {
+                    isDeleting.value = false;
+                },
+            });
+        } else {
+            isDeleting.value = false;
+        }
+    };
+
+    const availabilityOptions = [
+        { value: 'stock', label: 'В наличии' },
+        { value: 'daily', label: 'По графику' },
+        { value: 'preorder', label: 'Предзаказ' },
+    ];
+
+    //Изобр
+
+    const MAX_POST_SIZE = 20 * 1024 * 1024; // 20 MB
+
+    const removeImage = (index: number) => {
+        form.gallery.splice(index, 1);
+    };
+
+    const handleFile = (e: Event, field: 'voice' | 'gallery') => {
+        const target = e.target as HTMLInputElement;
+        const files = target.files;
+        if (!files || files.length === 0) return;
+
+        let currentTotalSize = 0;
+
+        // Считаем текущий вес файлов в форме
+        form.gallery.forEach((f: any) => {
+            if (f instanceof File) currentTotalSize += f.size;
+        });
+
+        const incomingFiles = Array.from(files);
+        const newFilesSize = incomingFiles.reduce((acc, file) => acc + file.size, 0);
+
+        if (currentTotalSize + newFilesSize > MAX_POST_SIZE) {
+            alert('Общий размер файлов слишком велик! Лимит 20 МБ.');
+            target.value = ''; // Сбрасываем инпут
+            return;
+        }
+
+        if (field === 'gallery') {
+            // Важно: создаем новый массив, чтобы Vue/Inertia увидели изменения
+            form.gallery = [...form.gallery, ...incomingFiles];
+        }
+
+        target.value = ''; // Очищаем инпут, чтобы можно было выбрать тот же файл повторно
+    };
+
+    const selectedImage = ref<string | null>(null);
+
+    const existingAvatarUrl = computed(() => {
+        return props.product?.data.main_photo?.[0]?.url || null;
+    });
 </script>
 
 <template>
-    <Head :title="product ? 'Редактирование' : 'Новый товар'" />
+    <Teleport to="#admin-header-content">
+        <div class="flex items-center gap-4">
+            <button
+                @click="router.get(route('admin.products.index'))"
+                class="group rounded-xl border border-slate-800 p-2 text-slate-400 transition-all hover:bg-slate-800 hover:text-white"
+                aria-label="Вернуться к списку"
+            >
+                <ChevronLeftIcon class="h-5 w-5" />
+            </button>
+            <h1 class="text-xl font-black text-white">
+                {{ isEdit ? 'Редактирование товара' : 'Новый товар' }}
+            </h1>
+        </div>
+    </Teleport>
 
-    <AdminLayout>
-        <template #header>
-            {{ product ? 'Редактировать товар' : 'Добавить товар' }}
-        </template>
+    <div class="space-y-6">
+        <nav class="flex gap-2 border-b border-slate-800 pb-px" role="tablist">
+            <button
+                v-for="tab in tabs"
+                :key="tab.id"
+                @click="activeTab = tab.id"
+                role="tab"
+                :aria-selected="activeTab === tab.id"
+                class="flex items-center gap-2 px-6 py-4 text-xs font-black uppercase tracking-widest transition-all"
+                :class="
+                    activeTab === tab.id
+                        ? 'border-b-2 border-orange-600 text-white'
+                        : 'text-slate-500 hover:text-slate-300'
+                "
+            >
+                <component :is="tab.icon" class="h-4 w-4" />
+                {{ tab.name }}
+            </button>
+        </nav>
 
-        <form @submit.prevent="submit" class="max-w-5xl">
-            <nav class="mb-8 flex gap-8 border-b border-slate-800" role="tablist">
-                <button
-                    v-for="tab in tabs"
-                    :key="tab.id"
-                    type="button"
-                    role="tab"
-                    :aria-selected="activeTab === tab.id"
-                    @click="activeTab = tab.id"
-                    class="pb-4 text-xs font-black uppercase tracking-widest transition-colors"
-                    :class="
-                        activeTab === tab.id
-                            ? 'border-b-2 border-orange-500 text-white'
-                            : 'text-slate-500 hover:text-slate-300'
-                    "
+        <form @submit.prevent="submit" class="grid grid-cols-1 gap-8 xl:grid-cols-12">
+            <div class="xl:col-span-8">
+                <div
+                    v-show="activeTab === 'general'"
+                    class="space-y-8 rounded-3xl border border-slate-800 bg-slate-900/50 p-6 md:p-8"
                 >
-                    {{ tab.name }}
-                </button>
-            </nav>
+                    <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+                        <ImageUpload
+                            v-model="form.main_photo"
+                            label="Аватар особи"
+                            :existing-image="existingAvatarUrl"
+                            :error="form.errors.main_photo"
+                        />
 
-            <div v-show="activeTab === 'main'" class="space-y-6" role="tabpanel">
-                <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-                    <div class="space-y-4">
-                        <div>
-                            <label
-                                for="name"
-                                class="mb-2 block text-[10px] font-black uppercase tracking-widest text-slate-500"
-                                >Название товара</label
-                            >
-                            <input
-                                id="name"
-                                v-model="form.name"
-                                type="text"
-                                class="w-full rounded-2xl border-slate-800 bg-slate-900 text-white focus:border-orange-500 focus:ring-orange-500/20"
-                            />
-                        </div>
+                        <BaseInput
+                            v-model="form.name"
+                            v-model:error="form.errors.name"
+                            label="Название товара"
+                            placeholder="Напр: Молоко козье пастеризованное"
+                            required
+                        />
 
-                        <div>
-                            <label
-                                for="category"
-                                class="mb-2 block text-[10px] font-black uppercase tracking-widest text-slate-500"
-                                >Категория</label
-                            >
-                            <select
-                                id="category"
-                                v-model="form.category_id"
-                                class="w-full rounded-2xl border-slate-800 bg-slate-900 text-white"
-                            >
-                                <option value="">Выберите категорию</option>
-                                <option v-for="cat in categories" :key="cat.id" :value="cat.id">
-                                    {{ cat.name }}
-                                </option>
-                            </select>
-                        </div>
+                        <BaseInput
+                            v-model="form.slug"
+                            v-model:error="form.errors.slug"
+                            label="URL Slug (оставьте пустым для авто)"
+                            placeholder="moloko-kozie"
+                        />
+
+                        <BaseSelect
+                            v-model="form.category_id"
+                            v-model:error="form.errors.category_id"
+                            :options="categories.data"
+                            label="Категория"
+                            placeholder="Выберите категорию"
+                            variant="admin"
+                        />
+
+                        <BaseSelect
+                            v-model="form.availability_type"
+                            v-model:error="form.errors.availability_type"
+                            :options="availabilityOptions"
+                            valueKey="value"
+                            labelKey="label"
+                            label="Тип доступности"
+                            variant="admin"
+                        />
                     </div>
+
+                    <AdminBaseTextarea
+                        v-model="form.description"
+                        v-model:error="form.errors.description"
+                        label="Описание товара"
+                        placeholder="Опишите преимущества, вкус и особенности..."
+                        rows="6"
+                    />
 
                     <div>
                         <label
-                            for="desc"
-                            class="mb-2 block text-[10px] font-black uppercase tracking-widest text-slate-500"
-                            >Описание</label
+                            class="mb-3 block text-[10px] font-black uppercase tracking-widest text-slate-500"
                         >
-                        <textarea
-                            id="desc"
-                            v-model="form.description"
-                            rows="5"
-                            class="w-full rounded-2xl border-slate-800 bg-slate-900 text-white"
-                        ></textarea>
-                    </div>
-                </div>
-            </div>
-
-            <div v-show="activeTab === 'seo'" class="space-y-6" role="tabpanel">
-                <div class="rounded-3xl border border-slate-800 bg-slate-900/50 p-8">
-                    <div class="space-y-4">
-                        <div>
+                            Источник (Животные)
+                        </label>
+                        <div class="flex flex-wrap gap-3">
                             <label
-                                for="seo_title"
-                                class="mb-2 block text-[10px] font-black uppercase tracking-widest text-slate-500"
-                                >Meta Title</label
+                                v-for="animal in animals.data"
+                                :key="animal.id"
+                                class="flex cursor-pointer items-center gap-2 rounded-2xl border px-4 py-2 transition-all"
+                                :class="
+                                    form.animal_ids.includes(animal.id)
+                                        ? 'border-orange-600 bg-orange-600/10 text-white'
+                                        : 'border-slate-800 text-slate-500 hover:border-slate-700'
+                                "
                             >
-                            <input
-                                id="seo_title"
-                                v-model="form.seo.title"
-                                type="text"
-                                class="w-full rounded-2xl border-slate-800 bg-slate-900 text-white"
-                                aria-describedby="seo_title_hint"
-                            />
-                            <p id="seo_title_hint" class="mt-2 text-[10px] text-slate-600">
-                                Рекомендуется до 60 символов.
-                            </p>
-                        </div>
-                        <div>
-                            <label
-                                for="seo_desc"
-                                class="mb-2 block text-[10px] font-black uppercase tracking-widest text-slate-500"
-                                >Meta Description</label
-                            >
-                            <textarea
-                                id="seo_desc"
-                                v-model="form.seo.description"
-                                rows="3"
-                                class="w-full rounded-2xl border-slate-800 bg-slate-900 text-white"
-                            ></textarea>
+                                <input
+                                    type="checkbox"
+                                    :value="animal.id"
+                                    v-model="form.animal_ids"
+                                    class="hidden"
+                                />
+                                <span class="text-xs font-bold">{{ animal.name }}</span>
+                            </label>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <div v-show="activeTab === 'variants'" class="space-y-6" role="tabpanel">
-                <TransitionGroup name="list" tag="div" class="space-y-6">
-                    <div
-                        v-for="(variant, index) in form.variants"
-                        :key="index"
-                        class="relative rounded-3xl border border-slate-800 bg-slate-900 p-6 transition-all"
+                <MediaGallery
+                    v-show="activeTab === 'gallery'"
+                    v-model="form.gallery"
+                    @remove="removeImage"
+                    @preview="(url) => (selectedImage = url)"
+                    ><label
+                        class="relative flex aspect-square cursor-pointer flex-col items-center justify-center rounded-[2rem] border-2 border-dashed border-slate-800 bg-slate-950/20 transition-all hover:border-orange-500/50 hover:bg-slate-950/40"
                     >
-                        <button
-                            v-if="form.variants.length > 1"
-                            @click="removeVariant(index as number)"
-                            type="button"
-                            class="shadow-lg absolute -right-2 -top-2 z-10 rounded-full bg-red-500 p-1 text-white transition-transform hover:bg-red-600 active:scale-90"
-                            aria-label="Удалить вариант"
+                        <input
+                            type="file"
+                            multiple
+                            accept="image/*"
+                            @change="handleFile($event, 'gallery')"
+                            class="sr-only"
+                        />
+                        <PhotoIcon class="mb-2 h-8 w-8 text-slate-700" />
+                        <span
+                            class="text-[10px] font-black uppercase tracking-widest text-slate-500"
+                            >Добавить</span
                         >
-                            <TrashIcon class="h-4 w-4" />
-                        </button>
+                    </label>
+                </MediaGallery>
 
-                        <div class="grid grid-cols-2 gap-4 md:grid-cols-4">
-                            <div>
-                                <label
-                                    class="mb-1 block text-[10px] font-black uppercase text-slate-500"
-                                    >Цена</label
-                                >
-                                <input
-                                    v-model="variant.price"
-                                    type="number"
-                                    class="w-full rounded-xl border-slate-800 bg-slate-950 text-white focus:ring-orange-500/20"
-                                />
+                <FeaturesSection
+                    v-if="activeTab === 'features'"
+                    v-model:features="form.attributes"
+                />
+
+                <SEOSection v-if="activeTab === 'seo'" v-model="form.seo" />
+            </div>
+
+            <aside class="xl:col-span-4">
+                <div class="sticky top-6 space-y-6">
+                    <div class="rounded-3xl border border-slate-800 bg-slate-900/50 p-6">
+                        <BaseSwitch
+                            v-model="form.is_active"
+                            label="Статус публикации"
+                            active-text="Опубликован"
+                            inactive-text="Черновик"
+                        />
+
+                        <hr class="my-6 border-slate-800" />
+
+                        <div class="space-y-4">
+                            <div
+                                class="flex justify-between text-[10px] font-black uppercase tracking-widest"
+                            >
+                                <span class="text-slate-500">Создан:</span>
+                                <Transition name="fade-date" mode="out-in">
+                                    <time
+                                        :key="showExactDate.toString()"
+                                        :datetime="product?.data.created_at"
+                                        :title="
+                                            showExactDate
+                                                ? 'Нажмите, чтобы увидеть время назад'
+                                                : 'Нажмите, чтобы увидеть точную дату'
+                                        "
+                                        @click="toggleDate"
+                                        class="cursor-pointer select-none text-[10px] font-medium text-slate-500 transition-colors hover:text-slate-300"
+                                    >
+                                        {{
+                                            showExactDate
+                                                ? formatDateTime(product?.data.created_at || null)
+                                                : formatRelativeTime(
+                                                      product?.data.created_at || null,
+                                                  )
+                                        }}
+                                    </time>
+                                </Transition>
                             </div>
-                            <div>
-                                <label
-                                    class="mb-1 block text-[10px] font-black uppercase text-slate-500"
-                                    >Вес/Объем</label
-                                >
-                                <input
-                                    v-model="variant.weight"
-                                    type="text"
-                                    class="w-full rounded-xl border-slate-800 bg-slate-950 text-white focus:ring-orange-500/20"
-                                />
+                            <div
+                                class="flex justify-between text-[10px] font-black uppercase tracking-widest"
+                            >
+                                <span class="text-slate-500">ID товара:</span>
+                                <span class="text-slate-300">{{
+                                    product?.data?.id ?? 'Новый'
+                                }}</span>
                             </div>
                         </div>
+
+                        <BaseCreateButton
+                            type="submit"
+                            :label="isEdit ? 'Обновить данные' : 'Создать товар'"
+                            :disabled="form.processing"
+                            class="mt-8 w-full"
+                        />
                     </div>
-                </TransitionGroup>
 
-                <button
-                    @click="addVariant"
-                    type="button"
-                    class="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-orange-500 transition-colors hover:text-orange-400"
-                >
-                    <PlusIcon class="h-4 w-4" />
-                    Добавить вариант цены
-                </button>
-            </div>
+                    <div
+                        v-if="isEdit"
+                        class="rounded-3xl border border-red-900/30 bg-red-900/10 p-6"
+                    >
+                        <h4 class="text-[10px] font-black uppercase tracking-widest text-red-500">
+                            Опасная зона
+                        </h4>
+                        <p class="mt-2 text-xs text-red-900/70">
+                            Удаление продукта приведет к его перемещению в корзину.
+                        </p>
 
-            <div class="mt-12 flex gap-4 border-t border-slate-800 pt-8">
-                <button
-                    type="submit"
-                    :disabled="form.processing"
-                    class="rounded-2xl bg-orange-600 px-8 py-4 text-xs font-black uppercase tracking-widest text-white hover:bg-orange-500 disabled:opacity-50"
-                >
-                    {{ product ? 'Сохранить изменения' : 'Создать товар' }}
-                </button>
-            </div>
+                        <BaseDeleteButton
+                            v-if="product?.data.can_delete"
+                            :disabled="isDeleting"
+                            @confirm="deletePage"
+                            ><span v-if="isDeleting">Удаление...</span>
+                            <span v-else>Удалить страницу</span>
+                        </BaseDeleteButton>
+
+                        <div
+                            v-else
+                            class="rounded-xl bg-orange-500/10 p-3 text-center text-[9px] font-bold uppercase text-orange-500"
+                        >
+                            Системная страница: удаление запрещено
+                        </div>
+                    </div>
+                </div>
+            </aside>
         </form>
-    </AdminLayout>
+    </div>
 </template>
 
 <style scoped>
-    .list-enter-active,
-    .list-leave-active {
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    .fade-date-enter-active,
+    .fade-date-leave-active {
+        transition:
+            opacity 0.2s ease,
+            transform 0.2s ease;
     }
 
-    .list-enter-from {
+    .fade-date-enter-from {
+        opacity: 1;
+        transform: translateY(2px);
+    }
+
+    .fade-date-leave-to {
         opacity: 0;
-        transform: translateY(-20px) scale(0.95);
-    }
-
-    .list-leave-to {
-        opacity: 0;
-        transform: scale(0.95);
-    }
-
-    .list-move {
-        transition: transform 0.4s ease;
+        transform: translateY(-2px);
     }
 </style>

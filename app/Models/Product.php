@@ -8,6 +8,7 @@ use App\Traits\HasStandardMedia;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Builder;
 // Spatie
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
@@ -65,11 +66,33 @@ class Product extends Model implements HasMedia
         return $default ?? $this->variants->first();
     }
 
+    public function scopeFilter(Builder $query, array $filters): void
+    {
+        $query->when($filters['search'] ?? null, function ($query, $search) {
+            $search = mb_strtolower($search, 'UTF-8');
+            $query->where(function ($q) use ($search) {
+                $q->whereRaw('LOWER(name) LIKE ?', ["%{$search}%"])
+                ->orWhereRaw('LOWER(description) LIKE ?', ["%{$search}%"]);
+            });
+        })->when($filters['category'] ?? null, function ($query, $category) {
+            $query->where('category_id', $category);
+        })->when($filters['animal'] ?? null, function ($query, $animal) {
+            $query->whereHas('animals', function ($q) use ($animal) {
+                $q->where('animals.id', $animal);
+            });
+        });
+    }
+
     /**
      * Setting up Spatie Media Library (v12 + Image v3)
      */
     public function registerMediaCollections(): void
     {
+        $this->addMediaCollection('main')
+            ->useFallbackUrl('/images/no-product.jpg')
+            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/webp'])
+            ->singleFile();
+
         $this->addMediaCollection('gallery')
             ->useFallbackUrl('/images/no-product.jpg')
             ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/webp', 'image/avif']);

@@ -42,4 +42,15 @@ class Category extends Model
     {
         return $this->hasMany(Animal::class);
     }
+
+    public function scopeForProducts($query)
+    {
+        return $query->where('type', 'product');
+    }
+
+    
+    public function scopeFoAnimals($query)
+    {
+        return $query->where('type', 'animals');
+    }
 }

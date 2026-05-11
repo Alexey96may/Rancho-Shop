@@ -1,7 +1,7 @@
 <script setup lang="ts">
     import { computed, ref, watch } from 'vue';
 
-    import { Head, router, useForm } from '@inertiajs/vue3';
+    import { router, useForm } from '@inertiajs/vue3';
 
     import { Switch } from '@headlessui/vue';
     import {
@@ -159,15 +159,9 @@
         { id: 'media', name: 'Медиа', icon: PhotoIcon },
         { id: 'seo', name: 'SEO', icon: GlobeAltIcon },
     ];
-
-    const existingAvatarUrl = computed(() => {
-        return selectedAnimal.value?.avatars?.[0]?.url || null;
-    });
 </script>
 
 <template>
-    <Head title="Реестр животных" />
-
     <div class="p-8">
         <AdminPageHeader
             title-normal="Список"
@@ -387,11 +381,13 @@
                         v-if="activeTab === 'features'"
                         v-model:features="form.features"
                     />
+
                     <MediaSection
                         v-if="activeTab === 'media'"
                         v-model="form"
                         :existing-voice-url="selectedAnimal?.voice_url"
                     />
+
                     <SEOSection v-if="activeTab === 'seo'" v-model="form.seo" />
                 </div>
 

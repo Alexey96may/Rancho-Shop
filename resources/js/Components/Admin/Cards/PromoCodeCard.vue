@@ -13,6 +13,7 @@
         UserGroupIcon,
     } from '@heroicons/vue/24/outline';
 
+    import AdminDeleteButton from '@/Components/Admin/UI/AdminDeleteButton.vue';
     import { useFlash } from '@/composables/useFlash';
     import { AdminPromoCode } from '@/types';
     import { formatDateTime, formatMoney, formatRelativeTime } from '@/utils/format';
@@ -276,12 +277,12 @@
                 >
                     <PencilSquareIcon class="h-5 w-5" />
                 </Link>
-                <button
+
+                <AdminDeleteButton
                     @click="$emit('delete', promo)"
-                    class="rounded-xl bg-red-500/10 p-2.5 text-red-500/60 transition-all hover:bg-red-500/20 hover:text-red-500"
-                >
-                    <TrashIcon class="h-5 w-5" />
-                </button>
+                    title="Удалить промокод"
+                    :disabled="disabled"
+                />
             </div>
         </div>
     </div>

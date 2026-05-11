@@ -14,7 +14,7 @@
     import BaseSelect from '@/Components/UI/BaseSelect.vue';
     import AdminLayout from '@/Layouts/AdminLayout.vue';
     import { useFlash } from '@/composables/useFlash';
-    import { AdminPromoCode, Paginated } from '@/types';
+    import type { AdminPromoCode, Paginated } from '@/types';
 
     defineOptions({ layout: AdminLayout });
 
