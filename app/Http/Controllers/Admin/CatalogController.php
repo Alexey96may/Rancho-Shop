@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Product;
+use App\Models\Unit;
 use App\Models\ProductVariant;
-use App\Http\Resources\ProductVariantResource;
+use App\Http\Resources\Admin\AdminProductResource;
+use App\Http\Resources\Admin\AdminProductVariantResource;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -13,15 +16,23 @@ class CatalogController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $variants = ProductVariant::with(['product.media', 'unit'])
+        $variants = ProductVariant::query()
+            ->with(['product.media', 'unit'])
+            // Здесь можно добавить фильтрацию через scopeFilter, как мы делали для продуктов
+            ->when($request->search, function($q, $search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhereHas('product', fn($pq) => $pq->where('name', 'like', "%{$search}%"));
+            })
             ->orderBy('position', 'asc')
-            ->paginate(setting('admin_per_page', 10));
+            ->paginate(setting('admin_per_page', 10))
+            ->withQueryString();
 
         return Inertia::render('Admin/Catalog/Index', [
-            'variants' => ProductVariantResource::collection($variants),
-            'filters' => request()->all(['search', 'stock']),
+            'variants' => AdminProductVariantResource::collection($variants),
+            'filters' => $request->all(['search', 'stock']),
+            'seo' => $this->seo('Панель управления: Прайс-лист', 'Просмотр вариантов товаров',  robots: 'noindex, nofollow')
         ]);
     }
 
@@ -31,15 +42,9 @@ class CatalogController extends Controller
     public function create()
     {
         return Inertia::render('Admin/Catalog/Create', [
-        
-            'products' => \App\Models\Product::query()
-                ->select(['id', 'name'])
-                ->orderBy('name')
-                ->get(),
-            'units' => \App\Models\Unit::query()
-                ->select(['id', 'short', 'name'])
-                ->orderBy('name')
-                ->get(),
+            'products' => Product::select(['id', 'name'])->orderBy('name')->get(),
+            'units'    => Unit::select(['id', 'short', 'name'])->orderBy('name')->get(),
+            'seo' => $this->seo('Создание нового варианта товара', robots: 'noindex, nofollow'),
         ]);
     }
 
@@ -60,64 +65,61 @@ class CatalogController extends Controller
             'attributes' => 'nullable|array',
         ]);
 
-        $validated['price'] = $validated['price'] * 100;
-        if ($validated['old_price']) {
-            $validated['old_price'] = $validated['old_price'] * 100;
-        }
-
         ProductVariant::create($validated);
 
         return redirect()->route('admin.catalog.index')
-            ->with('success', 'Вариант товара успешно создан');
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
+            ->with('success', "Вариант {$validated['name']} успешно создан");
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit($id)
+    public function edit(ProductVariant $variant)
     {
-        $variant = ProductVariant::with(['product', 'unit'])->findOrFail($id);
+        $variant->load(['product.media', 'unit']);
 
         return Inertia::render('Admin/Catalog/Edit', [
-            'variant' => new ProductVariantResource($variant)
+            'products' => Product::select(['id', 'name'])->orderBy('name')->get(),
+            'variant'  => new AdminProductVariantResource($variant),
+            'units'    => Unit::select(['id', 'short', 'name'])->orderBy('name')->get(),
+            'seo' => $this->seo('Редактирование варианта: ' . $variant->name, robots: 'noindex, nofollow'),
         ]);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, ProductVariant $variant)
     {
-        $variant = ProductVariant::findOrFail($id);
-
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'price' => 'required|integer',
-            'stock' => 'required|integer|min:0',
+            'product_id' => 'required|exists:products,id',
+            'unit_id'    => 'required|exists:units,id',
+            'name'       => 'required|string|max:255',
+            'price'      => 'required|integer|min:0',
+            'old_price'  => 'nullable|integer|min:0',
+            'stock'      => 'required|integer|min:0',
             'is_default' => 'boolean',
+            'position'   => 'nullable|integer',
+            'attributes' => 'nullable|array',
         ]);
 
         $variant->update($validated);
 
         return redirect()->route('admin.catalog.index')
-            ->with('success', 'Товар обновлен');
+            ->with('success', 'Вариант'  . $variant->name . ' обновлен');
     }
 
     // Method for quickly updating balances/prices from a table (In-line edit)
-    public function quickUpdate(Request $request, $id)
+    public function quickUpdate(Request $request, ProductVariant $variant)
     {
-        $variant = ProductVariant::findOrFail($id);
+        $validated = $request->validate([
+            'price' => 'sometimes|integer|min:0',
+            'stock' => 'sometimes|integer|min:0',
+            'is_default' => 'sometimes|boolean'
+        ]);
         
         // Allow updating only the price or balance
-        $variant->update($request->only(['price', 'stock', 'is_visible']));
+        $variant->update($validated);
 
         return redirect()->back()->with('success', 'Данные обновлены');
     }
@@ -125,8 +127,10 @@ class CatalogController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(ProductVariant $variant)
     {
-        //
+        $variant->delete();
+
+        return back()->with('success', 'Вариант'  . $variant->name . ' удален');
     }
 }

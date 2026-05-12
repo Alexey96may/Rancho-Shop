@@ -1,4 +1,4 @@
-import { BaseUnit, Media } from './';
+import type { BaseUnit, Media, UnitAdmin } from './';
 
 export interface ProductVariant {
     id: number;
@@ -6,7 +6,7 @@ export interface ProductVariant {
 
     name: string;
 
-    price: number; // копейки
+    price: number;
     old_price: number | null;
 
     amount: number;
@@ -26,30 +26,30 @@ export interface ProductVariant {
 
 export interface ProductVariantDTO {
     id: number;
-    product_id: number;
-
     name: string;
 
     price: number;
-    price_rub: number;
     old_price: number | null;
-    old_price_rub: number | null;
-
     stock: number;
 
+    is_in_stock: boolean;
     is_default: boolean;
-    position: number;
-
     attributes: Record<string, string> | null;
 
-    unit: BaseUnit;
+    unit?: BaseUnit;
+}
 
-    amount: number;
+export interface AdminProductVariantDTO extends ProductVariantDTO {
+    product_id: number;
+    unit_id: number;
+    position: number;
+    created_at: string; // ISO Date
 
-    product: {
+    unit?: UnitAdmin;
+    media?: Media[];
+    product?: {
+        id: number;
         name: string;
         slug: string;
     };
-
-    media: Media[];
 }
