@@ -1,132 +1,230 @@
 <script setup lang="ts">
-    import { ref, watch } from 'vue';
+    import { reactive, ref, watch } from 'vue';
 
-    import { Link, router } from '@inertiajs/vue3';
+    import { router } from '@inertiajs/vue3';
+    import { usePage } from '@inertiajs/vue3';
 
     import { debounce } from 'lodash';
-    import {
-        AlertCircleIcon,
-        PackageIcon,
-        PlusIcon,
-        SearchIcon,
-        SlidersHorizontalIcon,
-    } from 'lucide-vue-next';
 
-    import AdminCatalogRow from '@/Components/Admin/UI/AdminCatalogRow.vue';
+    import AdminCatalogRow from '@/Components/Admin/Cards/AdminCatalogRow.vue';
+    import AdminEmptyState from '@/Components/Admin/Shared/AdminEmptyState.vue';
+    import AdminPagination from '@/Components/Admin/Shared/AdminPagination.vue';
+    import AdminLoader from '@/Components/Admin/UI/AdminLoader.vue';
+    import AdminSearchInput from '@/Components/Admin/UI/AdminSearchInput.vue';
+    import BaseCreateButton from '@/Components/UI/BaseCreateButton.vue';
+    import BaseSelect from '@/Components/UI/BaseSelect.vue';
     import AdminLayout from '@/Layouts/AdminLayout.vue';
-    import type { AdminProductVariantDTO, Paginated } from '@/types';
+    import { useFlash } from '@/composables/useFlash';
+    import type { AdminProductVariantDTO, Paginated, QuickUpdatePayload } from '@/types';
 
+    watch(
+        () => usePage().props.errors,
+        (errors) => {
+            if (Object.keys(errors).length > 0) {
+                console.error('Ошибки валидации с сервера:', errors);
+            }
+        },
+        { deep: true },
+    );
     defineOptions({ layout: AdminLayout });
 
     const props = defineProps<{
         variants: Paginated<AdminProductVariantDTO>;
-        filters: { search?: string; stock?: string };
+        products: { id: number; name: string }[];
+        units: { id: number; name: string }[];
+        sortOptions: { label: string; value: string }[];
+        filters: {
+            search?: string;
+            product_id?: string;
+            unit_id?: string;
+            sort?: string;
+        };
     }>();
 
-    const search = ref(props.filters.search || '');
-    const processingId = ref<number | null>(null);
+    const filterForm = reactive({
+        search: props.filters.search || '',
+        product_id: props.filters.product_id || null,
+        unit_id: props.filters.unit_id || null,
+        sort: props.filters.sort || 'default',
+    });
 
-    const quickUpdate = (id: number, data: object) => {
-        processingId.value = id;
-        router.patch(route('admin.catalog.quick', id), data, {
+    const { notifyWithUndo, notify } = useFlash();
+    const processingIds = reactive<Set<number>>(new Set());
+    const isFiltering = ref(false);
+
+    const quickUpdate = (id: number, data: QuickUpdatePayload) => {
+        processingIds.add(id);
+
+        router.patch(route('admin.catalog.quick', id), data as any, {
             preserveScroll: true,
-            onFinish: () => (processingId.value = null),
+            onError: (e) => {
+                if (e.price) {
+                    notify(e.price, 'error');
+                } else if (e.stock) {
+                    notify(e.stock, 'error');
+                } else if (e.is_visible) {
+                    notify(e.is_visible, 'error');
+                }
+            },
+            onFinish: () => processingIds.delete(id),
         });
     };
 
-    const handleSearch = debounce(() => {
-        router.get(
-            route('admin.catalog.index'),
-            { search: search.value },
-            { preserveState: true, replace: true, preserveScroll: true },
+    const deleteVariant = async (variant: AdminProductVariantDTO) => {
+        if (processingIds.has(variant.id)) return;
+        processingIds.add(variant.id);
+
+        const canDelete = await notifyWithUndo(
+            'Удаление варианта «' + variant.name + '» для «' + variant.product?.name + '»',
         );
+
+        if (canDelete) {
+            router.delete(route('admin.catalog.destroy', variant.id), {
+                preserveScroll: true,
+                onFinish: () => processingIds.delete(variant.id),
+            });
+        } else {
+            processingIds.delete(variant.id);
+        }
+    };
+
+    const updateFilters = debounce(() => {
+        router.get(route('admin.catalog.index'), filterForm, {
+            preserveState: true,
+            preserveScroll: true,
+            replace: true,
+            onStart: () => (isFiltering.value = true),
+            onFinish: () => (isFiltering.value = false),
+        });
     }, 400);
 
-    watch(search, () => handleSearch());
+    watch(filterForm, () => {
+        isFiltering.value = true;
+
+        updateFilters();
+    });
+
+    const clearFilters = () => {
+        filterForm.search = '';
+        filterForm.product_id = null;
+        filterForm.unit_id = null;
+        filterForm.sort = 'newest';
+    };
+
+    const goToCreate = () => {
+        router.get(route('admin.catalog.create'));
+    };
 </script>
 
 <template>
-    <Teleport to="#admin-header-content">
-        <h1 class="text-xl font-black uppercase tracking-widest text-white">Прайс-лист</h1>
-    </Teleport>
+    <div>
+        <Teleport to="#admin-header-content">
+            <h1 class="text-xl font-black uppercase tracking-widest text-white">Прайс-лист</h1>
+        </Teleport>
 
-    <div class="space-y-8">
-        <div class="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
-            <div class="flex items-center gap-4">
-                <div
-                    class="shadow-inner flex h-14 w-14 items-center justify-center rounded-[1.5rem] bg-orange-500/10 text-orange-500"
-                >
-                    <PackageIcon class="h-8 w-8" />
-                </div>
-                <div>
-                    <h2 class="text-2xl font-black uppercase tracking-tighter text-white">
-                        Каталог вариантов
-                    </h2>
-                    <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">
-                        Быстрое управление ценами и остатками
-                    </p>
-                </div>
-            </div>
-
-            <Link
-                :href="route('admin.catalog.create')"
-                class="shadow-lg inline-flex items-center justify-center gap-2 rounded-2xl bg-orange-600 px-8 py-4 text-xs font-black uppercase tracking-widest text-white shadow-orange-900/20 transition-all hover:bg-orange-500 active:scale-95"
-            >
-                <PlusIcon class="h-4 w-4" /> Добавить вариант
-            </Link>
-        </div>
-
-        <div class="grid grid-cols-1 gap-4 lg:grid-cols-4">
-            <div class="relative lg:col-span-3">
-                <SearchIcon
-                    class="absolute left-5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-600"
+        <div class="space-y-8">
+            <div class="flex items-center justify-between gap-4">
+                <AdminSearchInput
+                    v-model="filterForm.search"
+                    placeholder="Поиск по названию или ID..."
                 />
-                <input
-                    v-model="search"
-                    type="text"
-                    placeholder="Название товара, варианта или ID..."
-                    class="w-full rounded-[2rem] border-slate-800 bg-slate-900/40 py-5 pl-14 pr-6 text-sm text-white transition-all placeholder:text-slate-600 focus:border-orange-500 focus:ring-orange-500/10"
+
+                <BaseCreateButton
+                    :href="
+                        route('admin.catalog.create', {
+                            page: variants.meta.current_page || 1,
+                        })
+                    "
+                    label="Добавить вариант"
+                    class="!px-3"
                 />
             </div>
-            <button
-                class="flex items-center justify-center gap-3 rounded-[2rem] border border-slate-800 bg-slate-900/40 text-[10px] font-black uppercase tracking-widest text-slate-500 transition-all hover:bg-slate-800 hover:text-white"
-            >
-                <SlidersHorizontalIcon class="h-4 w-4" /> Фильтры
-            </button>
-        </div>
-
-        <div
-            class="hidden grid-cols-12 gap-4 px-8 text-[9px] font-black uppercase tracking-[0.3em] text-slate-600 lg:grid"
-        >
-            <div class="col-span-5">Товар / Характеристики</div>
-            <div class="col-span-2 text-center">Цена за ед.</div>
-            <div class="col-span-2 text-center">Складской запас</div>
-            <div class="col-span-2 text-center">Актуальность</div>
-            <div class="col-span-1"></div>
-        </div>
-
-        <div class="relative min-h-[400px]">
-            <TransitionGroup tag="div" name="catalog-list" class="space-y-3">
-                <AdminCatalogRow
-                    v-for="variant in variants.data"
-                    :key="variant.id"
-                    :variant="variant"
-                    :disabled="processingId === variant.id"
-                    @quick-update="quickUpdate"
+            <div class="l flex flex-wrap gap-3 lg:col-span-8">
+                <BaseSelect
+                    v-model="filterForm.product_id"
+                    :options="products"
+                    placeholder="Все товары"
+                    valueKey="id"
+                    labelKey="name"
+                    variant="admin"
+                    class="w-full lg:w-48"
                 />
-            </TransitionGroup>
+
+                <BaseSelect
+                    v-model="filterForm.unit_id"
+                    :options="units"
+                    placeholder="Все измерения"
+                    valueKey="id"
+                    labelKey="name"
+                    variant="admin"
+                    class="w-full lg:w-32"
+                />
+
+                <BaseSelect
+                    v-model="filterForm.sort"
+                    :options="sortOptions"
+                    valueKey="value"
+                    labelKey="label"
+                    variant="admin"
+                    class="w-full lg:w-48"
+                />
+            </div>
 
             <div
-                v-if="variants.data.length === 0"
-                class="flex flex-col items-center justify-center rounded-[3rem] border-2 border-dashed border-slate-800 py-32 text-slate-700"
+                class="hidden grid-cols-12 gap-4 px-8 text-[9px] font-black uppercase tracking-[0.3em] text-slate-600 lg:grid"
             >
-                <AlertCircleIcon class="mb-6 h-16 w-16 opacity-10" />
-                <p class="text-xs font-black uppercase tracking-[0.3em]">Результатов не найдено</p>
+                <div class="col-span-5">Товар / Характеристики</div>
+                <div class="col-span-2 text-center">Цена за ед.</div>
+                <div class="col-span-2 text-center">Складской запас</div>
+                <div class="col-span-2 text-center">По умолчанию</div>
+                <div class="col-span-1"></div>
             </div>
-        </div>
 
-        <div v-if="variants.meta.last_page > 1" class="flex justify-center gap-2 pt-10">
-            <Pagination :links="variants.meta.links" />
+            <Transition name="fade-slide" mode="out-in">
+                <div v-if="variants.data.length" key="variants" class="relative min-h-[400px]">
+                    <TransitionGroup tag="div" name="catalog-list" class="space-y-3">
+                        <AdminCatalogRow
+                            v-for="variant in variants.data"
+                            :key="variant.id"
+                            :variant="variant"
+                            :disabled="processingIds.has(variant.id)"
+                            :out-of-stock="!variant.is_in_stock"
+                            :current-page="variants.meta.current_page"
+                            @quick-update="quickUpdate"
+                            @delete="deleteVariant"
+                        />
+                    </TransitionGroup>
+                </div>
+
+                <AdminLoader v-else-if="isFiltering" key="loading" text="Синхронизация" />
+
+                <AdminEmptyState
+                    v-else
+                    key="empty"
+                    :title="filters.search ? 'Варианты не найдены' : 'Список вариантов пуст'"
+                    @action="filters.search ? clearFilters() : goToCreate()"
+                    :action-text="filters.search ? 'Очистить фильтр' : 'Добавить вариант товара'"
+                    :show-action="true"
+                    :description="
+                        filters.search
+                            ? 'По запросу «' + filters.search + '» совпадений нет'
+                            : 'Нет ни одного варианта товаров'
+                    "
+                />
+            </Transition>
+
+            <AdminPagination :links="variants.meta.links" />
         </div>
     </div>
 </template>
+
+<style scoped>
+    .fade-slide-enter-active {
+        transition: all 0.4s ease-out;
+    }
+
+    .fade-slide-enter-from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+</style>

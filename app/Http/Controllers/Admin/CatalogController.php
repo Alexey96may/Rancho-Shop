@@ -20,18 +20,43 @@ class CatalogController extends Controller
     {
         $variants = ProductVariant::query()
             ->with(['product.media', 'unit'])
-            // Здесь можно добавить фильтрацию через scopeFilter, как мы делали для продуктов
             ->when($request->search, function($q, $search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhereHas('product', fn($pq) => $pq->where('name', 'like', "%{$search}%"));
+                $searchTerm = mb_strtolower($search, 'UTF-8');
+
+                $q->where(fn($query) => 
+                    $query->whereRaw('LOWER(name) LIKE ?', ["%{$searchTerm}%"])
+                        ->orWhere('id', 'like', "%{$searchTerm}%")
+                        ->orWhereHas('product', fn($pq) => 
+                            $pq->whereRaw('LOWER(name) LIKE ?', ["%{$searchTerm}%"])
+                        )
+                );
             })
-            ->orderBy('position', 'asc')
+            ->when($request->product_id, fn($q, $id) => $q->where('product_id', $id))
+            ->when($request->unit_id, fn($q, $id) => $q->where('unit_id', $id))
+            ->when($request->sort, function($q, $sort) {
+                switch ($sort) {
+                    case 'price_asc': $q->orderBy('price', 'asc'); break;
+                    case 'price_desc': $q->orderBy('price', 'desc'); break;
+                    case 'stock_desc': $q->orderBy('stock', 'desc'); break;
+                    case 'newest': $q->latest(); break;
+                    default: $q->orderBy('position', 'asc');
+                }
+            }, fn($q) =>  $q->orderBy('position', 'asc'))
             ->paginate(setting('admin_per_page', 10))
             ->withQueryString();
 
         return Inertia::render('Admin/Catalog/Index', [
             'variants' => AdminProductVariantResource::collection($variants),
-            'filters' => $request->all(['search', 'stock']),
+            'products' => Product::select(['id', 'name'])->orderBy('name')->get(),
+            'units' => \App\Models\Unit::select(['id', 'name'])->get(),
+            'filters' => $request->all(['search', 'product_id', 'unit_id', 'sort']),
+            'sortOptions' => [
+                ['label' => 'По умолчанию', 'value' => 'default'],
+                ['label' => 'Новинки', 'value' => 'newest'],
+                ['label' => 'Сначала дешевые', 'value' => 'price_asc'],
+                ['label' => 'Сначала дорогие', 'value' => 'price_desc'],
+                ['label' => 'Много на складе', 'value' => 'stock_desc'],
+            ],
             'seo' => $this->seo('Панель управления: Прайс-лист', 'Просмотр вариантов товаров',  robots: 'noindex, nofollow')
         ]);
     }
@@ -39,12 +64,15 @@ class CatalogController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(Request $request)
     {
-        return Inertia::render('Admin/Catalog/Create', [
+        $page = $request->input('page', 1);
+
+        return Inertia::render('Admin/Catalog/Form', [
             'products' => Product::select(['id', 'name'])->orderBy('name')->get(),
             'units'    => Unit::select(['id', 'short', 'name'])->orderBy('name')->get(),
             'seo' => $this->seo('Создание нового варианта товара', robots: 'noindex, nofollow'),
+            'currentPage' => $page,
         ]);
     }
 
@@ -65,31 +93,42 @@ class CatalogController extends Controller
             'attributes' => 'nullable|array',
         ]);
 
-        ProductVariant::create($validated);
+        $variant = ProductVariant::create($validated);
+        $page = $request->input('page', 1);
 
-        return redirect()->route('admin.catalog.index')
-            ->with('success', "Вариант {$validated['name']} успешно создан");
+        if ($request->boolean('create_another')) {
+            return redirect()->back()
+                ->with('success', "Вариант {$variant->name} создан. Можете добавить следующий.");
+        }
+
+        return redirect()->route('admin.catalog.index', ['page' => $page])
+            ->with('success', "Вариант {$variant->name} успешно создан");
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(ProductVariant $variant)
+    public function edit(ProductVariant $catalog, Request $request)
     {
-        $variant->load(['product.media', 'unit']);
+        $catalog->load(['product.media', 'unit']);
 
-        return Inertia::render('Admin/Catalog/Edit', [
+        $page = $request->input('page', 1);
+
+        return Inertia::render('Admin/Catalog/Form', [
             'products' => Product::select(['id', 'name'])->orderBy('name')->get(),
-            'variant'  => new AdminProductVariantResource($variant),
+            'variant'  => new AdminProductVariantResource($catalog),
             'units'    => Unit::select(['id', 'short', 'name'])->orderBy('name')->get(),
-            'seo' => $this->seo('Редактирование варианта: ' . $variant->name, robots: 'noindex, nofollow'),
+            'seo' => $this->seo('Редактирование варианта: ' . $catalog->name, robots: 'noindex, nofollow'),
+
+            'isEdit' => true,
+            'currentPage' => $page,
         ]);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, ProductVariant $variant)
+    public function update(Request $request, ProductVariant $catalog)
     {
         $validated = $request->validate([
             'product_id' => 'required|exists:products,id',
@@ -103,10 +142,12 @@ class CatalogController extends Controller
             'attributes' => 'nullable|array',
         ]);
 
-        $variant->update($validated);
+        $catalog->update($validated);
 
-        return redirect()->route('admin.catalog.index')
-            ->with('success', 'Вариант'  . $variant->name . ' обновлен');
+        $page = $request->input('page', 1);
+
+        return redirect()->route('admin.catalog.index', ['page' => $page])
+            ->with('success', 'Вариант'  . $catalog->name . ' обновлен');
     }
 
     // Method for quickly updating balances/prices from a table (In-line edit)
@@ -118,7 +159,6 @@ class CatalogController extends Controller
             'is_default' => 'sometimes|boolean'
         ]);
         
-        // Allow updating only the price or balance
         $variant->update($validated);
 
         return redirect()->back()->with('success', 'Данные обновлены');
@@ -127,10 +167,10 @@ class CatalogController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(ProductVariant $variant)
+    public function destroy(ProductVariant $catalog)
     {
-        $variant->delete();
+        $catalog->delete();
 
-        return back()->with('success', 'Вариант'  . $variant->name . ' удален');
+        return back()->with('success', 'Вариант «'  . $catalog->name . '» удален');
     }
 }

@@ -35,9 +35,11 @@ class AdminProductVariantResource extends ProductVariantResource
             }),
 
             'media' => $this->whenLoaded('product', function() {
-                 return $this->product->media->isNotEmpty()
-                    ? MediaResource::collection($this->product->media)
-                    : [MediaResource::fallback($this->product)];
+                 return [
+                    'main' => MediaResource::collection(
+                        $this->product->getMedia('main')
+                    )->first() ?: MediaResource::fallback($this->product),
+                ];
             }),
         ]);
     }

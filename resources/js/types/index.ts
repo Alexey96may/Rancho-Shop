@@ -1,3 +1,5 @@
+import type { RequestPayload } from '@inertiajs/core';
+
 import { User } from './User';
 
 export * from './Animal';
@@ -96,3 +98,9 @@ export interface SharedData extends PageProps {
     permissions: Permission[];
     [key: string]: any;
 }
+
+export type QuickUpdatePayload = RequestPayload & {
+    price?: number;
+    stock?: number;
+    is_default?: boolean;
+};

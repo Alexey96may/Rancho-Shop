@@ -46,7 +46,9 @@ export interface AdminProductVariantDTO extends ProductVariantDTO {
     created_at: string; // ISO Date
 
     unit?: UnitAdmin;
-    media?: Media[];
+    media?: {
+        main: Media;
+    };
     product?: {
         id: number;
         name: string;

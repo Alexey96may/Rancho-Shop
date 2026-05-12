@@ -112,7 +112,7 @@ Route::prefix('admin')
             Route::resource('categories', CategoryController::class);
 
             Route::resource('catalog', CatalogController::class);
-            Route::patch('catalog/{id}/quick', [CatalogController::class, 'quickUpdate'])->name('catalog.quick');
+            Route::patch('catalog/{variant}/quick', [CatalogController::class, 'quickUpdate'])->name('catalog.quick');
 
             Route::resource('animals', AdminAnimalController::class);
             Route::delete('animals/{animal}/media/{media}', [AnimalController::class, 'deleteMedia'])

@@ -139,6 +139,7 @@
     };
 
     const deletingIds = ref<Set<number>>(new Set());
+
     const deleteAnimal = async (id: number) => {
         if (deletingIds.value.has(id)) return;
         deletingIds.value.add(id);
