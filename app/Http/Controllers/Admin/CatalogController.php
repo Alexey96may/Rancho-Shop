@@ -137,7 +137,13 @@ class CatalogController extends Controller
             'price'      => 'required|integer|min:0',
             'old_price'  => 'nullable|integer|min:0',
             'stock'      => 'required|integer|min:0',
-            'is_default' => 'boolean',
+            'is_default' => ['boolean',
+                function ($attribute, $value, $fail) use ($catalog) {
+                    if ($value === false && $catalog->is_default && $catalog->product->variants()->count() === 1) {
+                        $fail('Нельзя снять флаг "По умолчанию", если это единственный вариант товара.');
+                    }
+                },
+            ],
             'position'   => 'nullable|integer',
             'attributes' => 'nullable|array',
         ]);
@@ -156,7 +162,13 @@ class CatalogController extends Controller
         $validated = $request->validate([
             'price' => 'sometimes|integer|min:0',
             'stock' => 'sometimes|integer|min:0',
-            'is_default' => 'sometimes|boolean'
+            'is_default' => ['sometimes', 'boolean',
+                function ($attribute, $value, $fail) use ($variant) {
+                    if ($value === false && $variant->is_default && $variant->product->variants()->count() === 1) {
+                        $fail('Нельзя снять флаг "По умолчанию", если это единственный вариант товара.');
+                    }
+                },
+            ],
         ]);
         
         $variant->update($validated);

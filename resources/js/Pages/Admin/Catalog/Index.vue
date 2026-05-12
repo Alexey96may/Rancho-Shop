@@ -2,7 +2,6 @@
     import { reactive, ref, watch } from 'vue';
 
     import { router } from '@inertiajs/vue3';
-    import { usePage } from '@inertiajs/vue3';
 
     import { debounce } from 'lodash';
 
@@ -17,15 +16,6 @@
     import { useFlash } from '@/composables/useFlash';
     import type { AdminProductVariantDTO, Paginated, QuickUpdatePayload } from '@/types';
 
-    watch(
-        () => usePage().props.errors,
-        (errors) => {
-            if (Object.keys(errors).length > 0) {
-                console.error('Ошибки валидации с сервера:', errors);
-            }
-        },
-        { deep: true },
-    );
     defineOptions({ layout: AdminLayout });
 
     const props = defineProps<{
@@ -43,8 +33,8 @@
 
     const filterForm = reactive({
         search: props.filters.search || '',
-        product_id: props.filters.product_id || null,
-        unit_id: props.filters.unit_id || null,
+        product_id: props.filters.product_id ? Number(props.filters.product_id) : null,
+        unit_id: props.filters.unit_id ? Number(props.filters.unit_id) : null,
         sort: props.filters.sort || 'default',
     });
 
@@ -57,13 +47,14 @@
 
         router.patch(route('admin.catalog.quick', id), data as any, {
             preserveScroll: true,
+            preserveState: true,
             onError: (e) => {
                 if (e.price) {
                     notify(e.price, 'error');
                 } else if (e.stock) {
                     notify(e.stock, 'error');
-                } else if (e.is_visible) {
-                    notify(e.is_visible, 'error');
+                } else if (e.is_default) {
+                    notify(e.is_default, 'error');
                 }
             },
             onFinish: () => processingIds.delete(id),
@@ -89,7 +80,11 @@
     };
 
     const updateFilters = debounce(() => {
-        router.get(route('admin.catalog.index'), filterForm, {
+        const params = Object.fromEntries(
+            Object.entries(filterForm).filter(([_, v]) => v !== null && v !== ''),
+        );
+
+        router.get(route('admin.catalog.index'), params, {
             preserveState: true,
             preserveScroll: true,
             replace: true,
