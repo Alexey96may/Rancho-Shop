@@ -7,7 +7,9 @@
     import type { ApexOptions } from 'apexcharts';
     import VueApexCharts from 'vue3-apexcharts';
 
+    import AdminPageHeader from '@/Components/Admin/Shared/AdminPageHeader.vue';
     import AdminLoader from '@/Components/Admin/UI/AdminLoader.vue';
+    import AdminStatCard from '@/Components/Admin/UI/AdminStatCard.vue';
     import AdminLayout from '@/Layouts/AdminLayout.vue';
     import { DailySalesResource } from '@/types';
     import { formatMoney } from '@/utils/format';
@@ -57,8 +59,8 @@
     const chartOptions = computed<ApexOptions>(() => ({
         chart: {
             type: 'area',
-            toolbar: { show: false },
-            zoom: { enabled: false },
+            toolbar: { show: true },
+            zoom: { enabled: true },
             fontFamily: 'inherit',
             background: 'transparent',
         },
@@ -103,47 +105,33 @@
     const isProcessing = computed(
         () => page.component === 'Admin/Analytics/Index' && !!page.props.loading,
     );
+
+    const computedTotalRev = computed(() => formatMoney(props.overview.total_revenue));
+    const computedOrdersCount = computed(() => props.overview.orders_count);
+    const computedUsersCount = computed(() => props.overview.users_count);
 </script>
 
 <template>
     <Teleport to="#admin-header-content">
-        <h1 class="text-xl font-black text-white">Аналитика</h1>
-        <p class="mt-1 text-xs uppercase tracking-tighter text-slate-500">
-            Данные обновляются в реальном времени
-        </p>
+        <AdminPageHeader title="Аналитика" subtitle="Данные обновляются в реальном времени" />
     </Teleport>
 
     <div class="space-y-8">
         <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
-            <div
-                v-for="(val, label) in overview"
-                :key="label"
-                class="relative overflow-hidden rounded-2xl border border-slate-800/50 bg-slate-900/50 p-6"
-            >
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p
-                            class="mb-1 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500"
-                        >
-                            {{
-                                label === 'total_revenue'
-                                    ? 'Общая выручка'
-                                    : label === 'orders_count'
-                                      ? 'Заказов всего'
-                                      : 'Клиентов'
-                            }}
-                        </p>
-                        <h2 class="text-2xl font-bold text-white">
-                            {{ label === 'total_revenue' ? formatMoney(val) : val }}
-                        </h2>
-                    </div>
-                    <div class="rounded-xl bg-slate-800/50 p-3 text-indigo-400">
-                        <CurrencyDollarIcon v-if="label === 'total_revenue'" class="h-6 w-6" />
-                        <ShoppingBagIcon v-else-if="label === 'orders_count'" class="h-6 w-6" />
-                        <UsersIcon v-else class="h-6 w-6" />
-                    </div>
-                </div>
-            </div>
+            <AdminStatCard
+                label="Общая выручка"
+                :value="computedTotalRev"
+                :icon="CurrencyDollarIcon"
+                labelColor="text-green-500"
+            />
+
+            <AdminStatCard
+                label="Заказов всего"
+                :value="computedOrdersCount"
+                :icon="ShoppingBagIcon"
+            />
+
+            <AdminStatCard label="Клиентов" :value="computedUsersCount" :icon="UsersIcon" />
         </div>
 
         <!-- Charts Section (Lazy Loading with Deferred) -->
@@ -158,7 +146,7 @@
                 <span v-else>Динамика продаж за всё время</span>
             </h3>
 
-            <div class="flex gap-1 rounded-xl border border-slate-800 bg-slate-950 p-1">
+            <div class="mb-8 flex gap-1 rounded-xl border border-slate-800 bg-slate-950 p-1">
                 <button
                     v-for="period in periods"
                     :key="period.value"

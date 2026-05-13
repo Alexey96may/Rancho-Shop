@@ -3,6 +3,7 @@
 
     import { router } from '@inertiajs/vue3';
 
+    import { ClockIcon, CurrencyDollarIcon, ShoppingBagIcon } from '@heroicons/vue/24/outline';
     import debounce from 'lodash/debounce';
 
     import AdminOrderCard from '@/Components/Admin/Cards/AdminOrderCard.vue';
@@ -61,15 +62,32 @@
     const computedCompletedRevenue = computed(() =>
         formatMoney(props.total_completed_revenue || 0),
     );
+
     const computedPendingRevenue = computed(() => formatMoney(props.total_pending_revenue || 0));
 </script>
 
 <template>
-    <AdminPageHeader
-        title-normal="Список"
-        title-orange="Заказов"
-        subtitle="Оперативное управление продажами"
-    />
+    <Teleport to="#admin-header-content">
+        <AdminPageHeader title="Список Заказов" subtitle="Оперативное управление продажами" />
+    </Teleport>
+
+    <div class="mb-8 grid grid-cols-1 gap-6 md:grid-cols-3">
+        <AdminStatCard
+            label="Выручка (завершено)"
+            :value="computedCompletedRevenue"
+            :icon="CurrencyDollarIcon"
+            labelColor="text-green-500"
+        />
+
+        <AdminStatCard
+            label="В обработке"
+            :value="computedPendingRevenue"
+            :icon="ClockIcon"
+            :labelColor="total_pending_revenue ? 'text-orange-500' : 'text-slate-500'"
+        />
+
+        <AdminStatCard label="Заказов всего" :icon="ShoppingBagIcon" :value="total_count || 0" />
+    </div>
 
     <div class="mb-8 space-y-6">
         <div
@@ -106,22 +124,6 @@
             >
                 Сбросить
             </button>
-        </div>
-
-        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <AdminStatCard
-                label="Выручка (завершено)"
-                :value="computedCompletedRevenue"
-                labelColor="text-green-500"
-            />
-
-            <AdminStatCard
-                label="В обработке"
-                :value="computedPendingRevenue"
-                labelColor="text-orange-500"
-            />
-
-            <AdminStatCard label="Заказов всего" :value="total_count || 0" />
         </div>
     </div>
 
