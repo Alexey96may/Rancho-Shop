@@ -74,6 +74,7 @@
             label: 'Интерфейс',
             icon: PresentationChartLineIcon,
             keys: [
+                'admin_per_page',
                 'products_per_page',
                 'animals_per_page',
                 'comments_per_page',
@@ -123,6 +124,7 @@
         delivery_schedule: 'График доставки',
         delivery_info: 'Информация о доставке',
         delivery_zones: 'Зоны доставки',
+        admin_per_page: 'Карточек в Админке на страницу',
         products_per_page: 'Товаров на страницу',
         animals_per_page: 'Животных на страницу',
         comments_per_page: 'Отзывов на страницу',
