@@ -8,6 +8,7 @@
 
     import AdminEmptyState from '@/Components/Admin/Shared/AdminEmptyState.vue';
     import AdminPageHeader from '@/Components/Admin/Shared/AdminPageHeader.vue';
+    import AdminLoader from '@/Components/Admin/UI/AdminLoader.vue';
     import AdminSearchInput from '@/Components/Admin/UI/AdminSearchInput.vue';
     import BaseDeleteButton from '@/Components/UI/BaseDeleteButton.vue';
     import AdminLayout from '@/Layouts/AdminLayout.vue';
@@ -22,6 +23,7 @@
     }>();
 
     const search = ref(props.filters.search || '');
+    const isFiltering = ref(false);
 
     const { notifyWithUndo } = useFlash();
 
@@ -162,9 +164,11 @@
                 </TransitionGroup>
             </div>
 
+            <AdminLoader v-else-if="isFiltering" key="loading" text="Синхронизация" />
+
             <AdminEmptyState
                 v-else
-                key="empty-state"
+                key="empty"
                 title="Страницы не найдены"
                 @action="clearFilters"
                 :show-action="true"

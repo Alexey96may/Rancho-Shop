@@ -7,6 +7,7 @@
     import AdminEmptyState from '@/Components/Admin/Shared/AdminEmptyState.vue';
     import AdminPageHeader from '@/Components/Admin/Shared/AdminPageHeader.vue';
     import AdminPagination from '@/Components/Admin/Shared/AdminPagination.vue';
+    import AdminLoader from '@/Components/Admin/UI/AdminLoader.vue';
     import AdminNumberInput from '@/Components/Admin/UI/AdminNumberInput.vue';
     import AdminSearchInput from '@/Components/Admin/UI/AdminSearchInput.vue';
     import AdminModal from '@/Components/UI/BaseModal.vue';
@@ -25,6 +26,7 @@
 
     const isModalOpen = ref(false);
     const editMode = ref(false);
+    const isFiltering = ref(false);
     const currentId = ref<number | null>(null);
 
     const form = useForm({
@@ -68,6 +70,8 @@
     };
 
     const performSearch = (searchValue: string, typeValue: string) => {
+        isFiltering.value = true;
+
         const searchSanitize = searchValue.toLocaleLowerCase().trim();
         const typeSanitize = typeValue.toLocaleLowerCase().trim();
 
@@ -78,6 +82,9 @@
                 preserveState: true,
                 replace: true,
                 preserveScroll: true,
+                onFinish: () => {
+                    isFiltering.value = false;
+                },
             },
         );
     };
@@ -117,7 +124,6 @@
     const clearFilters = () => {
         search.value = '';
         typeFilter.value = '';
-        notify('Фильтры очищены', 'info');
     };
 </script>
 
@@ -149,26 +155,30 @@
         </section>
 
         <div class="relative min-h-[400px]">
-            <TransitionGroup
-                v-if="categories.data.length > 0"
-                :key="categories.data.length"
-                tag="div"
-                name="category-list"
-                class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-                role="list"
-                aria-label="Список категорий"
-            >
-                <CategoryCard
-                    v-for="category in categories.data"
-                    :key="category.id"
-                    :category="category"
-                    @edit="openModal"
-                    @delete="deleteCategory(category.id)"
-                />
-            </TransitionGroup>
-
             <Transition name="fade-slide">
+                <div
+                    v-if="categories.data.length > 0"
+                    key="categories"
+                    role="list"
+                    aria-label="Список категорий"
+                    class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+                >
+                    <TransitionGroup name="category-list">
+                        <CategoryCard
+                            v-for="category in categories.data"
+                            :key="category.id"
+                            :category="category"
+                            @edit="openModal"
+                            @delete="deleteCategory(category.id)"
+                        />
+                    </TransitionGroup>
+                </div>
+
+                <AdminLoader v-else-if="isFiltering" key="loading" text="Синхронизация" />
+
                 <AdminEmptyState
+                    v-else
+                    key="empty"
                     title="Категории не найдены"
                     @action="clearFilters"
                     :show-action="true"
@@ -176,9 +186,11 @@
             </Transition>
         </div>
 
-        <footer v-if="categories.data.length > 0">
-            <AdminPagination :links="categories.meta.links" />
-        </footer>
+        <Transition name="fade-slide" mode="out-in">
+            <footer v-if="categories.data.length > 0 && !isFiltering">
+                <AdminPagination :links="categories.meta.links" />
+            </footer>
+        </Transition>
 
         <AdminModal
             :show="isModalOpen"

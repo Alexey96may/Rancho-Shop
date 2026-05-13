@@ -14,6 +14,7 @@
     import AdminEmptyState from '@/Components/Admin/Shared/AdminEmptyState.vue';
     import AdminPageHeader from '@/Components/Admin/Shared/AdminPageHeader.vue';
     import AdminPagination from '@/Components/Admin/Shared/AdminPagination.vue';
+    import AdminLoader from '@/Components/Admin/UI/AdminLoader.vue';
     import AdminStatCard from '@/Components/Admin/UI/AdminStatCard.vue';
     import AdminLayout from '@/Layouts/AdminLayout.vue';
     import { useFlash } from '@/composables/useFlash';
@@ -49,6 +50,7 @@
 
     const currentType = ref(props.filters.type || 'all');
     const currentStatus = ref(props.filters.status || 'all');
+    const isFiltering = ref(false);
     const { notifyWithUndo, notify } = useFlash();
 
     const typeTabs = [
@@ -64,13 +66,21 @@
     ]);
 
     const debouncedApplyFilters = debounce(() => {
+        isFiltering.value = true;
+
         router.get(
             route('admin.comments.index'),
             {
                 type: currentType.value === 'all' ? null : currentType.value,
                 status: currentStatus.value === 'all' ? null : currentStatus.value,
             },
-            { preserveState: true, replace: true },
+            {
+                preserveState: true,
+                replace: true,
+                onFinish: () => {
+                    isFiltering.value = false;
+                },
+            },
         );
     }, 300);
 
@@ -215,6 +225,8 @@
             </TransitionGroup>
         </div>
 
+        <AdminLoader v-else-if="isFiltering" key="loading" text="Синхронизация" />
+
         <AdminEmptyState
             v-else
             key="empty-state"
@@ -224,7 +236,9 @@
         />
     </Transition>
 
-    <AdminPagination :links="comments.meta.links" />
+    <Transition name="fade-slide" mode="out-in">
+        <AdminPagination :links="comments.meta.links" />
+    </Transition>
 </template>
 
 <style scoped>

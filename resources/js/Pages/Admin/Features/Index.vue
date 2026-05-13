@@ -1,9 +1,12 @@
 <script setup lang="ts">
+    import { ref } from 'vue';
+
     import { router } from '@inertiajs/vue3';
 
     import FeatureCard from '@/Components/Admin/Cards/AdminFeatureCard.vue';
     import AdminEmptyState from '@/Components/Admin/Shared/AdminEmptyState.vue';
     import AdminPageHeader from '@/Components/Admin/Shared/AdminPageHeader.vue';
+    import AdminLoader from '@/Components/Admin/UI/AdminLoader.vue';
     import AdminSearchInput from '@/Components/Admin/UI/AdminSearchInput.vue';
     import AdminLayout from '@/Layouts/AdminLayout.vue';
     import { AdminLandingBlock, ResourceCollection } from '@/types';
@@ -15,8 +18,12 @@
         filters: { search: string };
     }>();
 
+    const isFiltering = ref(false);
+
     const search = (str: string): void => {
         if (str === props.filters.search) return;
+
+        isFiltering.value = true;
 
         router.get(
             route('admin.features.index'),
@@ -25,6 +32,9 @@
                 preserveScroll: true,
                 preserveState: true,
                 replace: true,
+                onFinish: () => {
+                    isFiltering.value = false;
+                },
             },
         );
     };
@@ -53,10 +63,9 @@
         <AdminSearchInput :model-value="props.filters.search" @search="search" />
 
         <Transition name="fade-slide">
-            <div v-if="blocks.data.length">
+            <div v-if="blocks.data.length" key="blocks">
                 <TransitionGroup
                     name="list"
-                    key="blocks"
                     tag="div"
                     class="grid grid-cols-1 gap-6 lg:grid-cols-2"
                 >
@@ -69,9 +78,11 @@
                 </TransitionGroup>
             </div>
 
+            <AdminLoader v-else-if="isFiltering" key="loading" text="Синхронизация" />
+
             <AdminEmptyState
                 v-else
-                key="no-blocks"
+                key="empty"
                 title="Блоки не найдены"
                 @action="clearFilters"
                 :show-action="true"

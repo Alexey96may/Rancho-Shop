@@ -185,42 +185,44 @@
     </section>
 
     <main class="relative min-h-[400px]">
-        <TransitionGroup
-            v-if="users.data.length"
-            name="user-list"
-            tag="div"
-            class="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3"
-        >
-            <AdminUserCard
-                v-for="user in users.data"
-                :key="user.id"
-                :user="user"
-                :disabled="deletingIds.has(user.id) || form.processing"
-                @edit="openEditModal(user)"
-                @delete="deleteUser(user)"
-            />
-        </TransitionGroup>
+        <Transition name="fade-slide">
+            <div
+                v-if="users.data.length"
+                key="users"
+                class="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3"
+            >
+                <TransitionGroup name="user-list">
+                    <AdminUserCard
+                        v-for="user in users.data"
+                        :key="user.id"
+                        :user="user"
+                        :disabled="deletingIds.has(user.id) || form.processing"
+                        @edit="openEditModal(user)"
+                        @delete="deleteUser(user)"
+                    />
+                </TransitionGroup>
+            </div>
 
-        <AdminLoader v-else-if="isFiltering" key="loading" text="Синхронизация" />
+            <AdminLoader v-else-if="isFiltering" key="loading" text="Синхронизация" />
 
-        <AdminEmptyState
-            v-else
-            key="empty"
-            :title="searchQuery ? 'Пользователь не найден' : 'Список пользователей пуст'"
-            @action="searchQuery ? clearFilters() : openCreateModal()"
-            :action-text="searchQuery ? 'Очистить фильтр' : 'Добавить пользователя'"
-            :show-action="true"
-            :description="
-                searchQuery
-                    ? 'По запросу «' + searchQuery + '» совпадений нет'
-                    : 'Нет ни одного промокода'
-            "
-        />
+            <AdminEmptyState
+                v-else
+                key="empty"
+                :title="searchQuery ? 'Пользователь не найден' : 'Список пользователей пуст'"
+                @action="searchQuery ? clearFilters() : openCreateModal()"
+                :action-text="searchQuery ? 'Очистить фильтр' : 'Добавить пользователя'"
+                :show-action="true"
+                :description="
+                    searchQuery
+                        ? 'По запросу «' + searchQuery + '» совпадений нет'
+                        : 'Нет ни одного промокода'
+                "
+        /></Transition>
     </main>
 
-    <div class="mt-12 border-t border-slate-800/50 pt-8">
+    <Transition name="fade-slide" mode="out-in">
         <AdminPagination :links="users.meta.links" />
-    </div>
+    </Transition>
 
     <BaseModal
         :show="isModalOpen"
@@ -315,5 +317,14 @@
         position: absolute;
         width: 100%;
         max-width: 350px;
+    }
+
+    .fade-slide-enter-active {
+        transition: all 0.4s ease-out;
+    }
+
+    .fade-slide-enter-from {
+        opacity: 0;
+        transform: translateY(-10px);
     }
 </style>

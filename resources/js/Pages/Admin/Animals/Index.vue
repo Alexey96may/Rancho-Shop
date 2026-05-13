@@ -18,6 +18,7 @@
     import AdminEmptyState from '@/Components/Admin/Shared/AdminEmptyState.vue';
     import AdminPageHeader from '@/Components/Admin/Shared/AdminPageHeader.vue';
     import AdminPagination from '@/Components/Admin/Shared/AdminPagination.vue';
+    import AdminLoader from '@/Components/Admin/UI/AdminLoader.vue';
     import AdminSearchInput from '@/Components/Admin/UI/AdminSearchInput.vue';
     import BaseCreateButton from '@/Components/UI/BaseCreateButton.vue';
     import BaseSelect from '@/Components/UI/BaseSelect.vue';
@@ -36,6 +37,8 @@
     defineOptions({ layout: AdminLayout });
 
     const { notifyWithUndo, notify } = useFlash();
+
+    const isFiltering = ref(false);
 
     const view = ref<'list' | 'form'>('list');
     const activeTab = ref('main');
@@ -67,14 +70,25 @@
     });
 
     const performSearch = (val: string = search.value, cat: any = categoryFilter.value) => {
+        isFiltering.value = true;
+
         router.get(
             route('admin.animals.index'),
             { search: val, category_id: cat },
-            { preserveState: true, replace: true, preserveScroll: true },
+            {
+                preserveState: true,
+                replace: true,
+                preserveScroll: true,
+                onFinish: () => {
+                    isFiltering.value = false;
+                },
+            },
         );
     };
 
-    watch(categoryFilter, (newVal) => performSearch(search.value, newVal));
+    watch(categoryFilter, (newVal) => {
+        performSearch(search.value, newVal);
+    });
 
     const clearFilters = () => {
         search.value = '';
@@ -207,8 +221,11 @@
                         />
                     </TransitionGroup>
 
+                    <AdminLoader v-else-if="isFiltering" key="loading" text="Синхронизация" />
+
                     <AdminEmptyState
                         v-else
+                        key="empty"
                         title="Животные не найдены"
                         @action="clearFilters"
                         :show-action="true"
@@ -216,7 +233,9 @@
                 </Transition>
             </div>
 
-            <AdminPagination :links="animals.meta.links" />
+            <Transition name="fade-slide" mode="out-in">
+                <AdminPagination v-if="!isFiltering" :links="animals.meta.links"
+            /></Transition>
         </div>
 
         <div v-else class="mx-auto max-w-5xl">

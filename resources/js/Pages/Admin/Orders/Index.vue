@@ -166,7 +166,7 @@
         </Transition>
 
         <Transition name="fade-slide" mode="out-in">
-            <AdminPagination key="pagination" v-if="!isFiltering" :links="orders.meta.links"
+            <AdminPagination v-if="!isFiltering" :links="orders.meta.links"
         /></Transition>
     </main>
 </template>

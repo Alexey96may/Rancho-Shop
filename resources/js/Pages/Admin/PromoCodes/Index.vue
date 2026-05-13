@@ -173,7 +173,9 @@
             />
         </Transition>
 
-        <AdminPagination :links="promoCodes.meta.links" />
+        <Transition name="fade-slide" mode="out-in">
+            <AdminPagination v-show="!isFiltering" :links="promoCodes.meta.links" />
+        </Transition>
     </div>
 </template>
 

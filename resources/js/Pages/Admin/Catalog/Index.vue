@@ -212,7 +212,9 @@
                 />
             </Transition>
 
-            <AdminPagination :links="variants.meta.links" />
+            <Transition name="fade-slide" mode="out-in">
+                <AdminPagination v-if="!isFiltering" :links="variants.meta.links" />
+            </Transition>
         </div>
     </div>
 </template>

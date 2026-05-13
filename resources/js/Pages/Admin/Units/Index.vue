@@ -233,7 +233,9 @@
             </Transition>
         </div>
 
-        <AdminPagination :links="units.meta.links" />
+        <Transition name="fade-slide" mode="out-in">
+            <AdminPagination v-show="!isFiltering" :links="units.meta.links" />
+        </Transition>
     </div>
 
     <div
