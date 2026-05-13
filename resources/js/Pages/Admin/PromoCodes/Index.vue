@@ -7,6 +7,7 @@
 
     import PromoCodeCard from '@/Components/Admin/Cards/PromoCodeCard.vue';
     import AdminEmptyState from '@/Components/Admin/Shared/AdminEmptyState.vue';
+    import AdminPageHeader from '@/Components/Admin/Shared/AdminPageHeader.vue';
     import AdminPagination from '@/Components/Admin/Shared/AdminPagination.vue';
     import AdminLoader from '@/Components/Admin/UI/AdminLoader.vue';
     import AdminSearchInput from '@/Components/Admin/UI/AdminSearchInput.vue';
@@ -96,7 +97,7 @@
 
 <template>
     <Teleport to="#admin-header-content">
-        <h1 class="text-xl font-black text-white">Управление Промокодами</h1>
+        <AdminPageHeader title="Модерация промокодов" subtitle="Управление Промокодами магазина" />
     </Teleport>
 
     <div class="animate-in fade-in space-y-8 duration-500">

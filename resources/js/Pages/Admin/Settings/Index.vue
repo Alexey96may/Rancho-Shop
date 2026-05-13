@@ -12,6 +12,7 @@
         TruckIcon,
     } from '@heroicons/vue/24/outline';
 
+    import AdminPageHeader from '@/Components/Admin/Shared/AdminPageHeader.vue';
     import DeliveryZoneManager from '@/Components/Admin/Shared/DeliveryZoneManager.vue';
     import AdminBaseTextarea from '@/Components/Admin/UI/AdminBaseTextarea.vue';
     import AdminNumberInput from '@/Components/Admin/UI/AdminNumberInput.vue';
@@ -147,7 +148,7 @@
 
 <template>
     <Teleport to="#admin-header-content">
-        <h1 class="text-xl font-black text-white">Настройки</h1>
+        <AdminPageHeader title="Модерация Настроек" subtitle="Управление настройками сайта" />
     </Teleport>
 
     <div class="space-y-6">

@@ -8,6 +8,7 @@
 
     import AdminUserCard from '@/Components/Admin/Cards/AdminUserCard.vue';
     import AdminEmptyState from '@/Components/Admin/Shared/AdminEmptyState.vue';
+    import AdminPageHeader from '@/Components/Admin/Shared/AdminPageHeader.vue';
     import AdminPagination from '@/Components/Admin/Shared/AdminPagination.vue';
     import AdminLoader from '@/Components/Admin/UI/AdminLoader.vue';
     import AdminRoleFilter from '@/Components/Admin/UI/AdminRoleFilter.vue';
@@ -143,12 +144,10 @@
 
 <template>
     <Teleport to="#admin-header-content">
-        <div class="flex items-center gap-3">
-            <div class="h-8 w-1 rounded-full bg-orange-600"></div>
-            <h1 class="text-xl font-black uppercase tracking-wider text-white">
-                Система управления кадрами
-            </h1>
-        </div>
+        <AdminPageHeader
+            title="Модерация пользователей"
+            subtitle="Управление кадрами магазина и пользователями сайта"
+        />
     </Teleport>
 
     <section class="mb-8 space-y-6" aria-label="Инструменты поиска и фильтрации">

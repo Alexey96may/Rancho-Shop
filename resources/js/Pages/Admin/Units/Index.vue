@@ -9,6 +9,7 @@
 
     import UnitCard from '@/Components/Admin/Cards/AdminUnitCard.vue';
     import AdminEmptyState from '@/Components/Admin/Shared/AdminEmptyState.vue';
+    import AdminPageHeader from '@/Components/Admin/Shared/AdminPageHeader.vue';
     import AdminPagination from '@/Components/Admin/Shared/AdminPagination.vue';
     import AdminLoader from '@/Components/Admin/UI/AdminLoader.vue';
     import AdminSearchInput from '@/Components/Admin/UI/AdminSearchInput.vue';
@@ -168,17 +169,10 @@
 
 <template>
     <Teleport to="#admin-header-content">
-        <div class="flex items-center gap-4">
-            <h1 class="text-xl font-black uppercase tracking-wider text-white">
-                Единицы измерения
-            </h1>
-            <span
-                v-if="isSavingOrder"
-                class="flex animate-pulse items-center gap-2 text-[10px] font-bold text-orange-500"
-            >
-                <Loader2Icon class="h-3 w-3 animate-spin" /> СОХРАНЕНИЕ ПОРЯДКА
-            </span>
-        </div>
+        <AdminPageHeader
+            title="Единицы измерения"
+            subtitle="Управление единицами измерения магазина"
+        />
     </Teleport>
 
     <div class="space-y-6">

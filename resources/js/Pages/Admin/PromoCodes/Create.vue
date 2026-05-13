@@ -1,6 +1,7 @@
 <script setup lang="ts">
     import { InertiaForm } from '@inertiajs/vue3';
 
+    import AdminPageHeader from '@/Components/Admin/Shared/AdminPageHeader.vue';
     import BaseCancelButton from '@/Components/UI/BaseCancelButton.vue';
     import AdminLayout from '@/Layouts/AdminLayout.vue';
     import type { PromoCodeFormState } from '@/types';
@@ -27,7 +28,7 @@
 
 <template>
     <Teleport to="#admin-header-content">
-        <h1 class="text-xl font-black text-white">Новый промокод</h1>
+        <AdminPageHeader title="Новый промокод" />
     </Teleport>
 
     <BaseCancelButton

@@ -8,6 +8,7 @@
 
     import AdminProductCard from '@/Components/Admin/Cards/AdminProductCard.vue';
     import AdminEmptyState from '@/Components/Admin/Shared/AdminEmptyState.vue';
+    import AdminPageHeader from '@/Components/Admin/Shared/AdminPageHeader.vue';
     import AdminPagination from '@/Components/Admin/Shared/AdminPagination.vue';
     import AdminLoader from '@/Components/Admin/UI/AdminLoader.vue';
     import AdminSearchInput from '@/Components/Admin/UI/AdminSearchInput.vue';
@@ -94,7 +95,7 @@
 
 <template>
     <Teleport to="#admin-header-content">
-        <h1 class="text-xl font-black text-white">Управление Товарами</h1>
+        <AdminPageHeader title="Товары" subtitle="Управление Продуктами" />
     </Teleport>
 
     <section class="mb-8 space-y-4" role="search" aria-label="Фильтрация товаров">

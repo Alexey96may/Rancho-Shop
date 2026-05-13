@@ -13,6 +13,7 @@
     import ContentSection from '@/Components/Admin/Sections/PageContentSection.vue';
     import GeneralSection from '@/Components/Admin/Sections/PageGeneralSection.vue';
     import SeoSection from '@/Components/Admin/Sections/SEOSection.vue';
+    import AdminPageHeader from '@/Components/Admin/Shared/AdminPageHeader.vue';
     import BaseSwitch from '@/Components/UI/BaseSwitch.vue';
     import AdminLayout from '@/Layouts/AdminLayout.vue';
 
@@ -55,9 +56,7 @@
 
 <template>
     <Teleport to="#admin-header-content">
-        <h1 class="flex items-center gap-2 text-xl font-black text-white">
-            Создание новой страницы
-        </h1>
+        <AdminPageHeader title=" Создание новой страницы" />
     </Teleport>
 
     <div class="mx-auto max-w-6xl space-y-6">

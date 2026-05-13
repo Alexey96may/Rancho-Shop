@@ -7,6 +7,7 @@
     import debounce from 'lodash/debounce';
 
     import AdminEmptyState from '@/Components/Admin/Shared/AdminEmptyState.vue';
+    import AdminPageHeader from '@/Components/Admin/Shared/AdminPageHeader.vue';
     import AdminSearchInput from '@/Components/Admin/UI/AdminSearchInput.vue';
     import BaseDeleteButton from '@/Components/UI/BaseDeleteButton.vue';
     import AdminLayout from '@/Layouts/AdminLayout.vue';
@@ -65,7 +66,7 @@
 
 <template>
     <Teleport to="#admin-header-content">
-        <h1 class="flex items-center gap-2 text-xl font-black text-white">Модерация страниц</h1>
+        <AdminPageHeader title="Модерация страниц" subtitle="Управление страницами сайта (CMS)" />
     </Teleport>
 
     <div class="space-y-6">

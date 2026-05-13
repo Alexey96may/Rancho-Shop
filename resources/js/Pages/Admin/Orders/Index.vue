@@ -1,5 +1,5 @@
 <script setup lang="ts">
-    import { computed, reactive, watch } from 'vue';
+    import { computed, reactive, ref, watch } from 'vue';
 
     import { router } from '@inertiajs/vue3';
 
@@ -10,6 +10,7 @@
     import AdminEmptyState from '@/Components/Admin/Shared/AdminEmptyState.vue';
     import AdminPageHeader from '@/Components/Admin/Shared/AdminPageHeader.vue';
     import AdminPagination from '@/Components/Admin/Shared/AdminPagination.vue';
+    import AdminLoader from '@/Components/Admin/UI/AdminLoader.vue';
     import AdminSearchInput from '@/Components/Admin/UI/AdminSearchInput.vue';
     import AdminStatCard from '@/Components/Admin/UI/AdminStatCard.vue';
     import BaseSelect from '@/Components/UI/BaseSelect.vue';
@@ -32,13 +33,20 @@
         status: props.filters.status || '',
     });
 
+    const isFiltering = ref(false);
+
     watch(
         () => form,
         debounce((newForm) => {
+            isFiltering.value = true;
+
             router.get(route('admin.orders.index'), newForm, {
                 preserveState: true,
                 preserveScroll: true,
                 replace: true,
+                onFinish: () => {
+                    isFiltering.value = false;
+                },
             });
         }, 300),
         { deep: true },
@@ -68,7 +76,7 @@
 
 <template>
     <Teleport to="#admin-header-content">
-        <AdminPageHeader title="Список Заказов" subtitle="Оперативное управление продажами" />
+        <AdminPageHeader title="Список Заказов" subtitle="Управление продажами" />
     </Teleport>
 
     <div class="mb-8 grid grid-cols-1 gap-6 md:grid-cols-3">
@@ -128,30 +136,38 @@
     </div>
 
     <main aria-label="Список заказов">
-        <TransitionGroup
-            v-if="orders.data.length"
-            tag="div"
-            name="order-list"
-            class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-        >
-            <AdminOrderCard
-                v-for="order in orders.data"
-                :key="order.id"
-                v-memo="[order.id, order.updated_at]"
-                :order="order"
-                @click="openOrder(order.id)"
-                class="cursor-pointer"
-            />
-        </TransitionGroup>
-        <Transition v-else name="fade-slide" mode="out-in">
+        <Transition name="fade-slide" mode="out-in">
+            <div
+                v-if="orders.data.length"
+                key="orders"
+                class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+            >
+                <TransitionGroup name="order-list">
+                    <AdminOrderCard
+                        v-for="order in orders.data"
+                        :key="order.id"
+                        v-memo="[order.id, order.updated_at]"
+                        :order="order"
+                        @click="openOrder(order.id)"
+                        class="cursor-pointer"
+                    />
+                </TransitionGroup>
+            </div>
+
+            <AdminLoader v-else-if="isFiltering" key="loading" text="Синхронизация" />
+
             <AdminEmptyState
+                v-else
+                key="empty"
                 title="Заказы не найдены"
                 @action="clearFilters"
                 :show-action="!!(form.search || form.status)"
             />
         </Transition>
 
-        <AdminPagination :links="orders.meta.links" />
+        <Transition name="fade-slide" mode="out-in">
+            <AdminPagination key="pagination" v-if="!isFiltering" :links="orders.meta.links"
+        /></Transition>
     </main>
 </template>
 

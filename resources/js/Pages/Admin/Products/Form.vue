@@ -13,6 +13,7 @@
 
     import FeaturesSection from '@/Components/Admin/Sections/FeaturesSection.vue';
     import SEOSection from '@/Components/Admin/Sections/SEOSection.vue';
+    import AdminPageHeader from '@/Components/Admin/Shared/AdminPageHeader.vue';
     import AdminBaseTextarea from '@/Components/Admin/UI/AdminBaseTextarea.vue';
     import MediaGallery from '@/Components/Shared/MediaGallery.vue';
     import BaseCreateButton from '@/Components/UI/BaseCreateButton.vue';
@@ -173,21 +174,21 @@
 
 <template>
     <Teleport to="#admin-header-content">
-        <div class="flex items-center gap-4">
-            <button
-                @click="router.get(route('admin.products.index'))"
-                class="group rounded-xl border border-slate-800 p-2 text-slate-400 transition-all hover:bg-slate-800 hover:text-white"
-                aria-label="Вернуться к списку"
-            >
-                <ChevronLeftIcon class="h-5 w-5" />
-            </button>
-            <h1 class="text-xl font-black text-white">
-                {{ isEdit ? 'Редактирование товара' : 'Новый товар' }}
-            </h1>
-        </div>
+        <AdminPageHeader
+            :title="isEdit ? 'Редактирование товара' : 'Новый товар'"
+            :subtitle="form.name"
+        />
     </Teleport>
 
     <div class="space-y-6">
+        <button
+            @click="router.get(route('admin.products.index'))"
+            class="group rounded-xl border border-slate-800 p-2 text-slate-400 transition-all hover:bg-slate-800 hover:text-white"
+            aria-label="Вернуться к списку"
+        >
+            <ChevronLeftIcon class="h-5 w-5" />
+        </button>
+
         <nav class="flex gap-2 border-b border-slate-800 pb-px" role="tablist">
             <button
                 v-for="tab in tabs"

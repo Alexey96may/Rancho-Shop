@@ -4,6 +4,7 @@
     import { ChevronLeftIcon, LayoutIcon, PlusIcon, SaveIcon } from 'lucide-vue-next';
 
     import ContentItemCard from '@/Components/Admin/Cards/AdminContentItemCard.vue';
+    import AdminPageHeader from '@/Components/Admin/Shared/AdminPageHeader.vue';
     import AdminLayout from '@/Layouts/AdminLayout.vue';
     import { useFlash } from '@/composables/useFlash';
     import { AdminLandingBlock, ResourceSingle } from '@/types';
@@ -67,9 +68,7 @@
 
 <template>
     <Teleport to="#admin-header-content">
-        <h1 class="flex items-center gap-2 text-xl font-black text-white">
-            Редактирование блока "{{ block.data.label }}"
-        </h1>
+        <AdminPageHeader title="Редактирование блока " :subtitle="block.data.label" />
     </Teleport>
 
     <div class="mb-4 flex items-center justify-between gap-8">

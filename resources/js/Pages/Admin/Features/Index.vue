@@ -3,6 +3,7 @@
 
     import FeatureCard from '@/Components/Admin/Cards/AdminFeatureCard.vue';
     import AdminEmptyState from '@/Components/Admin/Shared/AdminEmptyState.vue';
+    import AdminPageHeader from '@/Components/Admin/Shared/AdminPageHeader.vue';
     import AdminSearchInput from '@/Components/Admin/UI/AdminSearchInput.vue';
     import AdminLayout from '@/Layouts/AdminLayout.vue';
     import { AdminLandingBlock, ResourceCollection } from '@/types';
@@ -45,9 +46,7 @@
 
 <template>
     <Teleport to="#admin-header-content">
-        <h1 class="flex items-center gap-2 text-xl font-black text-white">
-            Модерация блоков страниц
-        </h1>
+        <AdminPageHeader title="Блоки страниц" subtitle="Управление блоками на главной" />
     </Teleport>
 
     <div class="animate-in fade-in slide-in-from-bottom-4 space-y-8 duration-700">

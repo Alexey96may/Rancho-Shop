@@ -122,13 +122,9 @@
 </script>
 
 <template>
-    <AdminPageHeader
-        title-normal="Список"
-        title-orange="Категорий"
-        subtitle="Управление базой категорий"
-        button-text="Создать"
-        @action="openModal()"
-    />
+    <Teleport to="#admin-header-content">
+        <AdminPageHeader title="Список Категорий" subtitle="Управление базой категорий" />
+    </Teleport>
 
     <main id="main-content">
         <section

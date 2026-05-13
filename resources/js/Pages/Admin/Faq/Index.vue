@@ -9,6 +9,7 @@
 
     import FaqItem from '@/Components/Admin/Cards/AdminFaqCard.vue';
     import AdminEmptyState from '@/Components/Admin/Shared/AdminEmptyState.vue';
+    import AdminPageHeader from '@/Components/Admin/Shared/AdminPageHeader.vue';
     import AdminLoader from '@/Components/Admin/UI/AdminLoader.vue';
     import AdminNumberInput from '@/Components/Admin/UI/AdminNumberInput.vue';
     import AdminSearchInput from '@/Components/Admin/UI/AdminSearchInput.vue';
@@ -180,9 +181,10 @@
 
 <template>
     <Teleport to="#admin-header-content">
-        <h1 class="flex items-center gap-2 text-xl font-black text-white">
-            Модерация "Вопросы - Ответы"
-        </h1>
+        <AdminPageHeader
+            title="Вопросы - Ответы"
+            subtitle="Управление вопросами и ответами на главной"
+        />
     </Teleport>
 
     <div class="max-w-5xl space-y-6">

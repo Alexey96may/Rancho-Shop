@@ -1,16 +1,14 @@
 <script setup lang="ts">
-    import { computed, ref, watch } from 'vue';
+    import { ref, watch } from 'vue';
 
     import { router, useForm } from '@inertiajs/vue3';
 
     import { Switch } from '@headlessui/vue';
     import {
         AdjustmentsHorizontalIcon,
-        ChevronLeftIcon,
         GlobeAltIcon,
         IdentificationIcon,
         PhotoIcon,
-        PlusIcon,
     } from '@heroicons/vue/24/outline';
 
     import AnimalCard from '@/Components/Admin/Cards/AdminAnimalCard.vue';
@@ -21,6 +19,7 @@
     import AdminPageHeader from '@/Components/Admin/Shared/AdminPageHeader.vue';
     import AdminPagination from '@/Components/Admin/Shared/AdminPagination.vue';
     import AdminSearchInput from '@/Components/Admin/UI/AdminSearchInput.vue';
+    import BaseCreateButton from '@/Components/UI/BaseCreateButton.vue';
     import BaseSelect from '@/Components/UI/BaseSelect.vue';
     import ImageUpload from '@/Components/UI/ImageUploader.vue';
     import AdminLayout from '@/Layouts/AdminLayout.vue';
@@ -42,7 +41,6 @@
     const activeTab = ref('main');
     const selectedAnimal = ref<AdminAnimal | null>(null);
 
-    // Фильтры
     const search = ref(props.filters.search || '');
     const categoryFilter = ref(props.filters.category_id || '');
 
@@ -87,9 +85,6 @@
             route('admin.animals.index'),
             {},
             {
-                onBefore: () => {
-                    // Можно добавить лоадер
-                },
                 preserveScroll: true,
             },
         );
@@ -163,40 +158,11 @@
 </script>
 
 <template>
+    <Teleport to="#admin-header-content">
+        <AdminPageHeader title="Список Животных" subtitle="Управление базой животных" />
+    </Teleport>
+
     <div class="p-8">
-        <AdminPageHeader
-            title-normal="Список"
-            title-orange="Животных"
-            subtitle="Управление базой животных"
-            @action="openForm()"
-        >
-            <template #actions>
-                <button
-                    v-if="view === 'list'"
-                    @click="openForm()"
-                    aria-label="Добавить новую особь"
-                    class="group flex items-center gap-3 rounded-xl bg-orange-500 px-6 py-4 transition-all hover:bg-orange-600 active:scale-95"
-                >
-                    <PlusIcon class="h-5 w-5 text-white" aria-hidden="true" />
-                    <span class="text-xs font-black uppercase tracking-widest text-white"
-                        >Добавить</span
-                    >
-                </button>
-
-                <button
-                    v-else
-                    @click="closeForm"
-                    aria-label="Вернуться к списку"
-                    class="group flex items-center gap-3 rounded-xl bg-slate-800 px-6 py-4 transition-all hover:bg-slate-700"
-                >
-                    <ChevronLeftIcon class="h-5 w-5 text-slate-400" aria-hidden="true" />
-                    <span class="text-xs font-black uppercase tracking-widest text-slate-400"
-                        >Назад</span
-                    >
-                </button>
-            </template>
-        </AdminPageHeader>
-
         <div v-if="view === 'list'" class="space-y-10">
             <section class="flex flex-col gap-4 lg:flex-row lg:items-end" aria-label="Фильтрация">
                 <AdminSearchInput
@@ -213,6 +179,8 @@
                     variant="admin"
                     class="lg:w-64"
                 />
+
+                <BaseCreateButton label="Добавить" @click="openForm()" />
             </section>
 
             <div class="relative min-h-[400px]">
@@ -286,7 +254,6 @@
                             <ImageUpload
                                 v-model="form.avatar"
                                 label="Аватар особи"
-                                :existing-image="existingAvatarUrl"
                                 :error="form.errors.avatar"
                             />
 

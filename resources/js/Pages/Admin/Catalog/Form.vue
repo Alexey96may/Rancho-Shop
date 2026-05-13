@@ -1,6 +1,7 @@
 <script setup lang="ts">
     import { useForm } from '@inertiajs/vue3';
 
+    import AdminPageHeader from '@/Components/Admin/Shared/AdminPageHeader.vue';
     import AdminNumberInput from '@/Components/Admin/UI/AdminNumberInput.vue';
     import BaseCancelButton from '@/Components/UI/BaseCancelButton.vue';
     import BaseInput from '@/Components/UI/BaseInput.vue';
@@ -50,16 +51,14 @@
 
 <template>
     <Teleport to="#admin-header-content">
-        <h1 class="text-xl font-black uppercase tracking-widest text-white">
-            {{ isEdit ? 'Редактировать вариант' : 'Новый вариант товара' }}
-        </h1>
-        <p class="text-xs font-bold uppercase tracking-widest text-slate-500">
-            {{
+        <AdminPageHeader
+            :title="isEdit ? 'Редактировать вариант' : 'Новый вариант товара'"
+            :subtitle="
                 isEdit
-                    ? variant?.data.product?.name
+                    ? 'для «' + variant?.data.product?.name + '»'
                     : 'Заполните данные для нового торгового предложения'
-            }}
-        </p>
+            "
+        />
     </Teleport>
 
     <div class="mx-auto max-w-5xl space-y-8">

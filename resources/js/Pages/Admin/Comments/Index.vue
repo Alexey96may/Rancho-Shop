@@ -3,10 +3,16 @@
 
     import { router } from '@inertiajs/vue3';
 
+    import {
+        ChatBubbleLeftRightIcon,
+        ShieldExclamationIcon,
+        StarIcon,
+    } from '@heroicons/vue/24/outline';
     import { debounce } from 'lodash';
 
     import AdminCommentCard from '@/Components/Admin/Cards/AdminCommentCard.vue';
     import AdminEmptyState from '@/Components/Admin/Shared/AdminEmptyState.vue';
+    import AdminPageHeader from '@/Components/Admin/Shared/AdminPageHeader.vue';
     import AdminPagination from '@/Components/Admin/Shared/AdminPagination.vue';
     import AdminStatCard from '@/Components/Admin/UI/AdminStatCard.vue';
     import AdminLayout from '@/Layouts/AdminLayout.vue';
@@ -116,24 +122,36 @@
 
 <template>
     <Teleport to="#admin-header-content">
-        <h1 class="flex items-center gap-2 text-xl font-black text-white">
-            Модерация отзывов
-            <span
-                v-if="stats.pending_count"
-                class="rounded-full bg-orange-500/20 px-2 py-0.5 text-[10px] text-xs font-bold text-orange-500"
-            >
-                {{ stats.pending_count }}
-                {{ String(stats.pending_count).endsWith('1') ? 'новый' : 'новых' }}
-            </span>
-        </h1>
+        <AdminPageHeader
+            title="Модерация отзывов"
+            :subtitle="
+                String(stats.pending_count).endsWith('1')
+                    ? stats.pending_count + ' новый'
+                    : stats.pending_count + ' новых'
+            "
+        />
     </Teleport>
 
     <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <AdminStatCard label="Рейтинг сайта" :value="`${stats.avg_rating} / 5`" />
+        <AdminStatCard
+            label="Рейтинг сайта"
+            :value="`${stats.avg_rating} / 5`"
+            :icon="StarIcon"
+            labelColor="text-green-500"
+        />
 
-        <AdminStatCard label="Всего отзывов" :value="stats.total_count" />
+        <AdminStatCard
+            label="Всего отзывов"
+            :value="stats.total_count"
+            :icon="ChatBubbleLeftRightIcon"
+        />
 
-        <AdminStatCard isAccent label="Ожидают проверки" :value="stats.pending_count" />
+        <AdminStatCard
+            label="Ожидают проверки"
+            :value="stats.pending_count"
+            :icon="ShieldExclamationIcon"
+            :labelColor="stats.pending_count ? 'text-orange-700' : 'text-slate-500'"
+        />
     </div>
 
     <div class="mb-8 flex flex-col gap-6">

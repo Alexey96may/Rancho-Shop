@@ -14,6 +14,7 @@
     import ContentSection from '@/Components/Admin/Sections/PageContentSection.vue';
     import GeneralSection from '@/Components/Admin/Sections/PageGeneralSection.vue';
     import SeoSection from '@/Components/Admin/Sections/SEOSection.vue';
+    import AdminPageHeader from '@/Components/Admin/Shared/AdminPageHeader.vue';
     import BaseDeleteButton from '@/Components/UI/BaseDeleteButton.vue';
     import BaseSwitch from '@/Components/UI/BaseSwitch.vue';
     import AdminLayout from '@/Layouts/AdminLayout.vue';
@@ -81,10 +82,9 @@
 
 <template>
     <Teleport to="#admin-header-content">
-        <h1 class="flex items-center gap-2 text-xl font-black text-white">
-            Редактирование страницы "{{ page.data.title }}"
-        </h1>
+        <AdminPageHeader title="Редактирование страницы" :subtitle="page.data.title" />
     </Teleport>
+
     <div class="mx-auto max-w-6xl space-y-6">
         <div class="flex items-center justify-between">
             <div class="flex items-center gap-4">

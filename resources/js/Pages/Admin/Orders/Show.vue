@@ -75,11 +75,9 @@
 </script>
 
 <template>
-    <AdminPageHeader
-        title-normal="Заказ"
-        :title-orange="'#' + order.data.id"
-        subtitle="Просмотр деталей заказа"
-    />
+    <Teleport to="#admin-header-content">
+        <AdminPageHeader :title="'Заказ #' + order.data.id" subtitle="Просмотр деталей заказа" />
+    </Teleport>
 
     <div class="p-4 sm:p-8">
         <div class="mb-6">
