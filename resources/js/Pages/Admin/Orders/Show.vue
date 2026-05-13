@@ -1,5 +1,5 @@
 <script setup lang="ts">
-    import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
+    import { Link, router, useForm, usePage } from '@inertiajs/vue3';
 
     import {
         ArrowLeftIcon,

@@ -8,6 +8,7 @@
 
     import AdminEmptyState from '@/Components/Admin/Shared/AdminEmptyState.vue';
     import AdminPageHeader from '@/Components/Admin/Shared/AdminPageHeader.vue';
+    import AdminPagination from '@/Components/Admin/Shared/AdminPagination.vue';
     import AdminLoader from '@/Components/Admin/UI/AdminLoader.vue';
     import AdminSearchInput from '@/Components/Admin/UI/AdminSearchInput.vue';
     import BaseDeleteButton from '@/Components/UI/BaseDeleteButton.vue';
@@ -92,7 +93,7 @@
             <div class="col-span-2 text-right">Действия</div>
         </div>
 
-        <Transition name="fade-slide">
+        <Transition name="fade-slide" mode="out-in">
             <div class="space-y-3" role="list" v-if="pages.data.length" key="page-list">
                 <TransitionGroup name="stagger">
                     <div
@@ -173,6 +174,12 @@
                 @action="clearFilters"
                 :show-action="true"
             />
+        </Transition>
+
+        <Transition name="fade-slide" mode="out-in">
+            <footer v-show="pages.data.length > 0 && !isFiltering">
+                <AdminPagination :links="pages.meta.links" />
+            </footer>
         </Transition>
     </div>
 </template>

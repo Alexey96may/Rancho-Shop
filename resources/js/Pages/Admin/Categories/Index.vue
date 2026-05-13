@@ -189,7 +189,7 @@
         </div>
 
         <Transition name="fade-slide" mode="out-in">
-            <footer v-if="categories.data.length > 0 && !isFiltering">
+            <footer v-show="categories.data.length > 0 && !isFiltering">
                 <AdminPagination :links="categories.meta.links" />
             </footer>
         </Transition>

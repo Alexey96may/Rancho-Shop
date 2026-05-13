@@ -1,7 +1,7 @@
 <script setup lang="ts">
     import { computed, ref, watch } from 'vue';
 
-    import { router, useForm } from '@inertiajs/vue3';
+    import { Link, router, useForm } from '@inertiajs/vue3';
 
     import {
         AdjustmentsHorizontalIcon,
@@ -40,6 +40,7 @@
         product?: ResourceSingle<AdminProduct> | null;
         categories: { data: Category[] };
         animals: { data: Animal[] };
+        backUrl: string;
     }>();
 
     const isEdit = computed(() => !!props.product);
@@ -80,6 +81,7 @@
                   canonical: '',
                   is_noindex: false,
               },
+        backUrl: props.backUrl,
     });
 
     const submit = () => {
@@ -181,13 +183,9 @@
     </Teleport>
 
     <div class="space-y-6">
-        <button
-            @click="router.get(route('admin.products.index'))"
-            class="group rounded-xl border border-slate-800 p-2 text-slate-400 transition-all hover:bg-slate-800 hover:text-white"
-            aria-label="Вернуться к списку"
-        >
+        <Link :href="backUrl" aria-label="Вернуться к списку">
             <ChevronLeftIcon class="h-5 w-5" />
-        </button>
+        </Link>
 
         <nav class="flex gap-2 border-b border-slate-800 pb-px" role="tablist">
             <button

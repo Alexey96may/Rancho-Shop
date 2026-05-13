@@ -43,10 +43,13 @@ class ProductController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(Request $request)
     {
         return Inertia::render('Admin/Products/Form', array_merge([
             'seo' => $this->seo('Создание продукта', robots: 'noindex, nofollow'),
+            'backUrl' => $request->query('back') 
+                    ? route('admin.products.index') . $request->query('back') 
+                    : route('admin.products.index'),
             ], $this->getFormOptions()));
     }
 
@@ -81,7 +84,6 @@ class ProductController extends Controller
                 $product->animals()->sync($request->animal_ids);
             }
 
-            //Если прилетели медиа (Spatie)
             if ($request->hasFile('gallery')) {
                 $product->addMultipleMediaFromRequest(['gallery'])
                     ->each(fn ($file) => $file->toMediaCollection('gallery'));
@@ -90,6 +92,10 @@ class ProductController extends Controller
             return $product;
         });
 
+        if ($request->filled('backUrl')) {
+            return redirect($request->backUrl)->with('success', "Продукт {$product->name} создан");
+        }
+
         return redirect()->route('admin.products.edit', $product)
             ->with('success', "Продукт {$product->name} создан");
     }
@@ -97,7 +103,7 @@ class ProductController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Product $product)
+    public function edit(Request $request, Product $product)
     {
         $product->load(['variants.unit', 'category', 'media', 'animals', 'seo'])
                 ->loadCount(['variants', 'comments'])
@@ -109,6 +115,9 @@ class ProductController extends Controller
             'comments' => CommentResource::collection(
                 $product->comments()->latest()->paginate(10)
             ),
+            'backUrl' => $request->query('back') 
+                ? route('admin.products.index') . $request->query('back') 
+                : route('admin.products.index'),
         ], $this->getFormOptions()));
     }
 

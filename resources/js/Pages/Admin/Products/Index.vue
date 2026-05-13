@@ -32,8 +32,6 @@
         };
     }>();
 
-    const isDeleteModalOpen = ref(false);
-
     const isFiltering = ref(false);
     const deletingIds = ref(new Set<number>());
 
@@ -62,8 +60,15 @@
         submitFilters();
     };
 
-    const goToCreate = () => {
-        router.get(route('admin.products.create'));
+    const navigateWithContext = (productId?: number) => {
+        if (!window) return;
+        const currentParams = window.location.search;
+
+        if (productId) {
+            router.get(route('admin.products.edit', productId), { back: currentParams });
+        } else {
+            router.get(route('admin.products.create'), { back: currentParams });
+        }
     };
 
     watch(
@@ -117,7 +122,7 @@
                 </button>
 
                 <button
-                    @click="router.get(route('admin.products.create'))"
+                    @click="navigateWithContext()"
                     class="shadow-lg inline-flex items-center gap-2 rounded-2xl bg-orange-600 px-6 py-3 text-[12px] font-black uppercase tracking-widest text-white shadow-orange-600/20 transition-all hover:bg-orange-500 focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-slate-900 active:scale-95"
                     title="Создать новый товар"
                 >
@@ -176,7 +181,7 @@
                         :key="product.id"
                         :disabled="deletingIds.has(product.id)"
                         :product="product"
-                        @edit="(p) => router.get(route('admin.products.edit', p.id))"
+                        @edit="(p) => navigateWithContext(p.id)"
                         @delete="deleteProduct(product)"
                     />
                 </TransitionGroup>
@@ -192,7 +197,7 @@
                 v-else
                 key="empty"
                 :title="filterForm.search ? 'Товары не найдены' : 'Список товаров пуст'"
-                @action="filterForm.search ? resetFilters() : goToCreate()"
+                @action="filterForm.search ? resetFilters() : navigateWithContext()"
                 :action-text="filterForm.search ? 'Очистить фильтр' : 'Добавить товар'"
                 :show-action="true"
                 :description="
@@ -206,7 +211,6 @@
 </template>
 
 <style scoped>
-    /* Анимация появления и перемещения карточек */
     .product-grid-enter-active,
     .product-grid-leave-active {
         transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
