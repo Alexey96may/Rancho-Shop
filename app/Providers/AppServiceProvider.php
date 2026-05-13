@@ -61,6 +61,7 @@ class AppServiceProvider extends ServiceProvider
 
                     // WORKER + ADMIN
                     Permission::MANAGE_DELIVERY,
+                    Permission::MANAGE_ANALITICS,
                     Permission::MANAGE_ORDERS 
                         => $user->role === UserRole::WORKER,
 

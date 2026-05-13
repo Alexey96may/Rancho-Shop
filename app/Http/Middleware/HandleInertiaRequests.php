@@ -50,6 +50,7 @@ class HandleInertiaRequests extends Middleware
             'can' => [
                 'manageProducts' => Gate::allows('manage-products'),
                 'manageOrders' => Gate::allows('manage-orders'),
+                'manageAnalitics' => Gate::allows('manage-analitics'),
                 'manageComments' => Gate::allows('manage-comments'),
                 'manageDelivery' => Gate::allows('manage-delivery'),
                 'manageAnimals' => Gate::allows('manage-animals'),

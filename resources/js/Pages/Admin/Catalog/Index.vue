@@ -114,7 +114,11 @@
 <template>
     <div>
         <Teleport to="#admin-header-content">
-            <h1 class="text-xl font-black uppercase tracking-widest text-white">Прайс-лист</h1>
+            <h1 class="text-xl font-black uppercase tracking-widest text-white">
+                Единицы складского учёта
+            </h1>
+
+            <p class="text-sm text-gray-400">*Один вариант продукта будет главным всегда!</p>
         </Teleport>
 
         <div class="space-y-8">

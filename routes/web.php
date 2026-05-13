@@ -28,6 +28,7 @@ use App\Http\Controllers\Admin\FaqController;
 use App\Http\Controllers\Admin\FeatureController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\DashboardController as UserDashboardController;
+use App\Http\Controllers\Admin\AnalyticsController;
 use App\Enums\Permission;
 
 Route::get('/', [LandingController::class, 'index'])->name('home');
@@ -139,6 +140,8 @@ Route::prefix('admin')
         // (Admin, Worker)
         Route::middleware('can:' . Permission::MANAGE_ORDERS->value)->group(function () {
             Route::resource('orders', AdminOrderController::class);
+
+            Route::get('analytics', [AnalyticsController::class, 'index'])->name('analytics.index');
             
             Route::patch('units/reorder', [UnitController::class, 'reorder'])->name('units.reorder');
             Route::resource('units', UnitController::class)->except(['show', 'create']);

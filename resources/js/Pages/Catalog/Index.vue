@@ -15,12 +15,10 @@
         filters: { category?: string; search?: string; sort?: string };
     }>();
 
-    // Реактивные состояния для фильтров (инициализируем из пропсов)
     const search = ref(props.filters.search || '');
     const category = ref(props.filters.category || '');
     const sort = ref(props.filters.sort || '');
 
-    // Функция отправки фильтров
     const applyFilters = () => {
         router.get(
             route('catalog.index'),
@@ -31,7 +29,7 @@
             },
             {
                 preserveState: true,
-                replace: true, // чтобы не плодить историю при каждом символе поиска
+                replace: true,
             },
         );
     };
