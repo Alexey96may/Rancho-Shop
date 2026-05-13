@@ -57,6 +57,9 @@
                 {{ category.name }}
             </h4>
             <p class="mt-1 font-mono text-xs italic text-slate-500">/{{ category.slug }}</p>
+            <p v-if="category.description" class="mt-1 font-mono text-xs text-slate-300">
+                «{{ category.description }}»
+            </p>
         </div>
 
         <div class="mt-8 flex items-center justify-between border-t border-slate-800/50 pt-4">

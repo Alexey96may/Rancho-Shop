@@ -15,8 +15,8 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('slug')->unique();
-            $table->string('type')->default('product')->after('id');
-            $table->index('type');
+            $table->string('type')->default('product')->index();
+            $table->text('description')->nullable();
             $table->string('icon')->nullable(); // for lucide-vue-next.
             $table->integer('sort_order')->default(999);
             $table->boolean('is_active')->default(true);

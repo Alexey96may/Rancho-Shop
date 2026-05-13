@@ -9,13 +9,15 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Enums\AvailabilityType;
 // Spatie
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
 class Product extends Model implements HasMedia
 {
-    use HasActiveScope, HasInteractions, HasStandardMedia, InteractsWithMedia, SoftDeletes {
+    use HasActiveScope, HasFactory, HasInteractions, HasStandardMedia, InteractsWithMedia, SoftDeletes {
         HasStandardMedia::registerMediaConversions insteadof InteractsWithMedia;
     }
 
@@ -28,6 +30,7 @@ class Product extends Model implements HasMedia
         'schedule' => 'array',
         'attributes' => 'array',
         'is_active' => 'boolean',
+        'availability_type' => AvailabilityType::class,
     ];
 
     /**

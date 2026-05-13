@@ -22,15 +22,10 @@ return new class() extends Migration
 
             $table->text('description')->nullable();
 
-            // $table->unsignedInteger('price');
-            // $table->unsignedInteger('old_price')->nullable();
-
-            // $table->string('unit')->default('литр'); // кг, шт, баночка
-            // $table->unsignedInteger('stock')->default(0);
-
             $table->enum('availability_type', [
                 'stock',
                 'daily',
+                'weekly',
                 'preorder'
             ])->default('stock');
 

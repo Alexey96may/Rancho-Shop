@@ -54,6 +54,7 @@ class CategoryController extends Controller
             'slug'       => 'nullable|string|max:255|unique:categories,slug',
             'icon'       => 'nullable|string|max:255',
             'type'       => 'required|string|in:product,animal',
+            'description'=> 'required|string',
             'sort_order' => 'integer',
             'is_active'  => 'boolean',
         ]);
@@ -94,6 +95,7 @@ class CategoryController extends Controller
             'slug'       => 'nullable|string|max:255|unique:categories,slug,' . $category->id,
             'icon'       => 'nullable|string|max:255',
             'type'       => 'required|string|in:product,animal',
+            'description'=> 'required|string',
             'sort_order' => 'integer',
             'is_active'  => 'boolean',
         ]);

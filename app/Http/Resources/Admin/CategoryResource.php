@@ -16,6 +16,7 @@ class CategoryResource extends UserCategoryResource
     {
         return array_merge(parent::toArray($request), [
             'sort_order' => $this->sort_order,
+            'description' => $this->description,
             'is_active'  => (bool) $this->is_active,
             'created_at' => $this->created_at->toIso8601String(),
             'updated_at' => $this->updated_at->toIso8601String(),

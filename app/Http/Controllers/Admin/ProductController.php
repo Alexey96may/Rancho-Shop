@@ -9,6 +9,8 @@ use App\Http\Resources\{CommentResource, CategoryResource, AnimalResource, UnitR
 use App\Models\{Product, Category, Animal, Unit};
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use App\Enums\AvailabilityType;
+use Illuminate\Validation\Rules\Enum;
 use Inertia\Inertia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
@@ -57,7 +59,10 @@ class ProductController extends Controller
             'name' => 'required|string|max:255',
             'slug' => 'nullable|string|max:255|unique:products,slug',
             'category_id' => 'required|exists:categories,id',
-            'availability_type' => 'required|string',
+            'availability_type' => [
+                'required',
+                new Enum(AvailabilityType::class)
+            ],
             'is_active' => 'boolean',
             'description' => 'nullable|string',
             'attributes' => 'nullable|array',
@@ -117,7 +122,10 @@ class ProductController extends Controller
             'slug' => 'nullable|string|max:255|unique:products,slug,' . $product->id,
             'category_id' => 'required|exists:categories,id',
             'is_active' => 'boolean',
-            'availability_type' => 'string',
+            'availability_type' => [
+                'required',
+                new Enum(AvailabilityType::class)
+            ],
             'description' => 'nullable|string',
             'attributes' => 'array',
             'schedule' => 'array',

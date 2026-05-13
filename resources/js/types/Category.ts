@@ -11,6 +11,7 @@ export interface Category {
 export interface AdminCategory extends Category {
     sort_order: number;
     is_active: boolean;
+    description: string;
     created_at: string;
     updated_at: string;
 }

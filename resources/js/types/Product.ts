@@ -9,7 +9,12 @@ import type {
     Unit,
 } from './';
 
-export type AvailabilityType = 'stock' | 'daily' | 'preorder';
+export type AvailabilityType = 'stock' | 'daily' | 'weekly' | 'preorder';
+
+export interface Availability {
+    value: AvailabilityType;
+    label: string;
+}
 
 // проследить!
 export interface ProductSchedule {
@@ -19,10 +24,10 @@ export interface ProductSchedule {
 }
 
 export interface ProductAttributes {
-    fat_content?: string; // Жирность
-    shelf_life?: string; // Срок годности
-    storage_temp?: string; // Температура хранения
-    [key: string]: any; // Для динамических полей
+    fat_content?: string;
+    shelf_life?: string;
+    storage_temp?: string;
+    [key: string]: any;
 }
 
 export interface Product {
@@ -33,7 +38,7 @@ export interface Product {
     slug: string;
     description: string | null;
 
-    availability_type: AvailabilityType;
+    availability_type: Availability;
     schedule: ProductSchedule;
     next_delivery_date: string | null; // "2024-05-20"
 

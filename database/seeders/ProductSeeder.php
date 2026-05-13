@@ -20,105 +20,47 @@ class ProductSeeder extends Seeder
      */
     public function run(): void
     {
+        $this->seedManualProducts();
+
+        Product::factory()->count(50)->create()->each(function ($product) {
+            $this->addSeedImage($product);
+        });
+    }
+
+    private function seedManualProducts(): void
+    {
         $zorka = Animal::where('slug', 'zorka')->first();
-        $belka = Animal::where('slug', 'belka')->first();
-
-        $milkCat = Category::where('type', 'product')->where('slug', 'moloko')->first();
-        $cheeseCat = Category::where('type', 'product')->where('slug', 'syry')->first();
-        $sourCreamCat = Category::where('type', 'product')->where('slug', 'smetana')->first();
-
-        $kg = Unit::where('slug', 'kg')->first();
-        $g = Unit::where('slug', 'g')->first();
+        $milkCat = Category::where('slug', 'moloko')->first();
         $l = Unit::where('slug', 'l')->first();
 
-        $products = [
-            [
-                'data' => [
-                    'category_id' => $milkCat?->id,
-                    'animal_id' => $zorka?->id,
-                    'name' => 'Молоко коровье цельное',
-                    'slug' => 'moloko-korovye-tselnoe',
-                    'description' => 'Парное молоко от нашей Зорьки.',
-                    'availability_type' => 'daily',
-                    'attributes' => ['жирность' => '4%', 'пастеризовация' => false],
-                ],
-                'variants' => [
-                    [
-                        'name' => '1 л',
-                        'price' => 12000,
-                        'stock' => 50,
-                        'unit_id' => $l?->id,
-                    ],
-                    [
-                        'name' => '0.5 л',
-                        'price' => 7000,
-                        'stock' => 30,
-                        'unit_id' => $l?->id,
-                    ],
-                ],
-            ],
-            [
-                'data' => [
-                    'category_id' => $cheeseCat?->id,
-                    'animal_id' => $belka?->id,
-                    'name' => 'Сыр козий "Домашний"',
-                    'slug' => 'syr-koziy-domashniy',
-                    'description' => 'Мягкий молодой сыр.',
-                    'availability_type' => 'preorder',
-                ],
-                'variants' => [
-                    [
-                        'name' => '1 кг',
-                        'price' => 45000,
-                        'stock' => 10,
-                        'unit_id' => $kg?->id,
-                    ],
-                    [
-                        'name' => '500 г',
-                        'price' => 24000,
-                        'stock' => 15,
-                        'unit_id' => $g?->id,
-                    ],
-                ],
-            ],
-            [
-                'data' => [
-                    'category_id' => $sourCreamCat?->id,
-                    'animal_id' => null,
-                    'name' => 'Сметана фермерская',
-                    'slug' => 'smetana-fermerskaya',
-                    'description' => 'Густая сметана.',
-                    'availability_type' => 'daily',
-                ],
-                'variants' => [
-                    [
-                        'name' => '0.5 кг',
-                        'price' => 20000,
-                        'stock' => 20,
-                        'unit_id' => $kg?->id,
-                    ],
-                ],
-            ],
-        ];
+        $milk = Product::create([
+            'category_id' => $milkCat?->id,
+            'animal_id' => $zorka?->id,
+            'name' => 'Молоко коровье цельное',
+            'slug' => 'moloko-korovye-tselnoe',
+            'description' => 'Парное молоко от нашей Зорьки.',
+            'availability_type' => 'daily',
+            'is_active' => true,
+        ]);
 
-        foreach ($products as $item) {
-            $product = Product::create(array_merge($item['data'], ['is_active' => true]));
+        ProductVariant::create([
+            'product_id' => $milk->id,
+            'name' => '1 литр',
+            'price' => 12000,
+            'stock' => 50,
+            'unit_id' => $l?->id,
+        ]);
 
-            // variants
-            foreach ($item['variants'] as $variant) {
-                ProductVariant::create(array_merge($variant, [
-                    'product_id' => $product->id,
-                ]));
-            }
+        $this->addSeedImage($milk);
+    }
 
-            // image
-            $imagePath = public_path('images/seeds/milk.png');
-
-            if (File::exists($imagePath)) {
-                $product->addMedia($imagePath)
-                    ->preservingOriginal()
-                    ->toMediaCollection('gallery');
-            }
+    private function addSeedImage(Product $product): void
+    {
+        $imagePath = public_path('images/seeds/product-placeholder.png');
+        if (File::exists($imagePath)) {
+            $product->addMedia($imagePath)
+                ->preservingOriginal()
+                ->toMediaCollection('gallery');
         }
     }
 }

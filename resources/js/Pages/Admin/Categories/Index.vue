@@ -10,6 +10,7 @@
     import AdminLoader from '@/Components/Admin/UI/AdminLoader.vue';
     import AdminNumberInput from '@/Components/Admin/UI/AdminNumberInput.vue';
     import AdminSearchInput from '@/Components/Admin/UI/AdminSearchInput.vue';
+    import BaseInput from '@/Components/UI/BaseInput.vue';
     import AdminModal from '@/Components/UI/BaseModal.vue';
     import AdminSelect from '@/Components/UI/BaseSelect.vue';
     import BaseStatusToggle from '@/Components/UI/BaseStatusToggle.vue';
@@ -31,6 +32,7 @@
 
     const form = useForm({
         name: '',
+        description: '',
         type: 'product',
         sort_order: 999,
         is_active: true,
@@ -198,53 +200,26 @@
             @close="isModalOpen = false"
         >
             <form @submit.prevent="submit" class="space-y-6" aria-label="Форма категории">
-                <div class="space-y-2">
-                    <label
-                        for="category-name"
-                        class="ml-1 text-[10px] font-black uppercase tracking-widest text-slate-500"
-                        >Название</label
-                    >
-                    <input
-                        id="category-name"
-                        v-model="form.name"
-                        type="text"
-                        required
-                        :aria-invalid="!!form.errors.name"
-                        :aria-describedby="form.errors.name ? 'name-error' : undefined"
-                        :class="[
-                            'w-full rounded-2xl border bg-slate-950 p-4 text-white transition-colors focus:ring-0',
-                            form.errors.name
-                                ? 'border-red-500 focus:border-red-500'
-                                : 'border-slate-800 focus:border-orange-500',
-                        ]"
-                    />
-                    <p
-                        v-if="form.errors.name"
-                        id="name-error"
-                        class="ml-1 text-xs font-medium text-red-500"
-                        role="alert"
-                    >
-                        {{ form.errors.name }}
-                    </p>
-                </div>
+                <BaseInput
+                    v-model="form.name"
+                    v-model:error="form.errors.name"
+                    label="Название"
+                    placeholder=""
+                />
 
-                <div class="space-y-2">
-                    <label
-                        class="ml-1 text-[10px] font-black uppercase tracking-widest text-slate-500"
-                        >Иконка (lucide)</label
-                    >
-                    <input
-                        v-model="form.icon"
-                        type="text"
-                        placeholder="например: Leaf"
-                        :class="[
-                            'w-full rounded-2xl border bg-slate-950 p-4 text-white transition-colors focus:ring-0',
-                            form.errors.icon
-                                ? 'border-red-500 focus:border-red-500'
-                                : 'border-slate-800 focus:border-orange-500',
-                        ]"
-                    />
-                </div>
+                <BaseInput
+                    v-model="form.description"
+                    v-model:error="form.errors.description"
+                    label="Описание (необязательно)"
+                    placeholder="Категория для..."
+                />
+
+                <BaseInput
+                    v-model="form.icon"
+                    v-model:error="form.errors.icon"
+                    label="Иконка (lucide)"
+                    placeholder="Egg"
+                />
 
                 <div class="grid grid-cols-2 gap-6">
                     <div class="space-y-2">

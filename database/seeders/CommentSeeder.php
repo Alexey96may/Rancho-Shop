@@ -19,62 +19,41 @@ class CommentSeeder extends Seeder
      */
     public function run(): void
     {
-        $product = Product::where('slug', 'moloko-korovye-tselnoe')->first();
+        $this->seedSpecificReviews();
+
+        Product::all()->each(function ($product) {
+            Comment::factory()
+                ->count(rand(2, 8))
+                ->for($product, 'commentable')
+                ->create();
+        });
+
+        Animal::all()->each(function ($animal) {
+            Comment::factory()
+                ->count(rand(1, 5))
+                ->for($animal, 'commentable')
+                ->create();
+        });
+
+        Comment::factory()
+            ->count(10)
+            ->negative()
+            ->for(Product::inRandomOrder()->first(), 'commentable')
+            ->create();
+    }
+
+    private function seedSpecificReviews(): void
+    {
         $cow = Animal::where('slug', 'zorka')->first();
-        $mainPage = Page::where('slug', 'main')->orWhere('slug', 'home')->first();
-
-        // Product review
-        if ($product) {
-            Comment::create([
-                'user_id' => User::inRandomOrder()->first()->id,
-                'content' => 'Очень вкусное молоко, дети в восторге! Будем брать еще.',
-                'rating' => 5,
-                'status' => 'approved',
-                'commentable_id' => $product->id,
-                'commentable_type' => 'product',
-            ]);
-        }
-
-        // Review of the cow (Zorka fans)
         if ($cow) {
             Comment::create([
-                'user_id' => User::inRandomOrder()->first()->id,
-                'content' => 'Видел эту корову на ферме — очень ухоженная и добрая.',
+                'user_id' => User::first()->id,
+                'content' => 'Зорька — душа этой фермы! Молоко просто волшебное.',
                 'rating' => 5,
                 'status' => 'approved',
                 'commentable_id' => $cow->id,
                 'commentable_type' => 'animal',
             ]);
         }
-
-        if ($mainPage) {
-            $siteReviews = [
-                ['text' => 'Отличный сервис и всегда свежая продукция!'],
-                ['text' => 'Удобно заказывать, доставка в Симферополь быстрая.'],
-                ['text' => 'Лучшая молочка в Крыму, рекомендую всем знакомым.'],
-                ['text' => 'Спасибо за ваш труд, всё очень натуральное и вкусное.'],
-                ['text' => 'Чистое хозяйство, прозрачные процессы. Доверяю.'],
-            ];
-
-            foreach ($siteReviews as $review) {
-                Comment::create([
-                    'user_id' => User::inRandomOrder()->first()->id,
-                    'content' => $review['text'],
-                    'rating' => 5,
-                    'status' => 'approved',
-                    'commentable_id' => $mainPage->id,
-                    'commentable_type' => 'page',
-                ]);
-            }
-        }
-
-        Comment::create([
-            'user_id' => User::inRandomOrder()->first()->id,
-            'content' => 'Тестовый отзыв, который никто не должен видеть.',
-            'rating' => 1,
-            'status' => 'pending',
-            'commentable_id' => $product?->id ?? 1,
-            'commentable_type' => 'product',
-        ]);
     }
 }

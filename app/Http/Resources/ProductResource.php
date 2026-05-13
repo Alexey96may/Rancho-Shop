@@ -24,7 +24,13 @@ class ProductResource extends JsonResource
             'slug' => $this->slug,
             'description' => $this->description,
             
-            'availability_type' => $this->availability_type,
+            'availability' => $this->availability_type 
+                ? [
+                    'value' => $this->availability_type->value,
+                    'label' => $this->availability_type->label(),
+                ]
+                : null,
+
             'schedule' => $this->schedule ?? [],
 
             'attributes' => $this->attributes,

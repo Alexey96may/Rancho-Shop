@@ -3,11 +3,12 @@
 namespace Database\Seeders;
 
 use App\Models\Animal;
+use App\Models\Category;
 use App\Models\Page;
 use App\Models\Product;
 use App\Models\Seo;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
 class SeoSeeder extends Seeder
 {
@@ -18,55 +19,58 @@ class SeoSeeder extends Seeder
      */
     public function run(): void
     {
-        // 1. SEO for the "About the Farm" page
-        $aboutPage = Page::where('slug', 'about')->first();
-        if ($aboutPage) {
+        $this->seedManualSeo();
+
+        Product::all()->each(function ($product) {
             Seo::updateOrCreate(
-                ['seoable_id' => $aboutPage->id, 'seoable_type' => Page::class],
+                ['seoable_id' => $product->id, 'seoable_type' => Product::class],
                 [
-                'title' => 'О нашей семейной ферме | Молочная Долина',
-                'description' => 'Узнайте историю Молочной Долины: как мы заботимся о коровах и производим натуральные продукты.',
-                'keywords' => 'ферма Крым, натуральное молоко, история фермы',
-                'og_data' => [
-                    'title' => 'Молочная Долина — традиции качества',
-                    'description' => 'Семейная ферма с любовью к своему делу.',
-                    'image' => asset('images/og/about-farm.jpg'),
-                    'type' => 'website',
-                ],
-            ]);
-        }
+                    'title' => "Купить {$product->name} напрямую с фермы | Крым",
+                    'description' => "Свежий продукт «{$product->name}» от Молочной Долины. " . str($product->description)->limit(120),
+                    'keywords' => "натуральный продукт, фермерская еда, {$product->name}",
+                    'og_data' => [
+                        'title' => $product->name,
+                        'type' => 'product',
+                        'image' => $product->getFirstMediaUrl('gallery'),
+                    ],
+                ]
+            );
+        });
 
-        // 2. SEO for a specific product
-        $product = Product::where('slug', 'moloko-korovye-tselnoe')->first();
-        if ($product) {
-            Seo::updateOrCreate(['seoable_id' => $product->id, 'seoable_type' => Product::class],
-            [
-                'title' => 'Купить домашнее коровье молоко в Симферополе',
-                'description' => 'Цельное коровье молоко утреннего удоя. Стеклянная тара, 100% натурально.',
-                'canonical' => route('products.show', $product->slug),
-                'og_data' => [
-                    'title' => 'Натуральное коровье молоко',
-                    'type' => 'product',
-                    'product:price:currency' => 'RUB',
-                ],
-            ]);
-        }
+        Animal::all()->each(function ($animal) {
+            Seo::updateOrCreate(
+                ['seoable_id' => $animal->id, 'seoable_type' => Animal::class],
+                [
+                    'title' => "{$animal->name} — обитатель нашей фермы",
+                    'description' => "Посмотрите на {$animal->name}. Тип: {$animal->type}. Жизнь животных в Молочной Долине.",
+                    'og_data' => ['type' => 'article'],
+                ]
+            );
+        });
 
-        // 3. SEO for a specific animal (for example, Zorka)
-        $cow = Animal::where('slug', 'zorka')->first();
-        if ($cow) {
-            Seo::updateOrCreate(['seoable_id' => $cow->id, 'seoable_type' => Animal::class],
-            [
-                'title' => "Корова {$cow->name} — Наша гордость | Молочная Долина",
-                'description' => "Познакомьтесь с {$cow->name}. Узнайте её историю, особенности и посмотрите галерею нашей любимицы.",
-                'keywords' => "корова {$cow->name}, животные фермы, домашний скот Крым",
-                'canonical' => route('animals.show', $cow->slug),
-                'og_data' => [
-                        'title' => "Звезда нашей фермы: {$cow->name}",
-                        'type' => 'article',
-                ],
-                'is_noindex' => false,
-            ]);
+        Category::all()->each(function ($category) {
+            Seo::updateOrCreate(
+                ['seoable_id' => $category->id, 'seoable_type' => Category::class],
+                [
+                    'title' => "{$category->name} — натуральные фермерские товары",
+                    'description' => "Каталог товаров в категории {$category->name}. Только свежее и домашнее.",
+                ]
+            );
+        });
+    }
+
+    private function seedManualSeo(): void
+    {
+        $home = Page::where('slug', 'home')->first();
+        if ($home) {
+            Seo::updateOrCreate(
+                ['seoable_id' => $home->id, 'seoable_type' => Page::class],
+                [
+                    'title' => 'Молочная Долина — натуральные продукты в Крыму с доставкой',
+                    'description' => 'Семейная эко-ферма. Домашнее молоко, сыры, яйца и мясо утреннего сбора. Доставка по Крыму.',
+                    'keywords' => 'фермерские продукты, купить молоко крым, доставка еды на дом',
+                ]
+            );
         }
     }
 }
