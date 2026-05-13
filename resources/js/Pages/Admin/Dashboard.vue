@@ -3,9 +3,9 @@
 
     import {
         AcademicCapIcon,
+        ChartBarIcon,
         ChatBubbleLeftRightIcon,
         InboxIcon,
-        PresentationChartLineIcon,
         ShoppingCartIcon,
         TicketIcon,
         UsersIcon,
@@ -45,6 +45,15 @@
                     :href="route('admin.orders.index')"
                     :icon="ShoppingCartIcon"
                     :count="stats.orders_pending"
+                />
+
+                <AdminDashboardCard
+                    v-if="can.manageAnalitics"
+                    title="Аналитика"
+                    description="Данные по заказам"
+                    :href="route('admin.analytics.index')"
+                    :active="route().current('admin.analytics.*')"
+                    :icon="ChartBarIcon"
                 />
 
                 <AdminDashboardCard

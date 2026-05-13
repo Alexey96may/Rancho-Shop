@@ -16,7 +16,7 @@ class OrderObserver
      */
     public function created(Order $order): void
     {
-        if ($order->status === 'completed') {
+        if ($this->isCompleted($order)) {
             $this->analyticsService->updateStats($order);
         }
     }
@@ -26,11 +26,14 @@ class OrderObserver
      */
     public function updated(Order $order): void
     {
-        // If the status changed to 'completed' or the order amount was changed
-        if ($order->isDirty('status') || $order->isDirty('total_price')) {
-            if ($order->status === 'completed') {
+        if ($this->isCompleted($order)) {
+            if ($order->isDirty('status') || $order->isDirty('total_price')) {
                 $this->analyticsService->updateStats($order);
             }
+        }
+
+        elseif ($order->wasChanged('status') && $order->getOriginal('status') === 'completed') {
+            $this->analyticsService->updateStats($order);
         }
     }
 
@@ -39,7 +42,7 @@ class OrderObserver
      */
     public function deleted(Order $order): void
     {
-        if ($order->status === 'completed') {
+        if ($this->isCompleted($order)) {
             $this->analyticsService->updateStats($order);
         }
     }
@@ -58,5 +61,14 @@ class OrderObserver
     public function forceDeleted(Order $order): void
     {
         //
+    }
+
+    /**
+    * Helper for checking status (supports Enums)
+    */
+    private function isCompleted(Order $order): bool
+    {
+        $status = $order->status instanceof \UnitEnum ? $order->status->value : $order->status;
+        return $status === 'completed';
     }
 }

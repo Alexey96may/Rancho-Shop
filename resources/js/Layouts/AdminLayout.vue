@@ -4,27 +4,20 @@
     import { usePage } from '@inertiajs/vue3';
 
     import {
-        // Для доставки
         AcademicCapIcon,
         AdjustmentsHorizontalIcon,
+        ChartBarIcon,
         ChatBubbleBottomCenterTextIcon,
         Cog6ToothIcon,
         DocumentTextIcon,
         HomeIcon,
         InboxIcon,
-        // Для промокодов
         QuestionMarkCircleIcon,
         ShoppingCartIcon,
-        // Для животных (или замени на подходящую)
         Square3Stack3DIcon,
-        // Для FAQ
         StarIcon,
-        // Для фич/преимуществ
         TagIcon,
-        // Для каталога/вариантов
         TicketIcon,
-        // Для категорий
-        TruckIcon,
         UsersIcon,
     } from '@heroicons/vue/24/outline';
 
@@ -102,6 +95,14 @@
                             :active="route().current('admin.catalog.*')"
                             :icon="Square3Stack3DIcon"
                             label="Варианты (SKU)"
+                        />
+                    </li>
+                    <li>
+                        <AdminSidebarLink
+                            :href="route('admin.analytics.index')"
+                            :active="route().current('admin.analytics.*')"
+                            :icon="ChartBarIcon"
+                            label="Аналитика"
                         />
                     </li>
 

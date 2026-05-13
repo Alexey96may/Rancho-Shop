@@ -7,13 +7,11 @@ use App\Models\OrderItem;
 use App\Models\ProductVariant;
 use App\Models\PromoCode;
 use Carbon\Carbon;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class OrderSeeder extends Seeder
 {
-    use WithoutModelEvents;
-
     /**
      * Run the database seeds.
      */
@@ -29,7 +27,7 @@ class OrderSeeder extends Seeder
 
         for ($i = 0; $i < 30; $i++) {
             // Generate a random date in the past
-            $date = Carbon::now()->subDays(rand(0, 10))->subHours(rand(0, 23));
+            $date = Carbon::now()->subDays(rand(0, 90))->subHours(rand(0, 23));
             
             // Select 1–3 random products for this order
             $orderVariants = $variants->random(rand(1, 3));
@@ -79,6 +77,9 @@ class OrderSeeder extends Seeder
             $order->update([
                 'total_price' => $itemsTotal + $deliveryPrice - $discount
             ]);
+
+            $analytics = app(\App\Services\Admin\AnalyticsService::class);
+            $analytics->updateStats($order);
         }
     }
 }

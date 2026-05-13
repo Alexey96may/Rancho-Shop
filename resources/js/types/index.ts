@@ -20,6 +20,7 @@ export * from './ProductVariant';
 export * from './Delivery';
 export * from './User';
 export * from './Forms';
+export * from './Analitic';
 
 export interface ResourceCollection<T> {
     data: T[];
@@ -81,6 +82,7 @@ export interface SharedData extends PageProps {
     can: {
         manageProducts: boolean;
         manageOrders: boolean;
+        manageAnalitics: boolean;
         manageComments: boolean;
         manageDelivery: boolean;
         manageAnimals: boolean;
