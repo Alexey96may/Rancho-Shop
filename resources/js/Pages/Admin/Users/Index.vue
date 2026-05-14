@@ -221,7 +221,7 @@
     </main>
 
     <Transition name="fade-slide" mode="out-in">
-        <AdminPagination :links="users.meta.links" />
+        <AdminPagination v-show="!isFiltering" :links="users.meta.links" />
     </Transition>
 
     <BaseModal

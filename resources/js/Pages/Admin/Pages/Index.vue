@@ -1,19 +1,20 @@
 <script setup lang="ts">
-    import { ref, watch } from 'vue';
+    import { computed, ref, watch } from 'vue';
 
-    import { Link, router } from '@inertiajs/vue3';
+    import { Link, router, usePage } from '@inertiajs/vue3';
 
-    import { DocumentIcon, PencilIcon, PlusIcon, TrashIcon } from '@heroicons/vue/24/outline';
+    import { PlusIcon } from '@heroicons/vue/24/outline';
     import debounce from 'lodash/debounce';
 
+    import AdminPageCard from '@/Components/Admin/Cards/AdminPageCard.vue';
     import AdminEmptyState from '@/Components/Admin/Shared/AdminEmptyState.vue';
     import AdminPageHeader from '@/Components/Admin/Shared/AdminPageHeader.vue';
     import AdminPagination from '@/Components/Admin/Shared/AdminPagination.vue';
     import AdminLoader from '@/Components/Admin/UI/AdminLoader.vue';
     import AdminSearchInput from '@/Components/Admin/UI/AdminSearchInput.vue';
-    import BaseDeleteButton from '@/Components/UI/BaseDeleteButton.vue';
     import AdminLayout from '@/Layouts/AdminLayout.vue';
     import { useFlash } from '@/composables/useFlash';
+    import { useNavigation } from '@/composables/useNavigation';
     import { AdminPage, Paginated } from '@/types';
 
     defineOptions({ layout: AdminLayout });
@@ -25,6 +26,8 @@
 
     const search = ref(props.filters.search || '');
     const isFiltering = ref(false);
+
+    const { currentQuery } = useNavigation();
 
     const { notifyWithUndo } = useFlash();
 
@@ -75,9 +78,12 @@
     <div class="space-y-6">
         <div class="flex items-center justify-between">
             <AdminSearchInput v-model="search" placeholder="Поиск страниц..." />
-
             <Link
-                :href="route('admin.pages.create')"
+                :href="
+                    route('admin.pages.create', {
+                        back: currentQuery,
+                    })
+                "
                 class="shadow-lg flex items-center gap-2 rounded-2xl bg-orange-600 px-6 py-3 text-xs font-black uppercase tracking-widest text-white shadow-orange-900/20 transition-all hover:bg-orange-500"
             >
                 <PlusIcon class="h-5 w-5" /> Создать
@@ -96,72 +102,14 @@
         <Transition name="fade-slide" mode="out-in">
             <div class="space-y-3" role="list" v-if="pages.data.length" key="page-list">
                 <TransitionGroup name="stagger">
-                    <div
+                    <AdminPageCard
                         v-for="(page, index) in pages.data"
                         :key="page.id"
-                        :style="{ '--i': index }"
-                        role="listitem"
-                        class="group grid grid-cols-1 items-center gap-4 rounded-[2rem] border border-slate-800 bg-slate-900/30 p-4 transition-all hover:bg-slate-800/40 md:grid-cols-12 md:px-8"
-                    >
-                        <div class="col-span-5">
-                            <div class="flex items-center gap-4">
-                                <div
-                                    class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-800 text-slate-500"
-                                >
-                                    <DocumentIcon class="h-5 w-5" />
-                                </div>
-                                <div class="flex min-w-0 flex-col">
-                                    <span class="truncate font-bold text-white">{{
-                                        page.title
-                                    }}</span>
-                                    <span class="truncate font-mono text-[10px] text-slate-500">{{
-                                        page.slug
-                                    }}</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-span-3 flex flex-col items-center gap-1">
-                            <span
-                                :class="page.type_color"
-                                class="rounded-lg px-3 py-0.5 text-[9px] font-black uppercase"
-                            >
-                                {{ page.type_label }}
-                            </span>
-                            <span class="text-[8px] font-black uppercase text-slate-500">{{
-                                page.template
-                            }}</span>
-                        </div>
-
-                        <div class="col-span-2 flex justify-center">
-                            <div
-                                :aria-label="page.is_active ? 'Активна' : 'Неактивна'"
-                                :class="
-                                    page.is_active
-                                        ? 'bg-emerald-500 shadow-[0_0_10px_#10b981]'
-                                        : 'bg-slate-700'
-                                "
-                                class="h-2.5 w-2.5 rounded-full"
-                            ></div>
-                        </div>
-
-                        <div class="col-span-2 flex justify-end gap-2">
-                            <Link
-                                :href="route('admin.pages.edit', page.id)"
-                                aria-label="Редактировать"
-                                class="p-2 text-slate-500 transition-all hover:text-orange-500"
-                            >
-                                <PencilIcon class="h-5 w-5" />
-                            </Link>
-
-                            <BaseDeleteButton
-                                v-if="page.can_delete"
-                                :disabled="deletingIds.has(page.id)"
-                                @confirm="deletePage(page)"
-                                ><TrashIcon class="h-5 w-5" />
-                            </BaseDeleteButton>
-                        </div>
-                    </div>
+                        :page="page"
+                        :index="index"
+                        :is-deleting="deletingIds.has(page.id)"
+                        @delete="deletePage"
+                    />
                 </TransitionGroup>
             </div>
 

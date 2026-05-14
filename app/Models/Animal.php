@@ -14,6 +14,56 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 // Spatie
 use Spatie\MediaLibrary\HasMedia;
 
+/**
+ * @property int $id
+ * @property int $category_id
+ * @property int|null $parent_id
+ * @property string $name
+ * @property string $type
+ * @property string $slug
+ * @property bool $is_active
+ * @property string $status
+ * @property string|null $bio
+ * @property array<array-key, mixed>|null $features
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property-read \App\Models\Category $category
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Animal> $children
+ * @property-read int|null $children_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Comment> $comments
+ * @property-read int|null $comments_count
+ * @property-read \Spatie\MediaLibrary\MediaCollections\Models\Collections\MediaCollection<int, \Spatie\MediaLibrary\MediaCollections\Models\Media> $media
+ * @property-read int|null $media_count
+ * @property-read Animal|null $parent
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Product> $products
+ * @property-read int|null $products_count
+ * @property-read \App\Models\Seo|null $seo
+ * @property-read mixed $voice_url
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Animal active()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Animal cows()
+ * @method static \Database\Factories\AnimalFactory factory($count = null, $state = [])
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Animal newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Animal newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Animal onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Animal query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Animal whereBio($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Animal whereCategoryId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Animal whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Animal whereDeletedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Animal whereFeatures($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Animal whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Animal whereIsActive($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Animal whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Animal whereParentId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Animal whereSlug($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Animal whereStatus($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Animal whereType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Animal whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Animal withTrashed(bool $withTrashed = true)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Animal withoutTrashed()
+ * @mixin \Eloquent
+ */
 class Animal extends Model implements HasMedia
 {
     use HasActiveScope, HasFactory, HasInteractions, HasStandardMedia, SoftDeletes;

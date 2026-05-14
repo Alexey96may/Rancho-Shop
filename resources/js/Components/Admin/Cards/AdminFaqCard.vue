@@ -14,6 +14,7 @@
     defineProps<{
         faq: AdminFaq;
         isOpen: boolean;
+        isDeleting: boolean;
     }>();
 
     const emit = defineEmits(['toggle', 'edit', 'delete', 'toggle-status']);
@@ -24,6 +25,7 @@
         class="group overflow-hidden rounded-3xl border border-slate-800 bg-slate-900/30 transition-all"
         :class="{
             'border-orange-500/50 bg-slate-900/60 ring-1 ring-orange-500/20': isOpen,
+            'scale-[0.97] opacity-50': isDeleting,
         }"
     >
         <div class="flex items-center">

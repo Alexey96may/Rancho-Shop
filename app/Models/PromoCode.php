@@ -9,6 +9,42 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
+/**
+ * @property int $id
+ * @property string $code
+ * @property string|null $description
+ * @property PromoCodeType $type
+ * @property int $value
+ * @property int $min_order_amount
+ * @property int|null $max_discount
+ * @property int|null $usage_limit
+ * @property int $used_count
+ * @property \Illuminate\Support\Carbon|null $expires_at
+ * @property bool $is_active
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read string $status
+ * @method static Builder<static>|PromoCode active()
+ * @method static \Database\Factories\PromoCodeFactory factory($count = null, $state = [])
+ * @method static Builder<static>|PromoCode newModelQuery()
+ * @method static Builder<static>|PromoCode newQuery()
+ * @method static Builder<static>|PromoCode query()
+ * @method static Builder<static>|PromoCode valid()
+ * @method static Builder<static>|PromoCode whereCode($value)
+ * @method static Builder<static>|PromoCode whereCreatedAt($value)
+ * @method static Builder<static>|PromoCode whereDescription($value)
+ * @method static Builder<static>|PromoCode whereExpiresAt($value)
+ * @method static Builder<static>|PromoCode whereId($value)
+ * @method static Builder<static>|PromoCode whereIsActive($value)
+ * @method static Builder<static>|PromoCode whereMaxDiscount($value)
+ * @method static Builder<static>|PromoCode whereMinOrderAmount($value)
+ * @method static Builder<static>|PromoCode whereType($value)
+ * @method static Builder<static>|PromoCode whereUpdatedAt($value)
+ * @method static Builder<static>|PromoCode whereUsageLimit($value)
+ * @method static Builder<static>|PromoCode whereUsedCount($value)
+ * @method static Builder<static>|PromoCode whereValue($value)
+ * @mixin \Eloquent
+ */
 class PromoCode extends Model
 {
     use HasActiveScope, HasFactory;

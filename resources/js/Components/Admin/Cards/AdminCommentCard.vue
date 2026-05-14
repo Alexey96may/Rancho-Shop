@@ -17,6 +17,7 @@
 
     const props = defineProps<{
         comment: AdminComment;
+        isDeleting: boolean;
     }>();
 
     const emit = defineEmits<{
@@ -73,6 +74,7 @@
             comment.status === 'hidden'
                 ? 'border-slate-800/50 bg-slate-900/40 opacity-75 grayscale-[0.5]'
                 : '',
+            isDeleting ? 'scale-[0.97] opacity-50' : '',
         ]"
     >
         <div
@@ -196,6 +198,7 @@
             <button
                 v-if="comment.status !== 'approved'"
                 @click="onUpdateStatus('approved')"
+                :disabled="isDeleting"
                 class="shadow-lg flex flex-1 items-center justify-center gap-2 rounded-2xl bg-orange-600 py-3 text-xs font-black uppercase tracking-widest text-white shadow-orange-900/40 transition-all hover:bg-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500 active:scale-95"
                 aria-label="Одобрить комментарий и опубликовать его"
             >
@@ -206,6 +209,7 @@
             <button
                 v-if="comment.status !== 'hidden'"
                 @click="onUpdateStatus('hidden')"
+                :disabled="isDeleting"
                 class="flex items-center justify-center gap-2 rounded-2xl py-3 text-xs font-black uppercase tracking-widest transition-all active:scale-95"
                 :class="[
                     comment.status === 'approved'
@@ -224,6 +228,7 @@
 
             <button
                 @click="onDelete"
+                :disabled="isDeleting"
                 class="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-800 text-slate-500 transition-all hover:bg-red-500/20 hover:text-red-500 focus:outline-none focus:ring-2 focus:ring-red-500 active:scale-90"
                 aria-label="Удалить отзыв безвозвратно"
             >

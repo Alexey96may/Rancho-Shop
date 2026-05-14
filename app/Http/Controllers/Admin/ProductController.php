@@ -93,11 +93,11 @@ class ProductController extends Controller
         });
 
         if ($request->filled('backUrl')) {
-            return redirect($request->backUrl)->with('success', "Продукт {$product->name} создан");
+            return redirect($request->backUrl)->with('success', "Продукт «{$product->name}» создан");
         }
 
         return redirect()->route('admin.products.edit', $product)
-            ->with('success', "Продукт {$product->name} создан");
+            ->with('success', "Продукт «{$product->name}» создан");
     }
 
     /**
@@ -162,7 +162,11 @@ class ProductController extends Controller
             }
         });
 
-        return back()->with('success', "Продукт {$product->name} обновлен");
+        if ($request->filled('backUrl')) {
+            return redirect($request->backUrl)->with('success', "Продукт «{$product->name}» обновлён!");
+        }
+
+        return back()->with('success', "Продукт «{$product->name}» обновлён!");
     }
 
     /**
@@ -173,7 +177,7 @@ class ProductController extends Controller
         $product->delete(); // Soft Delete
 
         return redirect()->route('admin.products.index')
-            ->with('success', "Продукт {$product->name}  отправлен в корзину");
+            ->with('success', "Продукт «{$product->name}» отправлен в корзину");
     }
 
     public function restore(int $id)
@@ -181,7 +185,7 @@ class ProductController extends Controller
         $product = Product::withTrashed()->findOrFail($id);
         $product->restore();
 
-        return back()->with('success', "Продукт {$product->name} восстановлен");
+        return back()->with('success', "Продукт «{$product->name}» восстановлен");
     }
 
     private function getFormOptions()

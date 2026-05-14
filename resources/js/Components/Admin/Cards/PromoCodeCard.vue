@@ -45,8 +45,11 @@
 
 <template>
     <div
-        class="group relative flex flex-col overflow-hidden rounded-[2rem] border border-slate-800 bg-slate-900/40 p-6 transition-all hover:border-orange-500/50 hover:bg-slate-900/60"
-        :class="[!promo.is_valid || !promo.is_active || disabled ? 'opacity-50' : '']"
+        class="group relative flex flex-col overflow-hidden rounded-[2rem] border border-slate-800 bg-slate-900/40 p-6 transition-all duration-300 hover:border-emerald-500/50 hover:bg-slate-900/60"
+        :class="[
+            !promo.is_valid || !promo.is_active ? '!border-red-800' : '',
+            disabled ? 'scale-[0.97] opacity-50' : '',
+        ]"
     >
         <div
             v-if="promo.is_valid && promo.is_active && !disabled"

@@ -111,7 +111,12 @@
         );
     };
 
+    const deletingIds = ref(new Set<number>());
+
     const handleDelete = async (id: number) => {
+        if (deletingIds.value.has(id)) return;
+        deletingIds.value.add(id);
+
         const isDeleted = await notifyWithUndo(`Удаление комментария #${sanitizeNumber(id)}`);
 
         if (isDeleted) {
@@ -121,7 +126,12 @@
                 onError() {
                     notify('Ошибка удаления!', 'error');
                 },
+                onFinish: () => {
+                    deletingIds.value.delete(id);
+                },
             });
+        } else {
+            deletingIds.value.delete(id);
         }
     };
 
@@ -220,6 +230,7 @@
                     :comment="comment"
                     :style="{ '--i': index }"
                     @update-status="handleUpdateStatus"
+                    :is-deleting="deletingIds.has(comment.id)"
                     @delete="handleDelete"
                 />
             </TransitionGroup>
@@ -237,7 +248,7 @@
     </Transition>
 
     <Transition name="fade-slide" mode="out-in">
-        <AdminPagination :links="comments.meta.links" />
+        <AdminPagination v-show="!isFiltering" :links="comments.meta.links" />
     </Transition>
 </template>
 

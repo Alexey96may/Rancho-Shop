@@ -10,13 +10,14 @@
     import FaqItem from '@/Components/Admin/Cards/AdminFaqCard.vue';
     import AdminEmptyState from '@/Components/Admin/Shared/AdminEmptyState.vue';
     import AdminPageHeader from '@/Components/Admin/Shared/AdminPageHeader.vue';
+    import AdminPagination from '@/Components/Admin/Shared/AdminPagination.vue';
     import AdminLoader from '@/Components/Admin/UI/AdminLoader.vue';
     import AdminNumberInput from '@/Components/Admin/UI/AdminNumberInput.vue';
     import AdminSearchInput from '@/Components/Admin/UI/AdminSearchInput.vue';
     import Modal from '@/Components/UI/BaseModal.vue';
     import AdminLayout from '@/Layouts/AdminLayout.vue';
     import { useFlash } from '@/composables/useFlash';
-    import { AdminFaq, ResourceCollection } from '@/types';
+    import { AdminFaq, Paginated } from '@/types';
 
     interface DraggableEvent {
         oldIndex: number;
@@ -29,7 +30,7 @@
     defineOptions({ layout: AdminLayout });
 
     const props = defineProps<{
-        faqs: ResourceCollection<AdminFaq>;
+        faqs: Paginated<AdminFaq>;
         filters: { search: string };
     }>();
 
@@ -100,13 +101,24 @@
         );
     }, 100);
 
+    const deletingIds = ref(new Set<number>());
+
     const deleteFaq = async (id: number) => {
+        if (deletingIds.value.has(id)) return;
+        deletingIds.value.add(id);
+
         const isDeleted = await notifyWithUndo('Удаление вопроса');
 
         if (isDeleted) {
             router.delete(route('admin.faq.destroy', id), {
                 preserveScroll: true,
+                preserveState: true,
+                onFinish: () => {
+                    deletingIds.value.delete(id);
+                },
             });
+        } else {
+            deletingIds.value.delete(id);
         }
     };
 
@@ -222,6 +234,7 @@
                         <FaqItem
                             :faq="faq"
                             :is-open="openIds.has(faq.id)"
+                            :is-deleting="deletingIds.has(faq.id)"
                             @toggle="toggleAccordion"
                             @edit="openModal"
                             @delete="deleteFaq"
@@ -244,6 +257,10 @@
                     search ? 'По запросу «' + search + '» совпадений нет' : 'Нет ни одного вопроса'
                 "
             />
+        </Transition>
+
+        <Transition name="fade-slide" mode="out-in">
+            <AdminPagination v-show="!isFiltering" :links="faqs.meta.links" />
         </Transition>
     </div>
 

@@ -46,22 +46,23 @@ class PageController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(Request $request)
     {
-        return Inertia::render('Admin/Pages/Create', [
+        return Inertia::render('Admin/Pages/Form', [
             'seo' => $this->seo('Создание новой страницы', robots: 'noindex, nofollow'),
-            
             'page_types' => array_map(fn($case) => [
                 'id'    => $case->value,
                 'name'  => $case->label(),
                 'slug'  => $case->value
             ], PageType::cases()),
-
             'templates' => [
                 ['id' => 'default', 'name' => 'Стандартный'],
                 ['id' => 'about', 'name' => 'О компании'],
                 ['id' => 'delivery', 'name' => 'Доставка'],
-            ]
+            ],
+            'backUrl' => $request->query('back') 
+                    ? route('admin.pages.index') . $request->query('back') 
+                    : route('admin.pages.index'),
         ]);
     }
 
@@ -100,7 +101,11 @@ class PageController extends Controller
             $page->seo()->create($request->input('seo'));
         }
 
-        return redirect()->route('admin.pages.index')->with('success', 'Страница создана!');
+        if ($request->filled('backUrl')) {
+            return redirect($request->backUrl)->with('success', "Страница «{$page->title}» созданa!");
+        }
+
+        return redirect()->route('admin.pages.index')->with('success', "Страница «{$page->title}» созданa!");
     }
 
     /**
@@ -139,29 +144,23 @@ class PageController extends Controller
             );
         }
 
-        return redirect()->back()->with('success', 'Контент страницы обновлен!');
-    }
+        if ($request->filled('backUrl')) {
+            return redirect($request->backUrl)->with('success', "Контент страницы «{$page->title}» обновлён!");
+        }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
+        return redirect()->back()->with('success', 'Контент страницы обновлен!');
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Page $page)
+    public function edit(Request $request, Page $page)
     {
         $page->load(['seo', 'media'])->loadCount('reviews');
 
-        return Inertia::render('Admin/Pages/Edit', [
+        return Inertia::render('Admin/Pages/Form', [
             'page' => new AdminPageResource($page),
-            
             'seo' => $this->seo("Редактирование: {$page->title}", robots: 'noindex, nofollow'),
-            
             'page_types' => array_map(fn($case) => [
                 'id'    => $case->value,
                 'name'  => $case->label(),
@@ -172,7 +171,10 @@ class PageController extends Controller
                 ['id' => 'default', 'name' => 'Стандартный'],
                 ['id' => 'about', 'name' => 'О компании'],
                 ['id' => 'delivery', 'name' => 'Доставка'],
-            ]
+            ],
+            'backUrl' => $request->query('back') 
+                ? route('admin.pages.index') . $request->query('back') 
+                : route('admin.pages.index'),
         ]);
     }
 

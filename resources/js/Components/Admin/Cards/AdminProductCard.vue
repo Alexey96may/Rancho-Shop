@@ -11,7 +11,7 @@
 
     import AdminDeleteButton from '@/Components/Admin/UI/AdminDeleteButton.vue';
     import AppImage from '@/Components/UI/AppImage.vue';
-    import type { AdminProduct, AvailabilityType } from '@/types';
+    import type { AdminProduct } from '@/types';
 
     const props = defineProps<{
         product: AdminProduct;
@@ -42,7 +42,12 @@
                 aria: 'Статус: в наличии',
             },
             daily: {
-                label: 'По графику',
+                label: 'Ежедневно',
+                class: 'bg-blue-500/10 text-blue-500 border border-blue-500/20',
+                aria: 'Статус: по графику',
+            },
+            weekly: {
+                label: 'Еженедельно',
                 class: 'bg-blue-500/10 text-blue-500 border border-blue-500/20',
                 aria: 'Статус: по графику',
             },
@@ -54,7 +59,7 @@
         };
 
         return (
-            types[props.product.availability_type] || {
+            types[props.product.availability_type.value] || {
                 label: 'Нет данных',
                 class: 'bg-red-500/10 text-red-500',
                 aria: 'Нет данных',
