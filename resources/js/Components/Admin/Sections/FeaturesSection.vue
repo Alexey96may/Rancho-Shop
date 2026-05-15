@@ -1,5 +1,5 @@
 <script setup lang="ts">
-    import { PlusIcon, TrashIcon } from '@heroicons/vue/24/outline';
+    import AdminDeleteButton from '@/Components/Admin/UI/AdminDeleteButton.vue';
 
     const props = defineProps<{
         features: Record<string, string>;
@@ -65,13 +65,11 @@
                     placeholder="Значение"
                 />
 
-                <button
-                    type="button"
+                <AdminDeleteButton
                     @click="removeFeature(String(key))"
-                    class="p-2 text-slate-600 opacity-0 transition-opacity hover:text-red-500 group-hover:opacity-100"
-                >
-                    <TrashIcon class="h-4 w-4" />
-                </button>
+                    title="Удалить параметр"
+                    class="opacity-25 group-hover:opacity-75"
+                />
             </div>
         </div>
     </div>

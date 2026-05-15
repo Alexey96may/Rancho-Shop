@@ -10,6 +10,7 @@
     } from '@heroicons/vue/24/outline';
 
     import AdminDeleteButton from '@/Components/Admin/UI/AdminDeleteButton.vue';
+    import AdminEditButton from '@/Components/Admin/UI/AdminEditButton.vue';
     import AppImage from '@/Components/UI/AppImage.vue';
     import type { AdminProduct } from '@/types';
 
@@ -38,30 +39,30 @@
         const types = {
             stock: {
                 label: 'В наличии',
-                class: 'bg-green-500/10 text-green-500 border border-green-500/20',
+                class: 'bg-green-500/80 text-green-100 border border-green-500/20',
                 aria: 'Статус: в наличии',
             },
             daily: {
                 label: 'Ежедневно',
-                class: 'bg-blue-500/10 text-blue-500 border border-blue-500/20',
+                class: 'bg-blue-500/80 text-blue-100 border border-blue-500/20',
                 aria: 'Статус: по графику',
             },
             weekly: {
                 label: 'Еженедельно',
-                class: 'bg-blue-500/10 text-blue-500 border border-blue-500/20',
+                class: 'bg-blue-500/80 text-blue-1200 border border-blue-500/20',
                 aria: 'Статус: по графику',
             },
             preorder: {
                 label: 'Предзаказ',
-                class: 'bg-orange-500/10 text-orange-500 border border-orange-500/20',
+                class: 'bg-orange-500/80 text-orange-100 border border-orange-500/20',
                 aria: 'Статус: предзаказ',
             },
         };
 
         return (
-            types[props.product.availability_type.value] || {
+            types[props.product.availability.value] || {
                 label: 'Нет данных',
-                class: 'bg-red-500/10 text-red-500',
+                class: 'bg-red-500/80 text-red-100',
                 aria: 'Нет данных',
             }
         );
@@ -76,7 +77,7 @@
             disabled ? 'pointer-events-none scale-[0.96]' : 'scale-100',
             product.is_trashed ? 'border-red-900/30 grayscale-[0.4]' : 'grayscale-0',
         ]"
-        class="group relative flex flex-col overflow-hidden rounded-3xl border border-slate-800 bg-slate-900 transition-all duration-300 hover:border-orange-500/50"
+        class="group relative flex flex-col overflow-hidden rounded-3xl border border-slate-800 bg-slate-900 transition-all duration-300 hover:border-orange-500/80"
     >
         <div class="absolute right-4 top-4 z-10 flex flex-col gap-2">
             <div
@@ -134,25 +135,21 @@
             <div
                 class="mt-auto flex items-center justify-between border-t border-slate-800/50 pt-4"
             >
-                <button
+                <AdminEditButton
                     v-if="product.is_trashed"
                     @click="$emit('restore', product.id)"
-                    type="button"
-                    class="flex items-center gap-2 rounded text-[10px] font-black uppercase tracking-widest text-green-500 transition-colors hover:text-green-400"
-                >
-                    <ArrowPathIcon class="h-4 w-4" />
-                    <span>Восстановить</span>
-                </button>
+                    :title="`Восстановить ${product.name}`"
+                    :disabled="disabled"
+                    :icon="ArrowPathIcon"
+                />
 
-                <button
+                <AdminEditButton
                     v-else
                     @click="$emit('edit', product)"
-                    type="button"
-                    class="flex items-center gap-2 rounded text-[10px] font-black uppercase tracking-widest text-orange-500 transition-colors hover:text-orange-400"
-                >
-                    <PencilSquareIcon class="h-4 w-4" />
-                    <span>Изменить</span>
-                </button>
+                    :title="`Изменить ${product.name}`"
+                    :disabled="disabled"
+                    :icon="PencilSquareIcon"
+                />
 
                 <AdminDeleteButton
                     @click="$emit('delete', product.id)"

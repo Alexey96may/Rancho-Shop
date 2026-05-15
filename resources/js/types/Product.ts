@@ -38,7 +38,7 @@ export interface Product {
     slug: string;
     description: string | null;
 
-    availability_type: Availability;
+    availability: Availability;
     schedule: ProductSchedule;
     next_delivery_date: string | null; // "2024-05-20"
 

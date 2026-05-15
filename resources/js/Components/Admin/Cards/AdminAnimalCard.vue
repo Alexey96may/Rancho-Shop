@@ -1,10 +1,13 @@
 <script setup lang="ts">
     import { PencilSquareIcon, SpeakerWaveIcon, TrashIcon } from '@heroicons/vue/24/outline';
 
+    import AdminDeleteButton from '@/Components/Admin/UI/AdminDeleteButton.vue';
+    import AdminEditButton from '@/Components/Admin/UI/AdminEditButton.vue';
     import { AdminAnimal } from '@/types';
 
     defineProps<{
         animal: AdminAnimal;
+        disabled: boolean;
     }>();
 
     defineEmits(['edit', 'delete']);
@@ -12,7 +15,9 @@
     const playVoice = (url: string) => {
         const audio = new Audio(url);
         audio.play().catch((error) => {
-            console.error('Ошибка воспроизведения:', error);
+            if (console) {
+                console.error('Ошибка воспроизведения:', error);
+            }
         });
     };
 </script>
@@ -80,20 +85,18 @@
             <div
                 class="flex gap-1 transition-opacity duration-300 lg:opacity-0 lg:group-hover:opacity-100"
             >
-                <button
+                <AdminEditButton
                     @click="$emit('edit', animal)"
-                    class="rounded-xl p-2 text-slate-500 transition-all hover:bg-slate-800 hover:text-white"
-                    :aria-label="'Редактировать ' + animal.name"
-                >
-                    <PencilSquareIcon class="h-5 w-5" />
-                </button>
-                <button
+                    :title="'Редактировать ' + animal.name"
+                    :disabled="disabled"
+                    :icon="PencilSquareIcon"
+                />
+
+                <AdminDeleteButton
                     @click="$emit('delete', animal.id)"
-                    class="rounded-xl p-2 text-slate-500 transition-all hover:bg-red-500/10 hover:text-red-500"
-                    :aria-label="'Удалить ' + animal.name"
-                >
-                    <TrashIcon class="h-5 w-5" />
-                </button>
+                    :title="'Удалить ' + animal.name"
+                    :disabled="disabled"
+                />
             </div>
         </div>
     </div>

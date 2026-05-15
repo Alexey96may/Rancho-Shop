@@ -59,29 +59,25 @@
         slug: props.product?.data?.slug ?? '',
         description: props.product?.data?.description ?? '',
         category_id: props.product?.data?.category_id ?? null,
-        availability_type: props.product?.data?.availability_type ?? ('stock' as AvailabilityType),
+        availability_type: props.product?.data?.availability.value ?? ('stock' as AvailabilityType),
         is_active: props.product?.data?.is_active ?? true,
         attributes: props.product?.data?.attributes ?? {},
         schedule: props.product?.data?.schedule ?? { days: [] },
         animal_ids: props.product?.data?.animals?.map((a) => a.id) ?? [],
         // Spatie Media
-        main_photo: props.product?.data?.main_photo
-            ? [...props.product.data?.main_photo]
-            : ([] as Array<Media | File>),
+        main_photo: null as File | null,
         gallery: props.product?.data?.gallery
             ? [...props.product.data?.gallery]
             : ([] as Array<Media | File>),
         remove_media: [] as number[],
         // Seo
-        seo: props.product?.data?.seo
-            ? { ...props.product.data?.seo }
-            : {
-                  title: '',
-                  description: '',
-                  keywords: '',
-                  canonical: '',
-                  is_noindex: false,
-              },
+        seo: {
+            title: props.product?.data.seo?.title || '',
+            description: props.product?.data.seo?.description || '',
+            keywords: props.product?.data.seo?.keywords || '',
+            canonical: props.product?.data.seo?.canonical || '',
+            is_noindex: props.product?.data.seo?.is_noindex || false,
+        },
         backUrl: props.backUrl,
     });
 
@@ -196,7 +192,7 @@
                 class="flex items-center gap-2 px-6 py-4 text-xs font-black uppercase tracking-widest transition-all"
                 :class="
                     activeTab === tab.id
-                        ? 'border-b-2 border-orange-600 text-white'
+                        ? 'border-b-2 border-emerald-600 text-white'
                         : 'text-slate-500 hover:text-slate-300'
                 "
             >
@@ -275,7 +271,7 @@
                                 class="flex cursor-pointer items-center gap-2 rounded-2xl border px-4 py-2 transition-all"
                                 :class="
                                     form.animal_ids.includes(animal.id)
-                                        ? 'border-orange-600 bg-orange-600/10 text-white'
+                                        ? 'border-emerald-600 bg-emerald-600/10 text-white'
                                         : 'border-slate-800 text-slate-500 hover:border-slate-700'
                                 "
                             >
@@ -319,7 +315,7 @@
                     v-model:features="form.attributes"
                 />
 
-                <SEOSection v-if="activeTab === 'seo'" v-model="form.seo" />
+                <SEOSection v-if="activeTab === 'seo'" v-model="form.seo" :disabled="isDeleting" />
             </div>
 
             <aside class="xl:col-span-4">
@@ -395,7 +391,7 @@
                             :disabled="isDeleting"
                             @confirm="deletePage"
                             ><span v-if="isDeleting">Удаление...</span>
-                            <span v-else>Удалить страницу</span>
+                            <span v-else>Удалить продукт</span>
                         </BaseDeleteButton>
 
                         <div

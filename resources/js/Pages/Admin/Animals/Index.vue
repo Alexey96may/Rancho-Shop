@@ -1,9 +1,8 @@
 <script setup lang="ts">
-    import { ref, watch } from 'vue';
+    import { reactive, ref, watch } from 'vue';
 
     import { router, useForm } from '@inertiajs/vue3';
 
-    import { Switch } from '@headlessui/vue';
     import {
         AdjustmentsHorizontalIcon,
         GlobeAltIcon,
@@ -18,10 +17,14 @@
     import AdminEmptyState from '@/Components/Admin/Shared/AdminEmptyState.vue';
     import AdminPageHeader from '@/Components/Admin/Shared/AdminPageHeader.vue';
     import AdminPagination from '@/Components/Admin/Shared/AdminPagination.vue';
+    import AdminBaseTextarea from '@/Components/Admin/UI/AdminBaseTextarea.vue';
     import AdminLoader from '@/Components/Admin/UI/AdminLoader.vue';
     import AdminSearchInput from '@/Components/Admin/UI/AdminSearchInput.vue';
+    import BaseCancelButton from '@/Components/UI/BaseCancelButton.vue';
     import BaseCreateButton from '@/Components/UI/BaseCreateButton.vue';
+    import BaseInput from '@/Components/UI/BaseInput.vue';
     import BaseSelect from '@/Components/UI/BaseSelect.vue';
+    import BaseSwitch from '@/Components/UI/BaseSwitch.vue';
     import ImageUpload from '@/Components/UI/ImageUploader.vue';
     import AdminLayout from '@/Layouts/AdminLayout.vue';
     import { useFlash } from '@/composables/useFlash';
@@ -147,19 +150,19 @@
         });
     };
 
-    const deletingIds = ref<Set<number>>(new Set());
+    const deletingIds = reactive<Set<number>>(new Set());
 
     const deleteAnimal = async (id: number) => {
-        if (deletingIds.value.has(id)) return;
-        deletingIds.value.add(id);
+        if (deletingIds.has(id)) return;
+        deletingIds.add(id);
         const confirmed = await notifyWithUndo(`Удаление животного`, 4000);
         if (confirmed) {
             router.delete(route('admin.animals.destroy', id), {
                 preserveScroll: true,
-                onFinish: () => deletingIds.value.delete(id),
+                onFinish: () => deletingIds.delete(id),
             });
         } else {
-            deletingIds.value.delete(id);
+            deletingIds.delete(id);
         }
     };
 
@@ -211,6 +214,7 @@
                             v-for="animal in animals.data"
                             :key="animal.id"
                             :animal="animal"
+                            :disabled="deletingIds.has(animal.id)"
                             :class="{
                                 'pointer-events-none scale-95 opacity-50': deletingIds.has(
                                     animal.id,
@@ -239,6 +243,8 @@
         </div>
 
         <div v-else class="mx-auto max-w-5xl">
+            <BaseCancelButton @click="closeForm" label="Назад" />
+
             <form @submit.prevent="submit" class="space-y-8" novalidate>
                 <nav class="shadow-inner flex gap-2 rounded-[2rem] bg-slate-950 p-2" role="tablist">
                     <button
@@ -277,91 +283,49 @@
                             />
 
                             <div class="space-y-6">
-                                <div class="space-y-2">
-                                    <label
-                                        for="animal_name"
-                                        class="ml-2 text-[10px] font-black uppercase tracking-widest text-slate-500"
-                                        >Кличка / Название</label
-                                    >
-                                    <input
-                                        id="animal_name"
-                                        v-model="form.name"
-                                        type="text"
-                                        required
-                                        :class="[
-                                            'w-full rounded-xl border bg-slate-950 px-4 py-3 text-white transition-colors',
-                                            form.errors.name
-                                                ? 'border-red-500'
-                                                : 'border-slate-800 focus:border-orange-500',
-                                        ]"
-                                    />
-                                    <p
-                                        v-if="form.errors.name"
-                                        class="ml-2 text-[10px] font-bold text-red-500"
-                                        role="alert"
-                                    >
-                                        {{ form.errors.name }}
-                                    </p>
-                                </div>
+                                <BaseInput
+                                    v-model="form.name"
+                                    v-model:error="form.errors.name"
+                                    label="Имя / Кличка"
+                                    placeholder="Напишите имя животного..."
+                                />
 
                                 <div class="grid grid-cols-2 gap-4">
-                                    <div class="space-y-2">
-                                        <label
-                                            class="ml-2 text-[10px] font-black uppercase tracking-widest text-slate-500"
-                                            >Статус</label
-                                        >
-                                        <input
-                                            v-model="form.status"
-                                            type="text"
-                                            placeholder="Дома..."
-                                            class="w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-white focus:border-orange-500"
-                                        />
-                                    </div>
-                                    <div class="space-y-2">
-                                        <label
-                                            class="ml-2 text-[10px] font-black uppercase tracking-widest text-slate-500"
-                                            >Категория</label
-                                        >
-                                        <BaseSelect
-                                            v-model="form.category_id"
-                                            :options="categories"
-                                            variant="admin"
-                                        />
-                                    </div>
+                                    <BaseInput
+                                        v-model="form.name"
+                                        v-model:error="form.errors.name"
+                                        label="Статус"
+                                        placeholder="Создайте статус животному..."
+                                        title="Статус корректируется программно"
+                                    />
+
+                                    <BaseSelect
+                                        v-model="form.category_id"
+                                        :options="categories"
+                                        placeholder="Все категории"
+                                        label="Категория"
+                                        variant="admin"
+                                    />
                                 </div>
 
-                                <div class="flex items-center gap-4">
-                                    <label
-                                        class="ml-2 text-[10px] font-black uppercase tracking-widest text-slate-500"
-                                        >Публикация</label
-                                    >
-                                    <Switch
-                                        v-model="form.is_active"
-                                        :class="form.is_active ? 'bg-emerald-700' : 'bg-slate-800'"
-                                        class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors"
-                                    >
-                                        <span
-                                            :class="
-                                                form.is_active ? 'translate-x-6' : 'translate-x-1'
-                                            "
-                                            class="inline-block h-4 w-4 transform rounded-full bg-white transition"
-                                        />
-                                    </Switch>
-                                </div>
+                                <BaseSwitch
+                                    v-model="form.is_active"
+                                    label="Публикация"
+                                    active-text="Опубликовать"
+                                    inactive-text="В черновик"
+                                    :disabled="form.processing"
+                                />
                             </div>
                         </div>
 
-                        <div class="space-y-2">
-                            <label
-                                class="ml-2 text-[10px] font-black uppercase tracking-widest text-slate-500"
-                                >Биография</label
-                            >
-                            <textarea
-                                v-model="form.bio"
-                                rows="4"
-                                class="w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-white focus:border-orange-500"
-                            ></textarea>
-                        </div>
+                        <AdminBaseTextarea
+                            v-model="form.bio"
+                            id="seoDescr"
+                            label="Биография"
+                            :error="form.errors?.bio"
+                            :disabled="deletingIds.has(Number(form.id))"
+                            rows="8"
+                        />
                     </div>
 
                     <FeaturesSection
@@ -375,24 +339,22 @@
                         :existing-voice-url="selectedAnimal?.voice_url"
                     />
 
-                    <SEOSection v-if="activeTab === 'seo'" v-model="form.seo" />
+                    <SEOSection
+                        v-if="activeTab === 'seo'"
+                        v-model="form.seo"
+                        :disabled="deletingIds.has(Number(form.id))"
+                    />
                 </div>
 
-                <div class="flex items-center justify-end gap-4 border-t border-slate-800 pt-8">
-                    <button
-                        type="button"
-                        @click="closeForm"
-                        class="text-xs font-black uppercase tracking-widest text-slate-500 transition-colors hover:text-white"
-                    >
-                        Отменить
-                    </button>
-                    <button
+                <div class="flex items-center justify-end gap-4 border-t border-slate-800">
+                    <BaseCancelButton @click="closeForm" label="Отменить" />
+
+                    <BaseCreateButton
                         type="submit"
+                        :label="form.id ? 'Обновить данные' : 'Внести в реестр'"
                         :disabled="form.processing"
-                        class="rounded-xl bg-white px-10 py-4 text-xs font-black uppercase tracking-widest text-black transition-all hover:bg-orange-500 hover:text-white disabled:opacity-50"
-                    >
-                        {{ form.id ? 'Обновить данные' : 'Внести в реестр' }}
-                    </button>
+                        class="mt-8"
+                    />
                 </div>
             </form>
         </div>

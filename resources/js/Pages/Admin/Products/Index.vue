@@ -12,6 +12,8 @@
     import AdminPagination from '@/Components/Admin/Shared/AdminPagination.vue';
     import AdminLoader from '@/Components/Admin/UI/AdminLoader.vue';
     import AdminSearchInput from '@/Components/Admin/UI/AdminSearchInput.vue';
+    import BaseCreateButton from '@/Components/UI/BaseCreateButton.vue';
+    import BaseResetButton from '@/Components/UI/BaseResetButton.vue';
     import BaseSelect from '@/Components/UI/BaseSelect.vue';
     import AdminLayout from '@/Layouts/AdminLayout.vue';
     import { useFlash } from '@/composables/useFlash';
@@ -113,22 +115,12 @@
             />
 
             <div class="flex items-center gap-3">
-                <button
-                    v-if="filterForm.isDirty || filterForm.search"
-                    @click="resetFilters"
-                    class="rounded-lg px-2 text-[10px] font-black uppercase tracking-widest text-slate-500 transition-colors hover:text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
-                >
-                    Сбросить
-                </button>
+                <BaseResetButton
+                    :show="filterForm.isDirty || !!filterForm.search"
+                    @reset="resetFilters"
+                />
 
-                <button
-                    @click="navigateWithContext()"
-                    class="shadow-lg inline-flex items-center gap-2 rounded-2xl bg-orange-600 px-6 py-3 text-[12px] font-black uppercase tracking-widest text-white shadow-orange-600/20 transition-all hover:bg-orange-500 focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-slate-900 active:scale-95"
-                    title="Создать новый товар"
-                >
-                    <PlusIcon class="h-5 w-5" />
-                    Создать товар
-                </button>
+                <BaseCreateButton @click="navigateWithContext()" label="Создать товар" />
             </div>
         </div>
 
