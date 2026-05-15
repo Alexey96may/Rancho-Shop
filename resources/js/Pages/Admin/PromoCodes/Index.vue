@@ -1,7 +1,7 @@
 <script setup lang="ts">
-    import { ref, watch } from 'vue';
+    import { reactive, ref, watch } from 'vue';
 
-    import { Link, router } from '@inertiajs/vue3';
+    import { router } from '@inertiajs/vue3';
 
     import debounce from 'lodash/debounce';
 
@@ -33,7 +33,7 @@
     const sortOrder = ref(props.filters.sort || 'latest');
 
     const isFiltering = ref(false);
-    const deletingIds = ref(new Set<number>());
+    const deletingIds = reactive(new Set<number>());
 
     const { notifyWithUndo } = useFlash();
 
@@ -77,8 +77,8 @@
     };
 
     const deletePromo = async (promo: AdminPromoCode) => {
-        if (deletingIds.value.has(promo.id)) return;
-        deletingIds.value.add(promo.id);
+        if (deletingIds.has(promo.id)) return;
+        deletingIds.add(promo.id);
 
         const isTimeOut = await notifyWithUndo(`Удаление промокода «${promo.code}»`);
 
@@ -86,11 +86,11 @@
             router.delete(route('admin.promocodes.destroy', promo.id), {
                 preserveScroll: true,
                 onFinish: () => {
-                    deletingIds.value.delete(promo.id);
+                    deletingIds.delete(promo.id);
                 },
             });
         } else {
-            deletingIds.value.delete(promo.id);
+            deletingIds.delete(promo.id);
         }
     };
 </script>

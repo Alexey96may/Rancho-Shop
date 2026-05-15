@@ -1,22 +1,15 @@
 <script setup lang="ts">
-    import { ref } from 'vue';
+    import { computed } from 'vue';
 
-    import { Link } from '@inertiajs/vue3';
-
-    import {
-        CalendarIcon,
-        ExclamationTriangleIcon,
-        EyeIcon,
-        EyeSlashIcon,
-        PencilSquareIcon,
-        TrashIcon,
-        UserGroupIcon,
-    } from '@heroicons/vue/24/outline';
+    import { ExclamationTriangleIcon, UserGroupIcon } from '@heroicons/vue/24/outline';
 
     import AdminDeleteButton from '@/Components/Admin/UI/AdminDeleteButton.vue';
+    import AdminEditLink from '@/Components/Admin/UI/AdminEditLink.vue';
+    import BaseDateBadge from '@/Components/UI/BaseDateBadge.vue';
+    import BaseVisibilityToggle from '@/Components/UI/BaseVisibilityToggle.vue';
     import { useFlash } from '@/composables/useFlash';
     import { AdminPromoCode } from '@/types';
-    import { formatDateTime, formatMoney, formatRelativeTime } from '@/utils/format';
+    import { formatMoney } from '@/utils/format';
 
     const props = defineProps<{
         promo: AdminPromoCode;
@@ -29,18 +22,15 @@
     const { notify } = useFlash();
 
     const copyToClipboard = (text: string) => {
-        if (!window) return;
+        if (!navigator) return;
 
         navigator.clipboard.writeText(text);
-
         notify(`Промокод «${text}» скопирован!`, 'success');
     };
 
-    const isShortData = ref(false);
-
-    function toggleDataFormat() {
-        isShortData.value = !isShortData.value;
-    }
+    const compMinOrderAmount = computed(() => formatMoney(props.promo.min_order_amount));
+    const compMaxDiscount = computed(() => formatMoney(props.promo.max_discount));
+    const compPromoValue = computed(() => formatMoney(props.promo.value));
 </script>
 
 <template>
@@ -78,7 +68,7 @@
                         {{
                             promo.type === 'percent'
                                 ? `${promo.value}% скидка`
-                                : `${formatMoney(promo.value)}`
+                                : `${compPromoValue}`
                         }}
                     </span>
                     <p
@@ -90,90 +80,15 @@
                     </p>
                 </div>
 
-                <button
-                    @click="$emit('toggle', promo)"
-                    :class="[
-                        promo.is_active
-                            ? 'bg-emerald-500/10 text-emerald-500'
-                            : 'bg-slate-800 text-slate-500',
-                    ]"
-                    class="z-10 rounded-full px-3 py-1 text-[9px] font-black uppercase tracking-widest transition-all hover:scale-105"
-                >
-                    <EyeIcon v-if="promo.is_active" class="h-5 w-5" aria-hidden="true" />
-                    <EyeSlashIcon v-else class="h-5 w-5" aria-hidden="true" />
-                </button>
+                <BaseVisibilityToggle
+                    :active="promo.is_active"
+                    active-title="Виден на сайте"
+                    inactive-title="Скрыт"
+                    @toggle="$emit('toggle', promo)"
+                />
             </div>
 
-            <div
-                class="mb-4 flex items-center gap-3 rounded-2xl border border-slate-800 bg-slate-950/50 p-3"
-            >
-                <template v-if="promo.expires_at">
-                    <div
-                        class="flex w-10 shrink-0 flex-col items-center overflow-hidden rounded-lg border border-orange-500/30 bg-slate-900"
-                    >
-                        <div
-                            class="w-full bg-orange-600 py-0.5 text-center text-[7px] font-black uppercase text-white"
-                        >
-                            {{
-                                new Date(promo.expires_at).toLocaleString('ru', {
-                                    month: 'short',
-                                })
-                            }}
-                        </div>
-                        <div class="text-lg font-black leading-tight text-white">
-                            {{ new Date(promo.expires_at).getDate() }}
-                        </div>
-                    </div>
-
-                    <div class="flex min-w-0 flex-col">
-                        <span
-                            class="text-[9px] font-black uppercase tracking-widest transition-colors"
-                            :class="
-                                new Date(promo.expires_at) < new Date()
-                                    ? 'text-red-500'
-                                    : 'text-slate-500'
-                            "
-                        >
-                            {{ new Date(promo.expires_at) < new Date() ? 'Истёк' : 'Истекает' }}
-                        </span>
-
-                        <span
-                            @click="toggleDataFormat"
-                            class="cursor-pointer text-xs font-bold transition-colors hover:text-orange-400"
-                            :class="
-                                new Date(promo.expires_at) < new Date()
-                                    ? 'text-red-400/80'
-                                    : 'text-white'
-                            "
-                            :title="
-                                isShortData ? 'Показать сколько осталось' : 'Показать полную дату'
-                            "
-                        >
-                            <Transition name="date-fade" mode="out-in">
-                                <span :key="isShortData ? 'short' : 'full'">
-                                    {{
-                                        isShortData
-                                            ? formatDateTime(promo.expires_at)
-                                            : formatRelativeTime(promo.expires_at)
-                                    }}
-                                </span>
-                            </Transition>
-                        </span>
-                    </div>
-                </template>
-
-                <template v-else>
-                    <div class="flex items-center gap-3 text-slate-500">
-                        <CalendarIcon class="h-5 w-5" />
-                        <div class="flex flex-col">
-                            <span class="text-[9px] font-black uppercase">Срок действия</span>
-                            <span class="text-xs font-bold uppercase italic text-white"
-                                >Бессрочно</span
-                            >
-                        </div>
-                    </div>
-                </template>
-            </div>
+            <BaseDateBadge :date="promo.expires_at" label="Крайний срок" eternalText="Бессрочно" />
 
             <div class="mb-6 grid grid-cols-1 gap-4">
                 <div
@@ -252,34 +167,29 @@
                     <span class="font-bold uppercase tracking-widest text-slate-500"
                         >Мин. заказ:</span
                     >
-                    <span class="font-mono text-slate-300">{{
-                        formatMoney(promo.min_order_amount)
-                    }}</span>
+                    <span class="font-mono text-slate-300">{{ compMinOrderAmount }}</span>
                 </div>
                 <div v-if="promo.max_discount" class="flex justify-between text-[10px]">
                     <span class="font-bold uppercase tracking-widest text-slate-500"
                         >Макс. скидка:</span
                     >
-                    <span class="font-mono text-slate-300">{{
-                        formatMoney(promo.max_discount)
-                    }}</span>
+                    <span class="font-mono text-slate-300">{{ compMaxDiscount }}</span>
                 </div>
             </div>
 
             <div
                 class="mt-6 flex justify-end gap-2 border-t border-slate-800/50 pt-4 opacity-0 transition-all group-hover:opacity-100"
             >
-                <Link
+                <AdminEditLink
                     :href="
                         route('admin.promocodes.edit', {
                             promocode: promo.id,
                             page: returnPage || '',
                         })
                     "
-                    class="rounded-xl bg-slate-800 p-2.5 text-slate-400 transition-all hover:bg-slate-700 hover:text-orange-500"
-                >
-                    <PencilSquareIcon class="h-5 w-5" />
-                </Link>
+                    :title="`Редактировать ${promo.code}`"
+                    :disabled="disabled"
+                />
 
                 <AdminDeleteButton
                     @click="$emit('delete', promo)"
@@ -334,11 +244,11 @@
 
     .date-fade-enter-from {
         opacity: 0;
-        transform: translateY(4px); /* Появляется чуть снизу */
+        transform: translateY(4px);
     }
 
     .date-fade-leave-to {
         opacity: 0;
-        transform: translateY(-4px); /* Уходит чуть вверх */
+        transform: translateY(-4px);
     }
 </style>

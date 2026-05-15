@@ -1,6 +1,9 @@
 <script setup lang="ts">
-    import { GripVerticalIcon, LinkIcon, PencilIcon, Trash2Icon } from 'lucide-vue-next';
+    import { LinkIcon, PencilIcon, Trash2Icon } from 'lucide-vue-next';
 
+    import AdminEditButton from '@/Components/Admin/UI/AdminEditButton.vue';
+    import BaseDeleteButton from '@/Components/UI/BaseDeleteButton.vue';
+    import BaseDragHandle from '@/Components/UI/BaseDragHandle.vue';
     import { UnitAdmin } from '@/types';
 
     defineProps<{
@@ -24,12 +27,8 @@
             v-if="!disabled"
             class="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-orange-500/5 blur-[50px] transition-all group-hover:bg-orange-500/10"
         ></div>
-        <div
-            class="drag-handle cursor-grab p-2 text-slate-700 transition-colors hover:text-slate-400 active:cursor-grabbing"
-            aria-label="Перетащить для изменения порядка"
-        >
-            <GripVerticalIcon class="h-5 w-5" />
-        </div>
+
+        <BaseDragHandle />
 
         <div class="grid flex-1 grid-cols-1 gap-4 sm:grid-cols-3">
             <div class="flex flex-col">
@@ -56,22 +55,22 @@
         </div>
 
         <div class="flex items-center gap-1">
-            <button
+            <AdminEditButton
                 @click="emit('edit', unit)"
-                class="rounded-xl p-2.5 text-slate-500 transition-all hover:bg-slate-800 hover:text-white"
+                :title="`Редактировать ${unit.name}`"
+                :disabled="disabled"
                 :aria-label="`Редактировать ${unit.name}`"
-            >
-                <PencilIcon class="h-4 w-4" />
-            </button>
-            <button
-                @click="emit('delete', unit)"
+                :icon="PencilIcon"
+            />
+
+            <BaseDeleteButton
                 :disabled="!unit.can_delete || disabled"
-                class="rounded-xl p-2.5 text-slate-600 transition-all hover:bg-rose-500/10 hover:text-rose-500 disabled:opacity-20"
                 :title="!unit.can_delete ? 'Нельзя удалить: используется в товарах' : ''"
+                @confirm="emit('delete', unit)"
                 :aria-label="`Удалить ${unit.name}`"
             >
                 <Trash2Icon class="h-4 w-4" />
-            </button>
+            </BaseDeleteButton>
         </div>
     </div>
 </template>

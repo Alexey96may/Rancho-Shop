@@ -1,9 +1,10 @@
 <script setup lang="ts">
     import { router } from '@inertiajs/vue3';
 
-    import { DocumentIcon, PencilIcon, TrashIcon } from '@heroicons/vue/24/outline';
+    import { DocumentIcon, PencilIcon } from '@heroicons/vue/24/outline';
 
-    import BaseDeleteButton from '@/Components/UI/BaseDeleteButton.vue';
+    import AdminDeleteButton from '@/Components/Admin/UI/AdminDeleteButton.vue';
+    import AdminEditButton from '@/Components/Admin/UI/AdminEditButton.vue';
     import { useNavigation } from '@/composables/useNavigation';
     import { AdminPage } from '@/types';
 
@@ -76,23 +77,18 @@
         </div>
 
         <div class="col-span-2 flex justify-end gap-2">
-            <button
+            <AdminEditButton
                 @click="editPage"
-                type="button"
-                aria-label="Редактировать"
+                :title="`Редактировать ${page.title}`"
                 :disabled="isDeleting"
-                class="p-2 text-slate-500 transition-all hover:text-orange-500"
-            >
-                <PencilIcon class="h-5 w-5" />
-            </button>
+                :icon="PencilIcon"
+            />
 
-            <BaseDeleteButton
-                v-if="page.can_delete"
-                :disabled="isDeleting"
-                @confirm="$emit('delete', page)"
-            >
-                <TrashIcon class="h-5 w-5" />
-            </BaseDeleteButton>
+            <AdminDeleteButton
+                @click="$emit('delete', page)"
+                :title="page.can_delete ? 'Удалить страницу' : 'Нельзя удалить системную страницу'"
+                :disabled="!page.can_delete || isDeleting"
+            />
         </div>
     </div>
 </template>

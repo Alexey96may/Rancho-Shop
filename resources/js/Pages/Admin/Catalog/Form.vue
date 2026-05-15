@@ -69,11 +69,9 @@
         />
 
         <form @submit.prevent="submit" class="space-y-6">
-            <!-- Основные данные -->
             <div
                 class="grid grid-cols-1 gap-6 rounded-[2.5rem] border border-slate-800 bg-slate-900/40 p-8 md:grid-cols-12"
             >
-                <!-- Выбор продукта (только при создании или если нужно сменить родителя) -->
                 <BaseSelect
                     v-model="form.product_id"
                     v-model:error="form.errors.product_id"

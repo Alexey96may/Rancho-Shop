@@ -1,7 +1,6 @@
 <script setup lang="ts">
     import { PencilSquareIcon, SpeakerWaveIcon, TrashIcon } from '@heroicons/vue/24/outline';
 
-    import AppImage from '@/Components/UI/AppImage.vue';
     import { AdminAnimal } from '@/types';
 
     defineProps<{

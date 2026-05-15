@@ -1,9 +1,8 @@
 <script setup lang="ts">
-    import { computed, ref, watch } from 'vue';
+    import { ref, watch } from 'vue';
 
-    import { Link, router, usePage } from '@inertiajs/vue3';
+    import { router } from '@inertiajs/vue3';
 
-    import { PlusIcon } from '@heroicons/vue/24/outline';
     import debounce from 'lodash/debounce';
 
     import AdminPageCard from '@/Components/Admin/Cards/AdminPageCard.vue';
@@ -12,6 +11,7 @@
     import AdminPagination from '@/Components/Admin/Shared/AdminPagination.vue';
     import AdminLoader from '@/Components/Admin/UI/AdminLoader.vue';
     import AdminSearchInput from '@/Components/Admin/UI/AdminSearchInput.vue';
+    import BaseCreateButton from '@/Components/UI/BaseCreateButton.vue';
     import AdminLayout from '@/Layouts/AdminLayout.vue';
     import { useFlash } from '@/composables/useFlash';
     import { useNavigation } from '@/composables/useNavigation';
@@ -78,16 +78,15 @@
     <div class="space-y-6">
         <div class="flex items-center justify-between">
             <AdminSearchInput v-model="search" placeholder="Поиск страниц..." />
-            <Link
+
+            <BaseCreateButton
                 :href="
                     route('admin.pages.create', {
                         back: currentQuery,
                     })
                 "
-                class="shadow-lg flex items-center gap-2 rounded-2xl bg-orange-600 px-6 py-3 text-xs font-black uppercase tracking-widest text-white shadow-orange-900/20 transition-all hover:bg-orange-500"
-            >
-                <PlusIcon class="h-5 w-5" /> Создать
-            </Link>
+                label="Создать"
+            />
         </div>
 
         <div

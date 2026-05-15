@@ -3,14 +3,11 @@
 
     import { Link } from '@inertiajs/vue3';
 
-    import {
-        ArrowTopRightOnSquareIcon,
-        HandThumbDownIcon,
-        HandThumbUpIcon,
-        TrashIcon,
-    } from '@heroicons/vue/24/solid';
+    import { ArrowTopRightOnSquareIcon } from '@heroicons/vue/24/solid';
 
+    import AdminDeleteButton from '@/Components/Admin/UI/AdminDeleteButton.vue';
     import AppRating from '@/Components/UI/AppRating.vue';
+    import BaseStatusButton from '@/Components/UI/BaseStatusButton.vue';
     import { AdminComment } from '@/types';
     import { formatDateTime, formatRelativeTime } from '@/utils/format';
     import { getInitials } from '@/utils/user';
@@ -18,6 +15,7 @@
     const props = defineProps<{
         comment: AdminComment;
         isDeleting: boolean;
+        isProcessingStatus: boolean;
     }>();
 
     const emit = defineEmits<{
@@ -60,6 +58,9 @@
         animal: 'animals.show',
         page: 'pages.show',
     };
+
+    const computedDateTime = computed(() => formatDateTime(props.comment.created_at));
+    const computedRelativeTime = computed(() => formatRelativeTime(props.comment.created_at));
 </script>
 
 <template>
@@ -123,11 +124,7 @@
                             @click="toggleDate"
                             class="cursor-pointer select-none text-[10px] font-medium text-slate-500 transition-colors hover:text-slate-300"
                         >
-                            {{
-                                showExactDate
-                                    ? formatDateTime(comment.created_at)
-                                    : formatRelativeTime(comment.created_at)
-                            }}
+                            {{ showExactDate ? computedDateTime : computedRelativeTime }}
                         </time>
                     </Transition>
                 </div>
@@ -176,64 +173,38 @@
             </div>
 
             <Link
-                v-if="comment.commentable?.slug === 'main'"
-                :href="route('home')"
+                :href="
+                    comment.commentable?.slug === 'main'
+                        ? route('home')
+                        : route(routeNames[comment.commentable_type], comment.commentable?.slug)
+                "
                 class="rounded-xl p-2 text-slate-500 transition-all hover:bg-slate-800 hover:text-white"
-                :aria-label="`Перейти к ${currentType.label}: ${comment.commentable.name}`"
-            >
-                <ArrowTopRightOnSquareIcon class="h-4 w-4" aria-hidden="true" />
-            </Link>
-
-            <Link
-                v-else-if="comment.commentable?.slug && routeNames[comment.commentable_type]"
-                :href="route(routeNames[comment.commentable_type], comment.commentable.slug)"
-                class="rounded-xl p-2 text-slate-500 transition-all hover:bg-slate-800 hover:text-white"
-                :aria-label="`Перейти к ${currentType.label}: ${comment.commentable.name}`"
+                :aria-label="`Перейти к ${currentType.label}: ${comment.commentable?.name}`"
             >
                 <ArrowTopRightOnSquareIcon class="h-4 w-4" aria-hidden="true" />
             </Link>
         </section>
 
         <footer class="mt-auto flex items-center gap-2 border-t border-slate-800 pt-4">
-            <button
+            <BaseStatusButton
                 v-if="comment.status !== 'approved'"
+                type="approve"
+                :current-status="comment.status"
+                :disabled="isDeleting"
+                :loading="isProcessingStatus"
                 @click="onUpdateStatus('approved')"
-                :disabled="isDeleting"
-                class="shadow-lg flex flex-1 items-center justify-center gap-2 rounded-2xl bg-orange-600 py-3 text-xs font-black uppercase tracking-widest text-white shadow-orange-900/40 transition-all hover:bg-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500 active:scale-95"
-                aria-label="Одобрить комментарий и опубликовать его"
-            >
-                <HandThumbUpIcon class="h-4 w-4" aria-hidden="true" />
-                <span>Одобрить</span>
-            </button>
+            />
 
-            <button
+            <BaseStatusButton
                 v-if="comment.status !== 'hidden'"
+                type="reject"
+                :current-status="comment.status"
+                :disabled="isDeleting"
+                :loading="isProcessingStatus"
                 @click="onUpdateStatus('hidden')"
-                :disabled="isDeleting"
-                class="flex items-center justify-center gap-2 rounded-2xl py-3 text-xs font-black uppercase tracking-widest transition-all active:scale-95"
-                :class="[
-                    comment.status === 'approved'
-                        ? 'flex-1 bg-slate-800 text-slate-400 hover:bg-red-500/10 hover:text-red-500'
-                        : 'bg-slate-800 px-4 text-slate-500',
-                ]"
-                :aria-label="
-                    comment.status === 'approved'
-                        ? 'Снять комментарий с публикации'
-                        : 'Скрыть комментарий'
-                "
-            >
-                <HandThumbDownIcon class="h-4 w-4" aria-hidden="true" />
-                <span v-if="comment.status === 'approved'">Снять</span>
-            </button>
+            />
 
-            <button
-                @click="onDelete"
-                :disabled="isDeleting"
-                class="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-800 text-slate-500 transition-all hover:bg-red-500/20 hover:text-red-500 focus:outline-none focus:ring-2 focus:ring-red-500 active:scale-90"
-                aria-label="Удалить отзыв безвозвратно"
-            >
-                <TrashIcon class="h-5 w-5" aria-hidden="true" />
-            </button>
+            <AdminDeleteButton @click="onDelete" title="Удалить" :disabled="isDeleting" />
         </footer>
     </article>
 </template>

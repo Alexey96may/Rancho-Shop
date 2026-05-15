@@ -1,8 +1,9 @@
 <script setup lang="ts">
     import { Link } from '@inertiajs/vue3';
 
-    import { ChevronRightIcon, EyeIcon, EyeOffIcon, Settings2Icon } from 'lucide-vue-next';
+    import { ChevronRightIcon, Settings2Icon } from 'lucide-vue-next';
 
+    import BaseVisibilityToggle from '@/Components/UI/BaseVisibilityToggle.vue';
     import { AdminLandingBlock } from '@/types';
 
     const props = defineProps<{
@@ -34,23 +35,12 @@
                 ></h3>
             </div>
 
-            <button
-                @click="emit('toggle', block.id)"
-                type="button"
-                :aria-pressed="block.is_visible"
-                :aria-label="
-                    block.is_visible ? `Скрыть блок ${block.label}` : `Показать блок ${block.label}`
-                "
-                class="rounded-2xl border p-3 transition-all focus:outline-none focus:ring-2 focus:ring-orange-500/50 active:scale-95"
-                :class="
-                    block.is_visible
-                        ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-500'
-                        : 'border-slate-700 bg-slate-800 text-slate-600'
-                "
-            >
-                <EyeIcon v-if="block.is_visible" class="h-5 w-5" aria-hidden="true" />
-                <EyeOffIcon v-else class="h-5 w-5" aria-hidden="true" />
-            </button>
+            <BaseVisibilityToggle
+                :active="block.is_visible"
+                active-title="Блок виден на сайте"
+                inactive-title="Блок скрыт"
+                @toggle="emit('toggle', block.id)"
+            />
         </div>
 
         <div

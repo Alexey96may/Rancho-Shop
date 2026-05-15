@@ -12,7 +12,10 @@
         TrashIcon,
         UserIcon,
     } from '@heroicons/vue/24/outline';
+    import { PencilIcon, Trash2Icon } from 'lucide-vue-next';
 
+    import AdminEditButton from '@/Components/Admin/UI/AdminEditButton.vue';
+    import BaseDeleteButton from '@/Components/UI/BaseDeleteButton.vue';
     import { AdminUser } from '@/types';
 
     const props = defineProps<{
@@ -85,12 +88,12 @@
                 <div
                     class="h-14 w-14 shrink-0 overflow-hidden rounded-2xl bg-slate-950 ring-1 ring-slate-800 transition-transform duration-500 group-hover:scale-105"
                 >
-                    <img
+                    <AppImage
                         v-if="user.avatar"
-                        :src="user.avatar"
-                        class="h-full w-full object-cover"
+                        :src="user?.avatar || ''"
+                        :type="'thumbnails'"
                         :alt="user.name"
-                        loading="lazy"
+                        class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
                     />
                     <div
                         v-else
@@ -167,20 +170,21 @@
             </div>
 
             <div class="flex items-center gap-4">
-                <button
+                <AdminEditButton
                     @click="$emit('edit')"
-                    class="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-slate-500 transition-all hover:text-orange-500"
-                >
-                    <PencilSquareIcon class="h-4 w-4" />
-                    <span>Изменить</span>
-                </button>
+                    :title="`Изменить ${user.name}`"
+                    :disabled="disabled"
+                    :aria-label="`Изменить ${user.name}`"
+                    :icon="PencilIcon"
+                />
 
-                <button
-                    @click="$emit('delete')"
-                    class="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-slate-500 transition-all hover:text-red-500"
-                >
-                    <TrashIcon class="h-4 w-4" />
-                </button>
+                <BaseDeleteButton
+                    :disabled="disabled"
+                    :title="`Удалить ${user.name}`"
+                    @confirm="$emit('delete')"
+                    :aria-label="`Удалить ${user.name}`"
+                    ><Trash2Icon class="h-4 w-4"
+                /></BaseDeleteButton>
             </div>
         </div>
     </article>

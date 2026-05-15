@@ -1,9 +1,5 @@
 <script setup lang="ts">
-    import { computed, watch } from 'vue';
-
-    import { Link } from '@inertiajs/vue3';
-
-    import { PackageIcon, SquarePenIcon } from 'lucide-vue-next';
+    import { PackageIcon } from 'lucide-vue-next';
 
     import AdminDeleteButton from '@/Components/Admin/UI/AdminDeleteButton.vue';
     import AdminEditLink from '@/Components/Admin/UI/AdminEditLink.vue';

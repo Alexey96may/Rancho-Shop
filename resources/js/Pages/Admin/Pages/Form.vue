@@ -1,10 +1,9 @@
 <script setup lang="ts">
     import { computed, ref } from 'vue';
 
-    import { Link, router, useForm } from '@inertiajs/vue3';
+    import { router, useForm } from '@inertiajs/vue3';
 
     import {
-        ChevronLeftIcon,
         Cog6ToothIcon,
         DocumentTextIcon,
         EyeIcon,
@@ -15,7 +14,9 @@
     import GeneralSection from '@/Components/Admin/Sections/PageGeneralSection.vue';
     import SeoSection from '@/Components/Admin/Sections/SEOSection.vue';
     import AdminPageHeader from '@/Components/Admin/Shared/AdminPageHeader.vue';
+    import BaseCancelButton from '@/Components/UI/BaseCancelButton.vue';
     import BaseDeleteButton from '@/Components/UI/BaseDeleteButton.vue';
+    import BaseSubmitButton from '@/Components/UI/BaseSubmitButton.vue';
     import BaseSwitch from '@/Components/UI/BaseSwitch.vue';
     import AdminLayout from '@/Layouts/AdminLayout.vue';
     import { useFlash } from '@/composables/useFlash';
@@ -50,7 +51,6 @@
         type: props.page?.data.type || props.page_types[0]?.id || '',
         template: props.page?.data.template || props.templates[0]?.id || 'default',
         is_active: props.page?.data.is_active ?? true,
-
         seo: {
             title: props.page?.data.seo?.title || '',
             description: props.page?.data.seo?.description || '',
@@ -83,6 +83,10 @@
             isDeleting.value = false;
         }
     };
+
+    const computedUpdatedData = computed(() =>
+        formatDateTime(props.page?.data.updated_at || null, 'dd.MM.yyyy HH:mm'),
+    );
 </script>
 
 <template>
@@ -96,13 +100,8 @@
     <div class="mx-auto max-w-6xl space-y-6">
         <div class="flex items-center justify-between">
             <div class="flex items-center gap-4">
-                <Link
-                    :href="backUrl"
-                    class="rounded-full border border-slate-800 p-2 text-slate-500 transition-all hover:border-orange-500 hover:text-orange-500"
-                    title="Назад"
-                >
-                    <ChevronLeftIcon class="h-5 w-5" />
-                </Link>
+                <BaseCancelButton :href="backUrl" label="Назад" />
+
                 <div class="space-y-1">
                     <div v-if="isEdit" class="flex items-center gap-2">
                         <span
@@ -166,17 +165,27 @@
                             v-model:slug="form.slug"
                             v-model:type="form.type"
                             v-model:template="form.template"
+                            :errors="form.errors"
                             :page_types="page_types"
+                            :disabled="form.processing"
                             :templates="templates"
                         />
                     </div>
 
                     <div v-else-if="activeTab === 'content'" key="content">
-                        <ContentSection v-model="form.content" :page-id="page?.data.id" />
+                        <ContentSection
+                            v-model="form.content"
+                            :page-id="page?.data.id"
+                            :errors="form.errors"
+                        />
                     </div>
 
                     <div v-else-if="activeTab === 'seo'" key="seo">
-                        <SeoSection v-model="form.seo" />
+                        <SeoSection
+                            v-model="form.seo"
+                            :disabled="form.processing"
+                            :errors="form.errors"
+                        />
                     </div>
                 </TransitionGroup>
             </div>
@@ -194,18 +203,12 @@
                             :disabled="form.processing"
                         />
 
-                        <button
-                            type="submit"
-                            :disabled="form.processing"
-                            class="group relative w-full overflow-hidden rounded-2xl bg-orange-600 py-4 text-xs font-black uppercase text-white transition-all hover:bg-orange-500 disabled:opacity-50"
-                        >
-                            <span v-if="form.processing">{{
-                                isEdit ? 'Сохранение...' : 'Создание...'
-                            }}</span>
-                            <span v-else>{{
-                                isEdit ? 'Применить изменения' : 'Создать страницу'
-                            }}</span>
-                        </button>
+                        <BaseSubmitButton
+                            :processing="form.processing"
+                            :is-edit="isEdit"
+                            :with-icon="false"
+                            :label="isEdit ? 'Применить изменения' : 'Создать страницу'"
+                        />
                     </div>
 
                     <div
@@ -218,9 +221,7 @@
                         </div>
                         <div class="flex justify-between text-[10px] font-black uppercase">
                             <span class="text-slate-500">Обновлено</span>
-                            <span class="text-slate-400">{{
-                                formatDateTime(page?.data.updated_at || null, 'dd.MM.yyyy HH:mm')
-                            }}</span>
+                            <span class="text-slate-400">{{ computedUpdatedData }}</span>
                         </div>
 
                         <BaseDeleteButton

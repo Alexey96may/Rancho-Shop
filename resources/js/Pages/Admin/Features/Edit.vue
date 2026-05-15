@@ -1,10 +1,16 @@
 <script setup lang="ts">
-    import { Link, useForm } from '@inertiajs/vue3';
+    import { ref } from 'vue';
 
-    import { ChevronLeftIcon, LayoutIcon, PlusIcon, SaveIcon } from 'lucide-vue-next';
+    import { useForm } from '@inertiajs/vue3';
+
+    import { LayoutIcon, PlusIcon, SaveIcon } from 'lucide-vue-next';
 
     import ContentItemCard from '@/Components/Admin/Cards/AdminContentItemCard.vue';
     import AdminPageHeader from '@/Components/Admin/Shared/AdminPageHeader.vue';
+    import BaseCancelButton from '@/Components/UI/BaseCancelButton.vue';
+    import BaseInput from '@/Components/UI/BaseInput.vue';
+    import BaseSubmitButton from '@/Components/UI/BaseSubmitButton.vue';
+    import BaseSwitch from '@/Components/UI/BaseSwitch.vue';
     import AdminLayout from '@/Layouts/AdminLayout.vue';
     import { useFlash } from '@/composables/useFlash';
     import { AdminLandingBlock, ResourceSingle } from '@/types';
@@ -31,6 +37,8 @@
 
     const { notifyWithUndo } = useFlash();
 
+    const deletingIds = ref(new Set<number>());
+
     const addContentItem = () => {
         form.content.push({
             id: crypto.randomUUID(),
@@ -43,11 +51,16 @@
 
     const removeContentItem = async (index: number) => {
         if (form.content.length <= 1) return;
-        const isDeleted = await notifyWithUndo('Удаление карточки #' + (index + 1), 2000);
+        if (deletingIds.value.has(index)) return;
+        deletingIds.value.add(index);
+
+        const isDeleted = await notifyWithUndo('Удаление карточки #' + (index + 1), 3000);
 
         if (isDeleted) {
             form.content.splice(index, 1);
         }
+
+        deletingIds.value.delete(index);
     };
 
     const moveItem = (index: number, direction: 'up' | 'down') => {
@@ -72,12 +85,8 @@
     </Teleport>
 
     <div class="mb-4 flex items-center justify-between gap-8">
-        <Link
-            :href="route('admin.features.index')"
-            class="block rounded-xl bg-slate-800 p-2 text-slate-400 hover:text-white"
-        >
-            <ChevronLeftIcon class="h-5 w-5" />
-        </Link>
+        <BaseCancelButton :route-name="'admin.features.index'" label="Назад" />
+
         <p class="text-[12px] text-slate-400">*Здесь можно использовать html разметку</p>
     </div>
 
@@ -89,38 +98,30 @@
             </div>
 
             <div class="grid gap-6 md:grid-cols-2">
-                <div class="space-y-1">
-                    <label class="ml-2 text-[10px] font-black uppercase text-slate-500"
-                        >Заголовок</label
-                    >
-                    <input
-                        v-model="form.title"
-                        type="text"
-                        class="w-full rounded-2xl border-slate-800 bg-slate-950 p-4 text-white focus:border-orange-500"
-                    />
-                </div>
-                <div class="space-y-1">
-                    <label class="ml-2 text-[10px] font-black uppercase text-slate-500"
-                        >Подзаголовок</label
-                    >
-                    <input
-                        v-model="form.subtitle"
-                        type="text"
-                        class="w-full rounded-2xl border-slate-800 bg-slate-950 p-4 text-white focus:border-orange-500"
-                    />
-                </div>
+                <BaseInput
+                    v-model="form.title"
+                    v-model:error="form.errors.title"
+                    label="Заголовок"
+                    placeholder="Напишите заголовок..."
+                    :disabled="form.processing"
+                />
+
+                <BaseInput
+                    v-model="form.subtitle"
+                    v-model:error="form.errors.subtitle"
+                    label="Подзаголовок"
+                    placeholder="Напишите подзаголовок, если он предусмотрен..."
+                    :disabled="form.processing"
+                />
             </div>
 
-            <label class="flex cursor-pointer items-center gap-3">
-                <input
-                    type="checkbox"
-                    v-model="form.is_visible"
-                    class="h-5 w-5 rounded border-slate-800 bg-slate-950 text-orange-500 focus:ring-0"
-                />
-                <span class="text-xs font-bold uppercase tracking-widest text-slate-400"
-                    >Отображать этот блок на сайте</span
-                >
-            </label>
+            <BaseSwitch
+                v-model="form.is_visible"
+                label="Отображать этот блок на сайте"
+                active-text="Будет виден на сайте"
+                inactive-text="В черновик"
+                :disabled="form.processing"
+            />
         </section>
 
         <section class="space-y-6">
@@ -137,7 +138,7 @@
                 </button>
             </div>
 
-            <div class="v grid gap-4" v-if="form.content.length" key="cards">
+            <div class="grid gap-4" v-if="form.content.length" key="cards">
                 <TransitionGroup name="list">
                     <ContentItemCard
                         v-for="(item, index) in form.content"
@@ -147,6 +148,8 @@
                         :is-first="index === 0"
                         :is-last="index === form.content.length - 1"
                         :is-final="form.content.length <= 1"
+                        :disabled="deletingIds.has(Number(index))"
+                        :errors="form.errors.content"
                         @move="moveItem"
                         @remove="removeContentItem"
                     />
@@ -154,20 +157,14 @@
             </div>
         </section>
 
-        <div class="sticky bottom-8 flex justify-end gap-4">
-            <Link
-                :href="route('admin.features.index')"
-                class="rounded-2xl bg-slate-800 px-8 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 transition-all hover:text-white"
-            >
-                Отмена
-            </Link>
-            <button
-                type="submit"
-                :disabled="form.processing"
-                class="shadow-2xl flex items-center gap-2 rounded-2xl bg-orange-600 px-10 py-4 text-[10px] font-black uppercase tracking-widest text-white shadow-orange-900/40 transition-all hover:bg-orange-500"
-            >
-                <SaveIcon class="h-4 w-4" /> Сохранить изменения
-            </button>
+        <div class="sticky bottom-8 flex justify-end gap-4 rounded-[1rem] bg-slate-900/80">
+            <BaseCancelButton :route-name="'admin.features.index'" />
+
+            <BaseSubmitButton
+                :processing="form.processing"
+                label="Сохранить изменения"
+                :icon="SaveIcon"
+            />
         </div>
     </form>
 </template>

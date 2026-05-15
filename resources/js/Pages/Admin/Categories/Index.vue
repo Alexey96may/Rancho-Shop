@@ -1,5 +1,5 @@
 <script setup lang="ts">
-    import { ref, watch } from 'vue';
+    import { reactive, ref, watch } from 'vue';
 
     import { router, useForm } from '@inertiajs/vue3';
 
@@ -114,12 +114,23 @@
         }
     };
 
+    const deletingIds = reactive(new Set<number>());
+
     const deleteCategory = async (id: number) => {
-        const deleted = await notifyWithUndo('Удаление категории');
-        if (!deleted) return;
+        if (deletingIds.has(id)) return;
+        deletingIds.add(id);
+
+        const isTimeOut = await notifyWithUndo('Удаление категории');
+        if (!isTimeOut) {
+            deletingIds.delete(id);
+            return;
+        }
 
         router.delete(route('admin.categories.destroy', id), {
             preserveScroll: true,
+            onFinish: () => {
+                deletingIds.delete(id);
+            },
         });
     };
 
@@ -170,6 +181,7 @@
                             v-for="category in categories.data"
                             :key="category.id"
                             :category="category"
+                            :disabled="deletingIds.has(category.id)"
                             @edit="openModal"
                             @delete="deleteCategory(category.id)"
                         />

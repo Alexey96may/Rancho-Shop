@@ -14,6 +14,7 @@
     import AdminRoleFilter from '@/Components/Admin/UI/AdminRoleFilter.vue';
     import AdminSearchInput from '@/Components/Admin/UI/AdminSearchInput.vue';
     import BaseCancelButton from '@/Components/UI/BaseCancelButton.vue';
+    import BaseCreateButton from '@/Components/UI/BaseCreateButton.vue';
     import BaseInput from '@/Components/UI/BaseInput.vue';
     import BaseModal from '@/Components/UI/BaseModal.vue';
     import BaseSelect from '@/Components/UI/BaseSelect.vue';
@@ -159,13 +160,7 @@
                 />
             </div>
 
-            <button
-                @click="openCreateModal"
-                class="hover:shadow-lg inline-flex items-center justify-center gap-2 rounded-2xl bg-orange-600 px-8 py-4 text-[11px] font-black uppercase tracking-[0.15em] text-white transition-all hover:bg-orange-500 hover:shadow-orange-600/20 active:scale-95"
-            >
-                <UserPlusIcon class="h-5 w-5" />
-                Добавить сотрудника
-            </button>
+            <BaseCreateButton @click="openCreateModal" label="Добавить" :icon="UserPlusIcon" />
         </div>
 
         <div class="flex flex-col gap-4 border-t border-slate-800/50 pt-6">

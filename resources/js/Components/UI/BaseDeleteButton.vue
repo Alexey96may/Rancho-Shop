@@ -2,11 +2,15 @@
     interface Props {
         disabled?: boolean;
         show?: boolean;
+        title?: string;
+        areaLabel?: string;
     }
 
     const props = withDefaults(defineProps<Props>(), {
         disabled: false,
         show: true,
+        title: '',
+        areaLabel: 'Удалить',
     });
 
     const emit = defineEmits<{
@@ -26,7 +30,8 @@
         type="button"
         @click="handleClick"
         :disabled="disabled"
-        aria-label="Удалить"
+        :aria-label="areaLabel"
+        :title="title || undefined"
         :class="[
             'flex items-center gap-2 p-2 text-[10px] font-black uppercase transition-all',
             disabled

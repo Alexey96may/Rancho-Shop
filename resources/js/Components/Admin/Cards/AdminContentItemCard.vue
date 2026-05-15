@@ -1,7 +1,9 @@
 <script setup lang="ts">
-    import { MoveDownIcon, MoveUpIcon, Trash2Icon } from 'lucide-vue-next';
-
+    import AdminDeleteButton from '@/Components/Admin/UI/AdminDeleteButton.vue';
     import AdminNumberInput from '@/Components/Admin/UI/AdminNumberInput.vue';
+    import BaseInput from '@/Components/UI/BaseInput.vue';
+    import BaseMoveButton from '@/Components/UI/BaseMoveButton.vue';
+    import BaseTextarea from '@/Components/UI/BaseTextarea.vue';
     import { LandingContentItem } from '@/types';
 
     const props = defineProps<{
@@ -10,6 +12,8 @@
         isFirst: boolean;
         isLast: boolean;
         isFinal?: boolean;
+        disabled?: boolean;
+        errors?: string;
     }>();
 
     const emit = defineEmits<{
@@ -24,96 +28,66 @@
     <section
         :aria-labelledby="fieldId('title-display')"
         class="group relative rounded-[2rem] border border-slate-800 bg-slate-900/20 p-6 transition-all hover:border-slate-700"
+        :class="{ 'opacity-50': disabled }"
     >
         <div
             class="absolute -right-0 top-[50%] flex -translate-y-[50%] translate-x-[50%] flex-col gap-2 opacity-0 transition-all group-focus-within:opacity-100 group-hover:opacity-100"
             role="toolbar"
             :aria-label="`Управление элементом №${index + 1}`"
         >
-            <button
-                v-show="!isFirst"
-                type="button"
-                @click="emit('move', index, 'up')"
-                :aria-label="`Переместить элемент ${index + 1} выше`"
-                class="shadow-xl rounded-lg bg-slate-800 p-2 text-slate-400 outline-none hover:text-white focus:ring-2 focus:ring-orange-500"
-            >
-                <MoveUpIcon class="h-4 w-4" aria-hidden="true" />
-            </button>
+            <BaseMoveButton
+                direction="up"
+                :index="index"
+                :hidden="isFirst"
+                @move="emit('move', index, 'up')"
+            />
 
-            <button
-                v-show="!isLast"
-                type="button"
-                @click="emit('move', index, 'down')"
-                :aria-label="`Переместить элемент ${index + 1} ниже`"
-                class="shadow-xl rounded-lg bg-slate-800 p-2 text-slate-400 outline-none hover:text-white focus:ring-2 focus:ring-orange-500"
-            >
-                <MoveDownIcon class="h-4 w-4" aria-hidden="true" />
-            </button>
+            <BaseMoveButton
+                direction="down"
+                :index="index"
+                :hidden="isLast"
+                @move="emit('move', index, 'down')"
+            />
 
-            <button
+            <AdminDeleteButton
                 v-show="!isFinal"
-                type="button"
                 @click="emit('remove', index)"
-                :aria-label="`Удалить элемент ${index + 1}`"
-                class="shadow-xl rounded-lg bg-orange-800/50 p-2 text-red-400 outline-none transition-all hover:text-red-200 focus:ring-2 focus:ring-red-500"
-            >
-                <Trash2Icon class="h-4 w-4" aria-hidden="true" />
-            </button>
+                :title="`Удалить элемент ${index + 1}`"
+                :disabled="disabled"
+            />
         </div>
 
         <div class="grid gap-6 md:grid-cols-12">
             <div class="grid gap-4 md:col-span-11 md:grid-cols-3">
-                <div class="space-y-1">
-                    <label
-                        :for="fieldId('icon')"
-                        class="ml-1 text-[9px] font-black uppercase text-slate-600"
-                        >Иконка Lucide</label
-                    >
-                    <input
-                        :id="fieldId('icon')"
-                        v-model="item.icon"
-                        type="text"
-                        placeholder="Circle, Box, etc."
-                        class="w-full rounded-xl border-slate-800 bg-slate-950 p-3 text-xs text-white outline-none focus:border-orange-500/50 focus:ring-0"
-                    />
-                </div>
+                <BaseInput
+                    v-model="item.icon"
+                    label="Иконка Lucide"
+                    placeholder="Circle, Box, etc."
+                    :disabled="disabled"
+                />
 
-                <div class="space-y-1">
-                    <label
-                        :for="fieldId('title')"
-                        class="ml-1 text-[9px] font-black uppercase text-slate-600"
-                        >Заголовок</label
-                    >
-                    <input
-                        :id="fieldId('title')"
-                        v-model="item.title"
-                        type="text"
-                        class="w-full rounded-xl border-slate-800 bg-slate-950 p-3 text-xs text-white outline-none focus:border-orange-500/50 focus:ring-0"
-                    />
-                </div>
+                <BaseInput
+                    v-model="item.title"
+                    label="Заголовок"
+                    placeholder="Напишите заголовок, если он предусмотрен..."
+                    :disabled="disabled"
+                />
 
-                <div class="space-y-1">
-                    <AdminNumberInput
-                        v-model.number="item.step"
-                        :min="0"
-                        :max="9999"
-                        label="Шаг (если нужно)"
-                    />
-                </div>
+                <AdminNumberInput
+                    v-model.number="item.step"
+                    :min="0"
+                    :max="9999"
+                    label="Шаг (если нужно)"
+                />
 
-                <div class="space-y-1 md:col-span-3">
-                    <label
-                        :for="fieldId('desc')"
-                        class="ml-1 text-[9px] font-black uppercase text-slate-600"
-                        >Описание</label
-                    >
-                    <textarea
-                        :id="fieldId('desc')"
-                        v-model="item.desc"
-                        rows="2"
-                        class="w-full rounded-xl border-slate-800 bg-slate-950 p-3 text-xs leading-relaxed text-white outline-none focus:border-orange-500/50 focus:ring-0"
-                    ></textarea>
-                </div>
+                <BaseTextarea
+                    v-model="item.desc"
+                    label="Описание"
+                    placeholder="Введите описание, если оно предусмотрено..."
+                    :max-height="400"
+                />
+
+                <div v-show="errors" class="pl-4 text-sm text-orange-700">{{ errors }}</div>
             </div>
 
             <div

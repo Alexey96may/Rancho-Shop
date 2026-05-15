@@ -124,14 +124,6 @@
                 variant="admin"
                 class="lg:w-64"
             />
-
-            <button
-                v-if="form.search || form.status"
-                @click="clearFilters"
-                class="text-xs font-bold text-orange-500 hover:text-orange-400"
-            >
-                Сбросить
-            </button>
         </div>
     </div>
 

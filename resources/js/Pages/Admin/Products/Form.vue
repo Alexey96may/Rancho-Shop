@@ -1,5 +1,5 @@
 <script setup lang="ts">
-    import { computed, ref, watch } from 'vue';
+    import { computed, ref } from 'vue';
 
     import { Link, router, useForm } from '@inertiajs/vue3';
 
@@ -16,6 +16,7 @@
     import AdminPageHeader from '@/Components/Admin/Shared/AdminPageHeader.vue';
     import AdminBaseTextarea from '@/Components/Admin/UI/AdminBaseTextarea.vue';
     import MediaGallery from '@/Components/Shared/MediaGallery.vue';
+    import BaseCancelButton from '@/Components/UI/BaseCancelButton.vue';
     import BaseCreateButton from '@/Components/UI/BaseCreateButton.vue';
     import BaseDeleteButton from '@/Components/UI/BaseDeleteButton.vue';
     import BaseInput from '@/Components/UI/BaseInput.vue';
@@ -183,9 +184,7 @@
     </Teleport>
 
     <div class="space-y-6">
-        <Link :href="backUrl" aria-label="Вернуться к списку">
-            <ChevronLeftIcon class="h-5 w-5" />
-        </Link>
+        <BaseCancelButton :href="backUrl" label="Назад" />
 
         <nav class="flex gap-2 border-b border-slate-800 pb-px" role="tablist">
             <button

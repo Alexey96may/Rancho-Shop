@@ -4,7 +4,7 @@
     import { router, useForm } from '@inertiajs/vue3';
 
     import debounce from 'lodash/debounce';
-    import { Loader2Icon, XIcon } from 'lucide-vue-next';
+    import { XIcon } from 'lucide-vue-next';
     import draggable from 'vuedraggable';
 
     import UnitCard from '@/Components/Admin/Cards/AdminUnitCard.vue';
@@ -15,6 +15,7 @@
     import AdminSearchInput from '@/Components/Admin/UI/AdminSearchInput.vue';
     import BaseCreateButton from '@/Components/UI/BaseCreateButton.vue';
     import BaseInput from '@/Components/UI/BaseInput.vue';
+    import Modal from '@/Components/UI/BaseModal.vue';
     import BaseSubmitButton from '@/Components/UI/BaseSubmitButton.vue';
     import AdminLayout from '@/Layouts/AdminLayout.vue';
     import { useFlash } from '@/composables/useFlash';
@@ -238,59 +239,40 @@
         </Transition>
     </div>
 
-    <div
-        v-if="isModalOpen"
-        class="fixed inset-0 z-50 flex items-center justify-center p-4"
-        role="dialog"
-        aria-modal="true"
-    >
-        <div class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" @click="closeModal"></div>
+    <Modal :show="isModalOpen" @close="closeModal" max-width="2xl" aria-labelledby="modal-title">
+        <h2 class="mb-8 text-lg font-black uppercase tracking-widest text-white">
+            {{ editingUnit ? 'Редактировать' : 'Новая единица' }}
+        </h2>
 
-        <div
-            class="shadow-2xl animate-in zoom-in-95 relative w-full max-w-md rounded-[2.5rem] border border-slate-800 bg-slate-900 p-8 duration-200"
-        >
-            <button
-                @click="closeModal"
-                class="absolute right-6 top-6 text-slate-500 hover:text-white"
-            >
-                <XIcon class="h-6 w-6" />
-            </button>
+        <form @submit.prevent="submit" class="space-y-5">
+            <BaseInput
+                v-model="form.name"
+                v-model:error="form.errors.name"
+                label="Название"
+                placeholder="Килограмм"
+                :disabled="form.processing"
+            />
 
-            <h2 class="mb-8 text-lg font-black uppercase tracking-widest text-white">
-                {{ editingUnit ? 'Редактировать' : 'Новая единица' }}
-            </h2>
-
-            <form @submit.prevent="submit" class="space-y-5">
+            <div class="grid grid-cols-2 gap-4">
                 <BaseInput
-                    v-model="form.name"
-                    v-model:error="form.errors.name"
-                    label="Название"
-                    placeholder="Килограмм"
+                    v-model="form.short"
+                    v-model:error="form.errors.short"
+                    label="Сокращение"
+                    placeholder="кг"
                     :disabled="form.processing"
                 />
 
-                <div class="grid grid-cols-2 gap-4">
-                    <BaseInput
-                        v-model="form.short"
-                        v-model:error="form.errors.short"
-                        label="Сокращение"
-                        placeholder="кг"
-                        :disabled="form.processing"
-                    />
+                <BaseInput
+                    v-model="form.slug"
+                    v-model:error="form.errors.slug"
+                    label="Slug"
+                    placeholder="kg"
+                    :disabled="form.processing"
+                />
+            </div>
 
-                    <BaseInput
-                        v-model="form.slug"
-                        v-model:error="form.errors.slug"
-                        label="Slug"
-                        placeholder="kg"
-                        :disabled="form.processing"
-                    />
-                </div>
-
-                <BaseSubmitButton :processing="form.processing" label="Подтвердить" />
-            </form>
-        </div>
-    </div>
+            <BaseSubmitButton :processing="form.processing" label="Подтвердить" /></form
+    ></Modal>
 </template>
 
 <style scoped>

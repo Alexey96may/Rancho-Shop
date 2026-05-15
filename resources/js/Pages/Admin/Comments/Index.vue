@@ -1,5 +1,5 @@
 <script setup lang="ts">
-    import { computed, onUnmounted, ref, watch } from 'vue';
+    import { computed, onUnmounted, reactive, ref, watch } from 'vue';
 
     import { router } from '@inertiajs/vue3';
 
@@ -101,25 +101,36 @@
         debouncedApplyFilters();
     });
 
+    const processingStatusesIds = reactive(new Set<number>());
+
     const handleUpdateStatus = (id: number, status: string) => {
+        if (processingStatusesIds.has(id)) return;
+        processingStatusesIds.add(id);
+
         router.patch(
             route('admin.comments.update', id),
             { status },
             {
                 preserveScroll: true,
+                onBefore() {
+                    processingStatusesIds.add(id);
+                },
+                onFinish() {
+                    processingStatusesIds.delete(id);
+                },
             },
         );
     };
 
-    const deletingIds = ref(new Set<number>());
+    const deletingIds = reactive(new Set<number>());
 
     const handleDelete = async (id: number) => {
-        if (deletingIds.value.has(id)) return;
-        deletingIds.value.add(id);
+        if (deletingIds.has(id)) return;
+        deletingIds.add(id);
 
-        const isDeleted = await notifyWithUndo(`Удаление комментария #${sanitizeNumber(id)}`);
+        const isTimeOut = await notifyWithUndo(`Удаление комментария #${sanitizeNumber(id)}`);
 
-        if (isDeleted) {
+        if (isTimeOut) {
             router.delete(route('admin.comments.destroy', id), {
                 preserveScroll: true,
                 preserveState: true,
@@ -127,11 +138,11 @@
                     notify('Ошибка удаления!', 'error');
                 },
                 onFinish: () => {
-                    deletingIds.value.delete(id);
+                    deletingIds.delete(id);
                 },
             });
         } else {
-            deletingIds.value.delete(id);
+            deletingIds.delete(id);
         }
     };
 
@@ -231,6 +242,7 @@
                     :style="{ '--i': index }"
                     @update-status="handleUpdateStatus"
                     :is-deleting="deletingIds.has(comment.id)"
+                    :is-processing-status="processingStatusesIds.has(comment.id)"
                     @delete="handleDelete"
                 />
             </TransitionGroup>

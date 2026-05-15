@@ -1,11 +1,14 @@
 <script setup lang="ts">
-    import { PencilSquareIcon, TagIcon, TrashIcon } from '@heroicons/vue/24/outline';
+    import { PencilSquareIcon, TagIcon } from '@heroicons/vue/24/outline';
 
+    import AdminDeleteButton from '@/Components/Admin/UI/AdminDeleteButton.vue';
+    import AdminEditButton from '@/Components/Admin/UI/AdminEditButton.vue';
     import LucideIcon from '@/Components/UI/LucideIcon.vue';
     import { AdminCategory } from '@/types';
 
     defineProps<{
         category: AdminCategory;
+        disabled: boolean;
     }>();
 
     defineEmits(['edit', 'delete']);
@@ -15,6 +18,7 @@
     <div
         role="listitem"
         class="group relative flex flex-col justify-between overflow-hidden rounded-3xl border border-slate-900 bg-slate-900/30 p-6 transition-all hover:border-orange-500/50 hover:bg-slate-900/50"
+        :class="[disabled ? 'scale-[0.97] opacity-50' : '']"
     >
         <div class="flex items-start justify-between">
             <div
@@ -67,20 +71,18 @@
                 Порядок: {{ category.sort_order }}
             </span>
             <div class="flex gap-1">
-                <button
+                <AdminEditButton
                     @click="$emit('edit', category)"
-                    class="rounded-xl p-2 text-slate-500 transition-all hover:bg-slate-800 hover:text-white"
-                    :aria-label="'Редактировать ' + category.name"
-                >
-                    <PencilSquareIcon class="h-5 w-5" />
-                </button>
-                <button
+                    :title="'Редактировать ' + category.name"
+                    :disabled="disabled"
+                    :icon="PencilSquareIcon"
+                />
+
+                <AdminDeleteButton
                     @click="$emit('delete', category.id)"
-                    class="rounded-xl p-2 text-slate-500 transition-all hover:bg-red-500/10 hover:text-red-500"
-                    :aria-label="'Удалить ' + category.name"
-                >
-                    <TrashIcon class="h-5 w-5" />
-                </button>
+                    :title="'Удалить ' + category.name"
+                    :disabled="disabled"
+                />
             </div>
         </div>
     </div>

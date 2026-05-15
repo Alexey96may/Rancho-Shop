@@ -1,23 +1,30 @@
 <script setup lang="ts">
+    import { computed } from 'vue';
+
     import {
         Bars2Icon,
         ChevronDownIcon,
-        EyeIcon,
-        EyeSlashIcon,
         PencilSquareIcon,
         TrashIcon,
     } from '@heroicons/vue/24/outline';
 
+    import AdminDeleteButton from '@/Components/Admin/UI/AdminDeleteButton.vue';
+    import AdminEditButton from '@/Components/Admin/UI/AdminEditButton.vue';
+    import BaseVisibilityToggle from '@/Components/UI/BaseVisibilityToggle.vue';
     import { AdminFaq } from '@/types';
     import { formatDateTime } from '@/utils/format';
 
-    defineProps<{
+    const props = defineProps<{
         faq: AdminFaq;
         isOpen: boolean;
         isDeleting: boolean;
     }>();
 
     const emit = defineEmits(['toggle', 'edit', 'delete', 'toggle-status']);
+
+    const computedUpdatedAt = computed(() =>
+        formatDateTime(props.faq.updated_at, 'dd.MM.yyyy HH:mm'),
+    );
 </script>
 
 <template>
@@ -83,38 +90,30 @@
                             class="text-[10px] font-black uppercase tracking-widest text-slate-600"
                         >
                             Порядок: {{ faq.sort_order }} •
-                            {{ formatDateTime(faq.updated_at, 'dd.MM.yyyy HH:mm') }}
+                            {{ computedUpdatedAt }}
                         </div>
 
                         <div class="flex gap-2">
-                            <button
-                                @click="emit('toggle-status', faq.id)"
-                                class="rounded-xl p-2.5 transition-all"
-                                :class="
-                                    faq.is_published
-                                        ? 'bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20'
-                                        : 'bg-red-500/10 text-red-500/60 hover:text-red-500'
-                                "
-                            >
-                                <component
-                                    :is="faq.is_published ? EyeIcon : EyeSlashIcon"
-                                    class="h-5 w-5"
-                                />
-                            </button>
+                            <BaseVisibilityToggle
+                                :active="faq.is_published"
+                                active-title="Виден на сайте"
+                                :disabled="isDeleting"
+                                inactive-title="Скрыт"
+                                @toggle="emit('toggle-status', faq.id)"
+                            />
 
-                            <button
+                            <AdminEditButton
                                 @click="emit('edit', faq)"
-                                class="rounded-xl bg-slate-800 p-2.5 text-slate-400 transition-all hover:bg-slate-700 hover:text-orange-500"
-                            >
-                                <PencilSquareIcon class="h-5 w-5" />
-                            </button>
+                                :title="'Редактировать ' + faq.question"
+                                :disabled="isDeleting"
+                                :icon="PencilSquareIcon"
+                            />
 
-                            <button
+                            <AdminDeleteButton
                                 @click="emit('delete', faq.id)"
-                                class="rounded-xl bg-red-500/10 p-2.5 text-red-500/60 transition-all hover:bg-red-500 hover:text-white"
-                            >
-                                <TrashIcon class="h-5 w-5" />
-                            </button>
+                                :title="'Удалить ' + faq.question"
+                                :disabled="isDeleting"
+                            />
                         </div>
                     </div>
                 </div>

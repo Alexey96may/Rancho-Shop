@@ -3,7 +3,6 @@
 
     import { router, useForm } from '@inertiajs/vue3';
 
-    import { PlusIcon } from '@heroicons/vue/24/outline';
     import debounce from 'lodash/debounce';
     import draggable from 'vuedraggable';
 
@@ -14,7 +13,12 @@
     import AdminLoader from '@/Components/Admin/UI/AdminLoader.vue';
     import AdminNumberInput from '@/Components/Admin/UI/AdminNumberInput.vue';
     import AdminSearchInput from '@/Components/Admin/UI/AdminSearchInput.vue';
+    import BaseCancelButton from '@/Components/UI/BaseCancelButton.vue';
+    import BaseCreateButton from '@/Components/UI/BaseCreateButton.vue';
     import Modal from '@/Components/UI/BaseModal.vue';
+    import BaseStatusToggle from '@/Components/UI/BaseStatusToggle.vue';
+    import BaseSubmitButton from '@/Components/UI/BaseSubmitButton.vue';
+    import BaseTextarea from '@/Components/UI/BaseTextarea.vue';
     import AdminLayout from '@/Layouts/AdminLayout.vue';
     import { useFlash } from '@/composables/useFlash';
     import { AdminFaq, Paginated } from '@/types';
@@ -51,7 +55,7 @@
 
     const isFiltering = ref(false);
 
-    watch(search, (newValue) => {
+    watch(search, () => {
         isFiltering.value = true;
 
         performSearch();
@@ -203,12 +207,7 @@
         <div class="flex flex-col items-center justify-between gap-4 sm:flex-row">
             <AdminSearchInput v-model="search" placeholder="Поиск вопроса..." />
 
-            <button
-                @click="openModal()"
-                class="flex h-[54px] w-full items-center justify-center gap-2 rounded-2xl bg-orange-600 px-8 text-xs font-black uppercase tracking-widest text-white transition-all hover:bg-orange-500 sm:w-auto"
-            >
-                <PlusIcon class="h-5 w-5" /> Добавить вопрос
-            </button>
+            <BaseCreateButton @click="openModal()" label="Добавить вопрос" />
         </div>
 
         <Transition name="fade-slide" mode="out-in">
@@ -279,47 +278,23 @@
             </h3>
 
             <form @submit.prevent="submit" class="space-y-6">
-                <div class="space-y-1.5">
-                    <label
-                        for="faq-question"
-                        class="ml-2 text-[10px] font-black uppercase tracking-widest text-slate-500"
-                    >
-                        Текст вопроса
-                    </label>
-                    <textarea
-                        id="faq-question"
-                        v-model="form.question"
-                        required
-                        rows="2"
-                        class="w-full rounded-2xl border-slate-800 bg-slate-950 p-4 text-white transition-all focus:border-orange-500 focus:ring-0"
-                        placeholder="Например: Как активировать подписку?"
-                    ></textarea>
+                <BaseTextarea
+                    v-model="form.question"
+                    v-model:error="form.errors.question"
+                    label="Текст вопроса"
+                    :disabled="form.processing"
+                    placeholder="Например: Как активировать подписку?"
+                    :max-height="150"
+                />
 
-                    <div v-if="form.errors.question" class="ml-2 text-xs text-red-500">
-                        {{ form.errors.question }}
-                    </div>
-                </div>
-
-                <div class="space-y-1.5">
-                    <label
-                        for="faq-answer"
-                        class="ml-2 text-[10px] font-black uppercase tracking-widest text-slate-500"
-                    >
-                        Ответ (поддерживает HTML)
-                    </label>
-                    <textarea
-                        id="faq-answer"
-                        v-model="form.answer"
-                        required
-                        rows="6"
-                        class="w-full rounded-2xl border-slate-800 bg-slate-950 p-4 font-mono text-sm text-slate-300 transition-all focus:border-orange-500 focus:ring-0"
-                        placeholder="<p>Для активации перейдите в...</p>"
-                    ></textarea>
-
-                    <div v-if="form.errors.answer" class="ml-2 text-xs text-red-500">
-                        {{ form.errors.answer }}
-                    </div>
-                </div>
+                <BaseTextarea
+                    v-model="form.answer"
+                    v-model:error="form.errors.answer"
+                    :disabled="form.processing"
+                    label="Ответ (поддерживает HTML)"
+                    placeholder="<p>Для активации перейдите в...</p>"
+                    :max-height="150"
+                />
 
                 <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                     <AdminNumberInput
@@ -329,41 +304,21 @@
                         :max="999"
                     />
 
-                    <div class="flex items-end pb-4">
-                        <label class="group flex cursor-pointer items-center gap-3">
-                            <div class="relative flex items-center">
-                                <input
-                                    type="checkbox"
-                                    v-model="form.is_published"
-                                    class="peer h-6 w-6 rounded-lg border-slate-800 bg-slate-950 text-orange-600 transition-all focus:ring-0 focus:ring-offset-0"
-                                />
-                            </div>
-                            <span
-                                class="text-[10px] font-black uppercase tracking-widest text-slate-400 transition-colors group-hover:text-slate-200"
-                            >
-                                Опубликовать на сайте
-                            </span>
-                        </label>
-                    </div>
+                    <BaseStatusToggle
+                        v-model="form.is_published"
+                        label="Опубликовать на сайте"
+                        :disabled="form.processing"
+                    />
                 </div>
 
                 <div class="flex flex-col gap-4 pt-4 sm:flex-row">
-                    <button
-                        type="submit"
-                        :disabled="form.processing"
-                        class="flex-1 rounded-2xl bg-orange-600 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-white transition-all hover:bg-orange-500 disabled:opacity-50"
-                    >
-                        <span v-if="form.processing">Сохранение...</span>
-                        <span v-else>{{ editMode ? 'Обновить данные' : 'Создать вопрос' }}</span>
-                    </button>
+                    <BaseCancelButton label="Отмена" @click="isModalOpen = false" />
 
-                    <button
-                        @click="isModalOpen = false"
-                        type="button"
-                        class="flex-1 rounded-2xl bg-slate-800 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 transition-all hover:bg-slate-700 hover:text-white"
-                    >
-                        Отмена
-                    </button>
+                    <BaseSubmitButton
+                        :processing="form.processing"
+                        :is-edit="editMode"
+                        :label="editMode ? 'Обновить' : 'Создать '"
+                    />
                 </div>
             </form>
         </div>
