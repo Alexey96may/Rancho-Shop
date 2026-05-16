@@ -56,6 +56,21 @@ class AnimalController extends Controller
     }
 
     /**
+     * Show the form for creating a new resource.
+     */
+    public function create(Request $request)
+    {
+        return Inertia::render('Admin/Animals/FormPage', [
+            'animal' => null,
+            'categories' => Category::where('type', 'animal')->get(['id', 'name', 'slug']),
+            'seo' => $this->seo('Добавление новой особи', robots: 'noindex, nofollow'),
+            'backUrl' => $request->query('back') 
+                    ? route('admin.animals.index') . $request->query('back') 
+                    : route('admin.animals.index'),
+        ]);
+    }
+
+    /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
@@ -103,8 +118,29 @@ class AnimalController extends Controller
         if ($request->hasFile('voice')) {
             $animal->addMediaFromRequest('voice')->toMediaCollection('voice');
         }
+        
+        if ($request->filled('backUrl')) {
+            return redirect($request->backUrl)->with('success', "Животное «{$animal->name}» успешно добавлено!");
+        }
 
-        return redirect()->route('admin.animals.index')->with('success', "Животное $animal->name успешно добавлено");
+        return redirect()->route('admin.animals.index')->with('success', "Животное $animal->name успешно добавлено!");
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(Request $request, Animal $animal)
+    {
+        $animal->load(['seo', 'category', 'parent']);
+
+        return Inertia::render('Admin/Animals/FormPage', [
+            'animal' => new AdminAnimalResource($animal), 
+            'categories' => Category::where('type', 'animal')->get(['id', 'name', 'slug']),
+            'seo' => $this->seo("Редактирование {$animal->name}", robots: 'noindex, nofollow'),
+            'backUrl' => $request->query('back') 
+                ? route('admin.animals.index') . $request->query('back') 
+                : route('admin.animals.index'),
+        ]);
     }
 
     /**
@@ -131,6 +167,8 @@ class AnimalController extends Controller
             'seo.canonical'   => 'nullable|string|url',
             'seo.is_noindex'  => 'boolean',
         ]);
+
+        $validated['slug'] = Str::slug($validated['name']);
 
         $animal->update(collect($validated)->except(['avatar', 'gallery', 'voice', 'seo'])->toArray());
 
@@ -179,7 +217,13 @@ class AnimalController extends Controller
             $animal->addMediaFromRequest('voice')->toMediaCollection('voice');
         }
 
-        return redirect()->back()->with('success', "Данные животного $animal->name обновлены");
+        
+        if ($request->filled('backUrl')) {
+            return redirect($request->backUrl)->with('success', "Данные животного «{$animal->name}» обновлены!");
+        }
+
+
+        return redirect()->route('admin.animals.index')->with('success', "Данные животного $animal->name обновлены!");
     }
 
     /**
@@ -191,7 +235,7 @@ class AnimalController extends Controller
         return redirect()->route('admin.animals.index')->with('success', 'Животное перемещено в архив');
     }
 
-    public function restore($id)
+    public function restore(int $id)
     {
         $animal = Animal::withTrashed()->findOrFail($id);
         $animal->restore();
