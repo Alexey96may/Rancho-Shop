@@ -1,0 +1,112 @@
+import type { RequestPayload } from '@inertiajs/core';
+
+import { User } from './User';
+
+export * from './Animal';
+export * from './Product';
+export * from './Comment';
+export * from './Cart';
+export * from './Settings';
+export * from './Order';
+export * from './PromoCode';
+export * from './Seo';
+export * from './Page';
+export * from './Faq';
+export * from './Category';
+export * from './LandingBlock';
+export * from './Media';
+export * from './Unit';
+export * from './ProductVariant';
+export * from './Delivery';
+export * from './User';
+export * from './Forms';
+export * from './Analitic';
+
+export interface ResourceCollection<T> {
+    data: T[];
+}
+
+export interface ResourceSingle<T> {
+    data: T;
+}
+
+export interface PaginationLink {
+    url: string | null;
+    label: string;
+    active: boolean;
+}
+
+export interface Paginated<T> {
+    data: T[];
+    links: {
+        first: string;
+        last: string;
+        prev: string | null;
+        next: string | null;
+    };
+    meta: {
+        current_page: number;
+        last_page: number;
+        links: PaginationLink[];
+        per_page: number;
+        total: number;
+        path: string;
+    };
+}
+
+export interface FlashPayload {
+    success?: string;
+    error?: string;
+    message?: string;
+    warning?: string;
+
+    last_uploaded_url?: string;
+}
+
+export interface PageProps {
+    [key: string]: unknown;
+}
+
+export interface Permission {
+    key: string;
+    value: string;
+    label: string;
+}
+
+export interface AuthProps {
+    user: ResourceSingle<User> | ResourceSingle<null>;
+}
+
+export interface SharedData extends PageProps {
+    auth: AuthProps;
+    can: {
+        manageProducts: boolean;
+        manageOrders: boolean;
+        manageAnalitics: boolean;
+        manageComments: boolean;
+        manageDelivery: boolean;
+        manageAnimals: boolean;
+        manageUsers: boolean;
+        manageCategories: boolean;
+        manageCatalog: boolean;
+        managePages: boolean;
+        managePromocodes: boolean;
+        manageFaq: boolean;
+        manageFeatures: boolean;
+        manageSettings: boolean;
+        manageNomenclature: boolean;
+
+        editAdminNote: boolean;
+        restore: boolean;
+        forceDelete: boolean;
+    };
+    flash: FlashPayload;
+    permissions: Permission[];
+    [key: string]: any;
+}
+
+export type QuickUpdatePayload = RequestPayload & {
+    price?: number;
+    stock?: number;
+    is_default?: boolean;
+};
