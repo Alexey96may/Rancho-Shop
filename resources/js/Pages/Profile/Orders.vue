@@ -2,6 +2,7 @@
     import { router } from '@inertiajs/vue3';
 
     import ProfileLayout from '@/Layouts/ProfileLayout.vue';
+    import { useFlash } from '@/composables/ui/useFlash';
 
     defineOptions({ layout: ProfileLayout });
 
@@ -12,8 +13,12 @@
         };
     }>();
 
-    const cancelOrder = (orderId: number) => {
-        if (confirm('Вы уверены, что хотите отменить этот заказ?')) {
+    const { notifyWithUndo } = useFlash();
+
+    const cancelOrder = async (orderId: number) => {
+        const isTimeOut = await notifyWithUndo('Отмена заказа!');
+
+        if (isTimeOut) {
             router.patch(
                 route('profile.orders.cancel', orderId),
                 {},
@@ -53,7 +58,7 @@
 <template>
     <div class="space-y-6">
         <div v-if="orders.data.length === 0" class="py-12 text-center text-sm text-slate-500">
-            Вы еще не совершали заказов на нашем сайте.
+            Вы ещё не совершали заказов на нашем сайте.
         </div>
 
         <div class="grid grid-cols-1 gap-4">
