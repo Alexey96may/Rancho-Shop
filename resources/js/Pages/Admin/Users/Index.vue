@@ -1,43 +1,59 @@
 <script setup lang="ts">
-    import { ref, watch } from 'vue';
+    import { PropType, watch } from 'vue';
 
-    import { router, useForm } from '@inertiajs/vue3';
+    import { useForm } from '@inertiajs/vue3';
 
     import { FunnelIcon, UserPlusIcon } from '@heroicons/vue/24/outline';
-    import debounce from 'lodash/debounce';
 
     import AdminUserCard from '@/Components/Admin/Cards/AdminUserCard.vue';
     import AdminEmptyState from '@/Components/Admin/Shared/AdminEmptyState.vue';
+    import AdminPageHeader from '@/Components/Admin/Shared/AdminPageHeader.vue';
     import AdminPagination from '@/Components/Admin/Shared/AdminPagination.vue';
     import AdminLoader from '@/Components/Admin/UI/AdminLoader.vue';
     import AdminRoleFilter from '@/Components/Admin/UI/AdminRoleFilter.vue';
     import AdminSearchInput from '@/Components/Admin/UI/AdminSearchInput.vue';
     import BaseCancelButton from '@/Components/UI/BaseCancelButton.vue';
+    import BaseCreateButton from '@/Components/UI/BaseCreateButton.vue';
     import BaseInput from '@/Components/UI/BaseInput.vue';
     import BaseModal from '@/Components/UI/BaseModal.vue';
     import BaseSelect from '@/Components/UI/BaseSelect.vue';
     import BaseSubmitButton from '@/Components/UI/BaseSubmitButton.vue';
     import AdminLayout from '@/Layouts/AdminLayout.vue';
-    import { useFlash } from '@/composables/useFlash';
-    import { AdminUser, Paginated, RoleInfo } from '@/types';
-
-    const props = defineProps<{
-        users: Paginated<AdminUser>;
-        roles: RoleInfo[];
-        filters: { search: string; role: string | null };
-    }>();
-
-    const searchQuery = ref(props.filters.search || '');
-    const selectedRole = ref(props.filters.role || null);
-    const isFiltering = ref(false);
-
-    const isModalOpen = ref(false);
-    const editMode = ref(false);
-    const currentUserId = ref<number | null>(null);
-
-    const { notifyWithUndo, notify } = useFlash();
+    import { useAdminCrud } from '@/composables/crud/useAdminCrud';
+    import { useAdminForm } from '@/composables/crud/useAdminForm';
+    import { useAdminFilters } from '@/composables/routing/useAdminFilters';
+    import { AdminUser, Paginated, RoleInfo, UserRole } from '@/types';
 
     defineOptions({ layout: AdminLayout });
+
+    const props = defineProps({
+        users: {
+            type: Object as PropType<Paginated<AdminUser>>,
+            required: true,
+            validator: (value: unknown): boolean => {
+                const val = value as Record<string, unknown>;
+                const hasData = Array.isArray(val?.data);
+                const hasMeta = val?.meta && typeof val.meta === 'object';
+
+                if (!hasData || !hasMeta) {
+                    console.warn(
+                        'Runtime Error: The "users" prop must match the Paginated structure.',
+                    );
+                }
+                return !!(hasData && hasMeta);
+            },
+        },
+        roles: {
+            type: Array as PropType<RoleInfo[]>,
+            required: true,
+            default: () => [],
+        },
+        filters: {
+            type: Object as PropType<{ search: string; role: UserRole | null }>,
+            required: true,
+            default: () => ({ search: '', role: null }),
+        },
+    });
 
     const form = useForm({
         name: '',
@@ -47,126 +63,56 @@
         password: '',
     });
 
-    const updateFilters = () => {
-        router.get(
-            route('admin.users.index'),
-            { search: searchQuery.value, role: selectedRole.value },
-            {
-                preserveState: true,
-                replace: true,
-                preserveScroll: true,
-                onFinish: () => {
-                    isFiltering.value = false;
-                },
-            },
-        );
+    const filterForm = useForm({
+        search: props.filters.search || '',
+        role: props.filters.role || null,
+    });
+
+    const handleEditClick = (user: AdminUser) => {
+        const formData = {
+            ...user,
+            role: user.role.value,
+        };
+
+        openModal(form, formData);
+    };
+
+    const { deleteEntity, isDeleting } = useAdminCrud();
+    const { isFiltering, submitFilters, clearFilters } = useAdminFilters();
+    const { submitForm, isModalOpen, editMode, currentId, openModal, closeModal } = useAdminForm();
+
+    const submit = () => {
+        submitForm(form, 'admin.users', editMode.value ? currentId.value : null, {
+            onSuccess: () => closeModal(form),
+        });
     };
 
     watch(
-        [searchQuery, selectedRole],
-        debounce(() => {
-            isFiltering.value = true;
-
-            updateFilters();
-        }, 300),
+        () => [filterForm.search, filterForm.role],
+        () => {
+            submitFilters(filterForm, 'admin.users.index');
+        },
     );
-
-    const clearFilters = () => {
-        searchQuery.value = '';
-        selectedRole.value = '';
-    };
-
-    const openCreateModal = () => {
-        editMode.value = false;
-        currentUserId.value = null;
-        form.reset();
-        form.clearErrors();
-        isModalOpen.value = true;
-    };
-
-    const openEditModal = (user: AdminUser) => {
-        editMode.value = true;
-        currentUserId.value = user.id;
-        form.clearErrors();
-        form.name = user.name;
-        form.email = user.email;
-        form.phone = user.phone === 'Не указан' ? '' : user.phone;
-        form.role = user.role.value;
-        form.password = '';
-        isModalOpen.value = true;
-    };
-
-    const closeModal = () => {
-        isModalOpen.value = false;
-        form.reset();
-    };
-
-    const submit = () => {
-        if (editMode.value) {
-            form.put(
-                route('admin.users.update', currentUserId.value as number) as unknown as string,
-                {
-                    onSuccess: () => closeModal(),
-                    preserveScroll: true,
-                },
-            );
-        } else {
-            form.post(route('admin.users.store'), {
-                onSuccess: () => closeModal(),
-                preserveScroll: true,
-            });
-        }
-    };
-
-    const deletingIds = ref(new Set<number>());
-
-    const deleteUser = async (user: AdminUser) => {
-        if (deletingIds.value.has(user.id)) return;
-        deletingIds.value.add(user.id);
-        const isTimeOut = await notifyWithUndo(`Удаление пользователя «${user.name}»`);
-
-        if (isTimeOut) {
-            router.delete(route('admin.users.destroy', user.id), {
-                preserveScroll: true,
-                onFinish: () => {
-                    deletingIds.value.delete(user.id);
-                },
-                onError: (e) => {
-                    notify(e.error, 'error');
-                },
-            });
-        } else {
-            deletingIds.value.delete(user.id);
-        }
-    };
 </script>
 
 <template>
     <Teleport to="#admin-header-content">
-        <div class="flex items-center gap-3">
-            <div class="h-8 w-1 rounded-full bg-orange-600"></div>
-            <h1 class="text-xl font-black uppercase tracking-wider text-white">
-                Система управления кадрами
-            </h1>
-        </div>
+        <AdminPageHeader
+            title="Модерация пользователей"
+            subtitle="Управление кадрами магазина и пользователями сайта"
+        />
     </Teleport>
 
     <section class="mb-8 space-y-6" aria-label="Инструменты поиска и фильтрации">
         <div class="flex flex-col justify-between gap-4 md:flex-row md:items-center">
             <div class="relative w-full max-w-md">
                 <AdminSearchInput
-                    v-model="searchQuery"
-                    placeholder="Поиск: имя, почта или телефон"
+                    v-model="filterForm.search"
+                    placeholder="Поиск: имя, почта или телефон..."
                 />
             </div>
 
-            <button
-                @click="openCreateModal"
-                class="hover:shadow-lg inline-flex items-center justify-center gap-2 rounded-2xl bg-orange-600 px-8 py-4 text-[11px] font-black uppercase tracking-[0.15em] text-white transition-all hover:bg-orange-500 hover:shadow-orange-600/20 active:scale-95"
-            >
-                <UserPlusIcon class="h-5 w-5" />
-                Добавить сотрудника
-            </button>
+            <BaseCreateButton @click="openModal(form)" label="Добавить" :icon="UserPlusIcon" />
         </div>
 
         <div class="flex flex-col gap-4 border-t border-slate-800/50 pt-6">
@@ -179,49 +125,57 @@
 
             <AdminRoleFilter
                 :roles="roles"
-                :selected-role="selectedRole"
-                @change="(role) => (selectedRole = role)"
+                :selected-role="filterForm.role"
+                @change="(role) => (filterForm.role = role)"
             />
         </div>
     </section>
 
     <main class="relative min-h-[400px]">
-        <TransitionGroup
-            v-if="users.data.length"
-            name="user-list"
-            tag="div"
-            class="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3"
-        >
-            <AdminUserCard
-                v-for="user in users.data"
-                :key="user.id"
-                :user="user"
-                :disabled="deletingIds.has(user.id) || form.processing"
-                @edit="openEditModal(user)"
-                @delete="deleteUser(user)"
-            />
-        </TransitionGroup>
+        <Transition name="fade-slide">
+            <div
+                v-if="users.data.length"
+                key="users"
+                class="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3"
+            >
+                <TransitionGroup name="user-list">
+                    <AdminUserCard
+                        v-for="user in users.data"
+                        :key="user.id"
+                        :user="user"
+                        :disabled="isDeleting(user.id) || form.processing"
+                        @edit="handleEditClick(user)"
+                        @delete="
+                            deleteEntity(
+                                'admin.users',
+                                user.id,
+                                `Удаление пользователя «${user.name}»`,
+                            )
+                        "
+                    />
+                </TransitionGroup>
+            </div>
 
-        <AdminLoader v-else-if="isFiltering" key="loading" text="Синхронизация" />
+            <AdminLoader v-else-if="isFiltering" key="loading" text="Синхронизация" />
 
-        <AdminEmptyState
-            v-else
-            key="empty"
-            :title="searchQuery ? 'Пользователь не найден' : 'Список пользователей пуст'"
-            @action="searchQuery ? clearFilters() : openCreateModal()"
-            :action-text="searchQuery ? 'Очистить фильтр' : 'Добавить пользователя'"
-            :show-action="true"
-            :description="
-                searchQuery
-                    ? 'По запросу «' + searchQuery + '» совпадений нет'
-                    : 'Нет ни одного промокода'
-            "
-        />
+            <AdminEmptyState
+                v-else
+                key="empty"
+                :title="filterForm.search ? 'Пользователь не найден' : 'Список пользователей пуст'"
+                @action="filterForm.search ? clearFilters(filterForm) : openModal(form)"
+                :action-text="filterForm.search ? 'Очистить фильтр' : 'Добавить пользователя'"
+                :show-action="true"
+                :description="
+                    filterForm.search
+                        ? 'По запросу «' + filterForm.search + '» совпадений нет'
+                        : 'Нет ни одного промокода'
+                "
+        /></Transition>
     </main>
 
-    <div class="mt-12 border-t border-slate-800/50 pt-8">
-        <AdminPagination :links="users.meta.links" />
-    </div>
+    <Transition name="fade-slide" mode="out-in">
+        <AdminPagination v-show="!isFiltering" :links="users.meta.links" />
+    </Transition>
 
     <BaseModal
         :show="isModalOpen"
@@ -316,5 +270,14 @@
         position: absolute;
         width: 100%;
         max-width: 350px;
+    }
+
+    .fade-slide-enter-active {
+        transition: all 0.4s ease-out;
+    }
+
+    .fade-slide-enter-from {
+        opacity: 0;
+        transform: translateY(-10px);
     }
 </style>

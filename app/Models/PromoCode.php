@@ -9,6 +9,42 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
+/**
+ * @property int $id
+ * @property string $code
+ * @property string|null $description
+ * @property PromoCodeType $type
+ * @property int $value
+ * @property int $min_order_amount
+ * @property int|null $max_discount
+ * @property int|null $usage_limit
+ * @property int $used_count
+ * @property \Illuminate\Support\Carbon|null $expires_at
+ * @property bool $is_active
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read string $status
+ * @method static Builder<static>|PromoCode active()
+ * @method static \Database\Factories\PromoCodeFactory factory($count = null, $state = [])
+ * @method static Builder<static>|PromoCode newModelQuery()
+ * @method static Builder<static>|PromoCode newQuery()
+ * @method static Builder<static>|PromoCode query()
+ * @method static Builder<static>|PromoCode valid()
+ * @method static Builder<static>|PromoCode whereCode($value)
+ * @method static Builder<static>|PromoCode whereCreatedAt($value)
+ * @method static Builder<static>|PromoCode whereDescription($value)
+ * @method static Builder<static>|PromoCode whereExpiresAt($value)
+ * @method static Builder<static>|PromoCode whereId($value)
+ * @method static Builder<static>|PromoCode whereIsActive($value)
+ * @method static Builder<static>|PromoCode whereMaxDiscount($value)
+ * @method static Builder<static>|PromoCode whereMinOrderAmount($value)
+ * @method static Builder<static>|PromoCode whereType($value)
+ * @method static Builder<static>|PromoCode whereUpdatedAt($value)
+ * @method static Builder<static>|PromoCode whereUsageLimit($value)
+ * @method static Builder<static>|PromoCode whereUsedCount($value)
+ * @method static Builder<static>|PromoCode whereValue($value)
+ * @mixin \Eloquent
+ */
 class PromoCode extends Model
 {
     use HasActiveScope, HasFactory;
@@ -84,5 +120,47 @@ class PromoCode extends Model
                 return 'active';
             },
         );
+    }
+
+    /**
+    * Scope for complex filtering of promo codes
+    */
+    public function scopeFilter(Builder $query, array $filters): Builder
+    {
+        return $query
+            ->when($filters['search'] ?? null, function ($query, $search) {
+                $search = mb_strtolower($search, 'UTF-8');
+                $query->where(function ($q) use ($search) {
+                    $q->whereRaw('LOWER(code) LIKE ?', ["%{$search}%"])
+                      ->orWhereRaw('LOWER(description) LIKE ?', ["%{$search}%"]);
+                });
+            })
+            ->when($filters['type'] ?? null, function ($query, $type) {
+                $query->where('type', $type);
+            })
+            ->when($filters['status'] ?? null, function ($query, $status) {
+                if ($status === 'new') {
+                    $query->where('created_at', '>=', now()->subDays(7));
+                } elseif ($status === 'expiring') {
+                    $query->whereNotNull('expires_at')
+                          ->where('expires_at', '>', now())
+                          ->where('expires_at', '<=', now()->addDays(3));
+                }
+            });
+    }
+
+    /**
+    * Scope for flexible list sorting
+    */
+    public function scopeApplySorting(Builder $query, ?string $sort): Builder
+    {
+        $query->orderBy('is_active', 'desc');
+
+        if ($sort === 'expires_at') {
+            return $query->orderByRaw('expires_at IS NULL ASC')
+                         ->orderBy('expires_at', 'asc');
+        }
+
+        return $query->latest();
     }
 }

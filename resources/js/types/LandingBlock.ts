@@ -5,6 +5,7 @@ export enum LandingBlockKey {
 }
 
 export interface LandingContentItem {
+    id?: number;
     title: string;
     desc: string;
     icon?: string | null;

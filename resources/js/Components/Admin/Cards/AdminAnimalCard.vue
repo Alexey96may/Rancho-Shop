@@ -1,27 +1,39 @@
 <script setup lang="ts">
-    import { PencilSquareIcon, SpeakerWaveIcon, TrashIcon } from '@heroicons/vue/24/outline';
+    import { computed } from 'vue';
 
-    import AppImage from '@/Components/UI/AppImage.vue';
-    import { AdminAnimal } from '@/types';
+    import { usePage } from '@inertiajs/vue3';
+
+    import { ArrowPathIcon, PencilSquareIcon, SpeakerWaveIcon } from '@heroicons/vue/24/outline';
+
+    import AdminDeleteButton from '@/Components/Admin/UI/AdminDeleteButton.vue';
+    import AdminEditButton from '@/Components/Admin/UI/AdminEditButton.vue';
+    import { AdminAnimal, SharedData } from '@/types';
 
     defineProps<{
         animal: AdminAnimal;
+        disabled: boolean;
     }>();
 
-    defineEmits(['edit', 'delete']);
+    defineEmits(['edit', 'delete', 'restore']);
 
     const playVoice = (url: string) => {
         const audio = new Audio(url);
         audio.play().catch((error) => {
-            console.error('Ошибка воспроизведения:', error);
+            if (console) {
+                console.error('Ошибка воспроизведения:', error);
+            }
         });
     };
+
+    const page = usePage<SharedData>();
+    const can = computed(() => page.props.can ?? {});
 </script>
 
 <template>
     <div
         role="listitem"
         class="group relative flex flex-col overflow-hidden rounded-[2.5rem] border border-slate-900 bg-slate-900/30 p-5 transition-all hover:border-orange-500/40 hover:bg-slate-900/60"
+        :class="{ 'border-red-500/10 bg-red-950/5 opacity-75': animal.is_trashed }"
     >
         <div class="relative h-48 w-full overflow-hidden rounded-[2rem] bg-slate-800">
             <AppImage
@@ -30,13 +42,15 @@
                 :alt="animal.name"
                 :context="'animal'"
                 class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                :class="{ 'contrast-125 grayscale': animal.is_trashed }"
             />
 
             <div class="absolute right-3 top-3 flex gap-2">
                 <span
                     class="rounded-full bg-slate-950/60 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-white backdrop-blur-md"
+                    :class="{ 'border border-red-500/30 text-red-400': animal.is_trashed }"
                 >
-                    {{ animal.status }}
+                    {{ animal.is_trashed ? 'В КОРЗИНЕ' : animal.status }}
                 </span>
             </div>
         </div>
@@ -48,9 +62,15 @@
                 <div
                     class="h-2 w-2 rounded-full"
                     :class="
-                        animal.is_active ? 'bg-emerald-500 shadow-[0_0_8px_#10b981]' : 'bg-red-500'
+                        animal.is_trashed
+                            ? 'bg-red-700 shadow-[0_0_8px_#b91c1c]'
+                            : animal.is_active
+                              ? 'bg-emerald-500 shadow-[0_0_8px_#10b981]'
+                              : 'bg-red-500'
                     "
-                    :aria-label="animal.is_active ? 'Активен' : 'В архиве'"
+                    :aria-label="
+                        animal.is_trashed ? 'В корзине' : animal.is_active ? 'Активен' : 'В архиве'
+                    "
                 ></div>
             </div>
 
@@ -70,7 +90,7 @@
         <div class="mt-6 flex items-center justify-between border-t border-slate-800/50 px-2 pt-4">
             <div class="flex gap-2">
                 <button
-                    v-if="animal.voice_url"
+                    v-if="animal.voice_url && !animal.is_trashed"
                     @click="playVoice(animal.voice_url)"
                     class="rounded-xl bg-slate-800 p-2 text-slate-400 hover:text-orange-500"
                     title="Прослушать голос"
@@ -81,20 +101,28 @@
             <div
                 class="flex gap-1 transition-opacity duration-300 lg:opacity-0 lg:group-hover:opacity-100"
             >
-                <button
+                <AdminEditButton
+                    v-if="animal.is_trashed && can.restore"
+                    @click="$emit('restore', animal.id, animal.name)"
+                    :title="'Восстановить ' + animal.name"
+                    :disabled="disabled"
+                    :icon="ArrowPathIcon"
+                />
+
+                <AdminEditButton
+                    v-else-if="!animal.is_trashed"
                     @click="$emit('edit', animal)"
-                    class="rounded-xl p-2 text-slate-500 transition-all hover:bg-slate-800 hover:text-white"
-                    :aria-label="'Редактировать ' + animal.name"
-                >
-                    <PencilSquareIcon class="h-5 w-5" />
-                </button>
-                <button
+                    :title="'Редактировать ' + animal.name"
+                    :disabled="disabled"
+                    :icon="PencilSquareIcon"
+                />
+
+                <AdminDeleteButton
+                    v-if="!animal.is_trashed || can.forceDelete"
                     @click="$emit('delete', animal.id)"
-                    class="rounded-xl p-2 text-slate-500 transition-all hover:bg-red-500/10 hover:text-red-500"
-                    :aria-label="'Удалить ' + animal.name"
-                >
-                    <TrashIcon class="h-5 w-5" />
-                </button>
+                    :title="animal.is_trashed ? 'Удалить окончательно' : 'Удалить в архив'"
+                    :disabled="disabled"
+                />
             </div>
         </div>
     </div>

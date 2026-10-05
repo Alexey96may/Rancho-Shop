@@ -20,7 +20,7 @@ class SettingService
                 return $default;
             }
 
-            return $this->castValue($setting->value, $setting->type);
+            return $this->castValue($setting->value, $setting->type, $key);
         });
     }
 
@@ -48,7 +48,7 @@ class SettingService
     /**
      * Update or create a setting
      */
-    public function set(string $key, mixed $value, string $type = 'string'): void
+    public function set(string $key, mixed $value, string $type = 'string', bool $flushCache = true): void
     {
         $val = ($type === 'json') ? json_encode($value) : (string) $value;
 
@@ -58,9 +58,12 @@ class SettingService
         );
 
         Cache::forget("setting.{$key}");
-        Cache::forget("settings.all");
-        if ($key === 'delivery_zones') {
-            Cache::forget('delivery_zones');
+
+        if ($flushCache) {
+            $this->flushCache();
+            if ($key === 'delivery_zones') {
+                Cache::forget('delivery_zones');
+            }
         }
     }
 
@@ -69,18 +72,44 @@ class SettingService
         return Cache::remember("settings.all", 86400, function () {
             return Setting::all()
                 ->mapWithKeys(fn ($s) => [
-                    $s->key => $this->castValue($s->value, $s->type)
+                    $s->key => $this->castValue($s->value, $s->type, $s->key)
                 ])
                 ->toArray();
         });
     }
 
-    //for api
-    public function allModels()
+    public function bulkSet(array $settings): void
     {
-        return Setting::all();
+        $hasDeliveryZones = false;
+
+        foreach ($settings as $item) {
+            if ($item['key'] === 'delivery_zones') {
+                $hasDeliveryZones = true;
+            }
+
+            $this->set($item['key'], $item['value'], $item['type'], false);
+        }
+
+        $this->flushCache();
+        
+        if ($hasDeliveryZones) {
+            Cache::forget('delivery_zones');
+        }
     }
 
+    /**
+    * Get model collections for the admin panel (cache optimized)
+    */
+    public function allModels()
+    {
+        return Cache::remember("settings.models", 86400, function () {
+            return Setting::all();
+        });
+    }
+
+    /**
+    * Select a specific group of settings
+    */
     public function group(array $keys): array
     {
         $all = $this->all();
@@ -90,22 +119,40 @@ class SettingService
             ->toArray();
     }
 
+    /**
+    * Parse the coordinate string into a readable array
+    */
     private function parseCoords(?string $value): ?array
     {
-        if (!$value) return null;
+        if (!$value || !str_contains($value, ',')) {
+            return null;
+        }
 
         [$lat, $lng] = explode(',', $value);
 
         return [
-            'lat' => (float) $lat,
-            'lng' => (float) $lng,
+            'lat' => (float) trim($lat),
+            'lng' => (float) trim($lng),
         ];
     }
 
+    /**
+    * Get delivery zones
+    */
     public function deliveryZones(): array
     {
         return Cache::remember('delivery_zones', 3600, function () {
             return $this->get('delivery_zones', []);
         });
+    }
+
+    /**
+    * Centralized reset of the global settings cache
+    */
+    public function flushCache(): void
+    {
+        Cache::forget('settings.all');
+        Cache::forget('settings.models');
+        Cache::forget('delivery_zones');
     }
 }

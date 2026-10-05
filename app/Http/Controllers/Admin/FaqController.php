@@ -5,30 +5,32 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Admin\AdminFaqResource;
 use App\Models\Faq;
-use App\Services\SanitizeService;
+use App\Http\Requests\Admin\{FaqRequest, ReorderFaqRequest};
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\DB;
+use App\Traits\Http\Controllers\HandlesSmartPagination;
 
 class FaqController extends Controller
 {
+    use HandlesSmartPagination;
+
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
     {
+        $filters = $request->only(['search']);
+
         $faqs = Faq::query()
-            ->when($request->search, function ($query, $search) {
-                $search = mb_strtolower($search, 'UTF-8');
-                $query->whereRaw('LOWER(question) LIKE ?', ["%{$search}%"]);
-            })
+            ->filter($filters)
             ->orderBy('sort_order', 'asc')
             ->paginate(setting('admin_per_page', 10))
             ->withQueryString();
 
         return Inertia::render('Admin/Faq/Index', [
             'faqs' => AdminFaqResource::collection($faqs),
-            'filters' => $request->only(['search']),
+            'filters' => $filters,
             'seo' => $this->seo('Панель управления: Вопросы и Ответы', robots: 'noindex, nofollow')
         ]);
     }
@@ -36,45 +38,23 @@ class FaqController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(FaqRequest $request)
     {
-        $validated = $request->validate([
-            'question'     => 'required|string|max:500',
-            'answer'       => 'required|string',
-            'is_published' => 'boolean',
-            'sort_order'   => 'nullable|integer',
-        ]);
+        $dto = $request->toDto();
+        Faq::create($dto->toArray());
 
-        $validated['answer'] = SanitizeService::cleanHtml($validated['answer']);
-
-        if (!isset($validated['sort_order'])) {
-            $validated['sort_order'] = (Faq::max('sort_order') ?? 0) + 1;
-        }
-
-        Faq::create($validated);
-
-        return redirect()->route('admin.faq.index')
-            ->with('success', "Вопрос добавлен в базу знаний");
+        return redirect()->route('admin.faq.index')->with('success',  "Вопрос успешно добавлен!");
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Faq $faq)
+    public function update(FaqRequest $request, Faq $faq)
     {
-        $validated = $request->validate([
-            'question'     => 'required|string|max:500',
-            'answer'       => 'required|string',
-            'is_published' => 'boolean',
-            'sort_order'   => 'required|integer',
-        ]);
+        $dto = $request->toDto();
+        $faq->update($dto->toArray());
 
-        $validated['answer'] = SanitizeService::cleanHtml($validated['answer']);
-
-        $faq->update($validated);
-
-        return redirect()->back()
-            ->with('success', 'Вопрос успешно обновлен');
+        return redirect()->back()->with('success', "Вопрос #{$faq->id} успешно обновлён!");
     }
 
     /**
@@ -86,18 +66,19 @@ class FaqController extends Controller
             'is_published' => !$faq->is_published 
         ]);
 
-        return redirect()->back()->with('success', $faq->is_published ? 'Вопрос опубликован' : 'Вопрос скрыт');
+        $message = $faq->is_published ? "Вопрос #{$faq->id} опубликован!" : "Вопрос #{$faq->id} скрыт!";
+        return redirect()->back()->with('success', $message);
     }
 
     /**
     * Bulk order update (if we're doing drag-n-drop)
     */
-    public function reorder(Request $request)
+    public function reorder(ReorderFaqRequest $request)
     {
-        $request->validate(['ids' => 'required|array']);
-        $ids = $request->ids;
-
-        if (empty($ids)) return redirect()->back();
+        $ids = $request->validated()['ids'];
+        if (empty($ids)) {
+            return redirect()->back();
+        }
 
         $cases = [];
         $params = [];
@@ -118,23 +99,20 @@ class FaqController extends Controller
         ";
 
         try {
-            DB::transaction(function () use ($query, $params) {
-                DB::update($query, $params);
-            });
-
-            return redirect()->back()->with('success', 'Порядок вопросов обновлен');
-            } catch (\Exception $e) {
-                return redirect()->back()->withErrors(['error' => 'Ошибка базы данных: ' . $e->getMessage()]);
-            }
+            DB::transaction(fn() => DB::update($query, $params));
+            return redirect()->back()->with('success', 'Порядок вопросов обновлён!');
+        } catch (\Exception $e) {
+            return redirect()->back()->withErrors(['error' => 'Ошибка базы данных: ' . $e->getMessage()]);
+        }
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Faq $faq)
+    public function destroy(Request $request, Faq $faq)
     {   
         $faq->delete();
-        return redirect()->route('admin.faq.index')
-            ->with('success', 'Вопрос удален!');
+
+        return $this->redirectWithFilters($request, 'admin.faq.index', "Вопрос #{$faq->id} удалён!");
     }
 }

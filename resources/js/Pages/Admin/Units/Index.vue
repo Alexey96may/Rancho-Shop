@@ -1,67 +1,53 @@
 <script setup lang="ts">
-    import { ref, watch } from 'vue';
+    import { PropType, watch } from 'vue';
 
-    import { router, useForm } from '@inertiajs/vue3';
+    import { useForm } from '@inertiajs/vue3';
 
-    import debounce from 'lodash/debounce';
-    import { Loader2Icon, XIcon } from 'lucide-vue-next';
     import draggable from 'vuedraggable';
 
     import UnitCard from '@/Components/Admin/Cards/AdminUnitCard.vue';
     import AdminEmptyState from '@/Components/Admin/Shared/AdminEmptyState.vue';
+    import AdminPageHeader from '@/Components/Admin/Shared/AdminPageHeader.vue';
     import AdminPagination from '@/Components/Admin/Shared/AdminPagination.vue';
     import AdminLoader from '@/Components/Admin/UI/AdminLoader.vue';
     import AdminSearchInput from '@/Components/Admin/UI/AdminSearchInput.vue';
     import BaseCreateButton from '@/Components/UI/BaseCreateButton.vue';
     import BaseInput from '@/Components/UI/BaseInput.vue';
+    import Modal from '@/Components/UI/BaseModal.vue';
     import BaseSubmitButton from '@/Components/UI/BaseSubmitButton.vue';
     import AdminLayout from '@/Layouts/AdminLayout.vue';
-    import { useFlash } from '@/composables/useFlash';
+    import { useAdminCrud } from '@/composables/crud/useAdminCrud';
+    import { useAdminForm } from '@/composables/crud/useAdminForm';
+    import { useAdminFilters } from '@/composables/routing/useAdminFilters';
+    import { type DraggableEvent, useAdminReorder } from '@/composables/routing/useAdminReorder';
     import { Paginated, UnitAdmin } from '@/types';
+    import { triggerVibration } from '@/utils/navigator';
 
     defineOptions({ layout: AdminLayout });
 
-    interface DraggableEvent {
-        oldIndex: number;
-        newIndex: number;
-        item: HTMLElement;
-        from: HTMLElement;
-        to: HTMLElement;
-    }
+    const props = defineProps({
+        units: {
+            type: Object as PropType<Paginated<UnitAdmin>>,
+            required: true,
+            validator: (value: unknown): boolean => {
+                const val = value as Record<string, unknown>;
+                const hasData = Array.isArray(val?.data);
+                const hasMeta = val?.meta && typeof val.meta === 'object';
 
-    const props = defineProps<{
-        units: Paginated<UnitAdmin>;
-        filters: { search: string };
-    }>();
-
-    const isModalOpen = ref(false);
-    const editingUnit = ref<UnitAdmin | null>(null);
-    const isSavingOrder = ref(false);
-
-    const search = ref(props.filters.search || '');
-    const { notifyWithUndo } = useFlash();
-
-    const isFiltering = ref(false);
-
-    watch(search, () => {
-        isFiltering.value = true;
-
-        performSearch();
-    });
-
-    const performSearch = debounce(() => {
-        router.get(
-            route('admin.units.index'),
-            { search: search.value },
-            {
-                preserveState: true,
-                replace: true,
-                onFinish: () => {
-                    isFiltering.value = false;
-                },
+                if (!hasData || !hasMeta) {
+                    console.warn(
+                        'Runtime Error: The "units" prop must match the Paginated structure.',
+                    );
+                }
+                return !!(hasData && hasMeta);
             },
-        );
-    }, 300);
+        },
+        filters: {
+            type: Object as PropType<{ search: string }>,
+            required: true,
+            default: () => ({ search: '' }),
+        },
+    });
 
     const form = useForm({
         name: '',
@@ -70,122 +56,53 @@
         position: 0,
     });
 
-    const openModal = (unit: UnitAdmin | null = null) => {
-        editingUnit.value = unit;
+    const filterForm = useForm({
+        search: props.filters.search || '',
+    });
 
-        if (unit) {
-            form.name = unit.name;
-            form.short = unit.short;
-            form.slug = unit.slug;
-            form.position = unit.position;
-        } else {
-            form.reset();
-        }
-        isModalOpen.value = true;
-    };
-
-    const closeModal = () => {
-        isModalOpen.value = false;
-        form.reset();
-    };
+    const { deleteEntity, isDeleting } = useAdminCrud();
+    const { isFiltering, submitFilters, clearFilters } = useAdminFilters();
+    const { submitForm, isModalOpen, editMode, currentId, openModal, closeModal } = useAdminForm();
+    const { handleReorder } = useAdminReorder();
 
     const submit = () => {
-        if (editingUnit.value) {
-            form.put(route('admin.units.update', editingUnit.value.id), {
-                onError: (e) => console.log(e),
-                onSuccess: () => closeModal(),
-            });
-        } else {
-            form.post(route('admin.units.store'), {
-                onSuccess: () => closeModal(),
-            });
-        }
+        submitForm(form, 'admin.units', editMode.value ? currentId.value : null, {
+            onSuccess: () => closeModal(form),
+        });
     };
 
-    const deletingIds = ref(new Set<number>());
-
-    const deleteUnit = async (unit: UnitAdmin) => {
-        if (deletingIds.value.has(unit.id)) return;
-        deletingIds.value.add(unit.id);
-
-        const isTimeOut = await notifyWithUndo('Удаление единицы «' + unit.name + '»');
-
-        if (isTimeOut) {
-            router.delete(route('admin.units.destroy', unit.id), {
-                preserveScroll: true,
-                onFinish: () => {
-                    deletingIds.value.delete(unit.id);
-                },
-            });
-        } else {
-            deletingIds.value.delete(unit.id);
-        }
+    const onReorder = (e: DraggableEvent) => {
+        handleReorder(e, 'admin.units.reorder', props.units.data);
     };
 
-    const onDragEnd = (e: DraggableEvent) => {
-        if (e.oldIndex === e.newIndex) {
-            return;
-        }
-
-        const droppedItem = e.item;
-        droppedItem.classList.remove('drop-highlight');
-
-        void droppedItem.offsetWidth;
-
-        droppedItem.classList.add('drop-highlight');
-
-        setTimeout(() => {
-            droppedItem.classList.remove('drop-highlight');
-        }, 2000);
-
-        isSavingOrder.value = true;
-
-        router.patch(
-            route('admin.units.reorder'),
-            {
-                ids: props.units.data.map((u) => u.id),
-            },
-            {
-                onFinish: () => (isSavingOrder.value = false),
-                preserveScroll: true,
-                preserveState: true,
-            },
-        );
+    const vibrateDraggable = () => {
+        triggerVibration('click');
     };
 
-    const clearFilters = () => {
-        search.value = '';
-    };
-
-    const vibrate = () => {
-        if (!window) return;
-
-        if (window.navigator && window.navigator.vibrate) {
-            window.navigator.vibrate(10);
-        }
-    };
+    watch(
+        () => [filterForm.search],
+        () => {
+            submitFilters(filterForm, 'admin.units.index');
+        },
+    );
 </script>
 
 <template>
     <Teleport to="#admin-header-content">
-        <div class="flex items-center gap-4">
-            <h1 class="text-xl font-black uppercase tracking-wider text-white">
-                Единицы измерения
-            </h1>
-            <span
-                v-if="isSavingOrder"
-                class="flex animate-pulse items-center gap-2 text-[10px] font-bold text-orange-500"
-            >
-                <Loader2Icon class="h-3 w-3 animate-spin" /> СОХРАНЕНИЕ ПОРЯДКА
-            </span>
-        </div>
+        <AdminPageHeader
+            title="Единицы измерения"
+            subtitle="Управление единицами измерения магазина"
+        />
     </Teleport>
 
     <div class="space-y-6">
         <div class="flex justify-end">
-            <AdminSearchInput v-model="search" placeholder="Поиск вопроса..." />
+            <AdminSearchInput
+                v-model="filterForm.search"
+                placeholder="Поиск по имени, слагу и сокращению..."
+            />
 
-            <BaseCreateButton @click="openModal(null)" label="Добавить" />
+            <BaseCreateButton @click="openModal(form)" label="Добавить" />
         </div>
 
         <div class="animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -200,8 +117,8 @@
                     fallback-tolerance="3"
                     :force-fallback="true"
                     handle=".drag-handle"
-                    @start="vibrate"
-                    @end="onDragEnd"
+                    @start="vibrateDraggable"
+                    @end="onReorder"
                     ghost-class="ghost-card"
                     chosen-class="chosen-card"
                     drag-class="drag-card"
@@ -212,9 +129,15 @@
                             class="sortable-item"
                             :key="unit.id"
                             :unit="unit"
-                            @edit="openModal"
-                            @delete="deleteUnit"
-                            :disabled="deletingIds.has(unit.id)"
+                            @edit="openModal(form, unit)"
+                            @delete="
+                                deleteEntity(
+                                    'admin.units',
+                                    unit.id,
+                                    `Удаление единицы «${unit.name}»`,
+                                )
+                            "
+                            :disabled="isDeleting(unit.id)"
                         />
                     </template>
                 </draggable>
@@ -225,76 +148,68 @@
                     v-else
                     key="empty"
                     :title="
-                        search ? 'Единицы измерения не найдены' : 'Список единиц измерения пуст'
+                        filterForm.search
+                            ? 'Единицы измерения не найдены'
+                            : 'Список единиц измерения пуст'
                     "
-                    @action="search ? clearFilters() : openModal()"
-                    :action-text="search ? 'Очистить фильтр' : 'Добавить единицу измерения'"
+                    @action="filterForm.search ? clearFilters(filterForm) : openModal(form)"
+                    :action-text="
+                        filterForm.search ? 'Очистить фильтр' : 'Добавить единицу измерения'
+                    "
                     :show-action="true"
                     :description="
-                        search
-                            ? 'По запросу «' + search + '» совпадений нет'
+                        filterForm.search
+                            ? 'По запросу «' + filterForm.search + '» совпадений нет'
                             : 'Нет ни одной единицы измерения'
                     "
                 />
             </Transition>
         </div>
 
-        <AdminPagination :links="units.meta.links" />
+        <Transition name="fade-slide" mode="out-in">
+            <AdminPagination v-show="!isFiltering" :links="units.meta.links" />
+        </Transition>
     </div>
 
-    <div
-        v-if="isModalOpen"
-        class="fixed inset-0 z-50 flex items-center justify-center p-4"
-        role="dialog"
-        aria-modal="true"
-    >
-        <div class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" @click="closeModal"></div>
+    <Modal :show="isModalOpen" @close="closeModal" max-width="2xl" aria-labelledby="modal-title">
+        <h2 class="mb-8 text-lg font-black uppercase tracking-widest text-white">
+            {{ editMode ? 'Редактировать' : 'Новая единица' }}
+        </h2>
 
-        <div
-            class="shadow-2xl animate-in zoom-in-95 relative w-full max-w-md rounded-[2.5rem] border border-slate-800 bg-slate-900 p-8 duration-200"
-        >
-            <button
-                @click="closeModal"
-                class="absolute right-6 top-6 text-slate-500 hover:text-white"
-            >
-                <XIcon class="h-6 w-6" />
-            </button>
+        <form @submit.prevent="submit" class="space-y-5">
+            <BaseInput
+                v-model="form.name"
+                v-model:error="form.errors.name"
+                label="Название"
+                placeholder="Килограмм"
+                :disabled="form.processing"
+            />
 
-            <h2 class="mb-8 text-lg font-black uppercase tracking-widest text-white">
-                {{ editingUnit ? 'Редактировать' : 'Новая единица' }}
-            </h2>
-
-            <form @submit.prevent="submit" class="space-y-5">
+            <div class="grid grid-cols-2 gap-4">
                 <BaseInput
-                    v-model="form.name"
-                    v-model:error="form.errors.name"
-                    label="Название"
-                    placeholder="Килограмм"
+                    v-model="form.short"
+                    v-model:error="form.errors.short"
+                    label="Сокращение"
+                    placeholder="кг"
                     :disabled="form.processing"
                 />
 
-                <div class="grid grid-cols-2 gap-4">
-                    <BaseInput
-                        v-model="form.short"
-                        v-model:error="form.errors.short"
-                        label="Сокращение"
-                        placeholder="кг"
-                        :disabled="form.processing"
-                    />
+                <BaseInput
+                    v-model="form.slug"
+                    v-model:error="form.errors.slug"
+                    label="Slug"
+                    placeholder="kg"
+                    :disabled="form.processing"
+                />
+            </div>
 
-                    <BaseInput
-                        v-model="form.slug"
-                        v-model:error="form.errors.slug"
-                        label="Slug"
-                        placeholder="kg"
-                        :disabled="form.processing"
-                    />
-                </div>
-
-                <BaseSubmitButton :processing="form.processing" label="Подтвердить" />
-            </form>
-        </div>
-    </div>
+            <BaseSubmitButton
+                :processing="form.processing"
+                :is-edit="editMode"
+                :label="editMode ? 'Обновить' : 'Создать '"
+            />
+        </form>
+    </Modal>
 </template>
 
 <style scoped>

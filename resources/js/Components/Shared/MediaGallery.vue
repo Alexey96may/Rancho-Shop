@@ -12,7 +12,6 @@
     const props = defineProps<Props>();
     const emit = defineEmits(['remove', 'preview']);
 
-    // Храним ссылки на Blob, чтобы потом их "прибрать"
     const objectUrls = new Set<string>();
 
     const getImageUrl = (item: Media | File): string => {
@@ -24,7 +23,6 @@
         return item.url;
     };
 
-    // Очистка памяти при уничтожении компонента
     onBeforeUnmount(() => {
         objectUrls.forEach((url) => URL.revokeObjectURL(url));
     });

@@ -9,6 +9,7 @@
         UserIcon,
     } from '@heroicons/vue/24/outline';
 
+    import AdminEditLink from '@/Components/Admin/UI/AdminEditLink.vue';
     import { ORDER_STATUSES } from '@/Constants/statusConfig';
     import type { AdminOrder } from '@/types';
     import { formatMoney } from '@/utils/format';

@@ -24,8 +24,12 @@ class ProductResource extends JsonResource
             'slug' => $this->slug,
             'description' => $this->description,
             
-            'availability_type' => $this->availability_type,
-            'schedule' => $this->schedule ?? [],
+            'availability' => $this->availability_type 
+                ? [
+                    'value' => $this->availability_type->value,
+                    'label' => $this->availability_type->label(),
+                ]
+                : null,
 
             'attributes' => $this->attributes,
 
@@ -33,11 +37,10 @@ class ProductResource extends JsonResource
                 ? MediaResource::collection($this->getMedia('main'))
                 : [MediaResource::fallback($this->resource)],
 
-            'gallery' => $this->relationLoaded('media') && $this->media->isNotEmpty()
-                ? MediaResource::collection($this->media)
-                : [MediaResource::fallback($this->resource)],
+            'gallery' => $this->getMedia('gallery')->isNotEmpty()
+                ? MediaResource::collection($this->getMedia('gallery'))
+                : [],
 
-            // whenLoaded
             'variants' => ProductVariantResource::collection($this->whenLoaded('variants')),
             'category' => new CategoryResource($this->whenLoaded('category')),
             'seo' => new SeoResource($this->whenLoaded('seo')),

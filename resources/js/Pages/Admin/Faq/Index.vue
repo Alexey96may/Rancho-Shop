@@ -1,41 +1,60 @@
 <script setup lang="ts">
-    import { ref, watch } from 'vue';
+    import { PropType, ref, watch } from 'vue';
 
     import { router, useForm } from '@inertiajs/vue3';
 
-    import { PlusIcon } from '@heroicons/vue/24/outline';
     import debounce from 'lodash/debounce';
     import draggable from 'vuedraggable';
 
     import FaqItem from '@/Components/Admin/Cards/AdminFaqCard.vue';
     import AdminEmptyState from '@/Components/Admin/Shared/AdminEmptyState.vue';
+    import AdminPageHeader from '@/Components/Admin/Shared/AdminPageHeader.vue';
+    import AdminPagination from '@/Components/Admin/Shared/AdminPagination.vue';
     import AdminLoader from '@/Components/Admin/UI/AdminLoader.vue';
     import AdminNumberInput from '@/Components/Admin/UI/AdminNumberInput.vue';
     import AdminSearchInput from '@/Components/Admin/UI/AdminSearchInput.vue';
+    import BaseCancelButton from '@/Components/UI/BaseCancelButton.vue';
+    import BaseCreateButton from '@/Components/UI/BaseCreateButton.vue';
     import Modal from '@/Components/UI/BaseModal.vue';
+    import BaseStatusToggle from '@/Components/UI/BaseStatusToggle.vue';
+    import BaseSubmitButton from '@/Components/UI/BaseSubmitButton.vue';
+    import BaseTextarea from '@/Components/UI/BaseTextarea.vue';
     import AdminLayout from '@/Layouts/AdminLayout.vue';
-    import { useFlash } from '@/composables/useFlash';
-    import { AdminFaq, ResourceCollection } from '@/types';
-
-    interface DraggableEvent {
-        oldIndex: number;
-        newIndex: number;
-        item: HTMLElement;
-        from: HTMLElement;
-        to: HTMLElement;
-    }
+    import { useAdminCrud } from '@/composables/crud/useAdminCrud';
+    import { useAdminForm } from '@/composables/crud/useAdminForm';
+    import { useAdminFilters } from '@/composables/routing/useAdminFilters';
+    import { type DraggableEvent, useAdminReorder } from '@/composables/routing/useAdminReorder';
+    import { useFlash } from '@/composables/ui/useFlash';
+    import { AdminFaq, Paginated } from '@/types';
+    import { triggerVibration } from '@/utils/navigator';
 
     defineOptions({ layout: AdminLayout });
 
-    const props = defineProps<{
-        faqs: ResourceCollection<AdminFaq>;
-        filters: { search: string };
-    }>();
+    const props = defineProps({
+        faqs: {
+            type: Object as PropType<Paginated<AdminFaq>>,
+            required: true,
+            validator: (value: unknown): boolean => {
+                const val = value as Record<string, unknown>;
+                const hasData = Array.isArray(val?.data);
+                const hasMeta = val?.meta && typeof val.meta === 'object';
+
+                if (!hasData || !hasMeta) {
+                    console.warn(
+                        'Runtime Error: The "faqs" prop must contain a valid pagination structure ("data" array and "meta" object).',
+                    );
+                }
+                return !!(hasData && hasMeta);
+            },
+        },
+        filters: {
+            type: Object as PropType<{ search: string }>,
+            required: true,
+            default: () => ({ search: '' }),
+        },
+    });
 
     const openIds = ref(new Set<number>());
-    const isModalOpen = ref(false);
-    const editMode = ref(false);
-    const currentId = ref<number | null>(null);
 
     const form = useForm({
         question: '',
@@ -44,37 +63,20 @@
         is_published: true,
     });
 
-    const search = ref(props.filters.search || '');
-    const { notifyWithUndo } = useFlash();
-
-    const isFiltering = ref(false);
-
-    watch(search, (newValue) => {
-        isFiltering.value = true;
-
-        performSearch();
+    const filterForm = useForm({
+        search: props.filters.search || '',
     });
 
-    const performSearch = debounce(() => {
-        router.get(
-            route('admin.faq.index'),
-            { search: search.value },
-            {
-                preserveState: true,
-                replace: true,
-                onFinish: () => {
-                    isFiltering.value = false;
-                },
-            },
-        );
-    }, 300);
+    const { deleteEntity, isDeleting } = useAdminCrud();
+    const { isFiltering, submitFilters, clearFilters } = useAdminFilters();
+    const { submitForm } = useAdminForm();
+    const { isModalOpen, editMode, currentId, openModal, closeModal } = useAdminForm();
+    const { handleReorder } = useAdminReorder();
 
-    const vibrate = () => {
-        if (!window) return;
+    const { notify } = useFlash();
 
-        if (window.navigator && window.navigator.vibrate) {
-            window.navigator.vibrate(10);
-        }
+    const vibrateDraggable = () => {
+        triggerVibration('click');
     };
 
     const toggleAccordion = (id: number) => {
@@ -95,106 +97,45 @@
             {
                 preserveScroll: true,
                 preserveState: true,
+                onError: (error) => {
+                    notify('Ошибка при смены статуса', 'error');
+                    console.error('Error on status changing', error);
+                },
             },
         );
     }, 100);
 
-    const deleteFaq = async (id: number) => {
-        const isDeleted = await notifyWithUndo('Удаление вопроса');
-
-        if (isDeleted) {
-            router.delete(route('admin.faq.destroy', id), {
-                preserveScroll: true,
-            });
-        }
-    };
-
-    const handleReorder = (e: DraggableEvent) => {
-        if (e.oldIndex === e.newIndex) {
-            return;
-        }
-
-        const droppedItem = e.item;
-        droppedItem.classList.remove('drop-highlight');
-
-        void droppedItem.offsetWidth;
-
-        droppedItem.classList.add('drop-highlight');
-
-        setTimeout(() => {
-            droppedItem.classList.remove('drop-highlight');
-        }, 2000);
-
-        const ids = props.faqs.data.map((item) => item.id);
-
-        router.patch(
-            route('admin.faq.reorder'),
-            { ids },
-            {
-                preserveScroll: true,
-                preserveState: true,
-            },
-        );
-    };
-
-    const openModal = (faq: AdminFaq | null = null) => {
-        form.clearErrors();
-        editMode.value = !!faq;
-
-        if (faq) {
-            currentId.value = faq.id;
-            form.question = faq.question;
-            form.answer = faq.answer;
-            form.sort_order = faq.sort_order;
-            form.is_published = !!faq.is_published;
-        } else {
-            form.reset();
-
-            form.sort_order =
-                props.faqs.data.length > 0
-                    ? Math.max(...props.faqs.data.map((f: AdminFaq) => f.sort_order)) + 1
-                    : 1;
-        }
-        isModalOpen.value = true;
+    const onReorder = (e: DraggableEvent) => {
+        handleReorder(e, 'admin.faq.reorder', props.faqs.data);
     };
 
     const submit = () => {
-        const action = editMode.value
-            ? route('admin.faq.update', currentId.value!)
-            : route('admin.faq.store');
-
-        const method = editMode.value ? 'put' : 'post';
-
-        form[method](action, {
-            onSuccess: () => {
-                isModalOpen.value = false;
-                form.reset();
-            },
+        submitForm(form, 'admin.faq', editMode.value ? currentId.value : null, {
+            onSuccess: () => closeModal(form),
         });
     };
 
-    const clearFilters = () => {
-        search.value = '';
-    };
+    watch(
+        () => [filterForm.search],
+        () => {
+            submitFilters(filterForm, 'admin.faq.index');
+        },
+    );
 </script>
 
 <template>
     <Teleport to="#admin-header-content">
-        <h1 class="flex items-center gap-2 text-xl font-black text-white">
-            Модерация "Вопросы - Ответы"
-        </h1>
+        <AdminPageHeader
+            title="Вопросы - Ответы"
+            subtitle="Управление вопросами и ответами на главной"
+        />
     </Teleport>
 
     <div class="max-w-5xl space-y-6">
         <div class="flex flex-col items-center justify-between gap-4 sm:flex-row">
-            <AdminSearchInput v-model="search" placeholder="Поиск вопроса..." />
+            <AdminSearchInput v-model="filterForm.search" placeholder="Поиск вопроса..." />
 
-            <button
-                @click="openModal()"
-                class="flex h-[54px] w-full items-center justify-center gap-2 rounded-2xl bg-orange-600 px-8 text-xs font-black uppercase tracking-widest text-white transition-all hover:bg-orange-500 sm:w-auto"
-            >
-                <PlusIcon class="h-5 w-5" /> Добавить вопрос
-            </button>
+            <BaseCreateButton @click="openModal(form)" label="Добавить вопрос" />
         </div>
 
         <Transition name="fade-slide" mode="out-in">
@@ -208,8 +149,8 @@
                 :animation="300"
                 fallback-tolerance="3"
                 :force-fallback="true"
-                @start="vibrate"
-                @end="handleReorder"
+                @start="vibrateDraggable"
+                @end="onReorder"
                 ghost-class="ghost-card"
                 chosen-class="chosen-card"
                 drag-class="drag-card"
@@ -220,9 +161,12 @@
                         <FaqItem
                             :faq="faq"
                             :is-open="openIds.has(faq.id)"
+                            :is-deleting="isDeleting(faq.id)"
                             @toggle="toggleAccordion"
-                            @edit="openModal"
-                            @delete="deleteFaq"
+                            @edit="openModal(form, faq)"
+                            @delete="
+                                deleteEntity('admin.faq', faq.id, `Удаление вопроса #${faq.id + 1}`)
+                            "
                             @toggle-status="toggleStatus"
                         />
                     </div>
@@ -234,23 +178,24 @@
             <AdminEmptyState
                 v-else
                 key="empty"
-                :title="search ? 'Вопросы не найдены' : 'Список вопросов пуст'"
-                @action="search ? clearFilters() : openModal()"
-                :action-text="search ? 'Очистить фильтр' : 'Добавить вопрос'"
+                :title="filterForm.search ? 'Вопросы не найдены' : 'Список вопросов пуст'"
+                @action="filterForm.search ? clearFilters(filterForm) : openModal(form)"
+                :action-text="filterForm.search ? 'Очистить фильтр' : 'Добавить вопрос'"
                 :show-action="true"
                 :description="
-                    search ? 'По запросу «' + search + '» совпадений нет' : 'Нет ни одного вопроса'
+                    filterForm.search
+                        ? 'По запросу «' + filterForm.search + '» совпадений нет'
+                        : 'Нет ни одного вопроса'
                 "
             />
         </Transition>
+
+        <Transition name="fade-slide" mode="out-in">
+            <AdminPagination v-show="!isFiltering" :links="faqs.meta.links" />
+        </Transition>
     </div>
 
-    <Modal
-        :show="isModalOpen"
-        @close="isModalOpen = false"
-        max-width="2xl"
-        aria-labelledby="modal-title"
-    >
+    <Modal :show="isModalOpen" @close="closeModal" max-width="2xl" aria-labelledby="modal-title">
         <div class="p-8">
             <h3
                 id="modal-title"
@@ -260,47 +205,23 @@
             </h3>
 
             <form @submit.prevent="submit" class="space-y-6">
-                <div class="space-y-1.5">
-                    <label
-                        for="faq-question"
-                        class="ml-2 text-[10px] font-black uppercase tracking-widest text-slate-500"
-                    >
-                        Текст вопроса
-                    </label>
-                    <textarea
-                        id="faq-question"
-                        v-model="form.question"
-                        required
-                        rows="2"
-                        class="w-full rounded-2xl border-slate-800 bg-slate-950 p-4 text-white transition-all focus:border-orange-500 focus:ring-0"
-                        placeholder="Например: Как активировать подписку?"
-                    ></textarea>
+                <BaseTextarea
+                    v-model="form.question"
+                    v-model:error="form.errors.question"
+                    label="Текст вопроса"
+                    :disabled="form.processing"
+                    placeholder="Например: Как активировать подписку?"
+                    :max-height="150"
+                />
 
-                    <div v-if="form.errors.question" class="ml-2 text-xs text-red-500">
-                        {{ form.errors.question }}
-                    </div>
-                </div>
-
-                <div class="space-y-1.5">
-                    <label
-                        for="faq-answer"
-                        class="ml-2 text-[10px] font-black uppercase tracking-widest text-slate-500"
-                    >
-                        Ответ (поддерживает HTML)
-                    </label>
-                    <textarea
-                        id="faq-answer"
-                        v-model="form.answer"
-                        required
-                        rows="6"
-                        class="w-full rounded-2xl border-slate-800 bg-slate-950 p-4 font-mono text-sm text-slate-300 transition-all focus:border-orange-500 focus:ring-0"
-                        placeholder="<p>Для активации перейдите в...</p>"
-                    ></textarea>
-
-                    <div v-if="form.errors.answer" class="ml-2 text-xs text-red-500">
-                        {{ form.errors.answer }}
-                    </div>
-                </div>
+                <BaseTextarea
+                    v-model="form.answer"
+                    v-model:error="form.errors.answer"
+                    :disabled="form.processing"
+                    label="Ответ (поддерживает HTML)"
+                    placeholder="<p>Для активации перейдите в...</p>"
+                    :max-height="150"
+                />
 
                 <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                     <AdminNumberInput
@@ -310,41 +231,21 @@
                         :max="999"
                     />
 
-                    <div class="flex items-end pb-4">
-                        <label class="group flex cursor-pointer items-center gap-3">
-                            <div class="relative flex items-center">
-                                <input
-                                    type="checkbox"
-                                    v-model="form.is_published"
-                                    class="peer h-6 w-6 rounded-lg border-slate-800 bg-slate-950 text-orange-600 transition-all focus:ring-0 focus:ring-offset-0"
-                                />
-                            </div>
-                            <span
-                                class="text-[10px] font-black uppercase tracking-widest text-slate-400 transition-colors group-hover:text-slate-200"
-                            >
-                                Опубликовать на сайте
-                            </span>
-                        </label>
-                    </div>
+                    <BaseStatusToggle
+                        v-model="form.is_published"
+                        label="Опубликовать на сайте"
+                        :disabled="form.processing"
+                    />
                 </div>
 
                 <div class="flex flex-col gap-4 pt-4 sm:flex-row">
-                    <button
-                        type="submit"
-                        :disabled="form.processing"
-                        class="flex-1 rounded-2xl bg-orange-600 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-white transition-all hover:bg-orange-500 disabled:opacity-50"
-                    >
-                        <span v-if="form.processing">Сохранение...</span>
-                        <span v-else>{{ editMode ? 'Обновить данные' : 'Создать вопрос' }}</span>
-                    </button>
+                    <BaseCancelButton label="Отмена" @click="isModalOpen = false" />
 
-                    <button
-                        @click="isModalOpen = false"
-                        type="button"
-                        class="flex-1 rounded-2xl bg-slate-800 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 transition-all hover:bg-slate-700 hover:text-white"
-                    >
-                        Отмена
-                    </button>
+                    <BaseSubmitButton
+                        :processing="form.processing"
+                        :is-edit="editMode"
+                        :label="editMode ? 'Обновить' : 'Создать '"
+                    />
                 </div>
             </form>
         </div>

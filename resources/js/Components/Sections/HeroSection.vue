@@ -18,7 +18,7 @@
             description:
                 'Натуральное молоко, крафтовые сыры и домашнее масло прямо с нашего пастбища в ваше лукошко.',
             buttonText: 'В магазин',
-            route: 'home',
+            route: 'catalog.index',
             image: '/images/hero/slide1.jpg',
             color: 'text-rancho-forest',
         },
@@ -28,7 +28,7 @@
             description:
                 'У каждой нашей коровы есть имя и своя история. Послушайте, как поет Зорька или резвится Лучик.',
             buttonText: 'К животным',
-            route: 'home',
+            route: 'animals.index',
             image: '/images/hero/slide2.jpg',
             color: 'text-rancho-forest',
         },

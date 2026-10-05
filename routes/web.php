@@ -27,7 +27,10 @@ use App\Http\Controllers\Admin\UnitController;
 use App\Http\Controllers\Admin\FaqController;
 use App\Http\Controllers\Admin\FeatureController;
 use App\Http\Controllers\Admin\SettingController;
-use App\Http\Controllers\DashboardController as UserDashboardController;
+use App\Http\Controllers\Admin\AnalyticsController;
+use App\Http\Controllers\Profile\ProfileCommentController;
+use App\Http\Controllers\Profile\ProfileOrderController;
+
 use App\Enums\Permission;
 
 Route::get('/', [LandingController::class, 'index'])->name('home');
@@ -57,31 +60,19 @@ Route::post('/comments', [CommentController::class, 'store'])->name('comments.st
 
 Route::post('/delivery/draft', [DeliveryController::class, 'store'])->name('delivery.draft.store');
 
-Route::middleware(['auth', 'verified'])->name('user.')->group(function () {
-    Route::get('/dashboard', [UserDashboardController::class, 'index'])->name('dashboard');
-    Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
-    Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+Route::middleware('auth')->prefix('profile')->name('profile.')->group(function () {
+    Route::get('/', [ProfileController::class, 'edit'])->name('edit');
+    Route::patch('/', [ProfileController::class, 'update'])->name('update');
+    Route::delete('/', [ProfileController::class, 'destroy'])->name('destroy');
+
+    Route::get('/comments', [ProfileCommentController::class, 'index'])->name('comments.index');
+    Route::post('/comments', [ProfileCommentController::class, 'store'])->name('comments.store');
+    Route::put('/comments/{comment}', [ProfileCommentController::class, 'update'])->name('comments.update');
+    Route::delete('/comments/{comment}', [ProfileCommentController::class, 'destroy'])->name('comments.destroy');
+
+    Route::get('/orders', [ProfileOrderController::class, 'index'])->name('orders.index');
+    Route::patch('/orders/{order}/cancel', [ProfileOrderController::class, 'cancel'])->name('orders.cancel');
 });
-
-Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-});
-
-Route::middleware(['auth', 'can:view-admin-panel'])
-    ->prefix('admin')
-    ->name('admin.')
-    ->group(function () {
-
-        Route::get('/', [DashboardController::class, 'index'])
-            ->name('dashboard');
-
-        Route::get('/users', [UserController::class, 'index'])
-            ->name('users.index');
-
-    });
-
 
 Route::middleware(['auth', 'role:admin'])->group(function () {
     // Route::get('/admin/dashboard', function () {
@@ -108,15 +99,19 @@ Route::prefix('admin')
 
         // (Admin, Moderator)
         Route::middleware('can:' . Permission::MANAGE_PRODUCTS->value)->group(function () {
-            Route::resource('products', AdminProductController::class);
+            Route::patch('products/{product}/restore', [AdminProductController::class, 'restore'])->name('products.restore')->withTrashed();
+            Route::resource('products', AdminProductController::class)->withTrashed();
+
             Route::resource('categories', CategoryController::class);
 
             Route::resource('catalog', CatalogController::class);
             Route::patch('catalog/{variant}/quick', [CatalogController::class, 'quickUpdate'])->name('catalog.quick');
 
-            Route::resource('animals', AdminAnimalController::class);
-            Route::delete('animals/{animal}/media/{media}', [AnimalController::class, 'deleteMedia'])
+            Route::delete('animals/{animal}/media/{media}', [AdminAnimalController::class, 'deleteMedia'])
                 ->name('animals.media.destroy');
+            Route::patch('animals/{animal}/restore', [AdminAnimalController::class, 'restore'])
+                ->name('animals.restore')->withTrashed();
+            Route::resource('animals', AdminAnimalController::class);
 
             Route::resource('pages', AdminPageController::class);
             Route::post('pages/upload-media/{page}', [AdminPageController::class, 'uploadMedia'])->name('pages.upload-media');
@@ -133,12 +128,15 @@ Route::prefix('admin')
             Route::patch('features/{feature}/toggle', [FeatureController::class, 'toggle'])
                 ->name('features.toggle');
 
-            Route::resource('comments', AdminCommentController::class);
+            Route::patch('comments/{comment}/restore', [AdminCommentController::class, 'restore'])->name('comments.restore')->withTrashed();
+            Route::resource('comments', AdminCommentController::class)->only(['index', 'update', 'destroy'])->withTrashed();
         });
 
         // (Admin, Worker)
         Route::middleware('can:' . Permission::MANAGE_ORDERS->value)->group(function () {
             Route::resource('orders', AdminOrderController::class);
+
+            Route::get('analytics', [AnalyticsController::class, 'index'])->name('analytics.index');
             
             Route::patch('units/reorder', [UnitController::class, 'reorder'])->name('units.reorder');
             Route::resource('units', UnitController::class)->except(['show', 'create']);

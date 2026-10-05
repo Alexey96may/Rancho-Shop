@@ -1,12 +1,8 @@
 <script setup lang="ts">
-    import { computed, watch } from 'vue';
-
-    import { Link } from '@inertiajs/vue3';
-
-    import { PackageIcon, SquarePenIcon } from 'lucide-vue-next';
+    import { PackageIcon } from 'lucide-vue-next';
 
     import AdminDeleteButton from '@/Components/Admin/UI/AdminDeleteButton.vue';
-    import AdminEditLink from '@/Components/Admin/UI/AdminEditLink.vue';
+    import AdminEditButton from '@/Components/Admin/UI/AdminEditButton.vue';
     import AdminNumberInput from '@/Components/Admin/UI/AdminNumberInput.vue';
     import BaseStatusToggle from '@/Components/UI/BaseStatusToggle.vue';
     import type { AdminProductVariantDTO, QuickUpdatePayload } from '@/types';
@@ -15,11 +11,11 @@
         variant: AdminProductVariantDTO;
         disabled?: boolean;
         outOfStock?: boolean;
-        currentPage?: number;
     }>();
 
     const emit = defineEmits<{
         (e: 'quick-update', id: number, data: QuickUpdatePayload): void;
+        (e: 'edit', variant: AdminProductVariantDTO): void;
         (e: 'delete', variant: AdminProductVariantDTO): void;
     }>();
 
@@ -129,13 +125,8 @@
         </div>
 
         <div class="col-span-1 flex justify-end gap-2">
-            <AdminEditLink
-                :href="
-                    route('admin.catalog.edit', {
-                        catalog: variant.id,
-                        page: currentPage || 1,
-                    })
-                "
+            <AdminEditButton
+                @click="$emit('edit', variant)"
                 :title="`Редактировать ${variant.name}`"
                 :disabled="disabled"
             />

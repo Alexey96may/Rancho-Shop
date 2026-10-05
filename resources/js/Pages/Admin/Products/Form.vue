@@ -1,28 +1,29 @@
 <script setup lang="ts">
-    import { computed, ref, watch } from 'vue';
+    import { PropType, computed, ref } from 'vue';
 
-    import { router, useForm } from '@inertiajs/vue3';
+    import { useForm } from '@inertiajs/vue3';
 
-    import {
-        AdjustmentsHorizontalIcon,
-        ChevronLeftIcon,
-        DocumentTextIcon,
-        MagnifyingGlassIcon,
-        PhotoIcon,
-    } from '@heroicons/vue/24/outline';
+    import { PhotoIcon } from '@heroicons/vue/24/outline';
 
     import FeaturesSection from '@/Components/Admin/Sections/FeaturesSection.vue';
     import SEOSection from '@/Components/Admin/Sections/SEOSection.vue';
+    import AdminPageHeader from '@/Components/Admin/Shared/AdminPageHeader.vue';
     import AdminBaseTextarea from '@/Components/Admin/UI/AdminBaseTextarea.vue';
     import MediaGallery from '@/Components/Shared/MediaGallery.vue';
+    import BaseCancelButton from '@/Components/UI/BaseCancelButton.vue';
     import BaseCreateButton from '@/Components/UI/BaseCreateButton.vue';
     import BaseDeleteButton from '@/Components/UI/BaseDeleteButton.vue';
     import BaseInput from '@/Components/UI/BaseInput.vue';
+    import BaseModal from '@/Components/UI/BaseModal.vue';
     import BaseSelect from '@/Components/UI/BaseSelect.vue';
     import BaseSwitch from '@/Components/UI/BaseSwitch.vue';
     import ImageUpload from '@/Components/UI/ImageUploader.vue';
     import AdminLayout from '@/Layouts/AdminLayout.vue';
-    import { useFlash } from '@/composables/useFlash';
+    import { useAdminTabs } from '@/composables/config/useAdminTabs';
+    import { useAdminCrud } from '@/composables/crud/useAdminCrud';
+    import { useAdminForm } from '@/composables/crud/useAdminForm';
+    import type { GalleryItem } from '@/composables/features/useMediaUpload';
+    import { useMediaUpload, useSingleImagePreview } from '@/composables/features/useMediaUpload';
     import type {
         AdminProduct,
         Animal,
@@ -35,31 +36,72 @@
 
     defineOptions({ layout: AdminLayout });
 
-    const props = defineProps<{
-        product?: ResourceSingle<AdminProduct> | null;
-        categories: { data: Category[] };
-        animals: { data: Animal[] };
-    }>();
+    const props = defineProps({
+        product: {
+            type: Object as PropType<ResourceSingle<AdminProduct> | null>,
+            required: false,
+            default: null,
+            validator: (value: unknown): boolean => {
+                if (value === undefined || value === null) return true;
+
+                const val = value as Record<string, unknown>;
+                const hasData = !!(val?.data && typeof val.data === 'object' && val.data !== null);
+
+                if (!hasData) {
+                    console.warn(
+                        'Runtime Error: The "product" prop is provided but missing a valid "data" object.',
+                    );
+                }
+                return hasData;
+            },
+        },
+        categories: {
+            type: Object as PropType<{ data: Category[] }>,
+            required: true,
+            validator: (value: unknown): boolean => {
+                const val = value as Record<string, unknown>;
+                const hasDataArray = Array.isArray(val?.data);
+
+                if (!hasDataArray) {
+                    console.warn(
+                        'Runtime Error: The "categories" prop must contain a "data" array.',
+                    );
+                }
+                return hasDataArray;
+            },
+        },
+        animals: {
+            type: Object as PropType<{ data: Animal[] }>,
+            required: true,
+            validator: (value: unknown): boolean => {
+                const val = value as Record<string, unknown>;
+                const hasDataArray = Array.isArray(val?.data);
+
+                if (!hasDataArray) {
+                    console.warn('Runtime Error: The "animals" prop must contain a "data" array.');
+                }
+                return hasDataArray;
+            },
+        },
+        backUrl: {
+            type: String,
+            required: true,
+        },
+    });
 
     const isEdit = computed(() => !!props.product);
 
-    const tabs = [
-        { id: 'general', name: 'Основное', icon: DocumentTextIcon },
-        { id: 'gallery', name: 'Галерея', icon: PhotoIcon },
-        { id: 'features', name: 'Параметры', icon: AdjustmentsHorizontalIcon },
-        { id: 'seo', name: 'SEO данные', icon: MagnifyingGlassIcon },
-    ];
     const activeTab = ref('general');
+    const { tabs } = useAdminTabs();
 
     const form = useForm({
         name: props.product?.data?.name ?? '',
         slug: props.product?.data?.slug ?? '',
         description: props.product?.data?.description ?? '',
         category_id: props.product?.data?.category_id ?? null,
-        availability_type: props.product?.data?.availability_type ?? ('stock' as AvailabilityType),
+        availability_type: props.product?.data?.availability.value ?? ('stock' as AvailabilityType),
         is_active: props.product?.data?.is_active ?? true,
         attributes: props.product?.data?.attributes ?? {},
-        schedule: props.product?.data?.schedule ?? { days: [] },
         animal_ids: props.product?.data?.animals?.map((a) => a.id) ?? [],
         // Spatie Media
         main_photo: props.product?.data?.main_photo
@@ -70,56 +112,53 @@
             : ([] as Array<Media | File>),
         remove_media: [] as number[],
         // Seo
-        seo: props.product?.data?.seo
-            ? { ...props.product.data?.seo }
-            : {
-                  title: '',
-                  description: '',
-                  keywords: '',
-                  canonical: '',
-                  is_noindex: false,
-              },
+        seo: {
+            title: props.product?.data.seo?.title || '',
+            description: props.product?.data.seo?.description || '',
+            keywords: props.product?.data.seo?.keywords || '',
+            canonical: props.product?.data.seo?.canonical || '',
+            is_noindex: props.product?.data.seo?.is_noindex || false,
+        },
+        backUrl: props.backUrl,
+        voice: null,
     });
 
-    const submit = () => {
-        if (isEdit.value) {
-            form.transform((data) => ({
-                ...data,
-                _method: 'PUT',
-            })).post(route('admin.products.update', props.product!.data?.id), {
-                preserveScroll: true,
-            });
-        } else {
-            form.post(route('admin.products.store'));
-        }
-    };
-
-    const { notifyWithUndo } = useFlash();
-    const isDeleting = ref(false);
+    const { getPreview, handleFile, removeGalleryItem } = useMediaUpload(form);
+    const { currentFileForUpload, currentExistingImage } = useSingleImagePreview(
+        () => form.main_photo,
+    );
 
     const showExactDate = ref(false);
     const toggleDate = () => {
         showExactDate.value = !showExactDate.value;
     };
 
-    const deletePage = async () => {
-        if (!props.product?.data.can_delete) return;
+    const { submitForm } = useAdminForm();
+    const { deleteEntity, isDeleting } = useAdminCrud();
 
-        if (isDeleting.value) return;
-        isDeleting.value = true;
-
-        const isDeleted = await notifyWithUndo(`Удаление товара "${props.product?.data.name}"`);
-
-        if (isDeleted) {
-            router.delete(route('admin.products.destroy', props.product?.data.id), {
-                onFinish: () => {
-                    isDeleting.value = false;
-                },
-            });
-        } else {
-            isDeleting.value = false;
-        }
+    const submit = () => {
+        const id = isEdit.value && props.product ? props.product.data.id : null;
+        submitForm(form, 'admin.products', id);
     };
+
+    const deletePage = async () => {
+        if (!isEdit.value || !props.product?.data.can_delete) return;
+
+        deleteEntity(
+            'admin.products',
+            props.product.data.id,
+            `Удаление товара «${props.product.data.name}»`,
+        );
+    };
+
+    const selectedImage = ref<string | null>(null);
+
+    const isModalOpen = computed({
+        get: () => !!selectedImage.value,
+        set: (value) => {
+            if (!value) selectedImage.value = null;
+        },
+    });
 
     const availabilityOptions = [
         { value: 'stock', label: 'В наличии' },
@@ -127,67 +166,29 @@
         { value: 'preorder', label: 'Предзаказ' },
     ];
 
-    //Изобр
-
-    const MAX_POST_SIZE = 20 * 1024 * 1024; // 20 MB
-
-    const removeImage = (index: number) => {
-        form.gallery.splice(index, 1);
+    const openImage = (item: GalleryItem) => {
+        const previewUrl = getPreview(item);
+        if (previewUrl) {
+            selectedImage.value = previewUrl;
+        }
     };
 
-    const handleFile = (e: Event, field: 'voice' | 'gallery') => {
-        const target = e.target as HTMLInputElement;
-        const files = target.files;
-        if (!files || files.length === 0) return;
-
-        let currentTotalSize = 0;
-
-        // Считаем текущий вес файлов в форме
-        form.gallery.forEach((f: any) => {
-            if (f instanceof File) currentTotalSize += f.size;
-        });
-
-        const incomingFiles = Array.from(files);
-        const newFilesSize = incomingFiles.reduce((acc, file) => acc + file.size, 0);
-
-        if (currentTotalSize + newFilesSize > MAX_POST_SIZE) {
-            alert('Общий размер файлов слишком велик! Лимит 20 МБ.');
-            target.value = ''; // Сбрасываем инпут
-            return;
-        }
-
-        if (field === 'gallery') {
-            // Важно: создаем новый массив, чтобы Vue/Inertia увидели изменения
-            form.gallery = [...form.gallery, ...incomingFiles];
-        }
-
-        target.value = ''; // Очищаем инпут, чтобы можно было выбрать тот же файл повторно
+    const handleMainPhotoUpdate = (file: File | null) => {
+        form.main_photo = file ? [file] : (null as any);
     };
-
-    const selectedImage = ref<string | null>(null);
-
-    const existingAvatarUrl = computed(() => {
-        return props.product?.data.main_photo?.[0]?.url || null;
-    });
 </script>
 
 <template>
     <Teleport to="#admin-header-content">
-        <div class="flex items-center gap-4">
-            <button
-                @click="router.get(route('admin.products.index'))"
-                class="group rounded-xl border border-slate-800 p-2 text-slate-400 transition-all hover:bg-slate-800 hover:text-white"
-                aria-label="Вернуться к списку"
-            >
-                <ChevronLeftIcon class="h-5 w-5" />
-            </button>
-            <h1 class="text-xl font-black text-white">
-                {{ isEdit ? 'Редактирование товара' : 'Новый товар' }}
-            </h1>
-        </div>
+        <AdminPageHeader
+            :title="isEdit ? 'Редактирование товара' : 'Новый товар'"
+            :subtitle="form.name"
+        />
     </Teleport>
 
     <div class="space-y-6">
+        <BaseCancelButton :href="backUrl" label="Назад" />
+
         <nav class="flex gap-2 border-b border-slate-800 pb-px" role="tablist">
             <button
                 v-for="tab in tabs"
@@ -198,7 +199,7 @@
                 class="flex items-center gap-2 px-6 py-4 text-xs font-black uppercase tracking-widest transition-all"
                 :class="
                     activeTab === tab.id
-                        ? 'border-b-2 border-orange-600 text-white'
+                        ? 'border-b-2 border-emerald-600 text-white'
                         : 'text-slate-500 hover:text-slate-300'
                 "
             >
@@ -215,9 +216,10 @@
                 >
                     <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
                         <ImageUpload
-                            v-model="form.main_photo"
-                            label="Аватар особи"
-                            :existing-image="existingAvatarUrl"
+                            :model-value="currentFileForUpload"
+                            :existing-image="currentExistingImage"
+                            @update:model-value="handleMainPhotoUpdate"
+                            label="Главное фото товара"
                             :error="form.errors.main_photo"
                         />
 
@@ -277,7 +279,7 @@
                                 class="flex cursor-pointer items-center gap-2 rounded-2xl border px-4 py-2 transition-all"
                                 :class="
                                     form.animal_ids.includes(animal.id)
-                                        ? 'border-orange-600 bg-orange-600/10 text-white'
+                                        ? 'border-emerald-600 bg-emerald-600/10 text-white'
                                         : 'border-slate-800 text-slate-500 hover:border-slate-700'
                                 "
                             >
@@ -294,10 +296,10 @@
                 </div>
 
                 <MediaGallery
-                    v-show="activeTab === 'gallery'"
+                    v-show="activeTab === 'media'"
                     v-model="form.gallery"
-                    @remove="removeImage"
-                    @preview="(url) => (selectedImage = url)"
+                    @remove="removeGalleryItem"
+                    @preview="openImage"
                     ><label
                         class="relative flex aspect-square cursor-pointer flex-col items-center justify-center rounded-[2rem] border-2 border-dashed border-slate-800 bg-slate-950/20 transition-all hover:border-orange-500/50 hover:bg-slate-950/40"
                     >
@@ -321,7 +323,11 @@
                     v-model:features="form.attributes"
                 />
 
-                <SEOSection v-if="activeTab === 'seo'" v-model="form.seo" />
+                <SEOSection
+                    v-if="activeTab === 'seo'"
+                    v-model="form.seo"
+                    :disabled="form.processing"
+                />
             </div>
 
             <aside class="xl:col-span-4">
@@ -394,10 +400,10 @@
 
                         <BaseDeleteButton
                             v-if="product?.data.can_delete"
-                            :disabled="isDeleting"
+                            :disabled="isDeleting(product?.data.id)"
                             @confirm="deletePage"
-                            ><span v-if="isDeleting">Удаление...</span>
-                            <span v-else>Удалить страницу</span>
+                            ><span v-if="isDeleting(product?.data.id)">Удаление...</span>
+                            <span v-else>Удалить продукт</span>
                         </BaseDeleteButton>
 
                         <div
@@ -410,6 +416,14 @@
                 </div>
             </aside>
         </form>
+
+        <BaseModal :show="isModalOpen" variant="lightbox" @close="selectedImage = null">
+            <AppImage
+                v-if="selectedImage"
+                :src="selectedImage"
+                alt="Полноэкранный просмотр изображения"
+            />
+        </BaseModal>
     </div>
 </template>
 

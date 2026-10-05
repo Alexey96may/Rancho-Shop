@@ -5,15 +5,15 @@
         ChatBubbleLeftRightIcon,
         EnvelopeIcon,
         MapPinIcon,
-        PencilSquareIcon,
         PhoneIcon,
-        ShieldCheckIcon,
         ShoppingBagIcon,
-        TrashIcon,
         UserIcon,
     } from '@heroicons/vue/24/outline';
+    import { PencilIcon, Trash2Icon } from 'lucide-vue-next';
 
-    import { AdminUser } from '@/types';
+    import AdminEditButton from '@/Components/Admin/UI/AdminEditButton.vue';
+    import BaseDeleteButton from '@/Components/UI/BaseDeleteButton.vue';
+    import { AdminUser, UserColor } from '@/types';
 
     const props = defineProps<{
         user: AdminUser;
@@ -25,6 +25,18 @@
     const displayAddress = computed(() => {
         if (!props.user.addresses?.length) return null;
         return props.user.addresses.find((a) => a.is_default) || props.user.addresses[0];
+    });
+
+    const badgeClasses = computed(() => {
+        const styles: Record<UserColor, string> = {
+            emerald: 'text-emerald-500 ring-emerald-600/10',
+            violet: 'text-violet-500 ring-violet-600/10',
+            sky: 'text-sky-500 ring-sky-600/10',
+            zinc: 'text-zinc-500 ring-zinc-500/10',
+        };
+
+        const colorKey = props.user.role.color;
+        return styles[colorKey] || styles.zinc;
     });
 </script>
 
@@ -85,12 +97,12 @@
                 <div
                     class="h-14 w-14 shrink-0 overflow-hidden rounded-2xl bg-slate-950 ring-1 ring-slate-800 transition-transform duration-500 group-hover:scale-105"
                 >
-                    <img
+                    <AppImage
                         v-if="user.avatar"
-                        :src="user.avatar"
-                        class="h-full w-full object-cover"
+                        :src="user?.avatar || ''"
+                        :type="'thumbnails'"
                         :alt="user.name"
-                        loading="lazy"
+                        class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
                     />
                     <div
                         v-else
@@ -108,14 +120,9 @@
                         {{ user.name }}
                     </h2>
                     <span
-                        class="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[9px] font-black uppercase tracking-widest transition-colors"
-                        :style="{
-                            backgroundColor: `${user.role.color}10`,
-                            color: user.role.color,
-                            borderColor: `${user.role.color}30`,
-                        }"
+                        class="inline-flex items-center gap-1 py-0.5 text-[9px] font-black uppercase tracking-widest transition-colors"
+                        :class="badgeClasses"
                     >
-                        <ShieldCheckIcon v-if="user.is_admin" class="h-2.5 w-2.5" />
                         {{ user.role.label }}
                     </span>
                 </div>
@@ -130,6 +137,7 @@
                 <EnvelopeIcon class="h-4 w-4 text-slate-600" />
                 <span class="truncate">{{ user.email }}</span>
             </a>
+
             <div class="flex items-center gap-2 text-xs font-medium text-slate-400">
                 <PhoneIcon class="h-4 w-4 text-slate-600" />
                 <span>{{ user.phone }}</span>
@@ -167,20 +175,21 @@
             </div>
 
             <div class="flex items-center gap-4">
-                <button
+                <AdminEditButton
                     @click="$emit('edit')"
-                    class="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-slate-500 transition-all hover:text-orange-500"
-                >
-                    <PencilSquareIcon class="h-4 w-4" />
-                    <span>Изменить</span>
-                </button>
+                    :title="`Изменить ${user.name}`"
+                    :disabled="disabled"
+                    :aria-label="`Изменить ${user.name}`"
+                    :icon="PencilIcon"
+                />
 
-                <button
-                    @click="$emit('delete')"
-                    class="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-slate-500 transition-all hover:text-red-500"
-                >
-                    <TrashIcon class="h-4 w-4" />
-                </button>
+                <BaseDeleteButton
+                    :disabled="disabled"
+                    :title="`Удалить ${user.name}`"
+                    @confirm="$emit('delete')"
+                    :aria-label="`Удалить ${user.name}`"
+                    ><Trash2Icon class="h-4 w-4"
+                /></BaseDeleteButton>
             </div>
         </div>
     </article>

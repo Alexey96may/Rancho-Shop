@@ -5,6 +5,7 @@ namespace App\Enums;
 enum Permission: string
 {
     case MANAGE_PRODUCTS = 'manage-products';
+    case MANAGE_ANALITICS = 'manage-analitics';
     case MANAGE_ORDERS = 'manage-orders';
     case MANAGE_COMMENTS = 'manage-comments';
     case MANAGE_DELIVERY = 'manage-delivery';
@@ -24,6 +25,7 @@ enum Permission: string
         return match ($this) {
             self::MANAGE_PRODUCTS => 'Продукты',
             self::MANAGE_ORDERS => 'Заказы',
+            self::MANAGE_ANALITICS => 'Аналитика',
             self::MANAGE_COMMENTS => 'Комментарии',
             self::MANAGE_DELIVERY => 'Доставка',
             self::MANAGE_ANIMALS => 'Животные',

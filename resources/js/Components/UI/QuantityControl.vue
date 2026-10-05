@@ -15,7 +15,7 @@
     const quantity = computed(() => cartItem.value?.quantity ?? 0);
 
     const step = computed(() => {
-        switch (props.variant.unit.slug) {
+        switch (props.variant?.unit?.slug) {
             case 'pcs':
                 return 1;
             case 'kg':
@@ -46,7 +46,7 @@
 
         <span class="text-lg font-bold">
             {{ quantity }}
-            {{ variant.unit.short }}
+            {{ variant?.unit?.short }}
         </span>
 
         <button @click.stop="increase" class="px-3 text-xl active:scale-90">+</button>

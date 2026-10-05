@@ -6,24 +6,24 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Http\Resources\Admin\CategoryResource;
 use App\Models\Category;
+use App\Http\Requests\Admin\CategoryRequest;
+use App\Traits\Http\Controllers\HandlesSmartPagination;
 use Inertia\Inertia;
 use Illuminate\Support\Str;
 
 class CategoryController extends Controller
 {
+    use HandlesSmartPagination;
+
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
     {
+        $filters = $request->only(['search', 'type']);
+
         $categories = Category::query()
-            ->when($request->search, function ($query, $search) {
-                $search = mb_strtolower($search, 'UTF-8');
-                $query->whereRaw('LOWER(name) LIKE ?', ["%{$search}%"]);
-            })
-            ->when($request->type, function ($query, $type) {
-                $query->where('type', $type);
-            })
+            ->filter($filters)
             ->orderBy('is_active', 'desc')
             ->orderBy('sort_order')
             ->paginate(setting('admin_per_page', 10))
@@ -31,78 +31,30 @@ class CategoryController extends Controller
 
         return Inertia::render('Admin/Categories/Index', [
             'categories' => CategoryResource::collection($categories),
-            'filters' => $request->only(['search', 'type']),
+            'filters' => $filters,
             'seo' => $this->seo('Панель управления: Категории', robots: 'noindex, nofollow')
         ]);
     }
 
     /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request, Category $category)
+    public function store(CategoryRequest $request)
     {
-        $validated = $request->validate([
-            'name'       => 'required|string|max:255',
-            'slug'       => 'nullable|string|max:255|unique:categories,slug',
-            'icon'       => 'nullable|string|max:255',
-            'type'       => 'required|string|in:product,animal',
-            'sort_order' => 'integer',
-            'is_active'  => 'boolean',
-        ]);
-
-        if (empty($validated['slug'])) {
-            $validated['slug'] = Str::slug($validated['name']);
-        }
-
-        Category::create($validated);
+        $dto = $request->toDto();
+        $category = Category::create($dto->toArray());
 
         return redirect()->route('admin.categories.index')
-            ->with('success', "Категория $category->name успешно создана");
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
+            ->with('success', "Категория «{$category->name}» успешно создана");
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Category $category)
+    public function update(CategoryRequest $request, Category $category)
     {
-        $validated = $request->validate([
-            'name'       => 'required|string|max:255',
-            'slug'       => 'nullable|string|max:255|unique:categories,slug,' . $category->id,
-            'icon'       => 'nullable|string|max:255',
-            'type'       => 'required|string|in:product,animal',
-            'sort_order' => 'integer',
-            'is_active'  => 'boolean',
-        ]);
-
-        if (empty($validated['slug'])) {
-            $validated['slug'] = Str::slug($validated['name']);
-        }
-
-        $category->update($validated);
+        $dto = $request->toDto();
+        $category->update($dto->toArray());
 
         return redirect()->back()->with('success', "Категория $category->name обновлена");
     }
@@ -110,7 +62,7 @@ class CategoryController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Category $category)
+    public function destroy(Request $request, Category $category)
     {
         if ($category->products()->count() > 0 || $category->animals()->count() > 0) {
             return redirect()->back()->with('error', 'Нельзя удалить категорию, в которой есть товары или животные');
@@ -118,7 +70,6 @@ class CategoryController extends Controller
 
         $category->delete();
 
-        return redirect()->route('admin.categories.index')
-            ->with('success', "Категория $category->name удалена");
+        return $this->redirectWithFilters($request, 'admin.categories.index', "Категория «{$category->name}» удалена!");
     }
 }

@@ -17,7 +17,6 @@ class AdminProductResource extends ProductResource
         $data = parent::toArray($request);
         
         return array_merge($data, [
-            'is_active' => $this->is_active,
             'created_at' => $this->created_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),
             'deleted_at' => $this->deleted_at?->toIso8601String(),
@@ -31,6 +30,7 @@ class AdminProductResource extends ProductResource
             ),
                 
             // Status flags
+            'is_active' => $this->is_active,
             'is_trashed' => $this->trashed(),
             'can_delete' => !$this->trashed(),
         ]);

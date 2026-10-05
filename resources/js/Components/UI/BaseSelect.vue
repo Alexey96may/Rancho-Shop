@@ -56,7 +56,6 @@
                     ? 'rounded-2xl border bg-slate-950 py-3 pl-4 pr-10 text-left text-slate-300'
                     : 'rounded-xl border bg-white py-2.5 pl-4 pr-10 text-left sm:text-sm',
 
-                // Логика состояний рамки
                 hasError
                     ? isDark
                         ? 'border-red-500/50 hover:border-red-500'

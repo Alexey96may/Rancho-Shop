@@ -8,7 +8,7 @@
     import MapboxPicker from '@/Components/Map/MapboxPicker.vue';
     import CommentsSection from '@/Components/Sections/CommentsSection.vue';
     import MainLayout from '@/Layouts/MainLayout.vue';
-    import { useYandexGeocoder } from '@/composables/useYandexGeocoder';
+    import { useYandexGeocoder } from '@/composables/features/useYandexGeocoder';
     import type {
         Comment,
         DeliveryDraft,

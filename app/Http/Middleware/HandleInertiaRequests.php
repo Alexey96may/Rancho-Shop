@@ -40,8 +40,8 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             
             'auth' => [
-                'user' => $request->user()
-                    ? UserResource::make($request->user())
+                'user' => $user
+                    ? UserResource::make($user)
                     : null,
             ],
 
@@ -50,6 +50,7 @@ class HandleInertiaRequests extends Middleware
             'can' => [
                 'manageProducts' => Gate::allows('manage-products'),
                 'manageOrders' => Gate::allows('manage-orders'),
+                'manageAnalitics' => Gate::allows('manage-analitics'),
                 'manageComments' => Gate::allows('manage-comments'),
                 'manageDelivery' => Gate::allows('manage-delivery'),
                 'manageAnimals' => Gate::allows('manage-animals'),
@@ -62,7 +63,10 @@ class HandleInertiaRequests extends Middleware
                 'manageFeatures' => Gate::allows('manage-features'),
                 'manageSettings' => Gate::allows('manage-settings'),
                 'manageNomenclature' => Gate::allows('manage-nomenclature'),
-                'editAdminNote' => $user && $user->role === 'admin',
+
+                'editAdminNote'      => Gate::allows('edit-admin-note'),
+                'restore'            => Gate::allows('restore'),
+                'forceDelete'        => Gate::allows('force-delete'),
             ],
 
             'flash' => [

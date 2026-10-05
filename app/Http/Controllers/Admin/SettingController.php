@@ -5,17 +5,15 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Services\SettingService;
+use App\Http\Requests\Admin\BulkUpdateSettingsRequest;
 use App\Http\Resources\SettingResource;
 use Inertia\Inertia;
 
 class SettingController extends Controller
 {
-    protected $settingService;
-
-    public function __construct(SettingService $settingService)
-    {
-        $this->settingService = $settingService;
-    }
+    public function __construct(
+        protected SettingService $settingService
+    ) {}
 
     public function index()
     {
@@ -31,19 +29,11 @@ class SettingController extends Controller
     /**
      * Bulk update settings
      */
-    public function bulkUpdate(Request $request)
+    public function bulkUpdate(BulkUpdateSettingsRequest $request)
     {
-        // Expect an array of the following type: [['key' => 'site_name', 'value' => 'Новое имя', 'type' => 'string'], ...]
-        $validated = $request->validate([
-            'settings' => 'required|array',
-            'settings.*.key' => 'required|string|exists:settings,key',
-            'settings.*.value' => 'present', // present allows you to pass empty strings or null
-            'settings.*.type' => 'required|string|in:string,integer,boolean,json',
-        ]);
-
-        foreach ($validated['settings'] as $item) {
-            $this->settingService->set($item['key'], $item['value'], $item['type']);
-        }
+        $this->settingService->bulkSet(
+            $request->validated('settings')
+        );
 
         return back()->with('success', 'Настройки успешно обновлены');
     }
@@ -53,8 +43,7 @@ class SettingController extends Controller
      */
     public function clearCache()
     {
-        \Illuminate\Support\Facades\Cache::forget('settings.all');
-        \Illuminate\Support\Facades\Cache::forget('delivery_zones');
+        $this->settingService->flushCache();
         
         return back()->with('info', 'Кеш настроек очищен');
     }

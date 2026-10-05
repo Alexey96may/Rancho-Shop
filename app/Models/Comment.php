@@ -4,12 +4,51 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\Models\HasAdminTrash;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use App\Enums\CommentStatus;
 
+/**
+ * @property int $id
+ * @property int|null $user_id
+ * @property string|null $guest_name
+ * @property string $content
+ * @property int|null $rating
+ * @property CommentStatus $status
+ * @property string|null $commentable_type
+ * @property int|null $commentable_id
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property string|null $deleted_at
+ * @property-read mixed $author_name
+ * @property-read Model|\Eloquent|null $commentable
+ * @property-read \App\Models\User|null $user
+ * @method static \Database\Factories\CommentFactory factory($count = null, $state = [])
+ * @method static Builder<static>|Comment newModelQuery()
+ * @method static Builder<static>|Comment newQuery()
+ * @method static Builder<static>|Comment published()
+ * @method static Builder<static>|Comment query()
+ * @method static Builder<static>|Comment whereCommentableId($value)
+ * @method static Builder<static>|Comment whereCommentableType($value)
+ * @method static Builder<static>|Comment whereContent($value)
+ * @method static Builder<static>|Comment whereCreatedAt($value)
+ * @method static Builder<static>|Comment whereDeletedAt($value)
+ * @method static Builder<static>|Comment whereGuestName($value)
+ * @method static Builder<static>|Comment whereId($value)
+ * @method static Builder<static>|Comment whereRating($value)
+ * @method static Builder<static>|Comment whereStatus($value)
+ * @method static Builder<static>|Comment whereUpdatedAt($value)
+ * @method static Builder<static>|Comment whereUserId($value)
+ * @method static Builder<static>|Comment filter(array $filters)
+ * @mixin \Eloquent
+ */
 class Comment extends Model
 {
+    use HasFactory, SoftDeletes, HasAdminTrash;
+
     protected $fillable = [
         'user_id',
         'guest_name',
@@ -49,5 +88,45 @@ class Comment extends Model
     public function scopePublished(Builder $query): void
     {
         $query->where('status', CommentStatus::APPROVED);
+    }
+
+    /**
+    * Scope for filtering and prioritizing comments
+    */
+    public function scopeFilter(Builder $query, array $filters): Builder
+    {
+        return $query
+            ->when($filters['type'] ?? null, fn($q, $type) => $q->where('commentable_type', $type))
+            ->when($filters['status'] ?? null, fn($q, $status) => $q->where('status', $status))
+            ->orderBy(function ($q) {
+                $q->selectRaw("CASE 
+                    WHEN status = ? THEN 1 
+                    WHEN status = ? THEN 2 
+                    WHEN status = ? THEN 3 
+                    ELSE 4 END", [
+                        CommentStatus::PENDING->value,
+                        CommentStatus::APPROVED->value,
+                        CommentStatus::HIDDEN->value,
+                ]);
+            })
+            ->orderByRaw('deleted_at IS NOT NULL ASC');;
+    }
+
+    /**
+    * Optimized statistics retrieval with ONE database query
+    */
+    public static function getStats(): array
+    {
+        $totals = self::selectRaw("
+            ROUND(AVG(CASE WHEN status = ? THEN rating ELSE NULL END), 1) as avg_rating,
+            COUNT(*) as total_count,
+            COUNT(CASE WHEN status = ? THEN 1 END) as pending_count
+        ", [CommentStatus::APPROVED->value, CommentStatus::PENDING->value])->first();
+
+        return [
+            'avg_rating'    => (float) ($totals->avg_rating ?? 0),
+            'total_count'   => (int) $totals->total_count,
+            'pending_count' => (int) $totals->pending_count,
+        ];
     }
 }

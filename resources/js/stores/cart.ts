@@ -2,7 +2,7 @@ import { computed, ref } from 'vue';
 
 import { defineStore } from 'pinia';
 
-import type { CartItem, Media, ProductVariantDTO } from '@/types';
+import type { CartItem, Media, Product, ProductVariantDTO } from '@/types';
 
 type ServerCartItem = {
     variant_id: number;
@@ -57,7 +57,8 @@ export const useCartStore = defineStore(
         // ======================
         // ACTIONS
         // ======================
-        function add(variant: ProductVariantDTO) {
+        // Меняем сигнатуру и логику метода add:
+        function add(variant: ProductVariantDTO, product?: Product) {
             const existingItem = items.value.find((i) => i.variant_id === variant.id);
 
             if (existingItem) {
@@ -66,7 +67,6 @@ export const useCartStore = defineStore(
                     existingItem.reason = 'quantity_exceeded';
                     return;
                 }
-
                 existingItem.quantity++;
                 return;
             }
@@ -76,30 +76,30 @@ export const useCartStore = defineStore(
                 url: '/images/no-image.jpg',
                 thumbnails: { original: '/images/no-image.jpg', webp: null, avif: null },
                 previews: { original: null, webp: null, avif: null },
-                responsive: [],
+                responsive: {},
                 name: 'placeholder',
                 mime_type: 'image/jpeg',
                 order_column: 0,
             };
 
+            // Если передан продукт — берем имя и главную картинку от него.
+            // Если нет (например, если вызывается откуда-то еще) — фоллбечимся.
             items.value.push({
                 variant_id: variant.id,
+                product_id: product?.id ?? 0, // если ID нет, ставим 0
 
-                product_id: variant.product_id,
-
-                name: variant.product?.name,
+                name: product?.name ?? 'Товар',
                 variant_name: variant.name,
 
                 price: variant.price,
                 quantity: 1,
 
-                media: variant.media?.[0] || fallbackMedia,
+                media: product?.main_photo?.[0] || fallbackMedia,
 
-                unit: variant.unit.slug,
+                unit: variant.unit?.slug || 'kg',
                 amount: variant.amount,
 
-                slug: variant.product.slug,
-
+                slug: product?.slug ?? '',
                 stock: variant.stock,
 
                 valid: true,

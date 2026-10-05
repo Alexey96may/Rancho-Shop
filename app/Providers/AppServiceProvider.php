@@ -11,8 +11,7 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Http\Request;
 use App\DTO\DeliveryDTO;
 use Illuminate\Support\Str;
-use Illuminate\Support\Pluralizer;
-
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Gate;
 use App\Enums\UserRole;
 use App\Enums\Permission;
@@ -61,6 +60,7 @@ class AppServiceProvider extends ServiceProvider
 
                     // WORKER + ADMIN
                     Permission::MANAGE_DELIVERY,
+                    Permission::MANAGE_ANALITICS,
                     Permission::MANAGE_ORDERS 
                         => $user->role === UserRole::WORKER,
 
@@ -74,6 +74,10 @@ class AppServiceProvider extends ServiceProvider
                 };
             });
         }
+
+        Gate::define('edit-admin-note', fn ($user) => $user->role === UserRole::ADMIN);
+        Gate::define('restore', fn ($user) => $user->role === UserRole::ADMIN);
+        Gate::define('force-delete', fn ($user) => $user->role === UserRole::ADMIN);
 
         Relation::enforceMorphMap([
             'animal' => Animal::class,

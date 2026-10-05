@@ -1,40 +1,83 @@
 <script setup lang="ts">
-    import { ref, watch } from 'vue';
+    import { PropType, watch } from 'vue';
 
     import { router, useForm } from '@inertiajs/vue3';
 
-    import { FunnelIcon, PlusIcon, XMarkIcon } from '@heroicons/vue/24/outline';
-    import { debounce } from 'lodash';
+    import { FunnelIcon } from '@heroicons/vue/24/outline';
 
     import AdminProductCard from '@/Components/Admin/Cards/AdminProductCard.vue';
     import AdminEmptyState from '@/Components/Admin/Shared/AdminEmptyState.vue';
+    import AdminPageHeader from '@/Components/Admin/Shared/AdminPageHeader.vue';
     import AdminPagination from '@/Components/Admin/Shared/AdminPagination.vue';
     import AdminLoader from '@/Components/Admin/UI/AdminLoader.vue';
     import AdminSearchInput from '@/Components/Admin/UI/AdminSearchInput.vue';
+    import BaseCreateButton from '@/Components/UI/BaseCreateButton.vue';
     import BaseSelect from '@/Components/UI/BaseSelect.vue';
     import AdminLayout from '@/Layouts/AdminLayout.vue';
-    import { useFlash } from '@/composables/useFlash';
+    import { useAdminCrud } from '@/composables/crud/useAdminCrud';
+    import { useAdminFilters } from '@/composables/routing/useAdminFilters';
+    import { useAdminNavigation } from '@/composables/routing/useAdminNavigation';
     import type { AdminProduct, Animal, Category, Paginated, ResourceCollection } from '@/types';
 
     defineOptions({ layout: AdminLayout });
 
-    const { notifyWithUndo } = useFlash();
+    const props = defineProps({
+        products: {
+            type: Object as PropType<Paginated<AdminProduct>>,
+            required: true,
+            validator: (value: unknown): boolean => {
+                const val = value as Record<string, unknown>;
+                const hasData = Array.isArray(val?.data);
+                const hasMeta = val?.meta && typeof val.meta === 'object';
 
-    const props = defineProps<{
-        products: Paginated<AdminProduct>;
-        categories: ResourceCollection<Category>;
-        animals: ResourceCollection<Animal>;
+                if (!hasData || !hasMeta) {
+                    console.warn(
+                        'Runtime Error: The "products" prop must contain valid pagination metadata and data array.',
+                    );
+                }
+                return !!(hasData && hasMeta);
+            },
+        },
+        categories: {
+            type: Object as PropType<ResourceCollection<Category>>,
+            required: true,
+            validator: (value: unknown): boolean => {
+                const val = value as Record<string, unknown>;
+                const hasData = Array.isArray(val?.data);
+
+                if (!hasData) {
+                    console.warn(
+                        'Runtime Error: The "categories" prop must be a ResourceCollection containing a "data" array.',
+                    );
+                }
+                return hasData;
+            },
+        },
+        animals: {
+            type: Object as PropType<ResourceCollection<Animal>>,
+            required: true,
+            validator: (value: unknown): boolean => {
+                const val = value as Record<string, unknown>;
+                const hasData = Array.isArray(val?.data);
+
+                if (!hasData) {
+                    console.warn(
+                        'Runtime Error: The "animals" prop must be a ResourceCollection containing a "data" array.',
+                    );
+                }
+                return hasData;
+            },
+        },
         filters: {
-            search?: string;
-            category?: number | string;
-            animal?: number | string;
-        };
-    }>();
-
-    const isDeleteModalOpen = ref(false);
-
-    const isFiltering = ref(false);
-    const deletingIds = ref(new Set<number>());
+            type: Object as PropType<{
+                search?: string;
+                category?: number | string;
+                animal?: number | string;
+            }>,
+            required: true,
+            default: () => ({ search: '', category: null, animal: null }),
+        },
+    });
 
     const filterForm = useForm({
         search: props.filters.search || '',
@@ -42,59 +85,25 @@
         animal: props.filters.animal || null,
     });
 
-    const submitFilters = debounce(() => {
-        filterForm.get(route('admin.products.index'), {
-            preserveState: true,
-            replace: true,
-            preserveScroll: true,
+    const { navigateWithContext } = useAdminNavigation();
+    const { deleteEntity, restoreEntity, isDeleting, isRestoring } = useAdminCrud();
+    const { isFiltering, submitFilters, clearFilters } = useAdminFilters();
 
-            onFinish: () => {
-                isFiltering.value = false;
-            },
-        });
-    }, 400);
-
-    const resetFilters = () => {
-        filterForm.search = '';
-        filterForm.category = null;
-        filterForm.animal = null;
-        submitFilters();
-    };
-
-    const goToCreate = () => {
-        router.get(route('admin.products.create'));
+    const handleRestore = (id: number, name: string) => {
+        restoreEntity('admin.products', id, name);
     };
 
     watch(
         () => [filterForm.search, filterForm.category, filterForm.animal],
         () => {
-            isFiltering.value = true;
-            submitFilters();
+            submitFilters(filterForm, 'admin.products.index');
         },
     );
-
-    const deleteProduct = async (product: AdminProduct) => {
-        if (deletingIds.value.has(product.id)) return;
-        deletingIds.value.add(product.id);
-
-        const isTimeOut = await notifyWithUndo(`Удаление товара «${product.name}»`);
-
-        if (isTimeOut) {
-            router.delete(route('admin.products.destroy', product.id), {
-                preserveScroll: true,
-                onFinish: () => {
-                    deletingIds.value.delete(product.id);
-                },
-            });
-        } else {
-            deletingIds.value.delete(product.id);
-        }
-    };
 </script>
 
 <template>
     <Teleport to="#admin-header-content">
-        <h1 class="text-xl font-black text-white">Управление Товарами</h1>
+        <AdminPageHeader title="Товары" subtitle="Управление Продуктами" />
     </Teleport>
 
     <section class="mb-8 space-y-4" role="search" aria-label="Фильтрация товаров">
@@ -106,24 +115,10 @@
                 aria-label="Введите текст для поиска"
             />
 
-            <div class="flex items-center gap-3">
-                <button
-                    v-if="filterForm.isDirty || filterForm.search"
-                    @click="resetFilters"
-                    class="rounded-lg px-2 text-[10px] font-black uppercase tracking-widest text-slate-500 transition-colors hover:text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
-                >
-                    Сбросить
-                </button>
-
-                <button
-                    @click="router.get(route('admin.products.create'))"
-                    class="shadow-lg inline-flex items-center gap-2 rounded-2xl bg-orange-600 px-6 py-3 text-[12px] font-black uppercase tracking-widest text-white shadow-orange-600/20 transition-all hover:bg-orange-500 focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-slate-900 active:scale-95"
-                    title="Создать новый товар"
-                >
-                    <PlusIcon class="h-5 w-5" />
-                    Создать товар
-                </button>
-            </div>
+            <BaseCreateButton
+                @click="navigateWithContext('admin.products')"
+                label="Создать товар"
+            />
         </div>
 
         <div class="mt-4">
@@ -145,10 +140,10 @@
                 <BaseSelect
                     v-model="filterForm.animal"
                     :options="animals.data"
-                    placeholder="Все животные"
+                    placeholder="Все товары"
                     class="w-48"
                     variant="admin"
-                    aria-label="Фильтр по животным"
+                    aria-label="Фильтр по товарам"
                 />
             </div>
         </div>
@@ -173,16 +168,19 @@
                     <AdminProductCard
                         v-for="product in products.data"
                         :key="product.id"
-                        :disabled="deletingIds.has(product.id)"
+                        :disabled="isDeleting(product.id) || isRestoring(product.id)"
                         :product="product"
-                        @edit="(p) => router.get(route('admin.products.edit', p.id))"
-                        @delete="deleteProduct(product)"
+                        @edit="(p) => navigateWithContext('admin.products', 'edit', p.id)"
+                        @restore="handleRestore"
+                        @delete="
+                            deleteEntity(
+                                'admin.products',
+                                product.id,
+                                `Удаление товара «${product.name}»`,
+                            )
+                        "
                     />
                 </TransitionGroup>
-
-                <div class="mt-8">
-                    <AdminPagination :links="products.meta.links" />
-                </div>
             </div>
 
             <AdminLoader v-else-if="isFiltering" key="loading" text="Синхронизация" />
@@ -191,7 +189,11 @@
                 v-else
                 key="empty"
                 :title="filterForm.search ? 'Товары не найдены' : 'Список товаров пуст'"
-                @action="filterForm.search ? resetFilters() : goToCreate()"
+                @action="
+                    filterForm.search
+                        ? clearFilters(filterForm)
+                        : navigateWithContext('admin.products')
+                "
                 :action-text="filterForm.search ? 'Очистить фильтр' : 'Добавить товар'"
                 :show-action="true"
                 :description="
@@ -201,11 +203,12 @@
                 "
             />
         </Transition>
+
+        <AdminPagination :links="products.meta.links" />
     </main>
 </template>
 
 <style scoped>
-    /* Анимация появления и перемещения карточек */
     .product-grid-enter-active,
     .product-grid-leave-active {
         transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);

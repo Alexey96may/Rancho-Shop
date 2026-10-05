@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class SeoResource extends JsonResource
@@ -15,7 +16,13 @@ class SeoResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        /** @var Model|null $model */
         $model = $this->seoable;
+        $canonicalUrl = $this->canonical;
+
+        if (empty($canonicalUrl) && ($request->is('admin*') || $request->wantsJson())) {
+            $canonicalUrl = ''; 
+        }
 
         return [
             'id'          => $this->id,
@@ -28,7 +35,7 @@ class SeoResource extends JsonResource
 
             'image'       => $this->getOgImage($model),
 
-            'canonical'   => $this->canonical ?? url()->current(),
+            'canonical'   => $canonicalUrl,
             
             'og_data' => [
                 'title'       => $this->og_data['title'] ?? $this->title ?? $model?->name,
@@ -42,7 +49,10 @@ class SeoResource extends JsonResource
         ];
     }
 
-    private function getOgImage($model): ?string
+    /**
+    * Retrieves the Open Graph image, validating the model type.
+    */
+    private function getOgImage(?Model $model): ?string
     {
         // 1. If the link in og_data is manually set
         if (!empty($this->og_data['image'])) {
@@ -59,9 +69,9 @@ class SeoResource extends JsonResource
     }
 
     /**
-     * Generating Schema.org markup
+     * Generating Schema.org (JsonLD)
      */
-    private function generateJsonLd($model): array
+    private function generateJsonLd(?Model $model): array
     {
         if (!$model) return [];
 
@@ -103,7 +113,10 @@ class SeoResource extends JsonResource
         return $data;
     }
 
-    private function getSchemaType($model): string
+    /**
+    * Determines the schema type
+    */
+    private function getSchemaType(?Model $model): string
     {
         return match (true) {
             $model instanceof \App\Models\Product => 'Product',

@@ -16,7 +16,6 @@ class AnimalResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            // 'parent_id' => $this->parent_id,
             'name' => $this->name,
             'slug' => $this->slug,
             'status' => $this->status,

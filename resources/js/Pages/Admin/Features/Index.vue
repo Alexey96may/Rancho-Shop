@@ -1,32 +1,47 @@
 <script setup lang="ts">
-    import { router } from '@inertiajs/vue3';
+    import { PropType, watch } from 'vue';
+
+    import { router, useForm } from '@inertiajs/vue3';
 
     import FeatureCard from '@/Components/Admin/Cards/AdminFeatureCard.vue';
     import AdminEmptyState from '@/Components/Admin/Shared/AdminEmptyState.vue';
+    import AdminPageHeader from '@/Components/Admin/Shared/AdminPageHeader.vue';
+    import AdminLoader from '@/Components/Admin/UI/AdminLoader.vue';
     import AdminSearchInput from '@/Components/Admin/UI/AdminSearchInput.vue';
     import AdminLayout from '@/Layouts/AdminLayout.vue';
+    import { useAdminFilters } from '@/composables/routing/useAdminFilters';
     import { AdminLandingBlock, ResourceCollection } from '@/types';
 
     defineOptions({ layout: AdminLayout });
 
-    const props = defineProps<{
-        blocks: ResourceCollection<AdminLandingBlock>;
-        filters: { search: string };
-    }>();
+    const props = defineProps({
+        blocks: {
+            type: Object as PropType<ResourceCollection<AdminLandingBlock>>,
+            required: true,
+            validator: (value: unknown): boolean => {
+                const val = value as Record<string, unknown>;
+                const hasData = Array.isArray(val?.data);
 
-    const search = (str: string): void => {
-        if (str === props.filters.search) return;
-
-        router.get(
-            route('admin.features.index'),
-            { search: str },
-            {
-                preserveScroll: true,
-                preserveState: true,
-                replace: true,
+                if (!hasData) {
+                    console.warn(
+                        'Runtime Error: The "blocks" prop must be a ResourceCollection containing a "data" array.',
+                    );
+                }
+                return hasData;
             },
-        );
-    };
+        },
+        filters: {
+            type: Object as PropType<{ search: string }>,
+            required: true,
+            default: () => ({ search: '' }),
+        },
+    });
+
+    const filterForm = useForm({
+        search: props.filters.search || '',
+    });
+
+    const { isFiltering, submitFilters, clearFilters } = useAdminFilters();
 
     const toggleVisibility = (id: number) => {
         router.patch(
@@ -38,26 +53,26 @@
         );
     };
 
-    const clearFilters = () => {
-        search('');
-    };
+    watch(
+        () => [filterForm.search],
+        () => {
+            submitFilters(filterForm, 'admin.features.index');
+        },
+    );
 </script>
 
 <template>
     <Teleport to="#admin-header-content">
-        <h1 class="flex items-center gap-2 text-xl font-black text-white">
-            Модерация блоков страниц
-        </h1>
+        <AdminPageHeader title="Блоки страниц" subtitle="Управление блоками на главной" />
     </Teleport>
 
     <div class="animate-in fade-in slide-in-from-bottom-4 space-y-8 duration-700">
-        <AdminSearchInput :model-value="props.filters.search" @search="search" />
+        <AdminSearchInput v-model="filterForm.search" placeholder="Поиск по названию или тегу..." />
 
         <Transition name="fade-slide">
-            <div v-if="blocks.data.length">
+            <div v-if="blocks.data.length" key="blocks">
                 <TransitionGroup
                     name="list"
-                    key="blocks"
                     tag="div"
                     class="grid grid-cols-1 gap-6 lg:grid-cols-2"
                 >
@@ -70,11 +85,13 @@
                 </TransitionGroup>
             </div>
 
+            <AdminLoader v-else-if="isFiltering" key="loading" text="Синхронизация" />
+
             <AdminEmptyState
                 v-else
-                key="no-blocks"
+                key="empty"
                 title="Блоки не найдены"
-                @action="clearFilters"
+                @action="clearFilters(filterForm)"
                 :show-action="true"
             />
         </Transition>

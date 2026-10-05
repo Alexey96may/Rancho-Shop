@@ -9,46 +9,56 @@
 </script>
 
 <template>
-    <nav
-        v-if="links.length > 3"
-        role="navigation"
-        aria-label="Навигация по страницам"
-        class="mt-12 flex justify-center"
-    >
-        <div
-            class="flex items-center gap-1 rounded-2xl border border-slate-800 bg-slate-900/80 p-1.5 backdrop-blur-sm"
+    <Transition name="fade-slide" mode="out-in">
+        <nav
+            v-if="links.length > 3"
+            role="navigation"
+            aria-label="Навигация по страницам"
+            class="mt-12 flex justify-center"
         >
-            <template v-for="(link, k) in links" :key="k">
-                <div
-                    v-if="link.url === null"
-                    class="flex h-10 min-w-[40px] select-none items-center justify-center px-3 text-[10px] font-black uppercase tracking-widest text-slate-600 opacity-50"
-                    v-html="link.label"
-                    aria-hidden="true"
-                />
+            <div
+                class="flex items-center gap-1 rounded-2xl border border-slate-800 bg-slate-900/80 p-1.5 backdrop-blur-sm"
+            >
+                <template v-for="(link, k) in links" :key="k">
+                    <div
+                        v-if="link.url === null"
+                        class="flex h-10 min-w-[40px] select-none items-center justify-center px-3 text-[10px] font-black uppercase tracking-widest text-slate-600 opacity-50"
+                        v-html="link.label"
+                        aria-hidden="true"
+                    />
 
-                <Link
-                    v-else
-                    :href="link.url"
-                    class="flex h-10 min-w-[40px] items-center justify-center rounded-xl px-4 text-[10px] font-black uppercase tracking-widest transition-all focus:outline-none focus:ring-2 focus:ring-orange-500"
-                    :class="[
-                        link.active
-                            ? 'bg-orange-600 text-white shadow-[0_0_20px_rgba(234,88,12,0.4)]'
-                            : 'text-slate-400 hover:bg-slate-800 hover:text-white',
-                    ]"
-                    :aria-current="link.active ? 'page' : undefined"
-                    :aria-label="`Перейти на страницу ${link.label}`"
-                    preserve-scroll
-                    preserve-state
-                    v-html="link.label"
-                />
-            </template>
-        </div>
-    </nav>
+                    <Link
+                        v-else
+                        :href="link.url"
+                        class="flex h-10 min-w-[40px] items-center justify-center rounded-xl px-4 text-[10px] font-black uppercase tracking-widest transition-all focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        :class="[
+                            link.active
+                                ? 'bg-orange-600 text-white shadow-[0_0_20px_rgba(234,88,12,0.4)]'
+                                : 'text-slate-400 hover:bg-slate-800 hover:text-white',
+                        ]"
+                        :aria-current="link.active ? 'page' : undefined"
+                        :aria-label="`Перейти на страницу ${link.label}`"
+                        preserve-scroll
+                        preserve-state
+                        v-html="link.label"
+                    />
+                </template>
+            </div>
+        </nav>
+    </Transition>
 </template>
 
 <style scoped>
     :deep(span) {
         font-family: inherit;
         font-size: inherit;
+    }
+
+    .fade-slide-enter-active {
+        transition: all 0.4s ease-out;
+    }
+    .fade-slide-enter-from {
+        opacity: 0;
+        transform: translateY(-10px);
     }
 </style>

@@ -35,5 +35,6 @@ export interface AdminAnimal extends Animal, Timestamps {
     category_id: number;
     deleted_at: string;
     is_active: boolean;
+    is_trashed: boolean;
     media: Media[];
 }

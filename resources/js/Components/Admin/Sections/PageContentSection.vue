@@ -1,9 +1,10 @@
 <script setup lang="ts">
     import { ref, watch } from 'vue';
 
+    import type { Errors } from '@inertiajs/core';
     import { router } from '@inertiajs/vue3';
 
-    // Tiptap Extensions (именованные импорты для доп. модулей)
+    // Tiptap Extensions
     import { Color } from '@tiptap/extension-color';
     import Image from '@tiptap/extension-image';
     import Link from '@tiptap/extension-link';
@@ -38,13 +39,14 @@
     } from 'lucide-vue-next';
 
     import BaseModal from '@/Components/UI/BaseModal.vue';
-    import { useFlash } from '@/composables/useFlash';
+    import { useFlash } from '@/composables/ui/useFlash';
 
     const { notify } = useFlash();
 
     const props = defineProps<{
         modelValue?: string;
         pageId?: number;
+        errors?: Errors;
     }>();
 
     const content = defineModel<string>();
@@ -410,6 +412,9 @@
             </div>
             <div v-if="isHtmlMode" class="editor-container bg-slate-950">
                 <textarea v-model="content" rows="22" class="html-textarea border-none"></textarea>
+                <p v-if="errors?.content" class="text-xs font-medium text-red-500">
+                    {{ errors?.content }}
+                </p>
             </div>
         </div>
     </div>

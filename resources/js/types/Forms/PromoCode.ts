@@ -9,4 +9,6 @@ export interface PromoCodeFormState {
     expires_at: string | Date | null;
     is_active: boolean;
     create_another: boolean;
+
+    return_page?: number | string;
 }

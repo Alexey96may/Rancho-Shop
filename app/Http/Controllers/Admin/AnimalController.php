@@ -6,43 +6,32 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Http\Resources\Admin\AnimalResource as AdminAnimalResource;
+use App\Enums\UserRole;
+use App\Http\Requests\Admin\{StoreAnimalRequest};
 use App\Models\Animal;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
-use Illuminate\Support\Str;
+use App\Traits\Http\Controllers\HandlesSmartPagination;
 use App\Models\Category;
+use App\Traits\HandlesAdminMedia;
 
 class AnimalController extends Controller
 {
+    use HandlesSmartPagination, HandlesAdminMedia;
+
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
     {
+        $filters = $request->only(['search', 'category_id', 'status']);
+
         $animals = Animal::query()
             ->with(['category', 'parent', 'seo'])
-            ->when($request->search, function ($query, $search) {
-                $search = mb_strtolower($search, 'UTF-8');
-                
-                $query->where(function($q) use ($search) {
-                    $q->whereRaw('LOWER(name) LIKE ?', ["%{$search}%"]);
-                });
-            })
-            ->when($request->category_id, function ($query, $catId) {
-                // For ID
-                if (is_numeric($catId)) {
-                    $query->where('category_id', $catId);
-                } 
-                // For Slug 
-                else {
-                    $query->whereHas('category', function($q) use ($catId) {
-                        $q->where('slug', $catId);
-                    });
-                }
-            })
-            ->when($request->status, function ($query, $status) {
-                $query->where('status', $status);
-            })
             ->orderBy('is_active', 'desc')
+            ->withTrashControl($request, $filters)
+            ->filter($filters)
             ->latest()
             ->paginate(setting('admin_per_page', 10))
             ->withQueryString();
@@ -50,61 +39,60 @@ class AnimalController extends Controller
         return Inertia::render('Admin/Animals/Index', [
             'animals' => AdminAnimalResource::collection($animals),
             'categories' => Category::where('type', 'animal')->get(['id', 'name', 'slug']),
-            'filters' => $request->only(['search', 'category_id', 'status']),
+            'filters' => $filters,
             'seo' => $this->seo('Панель управления: Животные', robots: 'noindex, nofollow')
+        ]);
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create(Request $request)
+    {
+        return Inertia::render('Admin/Animals/FormPage', [
+            'animal' => null,
+            'categories' => Category::where('type', 'animal')->get(['id', 'name', 'slug']),
+            'seo' => $this->seo('Добавление новой особи', robots: 'noindex, nofollow'),
+            'backUrl' => $request->query('back') 
+                    ? route('admin.animals.index') . $request->query('back') 
+                    : route('admin.animals.index'),
         ]);
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreAnimalRequest $request)
     {
-        $validated = $request->validate([
-            'name'        => 'required|string|max:255',
-            'category_id' => 'required|exists:categories,id',
-            'parent_id'   => 'nullable|exists:animals,id',
-            'status'      => 'required|string',
-            'bio'         => 'nullable|string',
-            'features'    => 'nullable|array',
-            'is_active'   => 'boolean',
-            'avatar'      => 'nullable|image|max:2048', // 2MB max
-            'voice'       => 'nullable|mimes:mp3,wav|max:5120', // 5MB max
-            'gallery'     => 'nullable|array',
-            'gallery.*'   => 'image|mimes:jpeg,png,jpg,webp|max:5120',
+        $dto = $request->toDto();
 
-            'seo.title'       => 'nullable|string|max:255',
-            'seo.description' => 'nullable|string',
-            'seo.keywords'    => 'nullable|string',
-            'seo.canonical'   => 'nullable|string|url',
-            'seo.is_noindex'  => 'boolean',
+        $animal = DB::transaction(function () use ($dto, $request) {
+            $animal = Animal::create($dto->toArray());
+            $animal->syncSeo($dto->seoData);
+            
+            $this->syncModelMedia($animal, $request);
+
+            return $animal;
+        });
+
+        return $this->redirectWithFilters($request, 'admin.animals.index', "Животное «{$animal->name}» успешно добавлено!");
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(Request $request, Animal $animal)
+    {
+        $animal->load(['seo', 'category', 'parent']);
+
+        return Inertia::render('Admin/Animals/FormPage', [
+            'animal' => new AdminAnimalResource($animal), 
+            'categories' => Category::where('type', 'animal')->get(['id', 'name', 'slug']),
+            'seo' => $this->seo("Редактирование {$animal->name}", robots: 'noindex, nofollow'),
+            'backUrl' => $request->query('back') 
+                ? route('admin.animals.index') . $request->query('back') 
+                : route('admin.animals.index'),
         ]);
-
-        $validated['slug'] = Str::slug($validated['name']);
-
-        $animal = Animal::create(collect($validated)->except(['avatar', 'gallery', 'voice', 'seo'])->toArray());
-
-        if ($request->has('seo')) {
-            $animal->seo()->create($request->input('seo'));
-        }
-
-        if ($request->hasFile('avatar')) {
-            $animal->addMediaFromRequest('avatar')->toMediaCollection('avatars');
-        }
-
-        if ($request->hasFile('gallery')) {
-            $files = $request->file('gallery');
-
-            foreach (is_array($files) ? $files : [$files] as $file) {
-                $animal->addMedia($file)->toMediaCollection('gallery');
-            }
-        }
-
-        if ($request->hasFile('voice')) {
-            $animal->addMediaFromRequest('voice')->toMediaCollection('voice');
-        }
-
-        return redirect()->route('admin.animals.index')->with('success', "Животное $animal->name успешно добавлено");
     }
 
     /**
@@ -112,91 +100,51 @@ class AnimalController extends Controller
      */
     public function update(Request $request, Animal $animal)
     {
-        $validated = $request->validate([
-            'name'        => 'required|string|max:255',
-            'category_id' => 'required|exists:categories,id',
-            'parent_id'   => 'nullable|exists:animals,id',
-            'status'      => 'required|string',
-            'bio'         => 'nullable|string',
-            'features'    => 'nullable|array',
-            'is_active'   => 'boolean',
-            'avatar'      => 'nullable|image|max:2048', // 2MB max
-            'voice'       => 'nullable|mimes:mp3,wav|max:5120', // 5MB max
-            'gallery'     => 'nullable|array',
-            'gallery.*'   => 'nullable',
+        $dto = $request->toDto();
 
-            'seo.title'       => 'nullable|string|max:255',
-            'seo.description' => 'nullable|string',
-            'seo.keywords'    => 'nullable|string',
-            'seo.canonical'   => 'nullable|string|url',
-            'seo.is_noindex'  => 'boolean',
-        ]);
+        DB::transaction(function () use ($dto, $request, $animal) {
+            $animal->update($dto->toArray());
+            $animal->syncSeo($dto->seoData);
 
-        $animal->update(collect($validated)->except(['avatar', 'gallery', 'voice', 'seo'])->toArray());
+            $this->syncModelMedia($animal, $request);
+        });
 
-        if ($request->has('seo')) {
-            $animal->seo()->updateOrCreate([], $request->input('seo'));
-        }
-
-        if ($request->hasFile('avatar')) {
-            $animal->clearMediaCollection('avatars');
-            $animal->addMediaFromRequest('avatar')->toMediaCollection('avatars');
-        }
-
-        if ($request->has('gallery')) {
-            $currentMediaIds = collect($request->input('gallery'))
-                ->filter(fn($item) => is_array($item) && isset($item['id']))
-                ->pluck('id')
-                ->toArray();
-
-            // 1. Delete from the database those photos that are no longer in the array from the front
-            $animal->getMedia('gallery')
-                ->reject(fn($media) => in_array($media->id, $currentMediaIds))
-                ->each(fn($media) => $media->delete());
-
-            // 2. Add only NEW files
-            // In Laravel, files from the gallery array will be sent separately via $request->file()
-            if ($request->hasFile('gallery')) {
-                $files = $request->file('gallery');
-                
-                // If a single file was received, not an array (this happens with certain FormData settings)
-                if (!is_array($files)) {
-                    $files = [$files];
-                }
-
-                foreach ($files as $file) {
-                    if ($file->isValid()) {
-                        $animal->addMedia($file)->toMediaCollection('gallery');
-                    }
-                }
-            }
-        } elseif ($request->exists('gallery')) {
-            // If the gallery key exists but is empty, it means the user has deleted all photos.
-            $animal->clearMediaCollection('gallery');
-        }
-
-        if ($request->hasFile('voice')) {
-            $animal->addMediaFromRequest('voice')->toMediaCollection('voice');
-        }
-
-        return redirect()->back()->with('success', "Данные животного $animal->name обновлены");
+        return $this->redirectWithFilters($request, 'admin.animals.index', "Данные животного «{$animal->name}» успешно обновлены!");
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Animal $animal)
-    {
-        $animal->delete();
-        return redirect()->route('admin.animals.index')->with('success', 'Животное перемещено в архив');
-    }
-
-    public function restore($id)
+    public function destroy(Request $request, int $id)
     {
         $animal = Animal::withTrashed()->findOrFail($id);
+
+        if ($animal->trashed()) {
+            Gate::authorize('forceDelete', $animal);
+
+            $name = $animal->name;
+            
+            DB::transaction(function () use ($animal) {
+                $animal->seo()?->delete();
+                $animal->media()->delete();
+                $animal->forceDelete();
+            });
+
+            return back()->with('success', "Животное «{$name}» окончательно удалено!");
+        }
+
+        Gate::authorize('delete', $animal);
+        $animal->delete();
+        
+        return back()->with('success', "Животное «{$animal->name}» окончательно удалено!");
+    }
+
+    public function restore(Animal $animal)
+    {
+        Gate::authorize('restore', $animal);
         $animal->restore();
 
-        return redirect()->back()->with('success', 'Животное восстановлено из архива');
+        return redirect()->back()->with('success', "Животное «{$animal->name}» успешно восстановлено из архива!");
     }
 
     public function getPotentialParents(Request $request)

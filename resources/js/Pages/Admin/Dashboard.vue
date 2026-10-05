@@ -1,97 +1,110 @@
 <script setup lang="ts">
-    import { Head, usePage } from '@inertiajs/vue3';
+    import { usePage } from '@inertiajs/vue3';
 
     import {
         AcademicCapIcon,
+        ChartBarIcon,
         ChatBubbleLeftRightIcon,
         InboxIcon,
-        PresentationChartLineIcon,
         ShoppingCartIcon,
         TicketIcon,
         UsersIcon,
     } from '@heroicons/vue/24/outline';
 
     import AdminDashboardCard from '@/Components/Admin/Cards/DashboardCard.vue';
+    import AdminPageHeader from '@/Components/Admin/Shared/AdminPageHeader.vue';
     import AdminLayout from '@/Layouts/AdminLayout.vue';
     import { SharedData } from '@/types';
 
-    // В контроллере DashboardController нужно будет добавить эти ключи в stats
-    const props = defineProps<{
+    defineOptions({ layout: AdminLayout });
+
+    const props = defineProps({
         stats: {
-            products_count: number;
-            orders_pending: number;
-            new_comments: number;
-            total_users: number;
-            active_animals?: number;
-            active_promocodes?: number;
-        };
-    }>();
+            type: Object,
+            required: true,
+            default: () => ({
+                products_count: 0,
+                orders_pending: 0,
+                new_comments: 0,
+                total_users: 0,
+                active_animals: 0,
+                active_promocodes: 0,
+            }),
+        },
+    });
 
     const can = usePage<SharedData>().props.can;
 </script>
 
 <template>
-    <Head title="Панель управления" />
+    <Teleport to="#admin-header-content">
+        <AdminPageHeader title="Админ-Панель" subtitle="Управление сайтом" />
+    </Teleport>
 
-    <AdminLayout>
-        <template #header>Дашборд</template>
+    <section>
+        <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <AdminDashboardCard
+                v-if="can.manageOrders"
+                title="Заказы"
+                description="Ожидают обработки"
+                :href="route('admin.orders.index')"
+                :icon="ShoppingCartIcon"
+                :count="stats.orders_pending"
+            />
 
-        <section>
-            <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                <AdminDashboardCard
-                    v-if="can.manageOrders"
-                    title="Заказы"
-                    description="Ожидают обработки"
-                    :href="route('admin.orders.index')"
-                    :icon="ShoppingCartIcon"
-                    :count="stats.orders_pending"
-                />
+            <AdminDashboardCard
+                v-if="can.manageAnalitics"
+                title="Аналитика"
+                description="Данные по заказам"
+                :href="route('admin.analytics.index')"
+                :active="route().current('admin.analytics.*')"
+                :icon="ChartBarIcon"
+            />
 
-                <AdminDashboardCard
-                    v-if="can.manageProducts"
-                    title="Продукты"
-                    description="Всего в базе"
-                    :href="route('admin.products.index')"
-                    :icon="InboxIcon"
-                    :count="stats.products_count"
-                />
+            <AdminDashboardCard
+                v-if="can.manageProducts"
+                title="Продукты"
+                description="Всего в базе"
+                :href="route('admin.products.index')"
+                :icon="InboxIcon"
+                :count="stats.products_count"
+            />
 
-                <AdminDashboardCard
-                    title="Животные"
-                    description="Наше поголовье"
-                    :href="route('admin.animals.index')"
-                    :icon="AcademicCapIcon"
-                    :count="stats.active_animals || 0"
-                />
+            <AdminDashboardCard
+                title="Животные"
+                description="Наше поголовье"
+                :href="route('admin.animals.index')"
+                :icon="AcademicCapIcon"
+                :count="stats.active_animals || 0"
+            />
 
-                <AdminDashboardCard
-                    title="Промокоды"
-                    description="Активные акции"
-                    :href="route('admin.promocodes.index')"
-                    :icon="TicketIcon"
-                    :count="stats.active_promocodes || 0"
-                />
+            <AdminDashboardCard
+                title="Промокоды"
+                description="Активные акции"
+                :href="route('admin.promocodes.index')"
+                :icon="TicketIcon"
+                :count="stats.active_promocodes || 0"
+            />
 
-                <AdminDashboardCard
-                    v-if="can.manageComments"
-                    title="Отзывы"
-                    description="Новые сообщения"
-                    :href="route('admin.comments.index')"
-                    :icon="ChatBubbleLeftRightIcon"
-                    :count="stats.new_comments"
-                />
+            <AdminDashboardCard
+                v-if="can.manageComments"
+                title="Отзывы"
+                description="Новые сообщения"
+                :href="route('admin.comments.index')"
+                :icon="ChatBubbleLeftRightIcon"
+                :count="stats.new_comments"
+            />
 
-                <AdminDashboardCard
-                    v-if="can.manageUsers"
-                    title="Персонал"
-                    description="Доступ к админке"
-                    :href="route('admin.users.index')"
-                    :icon="UsersIcon"
-                    :count="stats.total_users"
-                />
-            </div>
-        </section>
+            <AdminDashboardCard
+                v-if="can.manageUsers"
+                title="Персонал"
+                description="Доступ к админке"
+                :href="route('admin.users.index')"
+                :icon="UsersIcon"
+                :count="stats.total_users"
+            />
+        </div>
+    </section>
 
-        <section class="mt-12"></section>
-    </AdminLayout>
+    <section class="mt-12"></section>
 </template>

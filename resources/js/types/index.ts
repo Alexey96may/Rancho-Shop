@@ -20,6 +20,7 @@ export * from './ProductVariant';
 export * from './Delivery';
 export * from './User';
 export * from './Forms';
+export * from './Analitic';
 
 export interface ResourceCollection<T> {
     data: T[];
@@ -73,7 +74,7 @@ export interface Permission {
 }
 
 export interface AuthProps {
-    user: User | null;
+    user: ResourceSingle<User> | ResourceSingle<null>;
 }
 
 export interface SharedData extends PageProps {
@@ -81,6 +82,7 @@ export interface SharedData extends PageProps {
     can: {
         manageProducts: boolean;
         manageOrders: boolean;
+        manageAnalitics: boolean;
         manageComments: boolean;
         manageDelivery: boolean;
         manageAnimals: boolean;
@@ -93,6 +95,10 @@ export interface SharedData extends PageProps {
         manageFeatures: boolean;
         manageSettings: boolean;
         manageNomenclature: boolean;
+
+        editAdminNote: boolean;
+        restore: boolean;
+        forceDelete: boolean;
     };
     flash: FlashPayload;
     permissions: Permission[];

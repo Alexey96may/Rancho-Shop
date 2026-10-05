@@ -3,16 +3,20 @@
 
     import { XMarkIcon } from '@heroicons/vue/24/outline';
 
-    const props = defineProps<{
-        show: boolean;
-        title?: string;
-    }>();
+    const props = withDefaults(
+        defineProps<{
+            show: boolean;
+            title?: string;
+            variant?: 'default' | 'lightbox';
+        }>(),
+        {
+            variant: 'default',
+        },
+    );
 
     const emit = defineEmits(['close']);
-
     const close = () => emit('close');
 
-    // Блокируем скролл основной страницы при открытой модалке
     watch(
         () => props.show,
         (isVisible) => {
@@ -31,7 +35,7 @@
     onMounted(() => window.addEventListener('keydown', handleEsc));
     onUnmounted(() => {
         window.removeEventListener('keydown', handleEsc);
-        document.body.style.overflow = ''; // На всякий случай возвращаем скролл
+        document.body.style.overflow = '';
     });
 </script>
 
@@ -47,33 +51,47 @@
         >
             <div
                 v-if="show"
-                class="fixed inset-0 z-[60] flex items-start justify-center overflow-y-auto bg-slate-950/80 p-4 backdrop-blur-sm sm:items-center"
+                class="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-slate-950/95 p-4 backdrop-blur-md"
                 role="dialog"
                 aria-modal="true"
                 :aria-labelledby="title"
                 @click="close"
             >
                 <div
-                    class="shadow-2xl relative my-auto w-full max-w-md rounded-3xl border border-slate-800 bg-slate-900 p-6 sm:p-8"
+                    :class="[
+                        variant === 'lightbox'
+                            ? 'relative max-h-[90vh] max-w-[90vw]'
+                            : 'shadow-2xl relative my-auto w-full max-w-md rounded-3xl border border-slate-800 bg-slate-900 p-6 sm:p-8',
+                    ]"
                     @click.stop
                 >
                     <button
                         @click="close"
-                        class="absolute right-4 top-4 z-10 text-slate-500 transition-colors hover:text-white sm:right-6 sm:top-6"
+                        :class="[
+                            variant === 'lightbox'
+                                ? 'absolute -top-12 right-0 text-white/50 transition-all hover:rotate-90 hover:text-white'
+                                : 'absolute right-4 top-4 z-10 text-slate-500 transition-colors hover:text-white sm:right-6 sm:top-6',
+                        ]"
                         aria-label="Закрыть модальное окно"
                     >
-                        <XMarkIcon class="h-6 w-6" />
+                        <XMarkIcon :class="variant === 'lightbox' ? 'h-8 w-8' : 'h-6 w-6'" />
                     </button>
 
                     <h3
-                        v-if="title"
+                        v-if="title && variant !== 'lightbox'"
                         :id="title"
                         class="mb-6 pr-8 text-xl font-black uppercase tracking-tight text-white"
                     >
                         {{ title }}
                     </h3>
 
-                    <div class="custom-scrollbar max-h-[70vh] overflow-y-auto">
+                    <div
+                        :class="
+                            variant === 'lightbox'
+                                ? ''
+                                : 'custom-scrollbar max-h-[70vh] overflow-y-auto'
+                        "
+                    >
                         <slot />
                     </div>
                 </div>
@@ -83,7 +101,6 @@
 </template>
 
 <style scoped>
-    /* Плавный скроллбар для эстетики */
     .custom-scrollbar::-webkit-scrollbar {
         width: 4px;
     }

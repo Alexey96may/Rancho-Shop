@@ -3,7 +3,7 @@
 
     import { AlertCircle, AlertTriangle, CheckCircle2, Info, X } from 'lucide-vue-next';
 
-    import { useFlash } from '@/composables/useFlash';
+    import { useFlash } from '@/composables/ui/useFlash';
 
     const { show, message, type, isCountingDown, undoRequested, timerDuration } = useFlash();
 

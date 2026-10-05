@@ -19,6 +19,7 @@ class AnimalResource extends UserAnimalResource
             'parent_id' => $this->parent_id,
             'category_id' => $this->category_id,
             'is_active' => $this->is_active,
+            'is_trashed' => $this->trashed(),
             'media' => MediaResource::collection($this->getMedia('avatars')),
 
             'created_at' => $this->created_at->toIso8601String(),

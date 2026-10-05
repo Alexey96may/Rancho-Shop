@@ -1,6 +1,9 @@
 <script setup lang="ts">
+    import { PropType } from 'vue';
+
     import { useForm } from '@inertiajs/vue3';
 
+    import AdminPageHeader from '@/Components/Admin/Shared/AdminPageHeader.vue';
     import AdminNumberInput from '@/Components/Admin/UI/AdminNumberInput.vue';
     import BaseCancelButton from '@/Components/UI/BaseCancelButton.vue';
     import BaseInput from '@/Components/UI/BaseInput.vue';
@@ -9,17 +12,63 @@
     import BaseSubmitButton from '@/Components/UI/BaseSubmitButton.vue';
     import BaseSwitch from '@/Components/UI/BaseSwitch.vue';
     import AdminLayout from '@/Layouts/AdminLayout.vue';
+    import { useAdminForm } from '@/composables/crud/useAdminForm';
     import type { AdminProductVariantDTO, ResourceSingle, UnitAdmin } from '@/types';
 
-    const props = defineProps<{
-        variant?: ResourceSingle<AdminProductVariantDTO>;
-        products: { id: number; name: string }[];
-        units: UnitAdmin[];
-        isEdit: boolean;
-        currentPage: number;
-    }>();
-
     defineOptions({ layout: AdminLayout });
+
+    const props = defineProps({
+        variant: {
+            type: Object as PropType<ResourceSingle<AdminProductVariantDTO>>,
+            required: false,
+            validator: (value: unknown): boolean => {
+                if (value === undefined || value === null) return true;
+
+                const val = value as Record<string, unknown>;
+                const hasData = 'data' in val && typeof val.data === 'object' && val.data !== null;
+
+                if (!hasData) {
+                    console.warn(
+                        'Runtime Error: The "variant" prop must contain a "data" wrapper object.',
+                    );
+                }
+                return hasData;
+            },
+        },
+        products: {
+            type: Array as PropType<{ id: number; name: string }[]>,
+            required: true,
+            validator: (value: unknown): boolean => {
+                if (!Array.isArray(value)) return false;
+                return value.every((item: unknown) => {
+                    const product = item as Record<string, unknown>;
+                    return typeof product?.id === 'number' && typeof product?.name === 'string';
+                });
+            },
+        },
+        units: {
+            type: Array as PropType<UnitAdmin[]>,
+            required: true,
+            validator: (value: unknown): boolean => {
+                if (!Array.isArray(value)) return false;
+                return value.every((item: unknown) => {
+                    const unit = item as Record<string, unknown>;
+                    return 'id' in unit && 'name' in unit;
+                });
+            },
+        },
+        isEdit: {
+            type: Boolean as PropType<boolean>,
+            required: true,
+        },
+        backUrl: {
+            type: String as PropType<string>,
+            required: true,
+            validator: (value: unknown): boolean => {
+                return typeof value === 'string' && value.length > 0;
+            },
+        },
+    });
 
     const form = useForm({
         product_id: props.variant?.data.product_id ?? null,
@@ -31,50 +80,38 @@
         position: props.variant?.data.position ?? 999,
         is_default: props.variant?.data.is_default ?? false,
         attributes: props.variant?.data.attributes ?? {},
-        page: props.currentPage,
+        backUrl: props.backUrl,
         create_another: false,
     });
 
+    const { submitForm } = useAdminForm();
+
     const submit = () => {
-        if (props.isEdit && props.variant) {
-            form.put(route('admin.catalog.update', props.variant.data.id));
-        } else {
-            form.post(route('admin.catalog.store'), {
-                onSuccess: () => {
-                    if (form.create_another) form.reset();
-                },
-            });
-        }
+        const id = props.isEdit && props.variant ? props.variant.data.id : null;
+
+        submitForm(form, 'admin.catalog', id);
     };
 </script>
 
 <template>
     <Teleport to="#admin-header-content">
-        <h1 class="text-xl font-black uppercase tracking-widest text-white">
-            {{ isEdit ? 'Редактировать вариант' : 'Новый вариант товара' }}
-        </h1>
-        <p class="text-xs font-bold uppercase tracking-widest text-slate-500">
-            {{
+        <AdminPageHeader
+            :title="isEdit ? 'Редактировать вариант' : 'Новый вариант товара'"
+            :subtitle="
                 isEdit
-                    ? variant?.data.product?.name
+                    ? 'для «' + variant?.data.product?.name + '»'
                     : 'Заполните данные для нового торгового предложения'
-            }}
-        </p>
+            "
+        />
     </Teleport>
 
     <div class="mx-auto max-w-5xl space-y-8">
-        <BaseCancelButton
-            :route-name="'admin.catalog.index'"
-            :route-params="{ page: currentPage }"
-            label="Назад"
-        />
+        <BaseCancelButton :href="backUrl" label="Назад" />
 
         <form @submit.prevent="submit" class="space-y-6">
-            <!-- Основные данные -->
             <div
                 class="grid grid-cols-1 gap-6 rounded-[2.5rem] border border-slate-800 bg-slate-900/40 p-8 md:grid-cols-12"
             >
-                <!-- Выбор продукта (только при создании или если нужно сменить родителя) -->
                 <BaseSelect
                     v-model="form.product_id"
                     v-model:error="form.errors.product_id"

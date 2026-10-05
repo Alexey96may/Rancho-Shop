@@ -1,17 +1,9 @@
 <script setup lang="ts">
-    import { computed, ref } from 'vue';
+    import { PropType, computed, ref } from 'vue';
 
     import { useForm } from '@inertiajs/vue3';
 
-    import {
-        CloudArrowUpIcon,
-        Cog6ToothIcon,
-        DevicePhoneMobileIcon,
-        GlobeAltIcon,
-        PresentationChartLineIcon,
-        TruckIcon,
-    } from '@heroicons/vue/24/outline';
-
+    import AdminPageHeader from '@/Components/Admin/Shared/AdminPageHeader.vue';
     import DeliveryZoneManager from '@/Components/Admin/Shared/DeliveryZoneManager.vue';
     import AdminBaseTextarea from '@/Components/Admin/UI/AdminBaseTextarea.vue';
     import AdminNumberInput from '@/Components/Admin/UI/AdminNumberInput.vue';
@@ -22,6 +14,8 @@
     import AdminLayout from '@/Layouts/AdminLayout.vue';
     import type { DeliveryZone, ResourceCollection } from '@/types';
 
+    import { SETTINGS_LABELS, SETTINGS_SECTIONS } from './Data/settingsStructure';
+
     type SettingType = 'string' | 'integer' | 'boolean' | 'json';
 
     interface Setting {
@@ -30,60 +24,25 @@
         type: SettingType;
     }
 
-    const props = defineProps<{
-        settings: ResourceCollection<Setting>;
-    }>();
+    const props = defineProps({
+        settings: {
+            type: Object as PropType<ResourceCollection<Setting>>,
+            required: true,
+            validator: (value: unknown): boolean => {
+                const val = value as Record<string, unknown>;
+                const hasData = Array.isArray(val?.data);
+
+                if (!hasData) {
+                    console.warn(
+                        'Runtime Error: The "settings" prop must be a ResourceCollection containing a "data" array.',
+                    );
+                }
+                return hasData;
+            },
+        },
+    });
 
     defineOptions({ layout: AdminLayout });
-
-    const sections = [
-        {
-            id: 'general',
-            label: 'Общие',
-            icon: GlobeAltIcon,
-            keys: ['site_name', 'site_description', 'header_announcement'],
-        },
-        {
-            id: 'contacts',
-            label: 'Контакты',
-            icon: DevicePhoneMobileIcon,
-            keys: [
-                'contact_phone',
-                'contact_email',
-                'contact_telegram',
-                'contact_vk',
-                'address_farm',
-                'farm_coords',
-            ],
-        },
-        {
-            id: 'shop',
-            label: 'Магазин',
-            icon: Cog6ToothIcon,
-            keys: ['shop_status', 'is_accepting_orders', 'min_order_amount'],
-        },
-        {
-            id: 'delivery',
-            label: 'Доставка',
-            icon: TruckIcon,
-            keys: ['delivery_schedule', 'delivery_info', 'delivery_zones'],
-        },
-        {
-            id: 'ui',
-            label: 'Интерфейс',
-            icon: PresentationChartLineIcon,
-            keys: [
-                'products_per_page',
-                'animals_per_page',
-                'comments_per_page',
-                'users_per_page',
-                'orders_per_page',
-                'featured_animals_limit',
-                'featured_products_limit',
-                'featured_comments_limit',
-            ],
-        },
-    ];
 
     const activeSection = ref('general');
 
@@ -96,7 +55,7 @@
     });
 
     const currentFields = computed(() => {
-        const section = sections.find((s) => s.id === activeSection.value);
+        const section = SETTINGS_SECTIONS.find((s) => s.id === activeSection.value);
         return form.settings.filter((s) => section?.keys.includes(s.key));
     });
 
@@ -106,33 +65,7 @@
         });
     };
 
-    const labels: Record<string, string> = {
-        site_name: 'Название сайта',
-        site_description: 'Описание (SEO)',
-        header_announcement: 'Текст в шапке',
-        contact_phone: 'Телефон',
-        contact_email: 'Email',
-        contact_telegram: 'Telegram (ссылка)',
-        contact_vk: 'VK (ссылка)',
-        address_farm: 'Адрес фермы',
-        farm_coords: 'Координаты (Через запятую: шир., дол.)',
-        shop_status: 'Статус магазина',
-        is_accepting_orders: 'Прием заказов',
-        min_order_amount: 'Мин. сумма заказа (коп.)',
-        delivery_schedule: 'График доставки',
-        delivery_info: 'Информация о доставке',
-        delivery_zones: 'Зоны доставки',
-        products_per_page: 'Товаров на страницу',
-        animals_per_page: 'Животных на страницу',
-        comments_per_page: 'Отзывов на страницу',
-        users_per_page: 'Пользователей на страницу',
-        orders_per_page: 'Заказов на страницу',
-        featured_animals_limit: 'Лимит "Популярные животные"',
-        featured_products_limit: 'Лимит "Популярные товары"',
-        featured_comments_limit: 'Лимит отзывов на главной',
-    };
-
-    const formatLabel = (key: string) => labels[key] || key;
+    const formatLabel = (key: string) => SETTINGS_LABELS[key] || key;
 
     const typeOptions = [
         { value: 'open', label: 'Открыт (Принимаем заказы)' },
@@ -147,13 +80,13 @@
 
 <template>
     <Teleport to="#admin-header-content">
-        <h1 class="text-xl font-black text-white">Настройки</h1>
+        <AdminPageHeader title="Модерация Настроек" subtitle="Управление настройками сайта" />
     </Teleport>
 
     <div class="space-y-6">
         <nav class="no-scrollbar flex items-center gap-2 overflow-x-auto pb-2" role="tablist">
             <button
-                v-for="section in sections"
+                v-for="section in SETTINGS_SECTIONS"
                 :key="section.id"
                 @click="activeSection = section.id"
                 role="tab"

@@ -1,15 +1,33 @@
+<script setup lang="ts">
+    import { Link } from '@inertiajs/vue3';
+
+    const sectionsItems = [
+        { name: 'Весь Каталог', pathName: 'catalog.index' },
+        { name: 'Наши Животные', pathName: 'animals.index' },
+        { name: 'История Ранчо', pathName: 'about' },
+        { name: 'Оплата и Доставка', pathName: 'delivery' },
+    ];
+
+    const productionItems = [
+        { name: 'Свежее Молоко', pathName: 'catalog.index', params: 1 },
+        { name: 'Домашние Сыры', pathName: 'catalog.index', params: 2 },
+        { name: 'Творог', pathName: 'catalog.index', params: 5 },
+        { name: 'Фермерские Яйца', pathName: 'catalog.index', params: 15 },
+    ];
+</script>
+
 <template>
     <footer
-        class="bg-rancho-forest text-rancho-paper rounded-t-[1rem] pb-8 pt-16 md:rounded-t-[2rem]"
+        class="rounded-t-[1rem] bg-rancho-forest pb-8 pt-16 text-rancho-paper md:rounded-t-[2rem]"
     >
         <AppContainer>
             <div class="mb-16 grid grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-4">
                 <div class="flex flex-col gap-6">
                     <div class="flex items-center gap-3">
                         <div
-                            class="bg-rancho-buttercup flex h-10 w-10 items-center justify-center rounded-full"
+                            class="flex h-10 w-10 items-center justify-center rounded-full bg-rancho-buttercup"
                         >
-                            <span class="text-rancho-forest font-header text-xl">МД</span>
+                            <span class="font-header text-xl text-rancho-forest">МД</span>
                         </div>
                         <span class="font-header text-2xl tracking-wide">Молочная Долина</span>
                     </div>
@@ -21,7 +39,7 @@
                         <a
                             href="https://t.me/elenikaglossa"
                             target="_blank"
-                            class="hover:text-rancho-buttercup transition-colors"
+                            class="transition-colors hover:text-rancho-buttercup"
                         >
                             <span class="sr-only">Telegram</span>
                             <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
@@ -34,55 +52,38 @@
                 </div>
 
                 <div>
-                    <h4 class="font-header text-rancho-buttercup mb-6 text-xl">Разделы</h4>
+                    <h4 class="mb-6 font-header text-xl text-rancho-buttercup">Разделы</h4>
                     <ul class="space-y-4 font-sans text-sm opacity-90">
-                        <li>
-                            <router-link
-                                to="/catalog"
+                        <li v-for="section in sectionsItems" :key="section.pathName">
+                            <Link
+                                :href="route(section.pathName)"
                                 class="inline-block transition-transform hover:translate-x-2"
-                                >Весь Каталог</router-link
                             >
+                                {{ section.name }}
+                            </Link>
                         </li>
-                        <li>
-                            <router-link
-                                to="/animals"
-                                class="inline-block transition-transform hover:translate-x-2"
-                                >Наши Коровы</router-link
-                            >
-                        </li>
-                        <li>
-                            <router-link
-                                to="/about"
-                                class="inline-block transition-transform hover:translate-x-2"
-                                >История Ранчо</router-link
-                            >
-                        </li>
-                        <li>
-                            <router-link
-                                to="/delivery"
-                                class="inline-block transition-transform hover:translate-x-2"
-                                >Оплата и Доставка</router-link
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="mb-6 font-header text-xl text-rancho-buttercup">Продукция</h4>
+                    <ul class="space-y-4 font-sans text-sm opacity-90">
+                        <li v-for="production in productionItems" :key="production.params">
+                            <Link
+                                :href="route(production.pathName, { category: production.params })"
+                                class="hover:text-rancho-buttercup"
+                                >{{ production.name }}</Link
                             >
                         </li>
                     </ul>
                 </div>
 
                 <div>
-                    <h4 class="font-header text-rancho-buttercup mb-6 text-xl">Продукция</h4>
-                    <ul class="space-y-4 font-sans text-sm opacity-90">
-                        <li><a href="#" class="hover:text-rancho-buttercup">Свежее Молоко</a></li>
-                        <li><a href="#" class="hover:text-rancho-buttercup">Домашние Сыры</a></li>
-                        <li><a href="#" class="hover:text-rancho-buttercup">Творог и Сливки</a></li>
-                        <li><a href="#" class="hover:text-rancho-buttercup">Фермерские Яйца</a></li>
-                    </ul>
-                </div>
-
-                <div>
-                    <h4 class="font-header text-rancho-buttercup mb-6 text-xl">Связаться</h4>
+                    <h4 class="mb-6 font-header text-xl text-rancho-buttercup">Связаться</h4>
                     <ul class="space-y-4 font-sans text-sm opacity-90">
                         <li class="flex items-start gap-3">
                             <svg
-                                class="text-rancho-buttercup h-5 w-5 shrink-0"
+                                class="h-5 w-5 shrink-0 text-rancho-buttercup"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -104,7 +105,7 @@
                         </li>
                         <li class="flex items-center gap-3">
                             <svg
-                                class="text-rancho-buttercup h-5 w-5"
+                                class="h-5 w-5 text-rancho-buttercup"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -116,14 +117,14 @@
                                     d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
                                 />
                             </svg>
-                            <span>+7 (978) 000-00-00</span>
+                            <a href="tel:79780000000">+7 (978) 000-00-00</a>
                         </li>
                     </ul>
                 </div>
             </div>
 
             <div
-                class="border-rancho-paper/10 flex flex-col items-center justify-between gap-4 border-t pt-8 md:flex-row"
+                class="flex flex-col items-center justify-between gap-4 border-t border-rancho-paper/10 pt-8 md:flex-row"
             >
                 <p class="font-sans text-xs opacity-60">
                     © 2026 Молочная Долина. Сделано с любовью к природе.
@@ -137,10 +138,4 @@
     </footer>
 </template>
 
-<script setup>
-    // Здесь пока нет логики, но можно добавить подписку на рассылку
-</script>
-
-<style scoped>
-    /* Дополнительные стили, если понадобятся */
-</style>
+<style scoped></style>

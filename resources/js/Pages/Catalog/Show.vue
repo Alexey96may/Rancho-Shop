@@ -7,14 +7,14 @@
     import MainLayout from '@/Layouts/MainLayout.vue';
     import type {
         Comment,
+        Product,
         ProductVariantDTO,
-        ProductWithCategory,
         ResourceCollection,
         ResourceSingle,
     } from '@/types';
 
     const props = defineProps<{
-        product: ResourceSingle<ProductWithCategory>;
+        product: ResourceSingle<Product>;
         comments: ResourceCollection<Comment>;
     }>();
 
@@ -88,7 +88,7 @@
                     <div class="space-y-4">
                         <div class="aspect-square overflow-hidden rounded-3xl border bg-slate-100">
                             <AppImage
-                                :src="productData.media?.[0] || ''"
+                                :src="productData.main_photo?.[0] || ''"
                                 :alt="productData.name"
                                 class-name="h-full w-full object-cover"
                             />
@@ -130,14 +130,7 @@
                             <div class="flex justify-between">
                                 <span class="text-slate-500">Статус</span>
                                 <span class="font-bold">
-                                    {{ availabilityLabels[productData.availability_type] }}
-                                </span>
-                            </div>
-
-                            <div v-if="productData.schedule?.days" class="flex justify-between">
-                                <span class="text-slate-500">Дни доставки</span>
-                                <span class="font-bold text-blue-600">
-                                    {{ getDaysNames(productData.schedule.days) }}
+                                    {{ productData.availability.label }}
                                 </span>
                             </div>
 
@@ -158,11 +151,7 @@
 
                         <!-- BUY -->
                         <div class="mt-auto pt-10">
-                            <BuyButton
-                                v-if="defaultVariant"
-                                :variant="defaultVariant"
-                                :availability_type="productData.availability_type"
-                            />
+                            <BuyButton v-if="defaultVariant" :product="product.data" />
                         </div>
                     </div>
                 </div>

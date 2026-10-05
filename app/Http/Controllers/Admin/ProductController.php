@@ -5,33 +5,40 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Http\Resources\Admin\AdminProductResource;
-use App\Http\Resources\{CommentResource, CategoryResource, AnimalResource, UnitResource};
-use App\Models\{Product, Category, Animal, Unit};
+use App\Http\Resources\{CommentResource, CategoryResource, AnimalResource};
+use App\Http\Requests\Admin\{StoreProductRequest, UpdateProductRequest};
+use App\Models\{Product, Category, Animal};
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 use Inertia\Inertia;
-use Spatie\MediaLibrary\MediaCollections\Models\Media;
+use App\Traits\Http\Controllers\HandlesSmartPagination;
+use App\Traits\HandlesAdminMedia;
+use Illuminate\Support\Facades\Gate;
+use App\Enums\UserRole;
+use Illuminate\Http\RedirectResponse;
 
 class ProductController extends Controller
 {
+    use HandlesSmartPagination, HandlesAdminMedia;
+
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
     {
+        $filters = $request->only(['search', 'category', 'animal', 'status']);
+        
         $products = Product::query()
-            ->withTrashed()
             ->with(['category', 'variants.unit'])
             ->withCount(['variants', 'comments']) 
             ->withAvg('comments', 'rating')
-            ->filter($request->only(['search', 'category', 'animal']))
-            ->latest()
+            ->withTrashControl($request, $filters)
+            ->filter($filters)
             ->paginate(setting('admin_per_page', 10))
             ->withQueryString();
         
         return Inertia::render('Admin/Products/Index', [
             'products' => AdminProductResource::collection($products),
-            'filters' => $request->only(['search', 'category', 'animal']),
+            'filters' => $filters,
             'categories' => CategoryResource::collection(Category::forProducts()->orderBy('name')->get()),
             'animals' => AnimalResource::collection(Animal::orderBy('name')->get()),
             'seo' => $this->seo('Панель управления: Продукты', 'Просмотр продуктов',  robots: 'noindex, nofollow')
@@ -41,58 +48,41 @@ class ProductController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(Request $request)
     {
         return Inertia::render('Admin/Products/Form', array_merge([
             'seo' => $this->seo('Создание продукта', robots: 'noindex, nofollow'),
+            'backUrl' => $request->query('back') 
+                    ? route('admin.products.index') . $request->query('back') 
+                    : route('admin.products.index'),
             ], $this->getFormOptions()));
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreProductRequest $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'slug' => 'nullable|string|max:255|unique:products,slug',
-            'category_id' => 'required|exists:categories,id',
-            'availability_type' => 'required|string',
-            'is_active' => 'boolean',
-            'description' => 'nullable|string',
-            'attributes' => 'nullable|array',
-            'schedule' => 'nullable|array',
-            'animal_ids' => 'array',
-        ]);
+        $dto = $request->toDto();
 
-        if (empty($validated['slug'])) {
-            $validated['slug'] = Str::slug($validated['name']);
-        }
-
-        $product = DB::transaction(function () use ($validated, $request) {
-            $product = Product::create($validated);
+        $product = DB::transaction(function () use ($dto, $request) {
+            $product = Product::create($dto->toArray());
             
-            if ($request->has('animal_ids')) {
-                $product->animals()->sync($request->animal_ids);
-            }
-
-            //Если прилетели медиа (Spatie)
-            if ($request->hasFile('gallery')) {
-                $product->addMultipleMediaFromRequest(['gallery'])
-                    ->each(fn ($file) => $file->toMediaCollection('gallery'));
-            }
+            $product->animals()->sync($dto->animal_ids);  
+            $product->syncSeo($dto->seoData);
+            
+            $this->syncModelMedia($product, $request);
 
             return $product;
         });
-
-        return redirect()->route('admin.products.edit', $product)
-            ->with('success', "Продукт {$product->name} создан");
+        
+        return $this->redirectWithFilters($request, 'admin.products.index', "Товар «{$product->name}» создан!");
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Product $product)
+    public function edit(Request $request, Product $product)
     {
         $product->load(['variants.unit', 'category', 'media', 'animals', 'seo'])
                 ->loadCount(['variants', 'comments'])
@@ -104,67 +94,60 @@ class ProductController extends Controller
             'comments' => CommentResource::collection(
                 $product->comments()->latest()->paginate(10)
             ),
+            'backUrl' => $request->query('back') 
+                ? route('admin.products.index') . $request->query('back') 
+                : route('admin.products.index'),
         ], $this->getFormOptions()));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Product $product)
+    public function update(UpdateProductRequest $request, Product $product)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'slug' => 'nullable|string|max:255|unique:products,slug,' . $product->id,
-            'category_id' => 'required|exists:categories,id',
-            'is_active' => 'boolean',
-            'availability_type' => 'string',
-            'description' => 'nullable|string',
-            'attributes' => 'array',
-            'schedule' => 'array',
-            'animal_ids' => 'array',
-        ]);
+        $dto = $request->toDto();
 
-        $validated['slug'] = empty($validated['slug']) 
-            ? Str::slug($validated['name']) 
-            : Str::slug($validated['slug']);
-
-        DB::transaction(function () use ($validated, $request, $product) {
-            $product->update($validated);
-
-            if ($request->has('animal_ids')) {
-                $product->animals()->sync($request->animal_ids);
-            }
+        DB::transaction(function () use ($dto, $request, $product) {
+            $product->update($dto->toArray());
             
-            if ($request->has('remove_media')) {
-                Media::whereIn('id', $request->remove_media)->delete();
-            }
-
-            if ($request->hasFile('gallery')) {
-                $product->addMultipleMediaFromRequest(['gallery'])
-                    ->each(fn ($file) => $file->toMediaCollection('gallery'));
-            }
+            $product->animals()->sync($dto->animal_ids);
+            $product->syncSeo($dto->seoData);
+            
+            $this->syncModelMedia($product, $request);
         });
 
-        return back()->with('success', "Продукт {$product->name} обновлен");
+        return $this->redirectWithFilters($request, 'admin.products.index', "Товар «{$product->name}» обновлён!");
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Product $product)
-    {
-        $product->delete(); // Soft Delete
-
-        return redirect()->route('admin.products.index')
-            ->with('success', "Продукт {$product->name}  отправлен в корзину");
-    }
-
-    public function restore(int $id)
+    public function destroy(Request $request, int $id): RedirectResponse
     {
         $product = Product::withTrashed()->findOrFail($id);
+
+        if ($product->trashed()) {
+            Gate::authorize('forceDelete', $product);
+
+            $name = $product->name;
+            $product->forceDelete();
+
+            return back()->with('success', "Товар «{$name}» окончательно удалён!");
+        }
+
+        Gate::authorize('delete', $product); // ProductPolicy@delete
+        $product->delete();
+        
+        return $this->redirectWithFilters($request, 'admin.products.index', "Товар «{$product->name}» помечен как удалённый!");
+    }
+
+    public function restore(Product $product): RedirectResponse
+    {
+        Gate::authorize('restore', $product);
+
         $product->restore();
 
-        return back()->with('success', "Продукт {$product->name} восстановлен");
+        return back()->with('success', "Товар «{$product->name}» успешно восстановлен!");
     }
 
     private function getFormOptions()

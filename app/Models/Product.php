@@ -5,17 +5,70 @@ namespace App\Models;
 use App\Traits\HasActiveScope;
 use App\Traits\HasInteractions;
 use App\Traits\HasStandardMedia;
+use App\Traits\HasSeoActions;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Builder;
+use App\Traits\Models\HasAdminTrash;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Enums\AvailabilityType;
 // Spatie
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
+/**
+ * @property int $id
+ * @property int|null $category_id
+ * @property int|null $animal_id
+ * @property string $name
+ * @property string $slug
+ * @property string|null $description
+ * @property AvailabilityType $availability_type
+ * @property array<array-key, mixed>|null $schedule
+ * @property array<array-key, mixed>|null $attributes
+ * @property bool $is_active
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Animal> $animals
+ * @property-read int|null $animals_count
+ * @property-read \App\Models\Category|null $category
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Comment> $comments
+ * @property-read int|null $comments_count
+ * @property-read \App\Models\ProductVariant|null $defaultVariant
+ * @property-read \Spatie\MediaLibrary\MediaCollections\Models\Collections\MediaCollection<int, \Spatie\MediaLibrary\MediaCollections\Models\Media> $media
+ * @property-read int|null $media_count
+ * @property-read \App\Models\Seo|null $seo
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\ProductVariant> $variants
+ * @property-read int|null $variants_count
+ * @method static Builder<static>|Product active()
+ * @method static \Database\Factories\ProductFactory factory($count = null, $state = [])
+ * @method static Builder<static>|Product filter(array $filters)
+ * @method static Builder<static>|Product newModelQuery()
+ * @method static Builder<static>|Product newQuery()
+ * @method static Builder<static>|Product onlyTrashed()
+ * @method static Builder<static>|Product query()
+ * @method static Builder<static>|Product whereAnimalId($value)
+ * @method static Builder<static>|Product whereAttributes($value)
+ * @method static Builder<static>|Product whereAvailabilityType($value)
+ * @method static Builder<static>|Product whereCategoryId($value)
+ * @method static Builder<static>|Product whereCreatedAt($value)
+ * @method static Builder<static>|Product whereDeletedAt($value)
+ * @method static Builder<static>|Product whereDescription($value)
+ * @method static Builder<static>|Product whereId($value)
+ * @method static Builder<static>|Product whereIsActive($value)
+ * @method static Builder<static>|Product whereName($value)
+ * @method static Builder<static>|Product whereSchedule($value)
+ * @method static Builder<static>|Product whereSlug($value)
+ * @method static Builder<static>|Product whereUpdatedAt($value)
+ * @method static Builder<static>|Product withTrashed(bool $withTrashed = true)
+ * @method static Builder<static>|Product withoutTrashed()
+ * @mixin \Eloquent
+ */
 class Product extends Model implements HasMedia
 {
-    use HasActiveScope, HasInteractions, HasStandardMedia, InteractsWithMedia, SoftDeletes {
+    use HasActiveScope, HasFactory, HasSeoActions, HasInteractions, HasStandardMedia, HasAdminTrash, InteractsWithMedia, SoftDeletes {
         HasStandardMedia::registerMediaConversions insteadof InteractsWithMedia;
     }
 
@@ -28,6 +81,7 @@ class Product extends Model implements HasMedia
         'schedule' => 'array',
         'attributes' => 'array',
         'is_active' => 'boolean',
+        'availability_type' => AvailabilityType::class,
     ];
 
     /**
@@ -81,6 +135,9 @@ class Product extends Model implements HasMedia
                 $q->where('animals.id', $animal);
             });
         });
+
+        $query->orderByRaw('CASE WHEN deleted_at IS NULL THEN 0 ELSE 1 END ASC')
+          ->orderBy('created_at', 'desc');
     }
 
     /**

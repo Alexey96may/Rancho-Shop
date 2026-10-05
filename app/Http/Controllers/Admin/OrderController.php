@@ -5,43 +5,33 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Admin\OrderResource;
 use App\Models\Order;
+use App\Http\Requests\Admin\UpdateOrderRequest;
+use App\Traits\Http\Controllers\HandlesSmartPagination;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class OrderController extends Controller
 {
+    use HandlesSmartPagination;
+
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
     {
-        $totalCompleted = Order::where('status', 'completed')->sum('total_price');
-        $totalPending = Order::whereIn('status', ['confirmed', 'delivering'])
-        ->sum('total_price');
+        $filters = $request->only(['search', 'status']);
 
         $orders = Order::query()
             ->with(['user', 'promoCode', 'items.product.media'])
-            ->when($request->search, function ($query, $search) {
-                $search = mb_strtolower($search, 'UTF-8');
-                
-                $query->where(function($q) use ($search) {
-                    $q->whereRaw('LOWER(customer_name) LIKE ?', ["%{$search}%"])
-                    ->orWhere('id', 'LIKE', "%{$search}%");
-                });
-            })
-            ->when($request->status, function ($query, $status) {
-                $query->where('status', $status);
-            })
+            ->filter($filters)
             ->latest()
             ->paginate(setting('admin_per_page', 10))
             ->withQueryString();
 
         return Inertia::render('Admin/Orders/Index', [
             'orders' => OrderResource::collection($orders),
-            'filters' => $request->only(['search', 'status']),
-            'total_count' => Order::count(),
-            'total_completed_revenue' => (int) $totalCompleted,
-            'total_pending_revenue' => (int) $totalPending,
+            'filters' => $filters,
+            ...Order::getStats(),
             'seo' => $this->seo('Панель управления: Заказы', 'Просмотр заказов',  robots: 'noindex, nofollow')
         ]);
     }
@@ -62,22 +52,12 @@ class OrderController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Order $order)
+    public function update(UpdateOrderRequest $request, Order $order)
     {
-        $validated = $request->validate([
-            'status' => 'required|in:new,confirmed,delivering,completed,cancelled',
-            'admin_note' => 'nullable|string|max:2000',
-        ]);
+        $dto = $request->toDto();
+        $order->update($dto->toArray());
 
-        if ($request->filled('admin_note') && $request->admin_note !== $order->admin_note) {
-            if (!$request->user()->isAdmin()) {
-                abort(403, 'Только администратор может редактировать заметки.');
-            }
-        }
-
-        $order->update($validated);
-
-        return back()->with('success', "Данные заказа #{$order->id} обновлен.");
+        return back()->with('success', "Данные заказа #{$order->id} обновлены.");
     }
 
     /**
@@ -91,6 +71,6 @@ class OrderController extends Controller
 
         $order->delete();
 
-        return redirect()->route('admin.orders.index')->with('warning', "Заказ #{$order->id} удалён из базы.");
+        return $this->redirectWithFilters($request, 'admin.orders.index', "Заказ #{$order->id} успешно удалён из базы!");
     }
 }

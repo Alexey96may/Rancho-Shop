@@ -5,72 +5,39 @@ namespace App\Http\Controllers\Admin;
 use App\Enums\PromoCodeType;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Admin\AdminPromoCodeResource;
+use App\Http\Requests\Admin\PromoCodeSaveRequest;
+use App\Traits\Http\Controllers\HandlesSmartPagination;
 use App\Models\PromoCode;
-use Illuminate\Validation\Rules\Enum;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class PromocodeController extends Controller
 {
+    use HandlesSmartPagination;
+
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
     {
+        $filters = $request->only(['search', 'type', 'status']);
+
+        $sort = in_array((string) $request->query('sort'), ['latest', 'expires_at'], true)
+            ? (string) $request->query('sort')
+            : 'latest';
+
         $promoCodes = PromoCode::query()
-            ->when($request->search, function ($query, $search) {
-                $search = mb_strtolower($search);
-                $query->where(function ($q) use ($search) {
-                    $q->whereRaw('LOWER(code) LIKE ?', ["%{$search}%"])
-                    ->orWhereRaw('LOWER(description) LIKE ?', ["%{$search}%"]);
-                });
-            })
-            ->when($request->type, function ($query, $type) {
-                $query->where('type', $type);
-            })
-            ->when($request->status, function ($query, $status) {
-                if ($status === 'new') {
-                    $query->where('created_at', '>=', now()->subDays(7));
-                } elseif ($status === 'expiring') {
-                    $query->whereNotNull('expires_at')
-                        ->where('expires_at', '>', now())
-                        ->where('expires_at', '<=', now()->addDays(3));
-                }
-            });
-
-        $sort = $request->get('sort', 'latest');
-        $promoCodes->orderBy('is_active', 'desc');
-        
-        if ($sort === 'expires_at') {
-            $promoCodes->orderByRaw('expires_at IS NULL ASC')
-                    ->orderBy('expires_at', 'asc');
-        } else {
-            $promoCodes->latest();
-        }
-
-        $promoCodes = $promoCodes->paginate(setting('admin_per_page', 10))->withQueryString();
-
-        $typeOptions = collect(PromoCodeType::cases())->map(fn($type) => [
-            'value' => $type->value,
-            'label' => $type->label(),
-        ]);
-
-        $statusOptions = [
-            ['value' => 'new', 'label' => 'Новинки (7 дней)'],
-            ['value' => 'expiring', 'label' => 'Истекают скоро'],
-        ];
-
-        $sortOptions = [
-            ['value' => 'latest', 'label' => 'Сначала новые'],
-            ['value' => 'expires_at', 'label' => 'По дате истечения'],
-        ];
+            ->filter($filters)
+            ->applySorting($sort)
+            ->paginate(setting('admin_per_page', 10))
+            ->withQueryString();
 
         return Inertia::render('Admin/PromoCodes/Index', [
             'promoCodes' => AdminPromoCodeResource::collection($promoCodes),
-            'filters'    => $request->only(['search', 'type', 'status']),
-            'typeOptions' => $typeOptions,
-            'statusOptions' => $statusOptions,
-            'sortOptions' => $sortOptions,
+            'filters'    => $filters,
+            'typeOptions' => $this->getTypeOptions(),
+            'statusOptions' => $this->getStatusOptions(),
+            'sortOptions' => $this->getSortOptions(),
             'seo' => $this->seo('Панель управления: Промокоды', robots: 'noindex, nofollow')
         ]);
     }
@@ -78,58 +45,27 @@ class PromocodeController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(PromoCodeSaveRequest $request)
     {
-
-        $validated = $request->validate([
-            'code'             => 'required|string|unique:promo_codes,code|max:50',
-            'description'      => 'nullable|string|max:1000',
-            'type'             => ['required', new Enum(PromoCodeType::class)],
-            'value'            => 'required|integer|min:1',
-            'min_order_amount' => 'nullable|integer|min:0',
-            'max_discount'     => 'nullable|integer|min:0',
-            'usage_limit'      => 'nullable|integer|min:1',
-            'expires_at'       => 'nullable|date',
-            'is_active'        => 'boolean',
-            'create_another'   => 'boolean',
-        ]);
-
-        $validated['code'] = strtoupper($validated['code']);
-
-        PromoCode::create($validated);
+        $dto = $request->toDto();
+        PromoCode::create($dto->toArray());
 
         if ($request->boolean('create_another')) {
-            return redirect()->back()->with('success', "Промокод {$validated['code']} создан. Можете добавить следующий.");
+            return redirect()->back()->with('success', "Промокод создан. Можете добавить следующий.");
         }
 
-        return redirect()->route('admin.promocodes.index', ['page' => $request->input('return_page', 1)])
-            ->with('success', "Промокод {$request->code} создан");
+        return $this->redirectWithFilters($request, 'admin.promocodes.index', "Промокод создан!");
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, PromoCode $promocode)
+    public function update(PromoCodeSaveRequest $request, PromoCode $promocode)
     {
-        $validated = $request->validate([
-            'code'             => 'required|string|max:50|unique:promo_codes,code,{$promocode->id}',
-            'description'      => 'nullable|string|max:1000',
-            'type'             => ['required', new Enum(PromoCodeType::class)],
-            'value'            => 'required|integer|min:1',
-            'min_order_amount' => 'nullable|integer|min:0',
-            'max_discount'     => 'nullable|integer|min:0',
-            'usage_limit'      => 'nullable|integer|min:1',
-            'expires_at'       => 'nullable|date',
-            'is_active'        => 'boolean',
-            'return_page'      => 'nullable',
-        ]);
-
-        $validated['code'] = strtoupper($validated['code']);
-
-        $promocode->update($validated);
-
-        return redirect()->route('admin.promocodes.index', ['page' => $request->input('return_page', 1)])
-            ->with('success', "Промокод {$promocode->code} обновлен");
+        $dto = $request->toDto();
+        $promocode->update($dto->toArray());
+        
+        return $this->redirectWithFilters($request, 'admin.promocodes.index', "Промокод «{$promocode->code}» успешно обновлён!");
     }
 
     public function create(Request $request)
@@ -141,26 +77,21 @@ class PromocodeController extends Controller
 
         return Inertia::render('Admin/PromoCodes/Create', [
             'typeOptions' => $typeOptions,
-            'filters' => [
-                'page' => $request->query('page', 1),
-            ],
+            'backUrl' => $request->query('back') 
+                    ? route('admin.promocodes.index') . $request->query('back') 
+                    : route('admin.promocodes.index'),
             'seo' => $this->seo('Новый промокод', robots: 'noindex, nofollow'),
         ]);
     }
 
     public function edit(PromoCode $promocode, Request $request)
     {
-        $typeOptions = collect(PromoCodeType::cases())->map(fn($type) => [
-            'value' => $type->value,
-            'label' => $type->label(),
-        ]);
-
         return Inertia::render('Admin/PromoCodes/Edit', [
             'promo' => new AdminPromoCodeResource($promocode),
-            'typeOptions' => $typeOptions,
-            'filters' => [
-                'page' => $request->query('page', 1),
-            ],
+            'typeOptions' => $this->getTypeOptions(),
+            'backUrl' => $request->query('back') 
+                    ? route('admin.promocodes.index') . $request->query('back') 
+                    : route('admin.promocodes.index'),
             'seo' => $this->seo('Редактирование промокода ' . $promocode->code, robots: 'noindex, nofollow'),
         ]);
     }
@@ -168,12 +99,11 @@ class PromocodeController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(PromoCode $promocode)
+    public function destroy(Request $request, PromoCode $promocode)
     {
         $promocode->delete();
 
-        return redirect()->route('admin.promocodes.index')
-            ->with('success', 'Промокод ' . $promocode->code . ' удален');
+        return $this->redirectWithFilters($request, 'admin.promocodes.index', "Промокод «{$promocode->code}» успешно удалён!");
     }
 
     /**
@@ -183,5 +113,33 @@ class PromocodeController extends Controller
     {
         $promoCode->update(['is_active' => !$promoCode->is_active]);
         return redirect()->back();
+    }
+
+    // ==========================================
+    // Helpers
+    // ==========================================
+
+    private function getTypeOptions(): array
+    {
+        return collect(PromoCodeType::cases())->map(fn($type) => [
+            'value' => $type->value,
+            'label' => $type->label(),
+        ])->toArray();
+    }
+
+    private function getStatusOptions(): array
+    {
+        return [
+            ['value' => 'new', 'label' => 'Новинки (7 дней)'],
+            ['value' => 'expiring', 'label' => 'Истекают скоро'],
+        ];
+    }
+
+    private function getSortOptions(): array
+    {
+        return [
+            ['value' => 'latest', 'label' => 'Сначала новые'],
+            ['value' => 'expires_at', 'label' => 'По дате истечения'],
+        ];
     }
 }

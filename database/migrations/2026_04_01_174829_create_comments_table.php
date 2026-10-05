@@ -17,7 +17,7 @@ return new class() extends Migration
             $table->string('guest_name')->nullable();
 
             $table->text('content');
-            $table->unsignedTinyInteger('rating')->nullable()->default(5);
+            $table->decimal('rating')->nullable()->default(5);
             $table->enum('status', ['pending', 'approved', 'hidden'])->default('pending');
 
             $table->nullableMorphs('commentable');

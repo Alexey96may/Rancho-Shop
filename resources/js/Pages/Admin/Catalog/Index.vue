@@ -1,125 +1,132 @@
 <script setup lang="ts">
-    import { reactive, ref, watch } from 'vue';
+    import { PropType, watch } from 'vue';
 
-    import { router } from '@inertiajs/vue3';
-    import { usePage } from '@inertiajs/vue3';
+    import { router, useForm } from '@inertiajs/vue3';
 
     import { debounce } from 'lodash';
 
     import AdminCatalogRow from '@/Components/Admin/Cards/AdminCatalogRow.vue';
     import AdminEmptyState from '@/Components/Admin/Shared/AdminEmptyState.vue';
+    import AdminPageHeader from '@/Components/Admin/Shared/AdminPageHeader.vue';
     import AdminPagination from '@/Components/Admin/Shared/AdminPagination.vue';
     import AdminLoader from '@/Components/Admin/UI/AdminLoader.vue';
     import AdminSearchInput from '@/Components/Admin/UI/AdminSearchInput.vue';
     import BaseCreateButton from '@/Components/UI/BaseCreateButton.vue';
     import BaseSelect from '@/Components/UI/BaseSelect.vue';
     import AdminLayout from '@/Layouts/AdminLayout.vue';
-    import { useFlash } from '@/composables/useFlash';
+    import { useAdminCrud } from '@/composables/crud/useAdminCrud';
+    import { useAdminFilters } from '@/composables/routing/useAdminFilters';
+    import { useAdminNavigation } from '@/composables/routing/useAdminNavigation';
+    import { useFlash } from '@/composables/ui/useFlash';
     import type { AdminProductVariantDTO, Paginated, QuickUpdatePayload } from '@/types';
 
-    watch(
-        () => usePage().props.errors,
-        (errors) => {
-            if (Object.keys(errors).length > 0) {
-                console.error('Ошибки валидации с сервера:', errors);
-            }
-        },
-        { deep: true },
-    );
     defineOptions({ layout: AdminLayout });
 
-    const props = defineProps<{
-        variants: Paginated<AdminProductVariantDTO>;
-        products: { id: number; name: string }[];
-        units: { id: number; name: string }[];
-        sortOptions: { label: string; value: string }[];
-        filters: {
-            search?: string;
-            product_id?: string;
-            unit_id?: string;
-            sort?: string;
-        };
-    }>();
+    const props = defineProps({
+        variants: {
+            type: Object as PropType<Paginated<AdminProductVariantDTO>>,
+            required: true,
+            validator: (value: unknown): boolean => {
+                const val = value as Record<string, unknown>;
+                const hasData = Array.isArray(val?.data);
+                const hasMeta = val?.meta && typeof val.meta === 'object';
 
-    const filterForm = reactive({
-        search: props.filters.search || '',
-        product_id: props.filters.product_id || null,
-        unit_id: props.filters.unit_id || null,
-        sort: props.filters.sort || 'default',
+                if (!hasData || !hasMeta) {
+                    console.warn(
+                        'Runtime Error: The "variants" prop is missing a valid pagination structure (data or meta).',
+                    );
+                }
+                return !!(hasData && hasMeta);
+            },
+        },
+        products: {
+            type: Array as PropType<{ id: number; name: string }[]>,
+            required: true,
+            validator: (value: unknown): boolean => {
+                if (!Array.isArray(value)) return false;
+                return value.every((item: unknown) => {
+                    const product = item as Record<string, unknown>;
+                    return typeof product?.id === 'number' && typeof product?.name === 'string';
+                });
+            },
+        },
+        units: {
+            type: Array as PropType<{ id: number; name: string }[]>,
+            required: true,
+            validator: (value: unknown): boolean => {
+                if (!Array.isArray(value)) return false;
+                return value.every((item: unknown) => {
+                    const unit = item as Record<string, unknown>;
+                    return typeof unit?.id === 'number' && typeof unit?.name === 'string';
+                });
+            },
+        },
+        sortOptions: {
+            type: Array as PropType<{ label: string; value: string }[]>,
+            required: true,
+            validator: (value: unknown): boolean => {
+                if (!Array.isArray(value)) return false;
+                return value.every((item: unknown) => {
+                    const option = item as Record<string, unknown>;
+                    return typeof option?.label === 'string' && typeof option?.value === 'string';
+                });
+            },
+        },
+        filters: {
+            type: Object as PropType<{
+                search?: string;
+                product_id?: string;
+                unit_id?: string;
+                sort?: string;
+            }>,
+            required: true,
+            default: () => ({ search: '', product_id: '', unit_id: '', sort: '' }),
+        },
     });
 
-    const { notifyWithUndo, notify } = useFlash();
-    const processingIds = reactive<Set<number>>(new Set());
-    const isFiltering = ref(false);
+    const filterForm = useForm({
+        search: props.filters.search || '',
+        product_id: props.filters.product_id ? Number(props.filters.product_id) : null,
+        unit_id: props.filters.unit_id ? Number(props.filters.unit_id) : null,
+        sort: props.filters.sort || '',
+    });
 
-    const quickUpdate = (id: number, data: QuickUpdatePayload) => {
-        processingIds.add(id);
+    const { notify } = useFlash();
+    const { navigateWithContext } = useAdminNavigation();
+    const { deleteEntity, isDeleting } = useAdminCrud();
+    const { isFiltering, submitFilters, clearFilters } = useAdminFilters();
 
-        router.patch(route('admin.catalog.quick', id), data as any, {
+    const quickUpdate = debounce((id: number, data: QuickUpdatePayload) => {
+        router.patch(route('admin.catalog.quick', id), data, {
             preserveScroll: true,
+            preserveState: true,
             onError: (e) => {
                 if (e.price) {
                     notify(e.price, 'error');
                 } else if (e.stock) {
                     notify(e.stock, 'error');
-                } else if (e.is_visible) {
-                    notify(e.is_visible, 'error');
+                } else if (e.is_default) {
+                    notify(e.is_default, 'error');
                 }
             },
-            onFinish: () => processingIds.delete(id),
         });
-    };
+    }, 300);
 
-    const deleteVariant = async (variant: AdminProductVariantDTO) => {
-        if (processingIds.has(variant.id)) return;
-        processingIds.add(variant.id);
-
-        const canDelete = await notifyWithUndo(
-            'Удаление варианта «' + variant.name + '» для «' + variant.product?.name + '»',
-        );
-
-        if (canDelete) {
-            router.delete(route('admin.catalog.destroy', variant.id), {
-                preserveScroll: true,
-                onFinish: () => processingIds.delete(variant.id),
-            });
-        } else {
-            processingIds.delete(variant.id);
-        }
-    };
-
-    const updateFilters = debounce(() => {
-        router.get(route('admin.catalog.index'), filterForm, {
-            preserveState: true,
-            preserveScroll: true,
-            replace: true,
-            onStart: () => (isFiltering.value = true),
-            onFinish: () => (isFiltering.value = false),
-        });
-    }, 400);
-
-    watch(filterForm, () => {
-        isFiltering.value = true;
-
-        updateFilters();
-    });
-
-    const clearFilters = () => {
-        filterForm.search = '';
-        filterForm.product_id = null;
-        filterForm.unit_id = null;
-        filterForm.sort = 'newest';
-    };
-
-    const goToCreate = () => {
-        router.get(route('admin.catalog.create'));
-    };
+    watch(
+        () => [filterForm.search, filterForm.product_id, filterForm.unit_id, filterForm.sort],
+        () => {
+            submitFilters(filterForm, 'admin.catalog.index');
+        },
+    );
 </script>
 
 <template>
     <div>
         <Teleport to="#admin-header-content">
-            <h1 class="text-xl font-black uppercase tracking-widest text-white">Прайс-лист</h1>
+            <AdminPageHeader
+                title="Единицы складского учёта"
+                subtitle="*Один вариант продукта будет главным всегда!"
+            />
         </Teleport>
 
         <div class="space-y-8">
@@ -130,13 +137,8 @@
                 />
 
                 <BaseCreateButton
-                    :href="
-                        route('admin.catalog.create', {
-                            page: variants.meta.current_page || 1,
-                        })
-                    "
+                    @click="navigateWithContext('admin.catalog', 'create')"
                     label="Добавить вариант"
-                    class="!px-3"
                 />
             </div>
             <div class="l flex flex-wrap gap-3 lg:col-span-8">
@@ -165,6 +167,7 @@
                     :options="sortOptions"
                     valueKey="value"
                     labelKey="label"
+                    placeholder="По умолчанию"
                     variant="admin"
                     class="w-full lg:w-48"
                 />
@@ -187,11 +190,22 @@
                             v-for="variant in variants.data"
                             :key="variant.id"
                             :variant="variant"
-                            :disabled="processingIds.has(variant.id)"
+                            :disabled="isDeleting(variant.id)"
                             :out-of-stock="!variant.is_in_stock"
                             :current-page="variants.meta.current_page"
+                            @edit="navigateWithContext('admin.catalog', 'edit', variant.id)"
                             @quick-update="quickUpdate"
-                            @delete="deleteVariant"
+                            @delete="
+                                deleteEntity(
+                                    'admin.catalog',
+                                    variant.id,
+                                    'Удаление варианта «' +
+                                        variant.name +
+                                        '» для «' +
+                                        variant.product?.name +
+                                        '»',
+                                )
+                            "
                         />
                     </TransitionGroup>
                 </div>
@@ -202,7 +216,11 @@
                     v-else
                     key="empty"
                     :title="filters.search ? 'Варианты не найдены' : 'Список вариантов пуст'"
-                    @action="filters.search ? clearFilters() : goToCreate()"
+                    @action="
+                        filters.search
+                            ? clearFilters(filterForm)
+                            : navigateWithContext('admin.catalog', 'create')
+                    "
                     :action-text="filters.search ? 'Очистить фильтр' : 'Добавить вариант товара'"
                     :show-action="true"
                     :description="
@@ -213,7 +231,9 @@
                 />
             </Transition>
 
-            <AdminPagination :links="variants.meta.links" />
+            <Transition name="fade-slide" mode="out-in">
+                <AdminPagination v-if="!isFiltering" :links="variants.meta.links" />
+            </Transition>
         </div>
     </div>
 </template>

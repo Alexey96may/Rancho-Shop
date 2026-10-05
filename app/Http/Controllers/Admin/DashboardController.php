@@ -14,7 +14,7 @@ class DashboardController extends Controller
         return Inertia::render('Admin/Dashboard', [
             'stats' => [
                 'users' => User::count(),
-                // позже:
+                // later:
                 // 'orders' => Order::count(),
                 // 'revenue' => ...
             ],

@@ -12,7 +12,6 @@
 
     const cart = useCartStore();
 
-    // Форматирование цены (из копеек в рубли)
     const formatPrice = (price: number) => (price / 100).toLocaleString('ru-RU');
 
     onMounted(() => {

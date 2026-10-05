@@ -1,5 +1,5 @@
 <script setup lang="ts">
-    import { computed } from 'vue';
+    import { type Component, computed } from 'vue';
 
     import { CheckIcon } from '@heroicons/vue/24/outline';
 
@@ -7,13 +7,15 @@
         processing: boolean;
         label?: string;
         isEdit?: boolean;
-        icon?: any; // Можно передать свою иконку
+        icon?: Component;
+        withIcon?: boolean;
     }
 
     const props = withDefaults(defineProps<Props>(), {
         label: '',
         isEdit: false,
         icon: CheckIcon,
+        withIcon: true,
     });
 
     const buttonText = computed(() => {
@@ -37,7 +39,11 @@
         </div>
 
         <template v-else>
-            <component :is="icon" class="h-4 w-4 transition-transform group-hover:scale-110" />
+            <component
+                v-if="withIcon"
+                :is="icon"
+                class="h-4 w-4 transition-transform group-hover:scale-110"
+            />
             <span>{{ buttonText }}</span>
         </template>
     </button>

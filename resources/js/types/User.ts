@@ -7,6 +7,14 @@ export enum UserRole {
     CUSTOMER = 'customer',
 }
 
+export type UserColor = 'emerald' | 'violet' | 'sky' | 'zinc';
+
+export interface RoleInfo {
+    value: UserRole;
+    label: string;
+    color: UserColor;
+}
+
 export interface User {
     id: number;
     name: string;
@@ -15,6 +23,7 @@ export interface User {
     phone: string;
     avatar: string | null;
     is_admin: boolean;
+    is_stuff: boolean;
     created_at: string;
 }
 
@@ -32,10 +41,4 @@ export interface AdminUser extends User {
     can_manage_orders: boolean;
 
     addresses?: Delivery[];
-}
-
-export interface RoleInfo {
-    value: UserRole;
-    label: string;
-    color: string;
 }

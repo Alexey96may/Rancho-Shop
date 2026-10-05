@@ -18,9 +18,9 @@ class PageSeeder extends Seeder
         $pages = [
             [
                 'title' => 'Главная',
-                'slug' => 'main',
+                'slug' => 'home',
                 'type' => 'home',
-                'content' => '<h1>Добро пожаловать в Молочную Долину!</h1>',
+                'content' => '<h1>Натуральные продукты из самого сердца Крыма</h1><p>От фермы до вашего стола за 24 часа.</p>',
                 'is_active' => true,
             ],
             [
@@ -28,7 +28,7 @@ class PageSeeder extends Seeder
                 'slug' => 'about',
                 'type' => 'system',
                 'template' => 'about',
-                'content' => '<h1>Добро пожаловать в нашу ферму!</h1><p>Мы производим самые свежие продукты в Крыму...</p>',
+                'content' => '<h2>История Молочной Долины</h2><p>Мы начинали с одной коровы Зорьки в 2015 году...</p>',
                 'is_active' => true,
             ],
             [
@@ -36,20 +36,38 @@ class PageSeeder extends Seeder
                 'slug' => 'delivery',
                 'type' => 'system',
                 'template' => 'delivery',
-                'content' => '<p>Мы доставляем продукты по вторникам и пятницам.</p>',
+                'content' => '<h3>Условия доставки</h3><ul><li>Симферополь: ежедневно</li><li>Севастополь: Вт, Пт</li></ul>',
+                'is_active' => true,
+            ],
+            [
+                'title' => 'Наши животные',
+                'slug' => 'animals',
+                'type' => 'system',
+                'template' => 'animal_list',
+                'content' => '<h1>Познакомьтесь с нашими обитателями</h1>',
                 'is_active' => true,
             ],
             [
                 'title' => 'Контакты',
                 'slug' => 'contacts',
                 'type' => 'contacts',
-                'content' => '<p>Связаться с нами можно через Telegram или по телефону.</p>',
+                'content' => '<p>Адрес: Белогорский район, село Ароматное.</p>',
+                'is_active' => true,
+            ],
+            [
+                'title' => 'Политика конфиденциальности',
+                'slug' => 'privacy',
+                'type' => 'default',
+                'content' => '<h1>Политика обработки данных</h1><p>Мы защищаем ваши данные...</p>',
                 'is_active' => true,
             ],
         ];
 
         foreach ($pages as $page) {
-            Page::updateOrCreate(['slug' => $page['slug']], $page);
+            Page::updateOrCreate(
+                ['slug' => $page['slug']], 
+                $page
+            );
         }
     }
 }

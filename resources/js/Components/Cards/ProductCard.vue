@@ -4,11 +4,11 @@
     import { Link } from '@inertiajs/vue3';
 
     import BuyButton from '@/Components/UI/BuyButton.vue';
-    import type { ProductVariantDTO, ProductWithCategory } from '@/types';
+    import type { Product, ProductVariantDTO } from '@/types';
     import { formatMoney } from '@/utils/format';
 
     const props = defineProps<{
-        product: ProductWithCategory;
+        product: Product;
     }>();
 
     const defaultVariant = computed(() => {
@@ -22,9 +22,7 @@
     );
 
     const displayOldPrice = computed(() =>
-        defaultVariant.value?.old_price_rub
-            ? (defaultVariant.value.old_price_rub / 100).toFixed(2)
-            : null,
+        defaultVariant.value?.old_price ? (defaultVariant.value.old_price / 100).toFixed(2) : null,
     );
 
     const availabilityLabels: Record<string, string> = {
@@ -64,7 +62,7 @@
         >
             <AppImage
                 :alt="product.name"
-                :src="product.media?.[0] || ''"
+                :src="product.main_photo?.[0] || ''"
                 :class-name="'h-full w-full object-cover transition-transform duration-500 group-hover:scale-110'"
             />
 
@@ -72,12 +70,12 @@
                 <span
                     :class="[
                         'shadow-sm rounded-lg px-2 py-1 text-[10px] font-black uppercase tracking-wider',
-                        product.availability_type === 'daily'
+                        product.availability.value === 'daily'
                             ? 'bg-green-500 text-white'
                             : 'bg-slate-900 text-white',
                     ]"
                 >
-                    {{ availabilityLabels[product.availability_type] }}
+                    {{ product.availability.label }}
                 </span>
             </div>
         </Link>
@@ -112,24 +110,9 @@
                 >
             </div>
 
-            <div class="mt-auto space-y-2 border-t border-slate-50 pt-4">
-                <div v-if="product.schedule" class="flex items-start gap-2">
-                    <div class="rounded bg-blue-100 p-1">📅</div>
-                    <div>
-                        <span class="block text-[10px] font-bold uppercase text-slate-400"
-                            >График сбора:</span
-                        >
-                        <span class="text-xs font-semibold text-slate-700">{{
-                            getDaysNames(product.schedule?.days)
-                        }}</span>
-                    </div>
-                </div>
-            </div>
-
             <BuyButton
                 v-if="defaultVariant"
-                :availability_type="product.availability_type"
-                :variant="defaultVariant"
+                :product="product"
             />
         </div>
     </div>

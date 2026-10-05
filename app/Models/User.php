@@ -5,9 +5,9 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Database\Factories\UserFactory;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Notifications\Notifiable;
 use App\Enums\UserRole;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -15,6 +15,50 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Spatie\MediaLibrary\HasMedia;
 use App\Traits\HasStandardMedia;
 
+/**
+ * @property int $id
+ * @property string $name
+ * @property string $email
+ * @property UserRole $role
+ * @property \Illuminate\Support\Carbon|null $email_verified_at
+ * @property string|null $password
+ * @property string|null $remember_token
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property string|null $google_id
+ * @property string|null $vkontakte_id
+ * @property string|null $avatar_url
+ * @property string|null $phone
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Comment> $comments
+ * @property-read int|null $comments_count
+ * @property-read \App\Models\DeliveryAddress|null $defaultDeliveryAddress
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\DeliveryAddress> $deliveryAddresses
+ * @property-read int|null $delivery_addresses_count
+ * @property-read \Spatie\MediaLibrary\MediaCollections\Models\Collections\MediaCollection<int, \Spatie\MediaLibrary\MediaCollections\Models\Media> $media
+ * @property-read int|null $media_count
+ * @property-read \Illuminate\Notifications\DatabaseNotificationCollection<int, \Illuminate\Notifications\DatabaseNotification> $notifications
+ * @property-read int|null $notifications_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Order> $orders
+ * @property-read int|null $orders_count
+ * @method static \Database\Factories\UserFactory factory($count = null, $state = [])
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereAvatarUrl($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereEmail($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereEmailVerifiedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereGoogleId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User wherePassword($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User wherePhone($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereRememberToken($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereRole($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereVkontakteId($value)
+ * @mixin \Eloquent
+ */
 class User extends Authenticatable implements HasMedia
 {
     /** @use HasFactory<UserFactory> */
@@ -93,5 +137,22 @@ class User extends Authenticatable implements HasMedia
             UserRole::ADMIN,
             UserRole::WORKER,
         ]);
+    }
+
+    /**
+    * Local scope for filtering and searching users
+    */
+    public function scopeFilter(Builder $query, array $filters): Builder
+    {
+        return $query
+            ->when($filters['search'] ?? null, function ($q, $search) {
+                $search = mb_strtolower(trim($search), 'UTF-8');
+                $q->where(function ($subQuery) use ($search) {
+                    $subQuery->whereRaw('LOWER(name) LIKE ?', ["%{$search}%"])
+                             ->orWhereRaw('LOWER(email) LIKE ?', ["%{$search}%"])
+                             ->orWhereRaw('LOWER(phone) LIKE ?', ["%{$search}%"]);
+                });
+            })
+            ->when($filters['role'] ?? null, fn($q, $role) => $q->where('role', $role));
     }
 }

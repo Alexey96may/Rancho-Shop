@@ -13,8 +13,8 @@
     import MainLayout from '@/Layouts/MainLayout.vue';
     import { useAppearanceStore } from '@/stores/useAppearanceStore';
     import type {
+        Animal,
         Comment,
-        Cow,
         Faq,
         LandingBlock,
         Product,
@@ -25,7 +25,7 @@
     defineOptions({ layout: MainLayout });
 
     interface Props {
-        cows: ResourceCollection<Cow>;
+        cows: ResourceCollection<Animal>;
         products: ResourceCollection<Product>;
         faqs: ResourceCollection<Faq>;
         about: ResourceSingle<LandingBlock>;
@@ -50,7 +50,7 @@
 
     onMounted(() => {
         window.addEventListener('scroll', onScroll, { passive: true });
-        onScroll(); // Инициализация при загрузке
+        onScroll();
     });
 
     onUnmounted(() => {

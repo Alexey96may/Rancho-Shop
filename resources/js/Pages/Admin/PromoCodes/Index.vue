@@ -1,113 +1,108 @@
 <script setup lang="ts">
-    import { ref, watch } from 'vue';
+    import { PropType, watch } from 'vue';
 
-    import { Link, router } from '@inertiajs/vue3';
-
-    import debounce from 'lodash/debounce';
+    import { router, useForm } from '@inertiajs/vue3';
 
     import PromoCodeCard from '@/Components/Admin/Cards/PromoCodeCard.vue';
     import AdminEmptyState from '@/Components/Admin/Shared/AdminEmptyState.vue';
+    import AdminPageHeader from '@/Components/Admin/Shared/AdminPageHeader.vue';
     import AdminPagination from '@/Components/Admin/Shared/AdminPagination.vue';
     import AdminLoader from '@/Components/Admin/UI/AdminLoader.vue';
     import AdminSearchInput from '@/Components/Admin/UI/AdminSearchInput.vue';
     import BaseCreateButton from '@/Components/UI/BaseCreateButton.vue';
     import BaseSelect from '@/Components/UI/BaseSelect.vue';
     import AdminLayout from '@/Layouts/AdminLayout.vue';
-    import { useFlash } from '@/composables/useFlash';
+    import { useAdminCrud } from '@/composables/crud/useAdminCrud';
+    import { useAdminFilters } from '@/composables/routing/useAdminFilters';
+    import { useAdminNavigation } from '@/composables/routing/useAdminNavigation';
     import type { AdminPromoCode, Paginated } from '@/types';
 
     defineOptions({ layout: AdminLayout });
 
-    const props = defineProps<{
-        promoCodes: Paginated<AdminPromoCode>;
-        filters: { search?: string; type?: string; status?: string; sort?: string };
-        typeOptions: Array<{ value: string; label: string }>;
-        statusOptions: Array<{ value: string; label: string }>;
-        sortOptions: Array<{ value: string; label: string }>;
-    }>();
+    const props = defineProps({
+        promoCodes: {
+            type: Object as PropType<Paginated<AdminPromoCode>>,
+            required: true,
+            validator: (value: unknown): boolean => {
+                const val = value as Record<string, unknown>;
+                const hasData = Array.isArray(val?.data);
+                const hasMeta = val?.meta && typeof val.meta === 'object';
 
-    const search = ref(props.filters.search || '');
-    const typeFilter = ref(props.filters.type || '');
-    const statusFilter = ref(props.filters.status || '');
-    const sortOrder = ref(props.filters.sort || 'latest');
-
-    const isFiltering = ref(false);
-    const deletingIds = ref(new Set<number>());
-
-    const { notifyWithUndo } = useFlash();
-
-    const updateFilters = debounce(() => {
-        router.get(
-            route('admin.promocodes.index'),
-            {
-                search: search.value,
-                type: typeFilter.value,
-                status: statusFilter.value,
-                sort: sortOrder.value,
+                if (!hasData || !hasMeta) {
+                    console.warn(
+                        'Runtime Error: The "promoCodes" prop must match the Laravel Paginated structure.',
+                    );
+                }
+                return !!(hasData && hasMeta);
             },
-            {
-                preserveState: true,
-                replace: true,
-                onFinish: () => {
-                    isFiltering.value = false;
-                },
-            },
-        );
-    }, 300);
-
-    watch([search, typeFilter, statusFilter, sortOrder], () => {
-        isFiltering.value = true;
-
-        updateFilters();
+        },
+        filters: {
+            type: Object as PropType<{
+                search?: string;
+                type?: string;
+                status?: string;
+                sort?: string;
+            }>,
+            required: true,
+            default: () => ({ search: '', type: '', status: '', sort: '' }),
+        },
+        typeOptions: {
+            type: Array as PropType<Array<{ value: string; label: string }>>,
+            required: true,
+            default: () => [],
+        },
+        statusOptions: {
+            type: Array as PropType<Array<{ value: string; label: string }>>,
+            required: true,
+            default: () => [],
+        },
+        sortOptions: {
+            type: Array as PropType<Array<{ value: string; label: string }>>,
+            required: true,
+            default: () => [],
+        },
     });
 
-    const clearFilters = () => {
-        search.value = '';
-        typeFilter.value = '';
-        statusFilter.value = '';
-    };
+    const filterForm = useForm({
+        search: props.filters.search || '',
+        type: props.filters.type || '',
+        status: props.filters.status || '',
+        sort: props.filters.sort || '',
+    });
 
-    const goToCreate = () => {
-        router.get(route('admin.promocodes.create'));
-    };
+    const { navigateWithContext } = useAdminNavigation();
+    const { deleteEntity, isDeleting } = useAdminCrud();
+    const { isFiltering, submitFilters, clearFilters } = useAdminFilters();
+
+    watch(
+        () => [filterForm.search, filterForm.type, filterForm.status, filterForm.sort],
+        () => {
+            submitFilters(filterForm, 'admin.promocodes.index');
+        },
+    );
 
     const togglePromo = (promo: AdminPromoCode) => {
         router.patch(route('admin.promocodes.toggle', promo.id));
-    };
-
-    const deletePromo = async (promo: AdminPromoCode) => {
-        if (deletingIds.value.has(promo.id)) return;
-        deletingIds.value.add(promo.id);
-
-        const isTimeOut = await notifyWithUndo(`Удаление промокода «${promo.code}»`);
-
-        if (isTimeOut) {
-            router.delete(route('admin.promocodes.destroy', promo.id), {
-                preserveScroll: true,
-                onFinish: () => {
-                    deletingIds.value.delete(promo.id);
-                },
-            });
-        } else {
-            deletingIds.value.delete(promo.id);
-        }
     };
 </script>
 
 <template>
     <Teleport to="#admin-header-content">
-        <h1 class="text-xl font-black text-white">Управление Промокодами</h1>
+        <AdminPageHeader title="Модерация промокодов" subtitle="Управление Промокодами магазина" />
     </Teleport>
 
     <div class="animate-in fade-in space-y-8 duration-500">
         <div class="flex flex-wrap items-center justify-between gap-4">
-            <BaseCreateButton :href="route('admin.promocodes.create')" label="Создать код" />
+            <BaseCreateButton
+                label="Создать код"
+                @click="navigateWithContext('admin.promocodes', 'create')"
+            />
 
             <div class="grid flex-1 grid-cols-1 gap-4 sm:grid-cols-2 lg:flex lg:items-center">
-                <AdminSearchInput v-model="search" placeholder="Поиск по коду..." />
+                <AdminSearchInput v-model="filterForm.search" placeholder="Поиск по коду..." />
 
                 <BaseSelect
-                    v-model="typeFilter"
+                    v-model="filterForm.type"
                     :options="typeOptions"
                     placeholder="Все типы"
                     valueKey="value"
@@ -117,7 +112,7 @@
                 />
 
                 <BaseSelect
-                    v-model="statusFilter"
+                    v-model="filterForm.status"
                     :options="statusOptions"
                     placeholder="Все статусы"
                     valueKey="value"
@@ -127,8 +122,9 @@
                 />
 
                 <BaseSelect
-                    v-model="sortOrder"
+                    v-model="filterForm.sort"
                     :options="sortOptions"
+                    placeholder="По умолчанию"
                     valueKey="value"
                     labelKey="label"
                     variant="admin"
@@ -148,10 +144,16 @@
                         v-for="promo in promoCodes.data"
                         :key="promo.id"
                         :promo="promo"
-                        :disabled="deletingIds.has(promo.id)"
-                        :return-page="promoCodes.meta.current_page"
+                        :disabled="isDeleting(promo.id)"
+                        @edit="navigateWithContext('admin.promocodes', 'edit', promo.id)"
                         @toggle="togglePromo"
-                        @delete="deletePromo"
+                        @delete="
+                            deleteEntity(
+                                'admin.promocodes',
+                                promo.id,
+                                `Удаление промокода «${promo.code}»`,
+                            )
+                        "
                 /></TransitionGroup>
             </div>
 
@@ -160,19 +162,25 @@
             <AdminEmptyState
                 v-else
                 key="empty"
-                :title="search ? 'Промокоды не найдены' : 'Список промокодов пуст'"
-                @action="search ? clearFilters() : goToCreate()"
-                :action-text="search ? 'Очистить фильтр' : 'Добавить промокод'"
+                :title="filterForm.search ? 'Промокоды не найдены' : 'Список промокодов пуст'"
+                @action="
+                    filterForm.search
+                        ? clearFilters(filterForm)
+                        : navigateWithContext('admin.promocodes', 'create')
+                "
+                :action-text="filterForm.search ? 'Очистить фильтр' : 'Добавить промокод'"
                 :show-action="true"
                 :description="
-                    search
-                        ? 'По запросу «' + search + '» совпадений нет'
+                    filterForm.search
+                        ? 'По запросу «' + filterForm.search + '» совпадений нет'
                         : 'Нет ни одного промокода'
                 "
             />
         </Transition>
 
-        <AdminPagination :links="promoCodes.meta.links" />
+        <Transition name="fade-slide" mode="out-in">
+            <AdminPagination v-show="!isFiltering" :links="promoCodes.meta.links" />
+        </Transition>
     </div>
 </template>
 

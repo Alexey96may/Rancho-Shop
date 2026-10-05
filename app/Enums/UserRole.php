@@ -21,10 +21,10 @@ enum UserRole: string {
     public function color(): string
     {
         return match($this) {
-            self::ADMIN => 'red',
-            self::MODERATOR => 'purple',
-            self::WORKER => 'blue',
-            self::CUSTOMER => 'slate',
+            self::ADMIN => 'emerald',
+            self::MODERATOR => 'violet',
+            self::WORKER => 'sky',
+            self::CUSTOMER => 'zinc',
         };
     }
 }

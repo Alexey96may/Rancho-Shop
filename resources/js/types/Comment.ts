@@ -19,6 +19,7 @@ export interface Comment {
 }
 
 export interface AdminComment extends Comment {
+    is_trashed: boolean;
     updated_at: string;
     deleted_at: string | null;
 

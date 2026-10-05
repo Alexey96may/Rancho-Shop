@@ -11,7 +11,7 @@ export interface ProductVariant {
 
     amount: number;
     unit: {
-        slug: 'kg' | 'g' | 'l' | 'ml' | 'pcs';
+        slug: string;
     };
 
     stock: number;
@@ -30,6 +30,7 @@ export interface ProductVariantDTO {
 
     price: number;
     old_price: number | null;
+    amount: number;
     stock: number;
 
     is_in_stock: boolean;

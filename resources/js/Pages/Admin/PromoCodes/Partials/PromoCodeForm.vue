@@ -1,6 +1,7 @@
 <script setup lang="ts">
-    import { useForm } from '@inertiajs/vue3';
-    import { InertiaForm } from '@inertiajs/vue3';
+    import { PropType } from 'vue';
+
+    import { InertiaForm, useForm } from '@inertiajs/vue3';
 
     import AdminNumberInput from '@/Components/Admin/UI/AdminNumberInput.vue';
     import BaseCancelButton from '@/Components/UI/BaseCancelButton.vue';
@@ -12,12 +13,28 @@
     import BaseSwitch from '@/Components/UI/BaseSwitch.vue';
     import type { AdminPromoCode, PromoCodeFormState } from '@/types';
 
-    const props = defineProps<{
-        promo?: AdminPromoCode;
-        isEdit?: boolean;
-        returnPage?: number | string;
-        typeOptions: Array<{ value: string; label: string }>;
-    }>();
+    const props = defineProps({
+        promo: {
+            type: Object as PropType<AdminPromoCode>,
+            required: false,
+            default: null,
+        },
+        isEdit: {
+            type: Boolean,
+            required: false,
+            default: false,
+        },
+        returnPage: {
+            type: String,
+            required: false,
+            default: '',
+        },
+        typeOptions: {
+            type: Array as PropType<Array<{ value: string; label: string }>>,
+            required: true,
+            default: () => [],
+        },
+    });
 
     const emit = defineEmits<{
         (e: 'submit', form: InertiaForm<PromoCodeFormState>): void;
@@ -35,6 +52,7 @@
         is_active: props.promo?.is_active ?? true,
 
         create_another: false,
+        return_page: props.returnPage,
     });
 
     const handleSubmit = () => {
@@ -125,10 +143,7 @@
         </div>
 
         <div class="flex items-center gap-4 border-t border-slate-800/50 pt-8">
-            <BaseCancelButton
-                :route-name="'admin.promocodes.index'"
-                :route-params="{ page: returnPage }"
-            />
+            <BaseCancelButton :href="returnPage" label="Назад" />
 
             <BaseSubmitButton
                 :processing="form.processing"
