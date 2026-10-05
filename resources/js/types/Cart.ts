@@ -12,7 +12,7 @@ export interface CartItem {
     quantity: number;
 
     media: Media;
-    unit: 'kg' | 'g' | 'l' | 'ml' | 'pcs';
+    unit: string;
     amount: number;
 
     product_id?: number;

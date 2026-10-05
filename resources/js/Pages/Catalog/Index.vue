@@ -7,10 +7,10 @@
     import BaseSelect from '@/Components/UI/BaseSelect.vue';
     import MainLayout from '@/Layouts/MainLayout.vue';
     import { useCartStore } from '@/stores/cart';
-    import type { Category, ProductWithCategory, ResourceCollection } from '@/types';
+    import type { Category, Product, ResourceCollection } from '@/types';
 
     const props = defineProps<{
-        products: ResourceCollection<ProductWithCategory>;
+        products: ResourceCollection<Product>;
         categories: ResourceCollection<Category>;
         filters: { category?: string; search?: string; sort?: string };
     }>();

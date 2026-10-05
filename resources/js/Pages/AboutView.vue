@@ -5,19 +5,13 @@
 
     import CommentsSection from '@/Components/Sections/CommentsSection.vue';
     import MainLayout from '@/Layouts/MainLayout.vue';
-    import type { Comment, Page } from '@/types';
+    import type { Comment, Page, Paginated } from '@/types';
 
     defineOptions({ layout: MainLayout });
 
     const props = defineProps<{
         page: Page;
-        reviews: {
-            data: Comment[];
-            meta: {
-                current_page: number;
-                last_page: number;
-            };
-        };
+        comments: Paginated<Comment>;
     }>();
 
     const pageData = computed(() => props.page);
@@ -111,8 +105,8 @@
             <!-- REVIEWS -->
             <section class="mt-20" aria-labelledby="reviews-title">
                 <CommentsSection
-                    :comments="reviews"
-                    :meta="reviews.meta"
+                    :comments="comments"
+                    :meta="comments.meta"
                     :commentable-id="pageData.id"
                     commentable-type="Page"
                 />

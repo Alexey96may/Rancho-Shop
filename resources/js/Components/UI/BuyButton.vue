@@ -2,14 +2,12 @@
     import { computed } from 'vue';
 
     import { useCartStore } from '@/stores/cart';
-    import type { ProductVariantDTO } from '@/types';
-    import type { AvailabilityType } from '@/types';
+    import type { Product } from '@/types';
 
     import QuantityControl from './QuantityControl.vue';
 
     interface Props {
-        variant: ProductVariantDTO;
-        availability_type: AvailabilityType;
+        product: Product;
         classes?: string;
         disabled?: boolean;
     }
@@ -21,14 +19,25 @@
 
     const cart = useCartStore();
 
-    const isInCart = computed(() =>
-        cart.items.some((item) => item.variant_id === props.variant.id),
-    );
+    // Вычисляем дефолтный вариант прямо из продукта
+    const defaultVariant = computed(() => {
+        return (
+            props.product.variants?.find((v) => v.is_default) ?? props.product.variants?.[0] ?? null
+        );
+    });
 
-    const isOutOfStock = computed(() => props.variant.stock <= 0);
+    // Проверяем, в корзине ли именно этот вариант этого продукта
+    const isInCart = computed(() => {
+        if (!defaultVariant.value) return false;
+        return cart.items.some((item) => item.variant_id === defaultVariant.value?.id);
+    });
+
+    const isOutOfStock = computed(() => {
+        return defaultVariant.value ? defaultVariant.value.stock <= 0 : true;
+    });
 
     const action = computed<'cart' | 'preorder'>(() => {
-        if (props.availability_type === 'stock') return 'cart';
+        if (props.product.availability.value === 'stock') return 'cart';
         return 'preorder';
     });
 
@@ -41,29 +50,30 @@
             return 'Предзаказ';
         }
 
-        return `В корзину — ${props.variant.price_rub}₽`;
+        const priceFormatted = defaultVariant.value
+            ? (defaultVariant.value.price / 100).toFixed(2)
+            : '0.00';
+        return `В корзину — ${priceFormatted}₽`;
     });
 
     const isDisabled = computed(() => {
-        if (props.disabled) return true;
+        if (props.disabled || !defaultVariant.value) return true;
         if (action.value === 'cart' && isOutOfStock.value) return true;
         return false;
     });
 
     const handleClick = () => {
-        if (isDisabled.value) return;
+        if (isDisabled.value || !defaultVariant.value) return;
 
-        cart.add({
-            ...props.variant,
-            // quantity: 1,
-        });
+        // Передаем в стор вариант И сам продукт, чтобы стор взял имя и картинку продукта
+        cart.add(defaultVariant.value, props.product);
     };
 </script>
 
 <template>
     <div class="w-full">
         <!-- STEP CONTROL -->
-        <QuantityControl v-if="isInCart" :variant="variant" />
+        <QuantityControl v-if="isInCart && defaultVariant" :variant="defaultVariant" />
 
         <!-- BUTTON -->
         <button
@@ -75,7 +85,6 @@
                 !isDisabled
                     ? 'shadow-lg bg-slate-900 text-white hover:bg-orange-600'
                     : 'cursor-not-allowed bg-slate-200 text-slate-400',
-
                 'focus:outline-none focus-visible:ring-4 focus-visible:ring-orange-500/20',
                 classes,
             ]"

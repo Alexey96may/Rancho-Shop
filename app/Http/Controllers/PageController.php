@@ -29,7 +29,7 @@ class PageController extends Controller
         if ($page->template === 'delivery') {
             $settings = app(\App\Services\SettingService::class);
             $data['delivery'] = [
-                'farm_coords' => $this->parseCoords($settings->get('farm_coords')),
+                'farm_coords' => $settings->get('farm_coords'),
                 'delivery_schedule' => $settings->get('delivery_schedule'),
                 'delivery_info' => $settings->get('delivery_info'),
                 'delivery_zones' => $settings->get('delivery_zones'),
@@ -53,7 +53,7 @@ class PageController extends Controller
             ->where('is_active', true)
             ->with(['seo', 'media'])
             ->firstOrFail();
-        
+
         $comments = $page->reviews()
             ->latest()
             ->paginate(setting('comments_per_page', 8));
@@ -82,26 +82,14 @@ class PageController extends Controller
             'page' => new PageResource($page),
             'comments' => CommentResource::collection($comments),
 
-            // 🗺️ delivery-specific data
+            // delivery-specific data
             'delivery' => [
-                'farm_coords' => $this->parseCoords($settings->get('farm_coords')),
+                'farm_coords' => $settings->get('farm_coords'),
                 'delivery_schedule' => $settings->get('delivery_schedule'),
                 'delivery_info' => $settings->get('delivery_info'),
                 'delivery_zones' => $settings->get('delivery_zones'),
                 'address_farm' => $settings->get('address_farm'),
             ],
         ]);
-    }
-
-    private function parseCoords(?string $value): ?array
-    {
-        if (!$value) return null;
-
-        [$lat, $lng] = explode(',', $value);
-
-        return [
-            'lat' => (float) $lat,
-            'lng' => (float) $lng,
-        ];
     }
 }

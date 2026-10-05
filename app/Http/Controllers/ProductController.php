@@ -39,7 +39,6 @@ class ProductController extends Controller
                 $q->withMax('variants', 'price')
                 ->orderBy('variants_price_max', 'desc');
             })
-
             ->when(!$request->sort, fn ($q) => $q->latest())
             ->get();
 
