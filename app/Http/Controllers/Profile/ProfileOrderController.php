@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Order;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use App\Http\Resources\OrderResource;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -14,13 +15,13 @@ class ProfileOrderController extends Controller
     public function index(Request $request): Response
     {
         $orders = $request->user()->orders()
-            ->with(['items.product'])
+            ->with(['items.product.media'])
             ->latest()
-            ->paginate(5)
+            ->paginate(setting('orders_per_page', 12))
             ->withQueryString();
 
         return Inertia::render('Profile/Orders', [
-            'orders' => $orders,
+            'orders' => OrderResource::collection($orders),
         ]);
     }
 

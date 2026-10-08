@@ -37,15 +37,15 @@ class OrderResource extends JsonResource
             'status' => $this->status,
             'status_label' => $this->status->label(),
 
-            'created_at' => $this->created_at->format('d.m.Y H:i'),
-            'updated_at' => $this->updated_at,
+            'created_at' => $this->created_at?->toIso8601String(),
+            'updated_at' => $this->updated_at?->toIso8601String(),
 
             // Relations
             'items' => OrderItemResource::collection($this->whenLoaded('items')),
             'user' => $this->when($this->relationLoaded('user') && $this->user, function() {
                 return new UserResource($this->user);
             }),
-            
+
             'promo_code' => new PromoCodeResource($this->whenLoaded('promoCode')),
         ];
     }

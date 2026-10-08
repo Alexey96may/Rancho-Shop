@@ -1,17 +1,22 @@
 <script setup lang="ts">
+    import type { PropType } from 'vue';
+
     import { router } from '@inertiajs/vue3';
 
+    import BaseSmartTime from '@/Components/UI/BaseSmartTime.vue';
     import ProfileLayout from '@/Layouts/ProfileLayout.vue';
     import { useFlash } from '@/composables/ui/useFlash';
+    import { Order, Paginated } from '@/types';
+    import { formatMoney } from '@/utils/format';
 
     defineOptions({ layout: ProfileLayout });
 
-    defineProps<{
+    defineProps({
         orders: {
-            data: Array<any>;
-            links: Array<any>;
-        };
-    }>();
+            type: Object as PropType<Paginated<Order>>,
+            required: true,
+        },
+    });
 
     const { notifyWithUndo } = useFlash();
 
@@ -74,8 +79,8 @@
                     <div>
                         <h3 class="text-sm font-black text-white">Заказ №{{ order.id }}</h3>
                         <span class="mt-0.5 block text-[10px] text-slate-500"
-                            >От даты: {{ order.created_at }}</span
-                        >
+                            >От: <BaseSmartTime :date="order.created_at"
+                        /></span>
                     </div>
 
                     <div class="flex items-center gap-3">
@@ -95,10 +100,10 @@
                         class="flex items-center justify-between rounded-xl bg-slate-900/40 p-2 text-xs text-slate-300"
                     >
                         <span class="font-medium text-slate-400">
-                            {{ item.product?.name || 'Удаленный товар' }}
+                            {{ item.product_name || 'Удаленный товар' }}
                             <span class="ml-1 font-black text-white">x{{ item.quantity }}</span>
                         </span>
-                        <span class="font-bold text-white">{{ item.price }} ₽</span>
+                        <span class="font-bold text-white">{{ formatMoney(item.unit_price) }}</span>
                     </div>
                 </div>
 
@@ -111,8 +116,8 @@
                             >Итого к оплате</span
                         >
                         <span class="text-base font-black text-orange-400"
-                            >{{ order.total_price || 0 }} ₽</span
-                        >
+                            >{{ formatMoney(order.total_price) }}
+                        </span>
                     </div>
 
                     <button
@@ -124,22 +129,6 @@
                     </button>
                 </div>
             </section>
-        </div>
-
-        <div v-if="orders.links && orders.links.length > 3" class="flex justify-center gap-1 pt-4">
-            <Component
-                :is="link.url ? 'Link' : 'span'"
-                v-for="(link, k) in orders.links"
-                :key="k"
-                :href="link.url"
-                v-html="link.label"
-                class="rounded-lg px-3 py-1.5 text-xs transition-all"
-                :class="{
-                    'bg-slate-800 font-bold text-white ring-1 ring-slate-700': link.active,
-                    'text-slate-500': !link.url,
-                    'text-slate-400 hover:bg-slate-900': link.url && !link.active,
-                }"
-            />
         </div>
     </div>
 </template>

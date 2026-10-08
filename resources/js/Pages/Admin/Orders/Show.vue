@@ -143,13 +143,14 @@
                                         <Link
                                             :href="
                                                 route('catalog.show', {
-                                                    product: item.product_slug,
+                                                    product: item.id,
                                                 })
                                             "
                                         >
                                             {{ item.product_name }}
                                         </Link>
                                     </h4>
+                                    {{ item.product_slug }}
                                     <p class="text-xs text-slate-500">
                                         {{ item.quantity }}{{ item.unit.short }} ×
                                         {{ formatMoney(item.unit_price) }}

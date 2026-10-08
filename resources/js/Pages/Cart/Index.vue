@@ -64,7 +64,7 @@
                 <div class="space-y-2 border-b border-slate-700 pb-4 text-sm opacity-80">
                     <div class="flex justify-between">
                         <span>Позиций:</span>
-                        <span>{{ cart.totalItems }}</span>
+                        <span>{{ cart.totalCleanItems }}</span>
                     </div>
                     <div class="flex justify-between">
                         <span>Доставка:</span>

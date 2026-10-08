@@ -5,6 +5,7 @@ namespace App\Actions\Checkout;
 use App\DTO\CheckoutDTO;
 use App\DTO\DeliveryDTO;
 use App\Models\Order;
+use Illuminate\Support\Facades\Auth;
 
 class CreateOrderAction
 {
@@ -20,9 +21,10 @@ class CreateOrderAction
         }
 
         return Order::create([
+            'user_id' => $dto->userId ?? Auth::id(),
             'customer_name' => $dto->customerName,
             'customer_phone' => $dto->customerPhone,
-            
+
             'delivery_address' => $delivery->is_pickup ? null : $delivery->address,
             'delivery_lat' => $delivery->lat,
             'delivery_lng' => $delivery->lng,
@@ -32,7 +34,7 @@ class CreateOrderAction
             'delivery_meta' => $deliveryResult,
 
             'customer_comment' => $dto->customerComment,
-            
+
             'total_price' => $totalPrice + $deliveryPrice,
             'delivery_price' => $deliveryPrice,
             'discount_total' => 0,        // 'discount_total' => $total['discount'],

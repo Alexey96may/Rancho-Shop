@@ -22,7 +22,7 @@
             </div>
 
             <Link
-                :href="route('home')"
+                :href="route('catalog.index')"
                 class="hidden font-bold text-rancho-olive hover:text-rancho-forest md:block"
             >
                 Весь каталог →

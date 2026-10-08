@@ -24,12 +24,12 @@
 <template>
     <Transition name="fade-date" mode="out-in">
         <time
-            v-if="date"
+            v-if="props.date"
             :key="showExactDate.toString()"
-            :datetime="date"
+            :datetime="props.date"
             :title="
                 showExactDate
-                    ? 'Нажмите, чтобы увидеть время назад'
+                    ? 'Нажмите, чтобы увидеть относительное время'
                     : 'Нажмите, чтобы увидеть точную дату'
             "
             @click="toggleDate"

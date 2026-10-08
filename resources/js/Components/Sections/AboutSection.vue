@@ -1,4 +1,6 @@
 <script setup lang="ts">
+    import { Link } from '@inertiajs/vue3';
+
     import { Quote } from 'lucide-vue-next';
 
     import type { LandingBlock } from '@/types';
@@ -25,7 +27,7 @@
                 </div>
 
                 <div
-                    class="text-white shadow-xl absolute -left-6 -top-10 hidden rounded-2xl bg-rancho-forest p-6 md:block"
+                    class="shadow-xl absolute -left-6 -top-10 hidden rounded-2xl bg-rancho-forest p-6 text-white md:block"
                 >
                     <span class="block text-3xl font-black italic">100%</span>
                     <span class="text-xs uppercase tracking-widest opacity-80"
@@ -57,13 +59,13 @@
                 </div>
 
                 <div class="mt-10">
-                    <button
-                        type="button"
-                        class="text-white rounded-full bg-rancho-forest px-8 py-4 font-bold transition-all hover:bg-rancho-buttercup hover:text-rancho-forest focus:outline-none focus:ring-4 focus:ring-rancho-buttercup/40"
+                    <Link
+                        :href="route('about')"
+                        class="rounded-full bg-rancho-forest px-8 py-4 font-bold text-white transition-all hover:bg-rancho-buttercup hover:text-rancho-forest focus:outline-none focus:ring-4 focus:ring-rancho-buttercup/40"
                         aria-label="Узнать подробную историю создания нашего хозяйства"
                     >
                         Наша история
-                    </button>
+                    </Link>
                 </div>
             </div>
         </div>

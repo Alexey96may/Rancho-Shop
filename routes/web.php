@@ -45,8 +45,6 @@ Route::get('/cart', function () {
     return inertia('Cart/Index');
 })->name('cart.index');
 
-Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
-
 Route::get('/checkout', [CheckoutPageController::class, 'index'])->name('checkout.index');
 Route::post('/checkout', [CheckoutPageController::class, 'store'])->name('checkout.store');
 

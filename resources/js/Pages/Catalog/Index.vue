@@ -52,7 +52,7 @@
     });
 
     const search = ref(props.filters.search || '');
-    const category = ref(props.filters.category || '');
+    const category = ref(props.filters.category ? Number(props.filters.category) : '');
     const sort = ref(props.filters.sort || '');
     const inStock = ref(props.filters.in_stock || false);
 
@@ -105,6 +105,8 @@
 <template>
     <main>
         <Head title="Каталог продукции Ранчо" />
+
+        {{ category }}
 
         <AppContainer>
             <div class="flex flex-col justify-between gap-4 md:flex-row md:items-end">
