@@ -5,11 +5,11 @@ namespace App\Actions\Checkout;
 use App\DTO\CheckoutDTO;
 use App\DTO\DeliveryDTO;
 use App\Models\Order;
-use Illuminate\Support\Facades\Auth;
+use App\Models\User;
 
 class CreateOrderAction
 {
-    public function handle(CheckoutDTO $dto, int $totalPrice, DeliveryDTO $delivery, array $deliveryResult): Order
+    public function handle(CheckoutDTO $dto, int $totalPrice, DeliveryDTO $delivery, array $deliveryResult, ?User $user = null): Order
     {
         $deliveryPrice = $deliveryResult['delivery_price'];
 
@@ -21,7 +21,7 @@ class CreateOrderAction
         }
 
         return Order::create([
-            'user_id' => $dto->userId ?? Auth::id(),
+            'user_id' => $user?->id,
             'customer_name' => $dto->customerName,
             'customer_phone' => $dto->customerPhone,
 

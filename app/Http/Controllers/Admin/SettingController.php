@@ -44,7 +44,7 @@ class SettingController extends Controller
     public function clearCache()
     {
         $this->settingService->flushCache();
-        
+
         return back()->with('info', 'Кеш настроек очищен');
     }
 }

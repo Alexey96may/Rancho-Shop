@@ -5,6 +5,7 @@
 
     import BaseInput from '@/Components/UI/BaseInput.vue';
     import BaseSubmitButton from '@/Components/UI/BaseSubmitButton.vue';
+    import BaseSwitch from '@/Components/UI/BaseSwitch.vue';
     import BaseTextarea from '@/Components/UI/BaseTextarea.vue';
     import MainLayout from '@/Layouts/MainLayout.vue';
     import { useCartStore } from '@/stores/cart';
@@ -13,11 +14,34 @@
 
     defineOptions({ layout: MainLayout });
 
+    interface DeliveryZone {
+        name: string;
+        path: [number, number][];
+        radius: number;
+        delivery_price: number;
+        free_from: number;
+        enabled: boolean;
+        priority: number;
+        max_distance: number;
+    }
+
+    interface DeliveryResult {
+        is_valid: boolean;
+        // при успехе:
+        delivery_price?: number;
+        zone?: DeliveryZone;
+        distance_to_route?: number;
+        distance_to_farm?: number;
+        // при ошибке:
+        error?: string;
+    }
+
     /**
      * PROPS & INERTIA SHARED DATA
      */
     interface Props {
         delivery_draft: DeliveryDraft | null;
+        delivery_result: DeliveryResult | null;
     }
 
     const props = defineProps<Props>();
@@ -26,7 +50,9 @@
     const page = usePage<SharedData>();
 
     const user = computed(() => page.props.auth.user);
+
     const delivery = computed(() => props.delivery_draft ?? page.props.delivery_draft ?? null);
+    const deliveryResult = computed(() => props.delivery_result ?? null);
 
     /**
      * REFS FOR FOCUS ON ERROR
@@ -47,6 +73,8 @@
         is_pickup: boolean;
         lat: number | null;
         lng: number | null;
+
+        create_account: boolean;
     };
 
     const form = useForm<CheckoutForm>({
@@ -54,8 +82,9 @@
         customer_phone: user.value?.data?.phone ?? '',
         delivery_address: delivery.value?.address ?? null,
         customer_comment: '',
+        create_account: false,
 
-        is_pickup: false,
+        is_pickup: !delivery.value?.address,
         lat: delivery.value?.lat ?? null,
         lng: delivery.value?.lng ?? null,
     });
@@ -63,19 +92,55 @@
     /**
      * DELIVERY STATE
      */
-    const isPickup = computed(() => form.delivery_address === null);
+    const isPickup = computed(() => form.is_pickup);
 
     const isDeliveryValid = computed(() => {
+        if (deliveryResult.value) return deliveryResult.value.is_valid;
         return delivery.value?.is_valid ?? false;
     });
 
     const deliveryError = computed(() => {
-        if (!isPickup.value && !isDeliveryValid.value) {
-            return 'Выбранный адрес доставки недоступен';
-        }
+        if (isPickup.value) return null;
+
+        const r = deliveryResult.value;
+        if (r && !r.is_valid) return r.error ?? 'Выбранный адрес доставки недоступен';
+        if (!r && !isDeliveryValid.value) return 'Выбранный адрес доставки недоступен';
         return null;
     });
 
+    /** Стоимость доставки с учётом бесплатной доставки от free_from */
+    const deliveryPrice = computed<number | null>(() => {
+        if (isPickup.value) return 0;
+
+        const r = deliveryResult.value;
+        if (!r || !r.is_valid) return null;
+
+        const price = r.delivery_price ?? r.zone?.delivery_price ?? null;
+        if (price === null) return null;
+
+        const freeFrom = r.zone?.free_from ?? null;
+        if (freeFrom !== null && cart.totalPrice >= freeFrom) return 0;
+
+        return price;
+    });
+
+    /** До бесплатной доставки осталось */
+    const amountUntilFreeDelivery = computed<number | null>(() => {
+        if (isPickup.value) return null;
+
+        const r = deliveryResult.value;
+        if (!r || !r.is_valid) return null;
+
+        const freeFrom = r.zone?.free_from ?? null;
+        if (freeFrom === null) return null;
+
+        const left = freeFrom - cart.totalPrice;
+        return left > 0 ? left : null;
+    });
+
+    const computedTotalPrice = computed(() =>
+        formatMoney(cart.totalPrice + (deliveryPrice.value ?? 0)),
+    );
     /**
      * UI ACTIONS
      */
@@ -96,11 +161,6 @@
     function goToDeliveryPage() {
         window.location.href = '/delivery';
     }
-
-    /**
-     * TOTAL
-     */
-    const computedTotalPrice = computed(() => formatMoney(cart.totalPrice));
 
     /**
      * ERRORS
@@ -192,6 +252,15 @@
                         :error="errors.customer_phone"
                     />
 
+                    <BaseSwitch
+                        v-if="!user"
+                        v-model="form.create_account"
+                        :error="errors.create_account"
+                        label="Создать аккаунт"
+                        active-text="Аккаунт будет создан автоматически"
+                        inactive-text="Аккаунт не будет создан автоматически"
+                    />
+
                     <!-- DELIVERY BLOCK -->
                     <div class="space-y-3 rounded-xl border bg-white p-4">
                         <!-- CASE: PICKUP -->
@@ -214,9 +283,83 @@
                                 🚚 Доставка выбрана
                             </div>
 
-                            <p class="mt-1 text-sm">
-                                {{ form.delivery_address }}
-                            </p>
+                            <p class="mt-1 text-sm">{{ form.delivery_address }}</p>
+
+                            <!-- РЕЗУЛЬТАТ РАСЧЁТА -->
+                            <div
+                                v-if="deliveryResult"
+                                class="mt-3 rounded-lg border p-3 text-sm"
+                                :class="
+                                    deliveryResult.is_valid
+                                        ? 'border-green-200 bg-green-50 text-green-900'
+                                        : 'border-red-200 bg-red-50 text-red-700'
+                                "
+                            >
+                                <template v-if="deliveryResult.is_valid">
+                                    <div class="flex justify-between">
+                                        <span>Стоимость доставки</span>
+                                        <span class="font-medium">
+                                            <template v-if="deliveryPrice === 0"
+                                                >бесплатно</template
+                                            >
+                                            <template v-else>
+                                                {{
+                                                    deliveryPrice !== null
+                                                        ? formatMoney(deliveryPrice)
+                                                        : '—'
+                                                }}
+                                            </template>
+                                        </span>
+                                    </div>
+
+                                    <div
+                                        v-if="deliveryResult.zone?.name"
+                                        class="mt-1 flex justify-between text-gray-600"
+                                    >
+                                        <span>Зона</span>
+                                        <span>{{ deliveryResult.zone.name }}</span>
+                                    </div>
+
+                                    <div
+                                        v-if="deliveryResult.distance_to_route != null"
+                                        class="mt-1 flex justify-between text-gray-600"
+                                    >
+                                        <span>До маршрута</span>
+                                        <span
+                                            >{{
+                                                Math.round(deliveryResult.distance_to_route)
+                                            }}
+                                            м</span
+                                        >
+                                    </div>
+
+                                    <div
+                                        v-if="deliveryResult.distance_to_farm != null"
+                                        class="mt-1 flex justify-between text-gray-600"
+                                    >
+                                        <span>От фермы</span>
+                                        <span
+                                            >{{
+                                                Math.round(deliveryResult.distance_to_farm)
+                                            }}
+                                            м</span
+                                        >
+                                    </div>
+
+                                    <!-- Подсказка про бесплатную доставку -->
+                                    <div
+                                        v-if="amountUntilFreeDelivery !== null"
+                                        class="mt-2 rounded bg-amber-50 p-2 text-xs text-amber-800"
+                                    >
+                                        До бесплатной доставки осталось
+                                        <strong>{{ formatMoney(amountUntilFreeDelivery) }}</strong>
+                                    </div>
+                                </template>
+
+                                <template v-else>
+                                    ⚠️ {{ deliveryResult.error ?? 'Адрес вне зоны доставки' }}
+                                </template>
+                            </div>
 
                             <div class="mt-3 flex gap-2">
                                 <button
@@ -288,6 +431,25 @@
                         </div>
                     </div>
 
+                    <div
+                        v-if="isPickup"
+                        class="mt-2 flex justify-between border-t pt-2 text-sm text-gray-700"
+                    >
+                        <span>Самовывоз</span>
+                        <span>бесплатно</span>
+                    </div>
+
+                    <div
+                        v-else-if="deliveryPrice !== null"
+                        class="mt-2 flex justify-between border-t pt-2 text-sm text-gray-700"
+                    >
+                        <span>Доставка</span>
+                        <span>
+                            <template v-if="deliveryPrice === 0">бесплатно</template>
+                            <template v-else>{{ formatMoney(deliveryPrice) }}</template>
+                        </span>
+                    </div>
+
                     <div v-if="cart.items.length === 0" class="text-sm text-gray-400">
                         Корзина пуста
                     </div>
@@ -301,10 +463,9 @@
                         @click="submit"
                         :processing="form.processing"
                         :disabled="cart.items.length === 0 || (!isPickup && !isDeliveryValid)"
+                        :label="form.processing ? 'Оформление...' : 'Оформить заказ'"
                         class="mt-6 w-full"
-                    >
-                        {{ form.processing ? 'Оформление...' : 'Оформить заказ' }}
-                    </BaseSubmitButton>
+                    />
                 </aside>
             </div>
         </div>

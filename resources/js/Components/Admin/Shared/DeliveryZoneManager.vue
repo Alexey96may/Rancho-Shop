@@ -76,6 +76,12 @@
                     <AdminNumberInput v-model="zone.radius" :min="0" label="Радиус (м)" />
 
                     <AdminNumberInput v-model="zone.priority" :min="0" label="Приоритет" />
+
+                    <AdminNumberInput
+                        v-model="zone.max_distance"
+                        :min="0"
+                        label="Максимальная дистанция"
+                    />
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
@@ -83,6 +89,13 @@
                         v-model="zone.delivery_price"
                         :min="0"
                         label="Цена"
+                        :is-money="true"
+                    />
+
+                    <AdminNumberInput
+                        v-model="zone.free_from"
+                        :min="0"
+                        label="Бесплатно от"
                         :is-money="true"
                     />
                 </div>

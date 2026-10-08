@@ -41,4 +41,20 @@ return [
         'redirect' => env('GOOGLE_REDIRECT_URI'), // ex, https://your-domain.com/auth/google/callback
     ],
 
+    'payment' => [
+        'driver' => env('PAYMENT_DRIVER', 'fake'),
+    ],
+
+    'paymaster' => [
+        'merchant_id' => env('PAYMASTER_MERCHANT_ID'),
+        'secret_key' => env('PAYMASTER_SECRET_KEY'),
+    ],
+
+    'direct' => [
+        'phone'     => env('PAYMENT_DIRECT_PHONE'),
+        'bank'      => env('PAYMENT_DIRECT_BANK'),
+        'recipient' => env('PAYMENT_DIRECT_RECIPIENT'),
+        'note'      => env('PAYMENT_DIRECT_NOTE_TEMPLATE', 'Оплата заказа #:order_id'),
+    ],
+
 ];

@@ -67,6 +67,7 @@ class Order extends Model
         'delivery_lat', 'delivery_lng', 'is_pickup', 'delivery_validated',
         'delivery_meta', 'customer_comment', 'discount_total',
         'total_price', 'delivery_price', 'status', 'admin_note',
+        'payment_method', 'payment_status', 'payment_id',
     ];
 
     protected $casts = [
@@ -106,7 +107,7 @@ class Order extends Model
         return $query
             ->when($filters['search'] ?? null, function ($query, $search) {
                 $search = mb_strtolower($search, 'UTF-8');
-                
+
                 $query->where(function($q) use ($search) {
                     $q->whereRaw('LOWER(customer_name) LIKE ?', ["%{$search}%"])
                       ->orWhere('id', 'LIKE', "%{$search}%");

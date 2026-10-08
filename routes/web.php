@@ -30,6 +30,7 @@ use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\AnalyticsController;
 use App\Http\Controllers\Profile\ProfileCommentController;
 use App\Http\Controllers\Profile\ProfileOrderController;
+use App\Http\Controllers\PaymentController;
 
 use App\Enums\Permission;
 
@@ -60,6 +61,15 @@ Route::get('/comments', [CommentController::class, 'index'])->name('reviews.inde
 Route::post('/comments', [CommentController::class, 'store'])->middleware('auth')->name('comments.store');
 
 Route::post('/delivery/draft', [DeliveryController::class, 'store'])->name('delivery.draft.store');
+
+// Публичные маршруты оплаты (доступны и для гостей, и для авторизованных)
+Route::get('/orders/{order}/pay', [PaymentController::class, 'checkout'])
+    ->name('payments.checkout');
+Route::get('/orders/{order}/fake-pay', [PaymentController::class, 'fakeProcess'])
+    ->name('payments.fake.process');
+// Webhook от PayMaster
+Route::post('/payments/paymaster/callback', [PaymentController::class, 'callback'])
+    ->name('payments.paymaster.callback');
 
 Route::middleware('auth')->prefix('profile')->name('profile.')->group(function () {
     Route::get('/', [ProfileController::class, 'edit'])->name('edit');

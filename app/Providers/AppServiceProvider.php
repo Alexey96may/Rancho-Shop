@@ -16,6 +16,11 @@ use Illuminate\Support\Facades\Gate;
 use App\Enums\UserRole;
 use App\Enums\Permission;
 
+use App\Contracts\PaymentGatewayInterface;
+use App\Services\Payments\DirectPaymentGateway;
+use App\Services\Payments\FakePaymentGateway;
+use App\Services\Payments\PayMasterGateway;
+
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -24,7 +29,16 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Автоматический выбор платежного драйвера из .env
+        $this->app->bind(PaymentGatewayInterface::class, function () {
+            $driver = config('services.payment.driver', 'fake');
+
+            return match ($driver) {
+                'paymaster' => new PayMasterGateway(),
+                'direct'    => new DirectPaymentGateway(),
+                default     => new FakePaymentGateway(),
+            };
+        });
     }
 
     /**
@@ -55,19 +69,19 @@ class AppServiceProvider extends ServiceProvider
                     Permission::MANAGE_PAGES,
                     Permission::MANAGE_FAQ,
                     Permission::MANAGE_FEATURES,
-                    Permission::MANAGE_COMMENTS 
+                    Permission::MANAGE_COMMENTS
                         => $user->role === UserRole::MODERATOR,
 
                     // WORKER + ADMIN
                     Permission::MANAGE_DELIVERY,
                     Permission::MANAGE_ANALITICS,
-                    Permission::MANAGE_ORDERS 
+                    Permission::MANAGE_ORDERS
                         => $user->role === UserRole::WORKER,
 
                     // ADMIN only
                     Permission::MANAGE_USERS,
                     Permission::MANAGE_SETTINGS,
-                    Permission::MANAGE_PROMOCODES 
+                    Permission::MANAGE_PROMOCODES
                         => false,
 
                     default => false,
@@ -156,7 +170,7 @@ class AppServiceProvider extends ServiceProvider
             foreach ($dictionary as $key => $value) {
                 $title = preg_replace('/\b' . preg_quote($key, '/') . '\b/u', $value, $title);
             }
-            
+
             return Str::slug($title, $separator, $language);
         });
     }

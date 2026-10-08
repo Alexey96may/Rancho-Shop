@@ -91,7 +91,7 @@ class SettingService
         }
 
         $this->flushCache();
-        
+
         if ($hasDeliveryZones) {
             Cache::forget('delivery_zones');
         }
@@ -102,9 +102,11 @@ class SettingService
     */
     public function allModels()
     {
-        return Cache::remember("settings.models", 86400, function () {
-            return Setting::all();
-        });
+        $rows = Cache::remember("settings.models", 86400, fn () =>
+            Setting::all()->toArray()
+        );
+
+        return Setting::hydrate($rows);
     }
 
     /**

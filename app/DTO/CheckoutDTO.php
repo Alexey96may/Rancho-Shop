@@ -15,6 +15,7 @@ class CheckoutDTO
         /** @var Collection<int, CartItemDTO> */
         public Collection $items,
 
-        public ?int $userId = null,
+        public bool $createAccount,
+        public ?int $userId,
     ) {}
 }

@@ -24,7 +24,7 @@ class ValidateDeliveryAction
             ];
         }
 
-        if (is_null($delivery->lat) || is_null($delivery->lng)) {
+        if ((is_null($delivery->lat) || is_null($delivery->lng)) && !$delivery->is_pickup ) {
             throw ValidationException::withMessages([
                 'delivery' => 'Укажите адрес доставки на карте',
             ]);

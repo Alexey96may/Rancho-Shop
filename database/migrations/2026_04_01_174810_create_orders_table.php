@@ -43,6 +43,14 @@ return new class() extends Migration
                 ->default('new');
 
             $table->text('admin_note')->nullable(); // Admin's comment on the order
+
+            // Способ оплаты: 'paymaster', 'direct' (прямой перевод/СБП/наличные)
+            $table->string('payment_method')->default('paymaster');
+            // Статус оплаты: 'pending', 'paid', 'failed', 'cancelled'
+            $table->string('payment_status')->default('pending');
+            // ID транзакции в PayMaster (LMI_SYS_PAYMENT_ID)
+            $table->string('payment_id')->nullable();
+
             $table->timestamps();
         });
     }

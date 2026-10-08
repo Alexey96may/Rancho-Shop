@@ -29,6 +29,7 @@ class CheckoutRequest extends FormRequest
             'customer_phone' => ['required', 'string', 'max:50'],
             'delivery_address' => ['nullable', 'string'],
             'customer_comment' => ['nullable', 'string'],
+            'create_account'   => ['sometimes', 'boolean'],
 
             'items' => ['required', 'array', 'min:1'],
             'items.*.variant_id' => ['required', 'integer', 'exists:product_variants,id'],
@@ -45,7 +46,8 @@ class CheckoutRequest extends FormRequest
             customerPhone: $data['customer_phone'],
             deliveryAddress: $data['delivery_address'] ?? null,
             customerComment: $data['customer_comment'] ?? null,
-
+            createAccount: (bool) ($data['create_account'] ?? false),
+            userId:        $this->user()?->id,
             items: collect($data['items'])
                 ->map(fn ($item) => new CartItemDTO(
                     quantity: $item['quantity'],

@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\StoreOrderRequest;
 use App\Http\Resources\OrderResource;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use App\Models\Order;
