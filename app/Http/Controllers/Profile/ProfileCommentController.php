@@ -14,11 +14,10 @@ class ProfileCommentController extends Controller
 {
     public function index(Request $request): Response
     {
-        // Оставляем только загрузку истории комментариев текущего юзера
         $comments = $request->user()->comments()
-            ->with('commentable') // Чтобы знать, к какому товару/странице был коммент
+            ->with('commentable')
             ->latest()
-            ->paginate(10)
+            ->paginate(setting('reviews_per_page', 12))
             ->withQueryString();
 
         return Inertia::render('Profile/Comments', [
@@ -28,20 +27,30 @@ class ProfileCommentController extends Controller
 
     public function update(Request $request, Comment $comment): RedirectResponse
     {
-        abort_if($comment->user_id !== $request->user()->id, 403);
-        
-        if ($comment->status === CommentStatus::APPROVED->value) {
+        // 1. Проверка прав владения
+        if ($comment->user_id !== $request->user()->id) {
+            abort(403);
+        }
+
+        // 2. Корректное сравнение Enum (учитываем $casts в модели)
+        $isApproved = $comment->status === CommentStatus::APPROVED
+            || $comment->status === CommentStatus::APPROVED->value;
+
+        if ($isApproved) {
             return back()->with('error', 'Нельзя изменить уже одобренный отзыв.');
         }
 
+        // 3. Синхронизированная валидация
         $validated = $request->validate([
-            'content' => ['required', 'string', 'min:5', 'max:1000'],
-            'rating'  => ['required', 'integer', 'min:1', 'max:5'],
+            'content' => ['required', 'string', 'min:1', 'max:1000'],
+            'rating'  => ['nullable', 'numeric', 'between:1,5'],
         ]);
 
+        // 4. Явное обновление полей
         $comment->update([
-            ...$validated,
-            'status' => CommentStatus::PENDING->value, // На перемодерацию
+            'content' => $validated['content'],
+            'rating'  => $validated['rating'] ?? null,
+            'status'  => CommentStatus::PENDING,
         ]);
 
         return back()->with('success', 'Отзыв успешно обновлен и отправлен на модерацию!');
@@ -49,7 +58,9 @@ class ProfileCommentController extends Controller
 
     public function destroy(Request $request, Comment $comment): RedirectResponse
     {
-        abort_if($comment->user_id !== $request->user()->id, 403);
+        if ($comment->user_id !== $request->user()->id) {
+            abort(403);
+        }
 
         $comment->delete();
 

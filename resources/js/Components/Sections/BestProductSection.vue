@@ -1,4 +1,6 @@
 <script setup lang="ts">
+    import { Link } from '@inertiajs/vue3';
+
     import ProductCard from '@/Components/Cards/ProductCard.vue';
     import { Product } from '@/types';
 
@@ -11,17 +13,17 @@
     <AppContainer tag="section" class="py-20" aria-labelledby="products-title">
         <div class="mb-12 flex items-end justify-between">
             <div>
-                <h2 id="products-title" class="text-rancho-forest text-4xl font-bold">
+                <h2 id="products-title" class="text-4xl font-bold text-rancho-forest">
                     Наши свежие продукты
                 </h2>
-                <p class="text-rancho-olive/70 mt-4">
+                <p class="mt-4 text-rancho-olive/70">
                     Собрано сегодня утром, чтобы быть на вашем столе к вечеру.
                 </p>
             </div>
 
             <Link
                 :href="route('home')"
-                class="text-rancho-olive hover:text-rancho-forest hidden font-bold md:block"
+                class="hidden font-bold text-rancho-olive hover:text-rancho-forest md:block"
             >
                 Весь каталог →
             </Link>

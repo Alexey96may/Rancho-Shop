@@ -2,15 +2,7 @@ import { computed, ref } from 'vue';
 
 import { defineStore } from 'pinia';
 
-import type { CartItem, Media, Product, ProductVariantDTO } from '@/types';
-
-type ServerCartItem = {
-    variant_id: number;
-    valid: boolean;
-    price: number;
-    stock: number;
-    reason?: string | null;
-};
+import type { CartItem, Media, Product, ProductVariantDTO, ServerCartItem } from '@/types';
 
 export const useCartStore = defineStore(
     'cart',
@@ -57,7 +49,6 @@ export const useCartStore = defineStore(
         // ======================
         // ACTIONS
         // ======================
-        // Меняем сигнатуру и логику метода add:
         function add(variant: ProductVariantDTO, product?: Product) {
             const existingItem = items.value.find((i) => i.variant_id === variant.id);
 
@@ -67,7 +58,7 @@ export const useCartStore = defineStore(
                     existingItem.reason = 'quantity_exceeded';
                     return;
                 }
-                existingItem.quantity++;
+                existingItem.quantity = quantityFallback(variant.unit?.slug ?? '');
                 return;
             }
 
@@ -92,11 +83,11 @@ export const useCartStore = defineStore(
                 variant_name: variant.name,
 
                 price: variant.price,
-                quantity: 1,
+                quantity: quantityFallback(variant.unit?.slug ?? ''),
 
                 media: product?.main_photo?.[0] || fallbackMedia,
 
-                unit: variant.unit?.slug || 'kg',
+                unit: variant.unit || { name: '', short: '', slug: '' },
                 amount: variant.amount,
 
                 slug: product?.slug ?? '',
@@ -166,24 +157,26 @@ export const useCartStore = defineStore(
 
                 items.value = items.value.map((localItem) => {
                     const serverItem = serverItems.find(
-                        (i) => i.variant_id === localItem.variant_id,
+                        (i) => Number(i.variant_id) === Number(localItem.variant_id),
                     );
 
-                    if (!serverItem) {
+                    if (!serverItem || !serverItem.valid) {
                         return {
                             ...localItem,
                             valid: false,
-                            reason: 'not_found',
+                            reason: serverItem?.reason ?? 'not_found',
                         };
                     }
 
+                    const stock = Number(serverItem.stock ?? 0);
+
                     return {
                         ...localItem,
-                        price: serverItem.price,
-                        stock: serverItem.stock,
-                        quantity: Math.min(localItem.quantity, serverItem.stock),
-                        valid: serverItem.valid,
-                        reason: (serverItem.reason as CartItem['reason']) ?? null,
+                        price: Number(serverItem.price ?? localItem.price),
+                        stock: stock,
+                        quantity: Math.min(Number(localItem.quantity), stock),
+                        valid: true,
+                        reason: null,
                     };
                 });
 
@@ -206,11 +199,13 @@ export const useCartStore = defineStore(
 
         function decrement(variantId: number, step: number = 1) {
             const item = items.value.find((i) => i.variant_id === variantId);
+
             if (!item) return;
 
             const next = item.quantity - step;
 
             if (next <= 0) {
+                item.quantity = round(next);
                 remove(variantId);
                 return;
             }
@@ -220,6 +215,19 @@ export const useCartStore = defineStore(
 
         function round(value: number) {
             return Math.round(value * 100) / 100;
+        }
+
+        function quantityFallback(slug: string) {
+            switch (slug) {
+                case 'kg':
+                case 'l':
+                    return 0.5;
+                case 'g':
+                case 'ml':
+                    return 50;
+                default:
+                    return 1;
+            }
         }
 
         return {

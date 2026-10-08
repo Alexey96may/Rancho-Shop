@@ -62,7 +62,7 @@ class Comment extends Model
     protected $casts = [
         'user_id' => 'integer',
         'status' => CommentStatus::class,
-        'rating' => 'integer',
+        'rating' => 'decimal:1',
     ];
 
     public function user()
@@ -75,6 +75,12 @@ class Comment extends Model
         return Attribute::make(
             get: fn () => $this->user ? $this->user->name : $this->guest_name
         );
+    }
+
+    public function scopeGeneral(Builder $query)
+    {
+        return $query->whereNull('commentable_type')
+                    ->whereNull('commentable_id');
     }
 
     public function commentable(): MorphTo
@@ -99,10 +105,10 @@ class Comment extends Model
             ->when($filters['type'] ?? null, fn($q, $type) => $q->where('commentable_type', $type))
             ->when($filters['status'] ?? null, fn($q, $status) => $q->where('status', $status))
             ->orderBy(function ($q) {
-                $q->selectRaw("CASE 
-                    WHEN status = ? THEN 1 
-                    WHEN status = ? THEN 2 
-                    WHEN status = ? THEN 3 
+                $q->selectRaw("CASE
+                    WHEN status = ? THEN 1
+                    WHEN status = ? THEN 2
+                    WHEN status = ? THEN 3
                     ELSE 4 END", [
                         CommentStatus::PENDING->value,
                         CommentStatus::APPROVED->value,

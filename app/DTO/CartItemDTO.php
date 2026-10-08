@@ -12,8 +12,8 @@ class CartItemDTO
     public static function fromArray(array $data): self
     {
         return new self(
-            quantity: $data['quantity'],
-            variantId: $data['variantId'],
+            variantId: (int) $data['variant_id'],
+            quantity: (int) $data['quantity'],
         );
     }
 }

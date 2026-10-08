@@ -11,11 +11,11 @@
 </script>
 
 <template>
-    <Head title="Страница не найдена — 404" />
-
     <div
         class="flex min-h-screen items-center justify-center bg-white p-6 selection:bg-slate-900 selection:text-white"
     >
+        <Head title="Страница не найдена — 404" />
+
         <main class="w-full max-w-2xl space-y-12 text-center" role="main">
             <div class="group relative inline-block">
                 <div

@@ -23,7 +23,7 @@ class CommentController extends Controller
         $filters = $request->only(['type', 'status']);
 
         $comments = Comment::query()
-            ->with(['user', 'commentable'])
+            ->with(['user', 'commentable' => fn($q) => $q->withTrashed()])
             ->withTrashControl($request, $filters)
             ->filter($filters)
             ->latest()
@@ -58,7 +58,7 @@ class CommentController extends Controller
     public function destroy(int $id)
     {
         $comment = Comment::withTrashed()->findOrFail($id);
-        
+
         if ($comment->trashed()) {
             Gate::authorize('forceDelete', $comment);
 

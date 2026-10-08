@@ -18,6 +18,11 @@ return new class() extends Migration
             $table->string('role')->default('customer');
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+
+            $table->string('last_delivery_address')->nullable();
+            $table->decimal('last_delivery_lat', 10, 7)->nullable();
+            $table->decimal('last_delivery_lng', 10, 7)->nullable();
+
             $table->rememberToken();
             $table->timestamps();
         });

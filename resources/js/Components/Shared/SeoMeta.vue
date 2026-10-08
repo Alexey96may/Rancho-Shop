@@ -1,16 +1,31 @@
 <script setup lang="ts">
-    import { computed, ref, watch } from 'vue';
+    import { type PropType, computed } from 'vue';
 
     import { Head, usePage } from '@inertiajs/vue3';
 
     import { SeoData, SharedData, SiteSettings } from '@/types';
 
-    interface SeoProps {
-        seo?: SeoData;
-        forceRobots?: string;
-    }
+    const props = defineProps({
+        seo: {
+            type: Object as PropType<SeoData>,
+            required: false,
+            default: undefined,
+            validator: (value: SeoData | undefined | null) => {
+                if (!value) return true;
+                return typeof value === 'object';
+            },
+        },
+        forceRobots: {
+            type: String as PropType<string>,
+            required: false,
+            default: undefined,
+            validator: (value: string | undefined | null) => {
+                if (!value) return true;
+                return typeof value === 'string';
+            },
+        },
+    });
 
-    const props = defineProps<SeoProps>();
     const page = usePage<SharedData>();
 
     const faviconPath = computed(() => {

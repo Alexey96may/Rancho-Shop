@@ -15,13 +15,19 @@ class ValidateDeliveryAction
 
     public function handle(DeliveryDTO $delivery): array
     {
-        if ($delivery->is_pickup) {
+        if ((bool) $delivery->is_pickup) {
             return [
                 'is_valid' => true,
                 'delivery_price' => 0,
                 'zone' => null,
                 'distance' => 0,
             ];
+        }
+
+        if (is_null($delivery->lat) || is_null($delivery->lng)) {
+            throw ValidationException::withMessages([
+                'delivery' => 'Укажите адрес доставки на карте',
+            ]);
         }
 
         $lat = round($delivery->lat, 7);
@@ -34,7 +40,12 @@ class ValidateDeliveryAction
             $zones = $this->settings->deliveryZones();
 
             $farmCoords = $this->settings->get('farm_coords'); // "44.8621, 34.2154"
-            [$farmLat, $farmLng] = array_map('floatval', explode(',', $farmCoords));
+            if (is_array($farmCoords)) {
+                $farmLat = (float) ($farmCoords['lat'] ?? $farmCoords[0]);
+                $farmLng = (float) ($farmCoords['lng'] ?? $farmCoords[1]);
+            } else {
+                [$farmLat, $farmLng] = array_map('floatval', explode(',', (string) $farmCoords));
+            }
 
             foreach ($zones as $zone) {
 
@@ -62,15 +73,18 @@ class ValidateDeliveryAction
                         'delivery_price' => $deliveryPrice,
                         'zone' => $zone,
 
-                        // 🔥 ВОТ ОНО
                         'distance_to_route' => $distanceToRoute,
                         'distance_to_farm' => $distanceToFarm,
                     ];
                 }
             }
 
+            $coordsString = is_array($farmCoords)
+                ? implode(', ', $farmCoords)
+                : (string) $farmCoords;
+
             throw ValidationException::withMessages([
-                'delivery' => 'Адрес вне зоны доставки' . $farmCoords,
+                'delivery' => 'Адрес вне зоны доставки (' . $coordsString . ')',
             ]);
         });
     }
@@ -109,8 +123,12 @@ class ValidateDeliveryAction
     /**
      * Реальное расстояние до фермы
      */
-    private function haversineDistance($lat1, $lon1, $lat2, $lon2): float
-    {
+    private function haversineDistance(
+        float $lat1,
+        float $lon1,
+        float $lat2,
+        float $lon2
+    ): float {
         $earthRadius = 6371000;
 
         $dLat = deg2rad($lat2 - $lat1);

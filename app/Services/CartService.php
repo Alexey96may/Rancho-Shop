@@ -26,12 +26,17 @@ class CartService
         return $items->map(function (CartItemDTO $item) use ($variants) {
             $variant = $variants->get($item->variantId);
 
-            if (!$variant || !$variant->is_active) {
+            if (!$variant || ($variant->product && !$variant->product->is_active)) {
                 return [
                     'variant_id' => $item->variantId,
                     'valid' => false,
                     'reason' => 'not_available',
                 ];
+            }
+
+            // Give the default Variant
+            if (!$variant->is_default && $variant->product->defaultVariant) {
+                $variant = $variant->product->defaultVariant;
             }
 
             if ($variant->stock <= 0) {

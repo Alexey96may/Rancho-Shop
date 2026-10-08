@@ -65,8 +65,9 @@ class User extends Authenticatable implements HasMedia
     use HasFactory, Notifiable, HasStandardMedia;
 
     protected $fillable = [
-        'name', 'email', 'phone', 'password', 'role', 
-        'google_id', 'vkontakte_id', 'avatar_url'
+        'name', 'email', 'phone', 'password', 'role',
+        'google_id', 'vkontakte_id', 'avatar_url',
+        'last_delivery_address','last_delivery_lat', 'last_delivery_lng',
     ];
 
     protected $hidden = ['password', 'remember_token'];
@@ -108,12 +109,12 @@ class User extends Authenticatable implements HasMedia
     public function isAdmin(): bool {
         return $this->role === UserRole::ADMIN;
     }
-    
-    
+
+
     public function isWorker(): bool {
         return $this->role === UserRole::WORKER;
     }
-    
+
     public function isModerator(): bool {
         return $this->role === UserRole::MODERATOR;
     }

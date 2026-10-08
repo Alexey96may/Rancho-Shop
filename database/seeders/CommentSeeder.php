@@ -21,6 +21,13 @@ class CommentSeeder extends Seeder
     {
         $this->seedSpecificReviews();
 
+        Comment::factory()
+            ->count(15)
+            ->create([
+                'commentable_id' => null,
+                'commentable_type' => null,
+            ]);
+
         Product::all()->each(function ($product) {
             Comment::factory()
                 ->count(rand(2, 8))

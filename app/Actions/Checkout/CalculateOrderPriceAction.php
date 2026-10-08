@@ -7,20 +7,11 @@ use App\DTO\CheckoutDTO;
 
 class CalculateOrderPriceAction
 {
-    public function handle(CheckoutDTO $dto, Collection $products): int
+    public function handle(CheckoutDTO $dto, Collection $variants): int
     {
-        $total = 0;
-
-        foreach ($dto->items as $item) {
-
-            $product = $products->get($item->productId);
-
-            $variant = $product->variants
-                ->firstWhere('id', $item->variantId);
-
-            $total += $variant->price * $item->quantity;
-        }
-
-        return $total;
+        return $dto->items->sum(function ($item) use ($variants) {
+            $variant = $variants->get($item->variantId);
+            return $variant ? $variant->price * $item->quantity : 0;
+        });
     }
 }

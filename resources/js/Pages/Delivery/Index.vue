@@ -3,11 +3,12 @@
 
     import { useForm, usePage } from '@inertiajs/vue3';
 
-    import { debounce, toFinite } from 'lodash';
+    import { debounce } from 'lodash';
 
     import MapboxPicker from '@/Components/Map/MapboxPicker.vue';
     import CommentsSection from '@/Components/Sections/CommentsSection.vue';
     import MainLayout from '@/Layouts/MainLayout.vue';
+    import { useComments } from '@/composables/crud/useComments';
     import { useYandexGeocoder } from '@/composables/features/useYandexGeocoder';
     import type {
         Comment,
@@ -16,6 +17,7 @@
         Page,
         Paginated,
         ResourceSingle,
+        SharedData,
     } from '@/types';
     import { formatDistance, formatMoney } from '@/utils/format';
 
@@ -168,7 +170,6 @@
             });
         } catch (e) {
             console.error(e);
-            alert('Ошибка геолокации');
         } finally {
             isLocating.value = false;
         }
@@ -190,9 +191,7 @@
             onSuccess: () => {
                 isConfirmed.value = true;
             },
-            onError: () => {
-                alert('Nope');
-            },
+            onError: () => {},
         });
 
         confirmedKey = pointKey(selectedPoint.value);
@@ -258,6 +257,11 @@
             isDeliveryAllowed.value = false;
         }
     }
+
+    const { submitComment } = useComments('page', props.page.data.id);
+
+    const usedPage = usePage<SharedData>();
+    const isAuthenticated = computed(() => !!usedPage.props.auth?.user);
 </script>
 
 <template>
@@ -361,8 +365,13 @@
         </section>
 
         <!-- COMMENTS -->
-        <div class="mx-auto mt-12 max-w-3xl px-6 pb-16">
-            <CommentsSection :comments="comments" title="Отзывы о доставке" />
+        <div class="mx-auto mt-12 max-w-4xl px-6 pb-16">
+            <CommentsSection
+                :comments="comments"
+                title="Отзывы о доставке"
+                @submit="submitComment"
+                :is-authenticated="isAuthenticated"
+            />
         </div>
     </main>
 </template>

@@ -40,6 +40,7 @@ export interface Product {
     main_photo: Media[];
     gallery: Media[];
     variants?: ProductVariantDTO[];
+    default_variant?: ProductVariantDTO | null;
     category?: Category;
     animals?: Animal[];
     unit?: Unit | null;

@@ -3,6 +3,7 @@
 
     import { Link, usePage } from '@inertiajs/vue3';
 
+    import CowIcon from '@/Components/Icons/CowIcon.vue';
     import { useCartStore } from '@/stores/cart';
     import { SharedData } from '@/types';
 
@@ -25,11 +26,7 @@
     >
         <AppContainer class="flex h-20 items-center justify-between">
             <Link :href="route('home')" class="group flex items-center gap-3">
-                <div
-                    class="flex h-10 w-10 items-center justify-center rounded-full bg-rancho-pine transition-transform group-hover:rotate-12"
-                >
-                    <span class="font-header text-xl text-white">МД</span>
-                </div>
+                <CowIcon class="h-8 w-8 text-orange-600" />
                 <div class="flex flex-col">
                     <span class="font-header text-2xl leading-none text-rancho-forest"
                         >Молочная Долина</span

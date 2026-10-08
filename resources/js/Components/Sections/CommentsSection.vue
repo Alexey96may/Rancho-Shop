@@ -1,40 +1,75 @@
 <script setup lang="ts">
-    import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+    import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
     import { router } from '@inertiajs/vue3';
 
     import type { Comment, Paginated } from '@/types';
 
-    const props = defineProps<{
-        comments: Paginated<Comment>;
-        title?: string;
-    }>();
+    const props = withDefaults(
+        defineProps<{
+            comments: Paginated<Comment>;
+            title?: string;
+            isAuthenticated?: boolean;
+            onlyShow?: boolean; // Если true — форма создания скрыта
+        }>(),
+        {
+            onlyShow: false,
+            isAuthenticated: false,
+        },
+    );
 
     const emit = defineEmits<{
-        (e: 'submit', content: string): void;
+        (e: 'submit', payload: { content: string; guest_name?: string; rating?: number }): void;
     }>();
 
+    // Реактивный массив для подгружаемых комментариев
     const items = ref<Comment[]>([...props.comments.data]);
     const page = ref(props.comments.meta.current_page);
     const lastPage = ref(props.comments.meta.last_page);
     const loading = ref(false);
 
-    const content = ref('');
-    const textareaId = `comment-form-${Math.random().toString(36).slice(2)}`;
+    // Синхронизация при первом рендере или смене пропсов извне
+    watch(
+        () => props.comments,
+        (newVal) => {
+            if (newVal.meta.current_page === 1) {
+                items.value = [...newVal.data];
+            }
+            page.value = newVal.meta.current_page;
+            lastPage.value = newVal.meta.last_page;
+        },
+    );
 
-    const canSubmit = computed(() => content.value.trim().length > 0);
+    const content = ref('');
+    const guestName = ref('');
+    const textareaId = `comment-form-${Math.random().toString(36).slice(2)}`;
+    const guestNameId = `guest-name-${Math.random().toString(36).slice(2)}`;
+
+    // Валидация: если не авторизован — имя гостя обязательно
+    const canSubmit = computed(() => {
+        const hasContent = content.value.trim().length > 0;
+        if (props.isAuthenticated) {
+            return hasContent;
+        }
+        return hasContent && guestName.value.trim().length > 0;
+    });
+
     const isEmpty = computed(() => items.value.length === 0);
 
     const submit = () => {
-        if (!canSubmit.value) return;
+        if (!canSubmit.value || props.onlyShow) return;
 
-        emit('submit', content.value.trim());
+        emit('submit', {
+            content: content.value.trim(),
+            guest_name: props.isAuthenticated ? undefined : guestName.value.trim(),
+        });
+
         content.value = '';
+        guestName.value = '';
     };
 
     const loadMore = () => {
-        if (loading.value) return;
-        if (page.value >= lastPage.value) return;
+        if (loading.value || page.value >= lastPage.value) return;
 
         loading.value = true;
 
@@ -47,10 +82,11 @@
                 only: ['comments'],
                 onSuccess: (res) => {
                     const newComments = (res.props as any).comments.data;
-
                     items.value.push(...newComments);
                     page.value++;
-
+                    loading.value = false;
+                },
+                onError: () => {
                     loading.value = false;
                 },
             },
@@ -58,7 +94,6 @@
     };
 
     let observer: IntersectionObserver;
-
     const sentinel = ref<HTMLElement | null>(null);
 
     onMounted(() => {
@@ -89,40 +124,61 @@
                 role="status"
                 aria-live="polite"
             >
-                {{ comments.data.length }}
+                {{ comments.meta.total ?? items.length }}
             </span>
         </header>
 
-        <!-- FORM -->
+        <!-- FORM FOR ALL USERS (AUTH & GUEST) — Показывается, если onlyShow === false -->
         <form
+            v-if="!onlyShow"
             @submit.prevent="submit"
-            class="mb-10 space-y-3"
+            class="mb-10 space-y-4"
             aria-label="Форма добавления комментария"
         >
-            <label :for="textareaId" class="sr-only"> Ваш комментарий </label>
+            <!-- GUEST NAME FIELD -->
+            <div v-if="!isAuthenticated">
+                <label :for="guestNameId" class="mb-1 block text-sm font-bold text-rancho-forest">
+                    Ваше имя <span class="text-red-500">*</span>
+                </label>
+                <input
+                    :id="guestNameId"
+                    v-model="guestName"
+                    type="text"
+                    maxlength="50"
+                    placeholder="Как к вам обращаться?"
+                    class="w-full rounded-2xl border border-slate-200 bg-white p-3.5 text-sm focus:border-rancho-pine focus:outline-none focus:ring-2 focus:ring-rancho-pine/20"
+                    required
+                />
+            </div>
 
-            <textarea
-                :id="textareaId"
-                v-model="content"
-                rows="4"
-                class="w-full rounded-2xl border border-slate-200 bg-white p-4 text-sm focus:border-rancho-pine focus:outline-none focus:ring-2 focus:ring-rancho-pine/20"
-                placeholder="Оставьте ваш отзыв..."
-                aria-describedby="comment-help"
-                required
-            />
+            <!-- COMMENT CONTENT FIELD -->
+            <div>
+                <label :for="textareaId" class="sr-only">Ваш комментарий</label>
+                <textarea
+                    :id="textareaId"
+                    v-model="content"
+                    rows="4"
+                    class="w-full rounded-2xl border border-slate-200 bg-white p-4 text-sm focus:border-rancho-pine focus:outline-none focus:ring-2 focus:ring-rancho-pine/20"
+                    placeholder="Оставьте ваш отзыв..."
+                    aria-describedby="comment-help"
+                    required
+                />
+            </div>
 
-            <p id="comment-help" class="text-xs text-slate-500">
-                Нажмите Enter в форме или кнопку отправки для публикации
-            </p>
+            <div class="flex items-center justify-between">
+                <p id="comment-help" class="text-xs text-slate-500">
+                    Нажмите Enter в форме или кнопку отправки для публикации
+                </p>
 
-            <button
-                type="submit"
-                class="rounded-xl bg-rancho-pine px-6 py-3 font-bold text-white transition hover:bg-rancho-forest focus:outline-none focus-visible:ring-4 focus-visible:ring-rancho-buttercup/40 disabled:cursor-not-allowed disabled:opacity-50"
-                :disabled="!canSubmit"
-                :aria-disabled="!canSubmit"
-            >
-                Отправить
-            </button>
+                <button
+                    type="submit"
+                    class="rounded-xl bg-rancho-pine px-6 py-3 font-bold text-white transition hover:bg-rancho-forest focus:outline-none focus-visible:ring-4 focus-visible:ring-rancho-buttercup/40 disabled:cursor-not-allowed disabled:opacity-50"
+                    :disabled="!canSubmit"
+                    :aria-disabled="!canSubmit"
+                >
+                    Отправить
+                </button>
+            </div>
         </form>
 
         <!-- EMPTY STATE -->
@@ -143,23 +199,23 @@
             aria-label="Список комментариев"
         >
             <article
-                v-for="comment in comments.data"
+                v-for="comment in items"
                 :key="comment.id"
                 class="shadow-sm rounded-2xl border border-slate-100 bg-white p-6"
                 role="listitem"
-                :aria-label="`Комментарий от ${comment.user_name}`"
+                :aria-label="`Комментарий от ${comment.author_name}`"
             >
                 <header class="mb-3 flex items-center gap-3">
                     <div
                         class="flex h-10 w-10 items-center justify-center rounded-full bg-rancho-buttercup font-bold text-white"
                         aria-hidden="true"
                     >
-                        {{ comment.user_name[0] }}
+                        {{ comment.author_name?.[0]?.toUpperCase() || '?' }}
                     </div>
 
                     <div>
                         <p class="font-bold text-rancho-forest">
-                            {{ comment.user_name }}
+                            {{ comment.author_name }}
                         </p>
 
                         <time class="text-xs text-rancho-olive/60" :datetime="comment.created_at">
@@ -174,8 +230,13 @@
             </article>
         </div>
 
-        <!-- loading trigger -->
-        <div ref="sentinel" class="flex h-10 items-center justify-center" aria-hidden="true">
+        <!-- LOADING TRIGGER -->
+        <div
+            v-if="page < lastPage"
+            ref="sentinel"
+            class="mt-6 flex h-10 items-center justify-center"
+            aria-hidden="true"
+        >
             <span v-if="loading" class="text-sm text-rancho-olive">Загрузка...</span>
         </div>
     </section>

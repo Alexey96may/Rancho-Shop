@@ -6,7 +6,6 @@ use App\Models\Product;
 use App\Models\Animal;
 use App\Models\LandingBlock;
 use App\Models\Comment;
-use App\Models\Setting;
 use App\Http\Resources\AnimalResource;
 use App\Http\Resources\ProductResource;
 use App\Http\Resources\CommentResource;
@@ -21,7 +20,10 @@ class LandingController extends Controller
     {
         return Inertia::render('HomeView', [
             'products' => ProductResource::collection(
-                Product::with(['variants', 'category', 'media'])
+                Product::query()
+                    ->active()
+                    ->inStock()
+                    ->with(['defaultVariant.unit', 'category', 'media'])
                     ->take(setting('featured_products_limit', 6))
                     ->get()
             ),
@@ -36,10 +38,11 @@ class LandingController extends Controller
             'values' => new LandingBlockResource(LandingBlock::getSafe('values')),
             'how_it_works' => new LandingBlockResource(LandingBlock::getSafe('how_it_works')),
             'comments' => CommentResource::collection(
-                Comment::published()
-                        ->where('commentable_type', 'page')
+                Comment::query()
+                        ->published()
+                        ->general()
                         ->latest()
-                        ->take(setting('featured_comments_limit', 6)) 
+                        ->take(setting('featured_comments_limit', 6))
                         ->get()
             ),
             'faqs'   => FaqResource::collection(Faq::published()->orderBy('sort_order')->get()),

@@ -120,24 +120,84 @@ class Product extends Model implements HasMedia
         return $default ?? $this->variants->first();
     }
 
+    /**
+    * Scope for retrieving in-stock products based on the default variant
+    */
+    public function scopeInStock(Builder $query): Builder
+    {
+        return $query->whereHas('variants', function ($q) {
+            $q->where('is_default', true)
+            ->where('stock', '>', 0);
+        });
+    }
+
     public function scopeFilter(Builder $query, array $filters): void
     {
+        // 1. Добавляем алиас для использования на фронтенде/в ресурсе, если нужно
+        $query->addSelect([
+            'has_default_in_stock' => ProductVariant::selectRaw('CASE WHEN stock > 0 THEN 1 ELSE 0 END')
+                ->whereColumn('product_id', 'products.id')
+                ->where('is_default', true)
+                ->limit(1)
+        ]);
+
+        // 2. Поиск (name и description)
         $query->when($filters['search'] ?? null, function ($query, $search) {
             $search = mb_strtolower($search, 'UTF-8');
             $query->where(function ($q) use ($search) {
                 $q->whereRaw('LOWER(name) LIKE ?', ["%{$search}%"])
                 ->orWhereRaw('LOWER(description) LIKE ?', ["%{$search}%"]);
             });
-        })->when($filters['category'] ?? null, function ($query, $category) {
-            $query->where('category_id', $category);
-        })->when($filters['animal'] ?? null, function ($query, $animal) {
+        });
+
+        // 3. Категория (ID и Slug)
+        $query->when($filters['category'] ?? null, function ($query, $category) {
+            $query->whereHas('category', function ($q) use ($category) {
+                if (is_numeric($category)) {
+                    $q->where('id', $category);
+                } else {
+                    $q->where('slug', $category);
+                }
+            });
+        });
+
+        // 4. Животные
+        $query->when($filters['animal'] ?? null, function ($query, $animal) {
             $query->whereHas('animals', function ($q) use ($animal) {
                 $q->where('animals.id', $animal);
             });
         });
 
-        $query->orderByRaw('CASE WHEN deleted_at IS NULL THEN 0 ELSE 1 END ASC')
-          ->orderBy('created_at', 'desc');
+        // 5. ФИЛЬТР ПО НАЛИЧИЮ
+        if (isset($filters['in_stock']) && filter_var($filters['in_stock'], FILTER_VALIDATE_BOOLEAN)) {
+            $query->whereHas('variants', function ($q) {
+                $q->where('is_default', true)
+                ->where('stock', '>', 0);
+            });
+        }
+
+        // 6. СОРТИРОВКА
+        $sort = $filters['sort'] ?? null;
+
+        // Первичная сортировка: сначала товары в наличии по дефолтному варианту
+        $inStockSubQuery = ProductVariant::selectRaw('CASE WHEN stock > 0 THEN 1 ELSE 0 END')
+            ->whereColumn('product_id', 'products.id')
+            ->where('is_default', true)
+            ->limit(1);
+
+        $query->orderByRaw('COALESCE((' . $inStockSubQuery->toSql() . '), 0) DESC', $inStockSubQuery->getBindings());
+
+        // Вторичная сортировка по фильтру пользователя
+        if ($sort === 'cheap') {
+            $query->withMin('variants', 'price')
+                ->orderBy('variants_min_price', 'asc'); // Исправлено: variants_min_price
+        } elseif ($sort === 'expensive') {
+            $query->withMax('variants', 'price')
+                ->orderBy('variants_max_price', 'desc'); // Исправлено: variants_max_price
+        } else {
+            // По умолчанию
+            $query->orderBy('products.created_at', 'desc');
+        }
     }
 
     /**

@@ -4,58 +4,39 @@
     import { Link } from '@inertiajs/vue3';
 
     import BuyButton from '@/Components/UI/BuyButton.vue';
-    import type { Product, ProductVariantDTO } from '@/types';
+    import type { Product } from '@/types';
     import { formatMoney } from '@/utils/format';
 
     const props = defineProps<{
         product: Product;
     }>();
 
-    const defaultVariant = computed(() => {
-        return (
-            props.product.variants?.find((v) => v.is_default) ?? props.product.variants?.[0] ?? null
-        );
-    });
-
-    const displayPrice = computed(() =>
-        defaultVariant.value ? (defaultVariant.value.price / 100).toFixed(2) : '0.00',
-    );
-
-    const displayOldPrice = computed(() =>
-        defaultVariant.value?.old_price ? (defaultVariant.value.old_price / 100).toFixed(2) : null,
-    );
-
-    const availabilityLabels: Record<string, string> = {
-        stock: 'В наличии',
-        daily: 'Ежедневно',
-        preorder: 'Предзаказ',
-    };
-
-    const getDaysNames = (days: number[] | undefined | null) => {
-        if (!Array.isArray(days)) return 'Не указано';
-
-        const names = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
-        return days.map((d) => names[d]).join(', ');
-    };
-
     const discountBadge = computed(() => {
         if (
-            !defaultVariant.value?.old_price ||
-            defaultVariant.value.old_price <= defaultVariant.value.price
+            !props.product.default_variant?.old_price ||
+            props.product.default_variant.old_price <= props.product.default_variant.price
         ) {
             return null;
         }
 
         return Math.round(
-            100 - (defaultVariant.value.price / defaultVariant.value.old_price) * 100,
+            100 -
+                (props.product.default_variant.price / props.product.default_variant.old_price) *
+                    100,
         );
     });
 </script>
 
 <template>
     <div
-        class="shadow-sm hover:shadow-xl group flex h-full flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white transition-all duration-300"
+        class="shadow-sm hover:shadow-xl group flex h-full flex-col overflow-hidden rounded-2xl border transition-all duration-300"
+        :class="[
+            product.default_variant
+                ? 'border-slate-100 bg-white'
+                : 'hover:shadow-sm border-slate-200 bg-slate-50/60 opacity-80',
+        ]"
     >
+        <!-- Ссылка на товар / Фото -->
         <Link
             :href="route('catalog.show', product.slug)"
             class="relative aspect-square overflow-hidden bg-slate-100"
@@ -63,23 +44,37 @@
             <AppImage
                 :alt="product.name"
                 :src="product.main_photo?.[0] || ''"
-                :class-name="'h-full w-full object-cover transition-transform duration-500 group-hover:scale-110'"
+                :class-name="
+                    'h-full w-full object-cover transition-transform duration-500 ' +
+                    (product.default_variant ? 'group-hover:scale-110' : 'grayscale-[30%]')
+                "
             />
 
+            <!-- Бейдж наличия/доступности -->
             <div class="absolute left-3 top-3 flex flex-col gap-2">
                 <span
+                    v-if="product.default_variant"
                     :class="[
                         'shadow-sm rounded-lg px-2 py-1 text-[10px] font-black uppercase tracking-wider',
-                        product.availability.value === 'daily'
+                        product.availability?.value === 'daily'
                             ? 'bg-green-500 text-white'
                             : 'bg-slate-900 text-white',
                     ]"
                 >
-                    {{ product.availability.label }}
+                    {{ product.availability?.label }}
+                </span>
+
+                <!-- Плашка при отсутствии варианта -->
+                <span
+                    v-else
+                    class="shadow-sm rounded-lg bg-slate-800 px-2 py-1 text-[10px] font-black uppercase tracking-wider text-slate-200"
+                >
+                    Нет в наличии
                 </span>
             </div>
         </Link>
 
+        <!-- Контент карточки -->
         <div class="flex flex-grow flex-col p-5">
             <div class="mb-3">
                 <div class="mb-1 text-[10px] font-bold uppercase tracking-widest text-orange-600">
@@ -95,25 +90,41 @@
                 </h3>
             </div>
 
-            <div class="mb-4 flex items-center gap-3">
-                <span class="text-2xl font-black text-slate-900">{{
-                    formatMoney(defaultVariant?.price)
-                }}</span>
-                <div v-if="displayOldPrice" class="flex flex-col">
-                    <span class="text-xs leading-none text-slate-400 line-through">{{
-                        formatMoney(defaultVariant?.old_price)
-                    }}</span>
+            <!-- Блок с ценой (если вариант есть) -->
+            <div v-if="product.default_variant" class="mb-4 flex items-center gap-3">
+                <span class="text-2xl font-black text-slate-900">
+                    {{ formatMoney(product.default_variant.price) }}
+                </span>
+
+                <div v-if="discountBadge" class="flex flex-col">
+                    <span class="text-xs leading-none text-slate-400 line-through">
+                        {{ formatMoney(product.default_variant.old_price) }}
+                    </span>
                     <span class="text-[10px] font-bold text-red-500">-{{ discountBadge }}%</span>
                 </div>
-                <span class="ml-auto text-sm text-slate-400"
-                    >/ {{ defaultVariant?.unit?.short ?? 'шт' }}</span
-                >
+
+                <span class="ml-auto text-sm text-slate-400">
+                    / {{ product.default_variant.unit?.short ?? 'шт' }}
+                </span>
             </div>
 
-            <BuyButton
-                v-if="defaultVariant"
-                :product="product"
-            />
+            <!-- Заглушка цены (если варианта нет) -->
+            <div v-else class="mb-4 flex min-h-[36px] items-center justify-between">
+                <span class="text-sm font-semibold text-slate-400"> Товар недоступен </span>
+            </div>
+
+            <!-- Кнопка действия -->
+            <div class="mt-auto">
+                <BuyButton v-if="product.default_variant" :product="product" />
+
+                <button
+                    v-else
+                    disabled
+                    class="w-full cursor-not-allowed rounded-xl bg-slate-200 py-3 text-center text-xs font-bold text-slate-400 transition-colors"
+                >
+                    Нельзя заказать
+                </button>
+            </div>
         </div>
     </div>
 </template>

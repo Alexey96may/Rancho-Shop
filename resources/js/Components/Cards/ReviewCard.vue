@@ -1,8 +1,8 @@
 <script setup lang="ts">
     import { computed } from 'vue';
 
-    import { Heart, MessageSquare, ShoppingBag, Star } from 'lucide-vue-next';
-
+    import AppRating from '@/Components/UI/AppRating.vue';
+    import BaseSmartTime from '@/Components/UI/BaseSmartTime.vue';
     import type { Comment } from '@/types/Comment';
     import { getAvatarColor, getInitials } from '@/utils/user';
 
@@ -10,92 +10,41 @@
         comment: Comment;
     }>();
 
-    const contextIcon = computed(() => {
-        switch (props.comment.commentable_type) {
-            case 'product':
-                return ShoppingBag;
-            case 'animal':
-                return Heart;
-            default:
-                return MessageSquare;
-        }
-    });
-
-    const contextLabel = computed(() => {
-        if (props.comment.commentable_type === 'product') return 'О товаре';
-        if (props.comment.commentable_type === 'animal') return 'О животном';
-        return 'О сайте';
+    const authorNameInitials = computed(() => {
+        return getInitials(props.comment.author_name);
     });
 </script>
 
 <template>
     <figure
-        class="bg-white shadow-sm hover:shadow-md flex flex-col rounded-3xl border border-rancho-paper p-6 transition-all lg:p-8"
+        class="shadow-sm hover:shadow-md flex flex-col gap-6 rounded-3xl border border-rancho-paper bg-white p-6 transition-all lg:p-8"
         role="listitem"
     >
-        <div class="mb-4 flex items-center justify-between">
+        <div class="flex items-center justify-between">
+            <BaseSmartTime :date="comment.created_at" />
+            <AppRating v-if="comment.rating" :rating="comment.rating" :max="5" />
+        </div>
+
+        <figcaption class="flex items-center gap-3 border-t border-rancho-paper">
             <div
-                class="inline-flex items-center gap-1.5 rounded-full bg-rancho-paper/30 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-rancho-olive/60"
-                :title="contextLabel"
+                class="flex h-10 w-10 items-center justify-center rounded-full text-sm font-black text-gray-300"
+                :class="[getAvatarColor(comment.id)]"
+                aria-hidden="true"
             >
-                <component :is="contextIcon" :size="12" aria-hidden="true" />
-                <span class="sr-only">Тип отзыва:</span> {{ contextLabel }}
+                {{ authorNameInitials }}
             </div>
 
-            <time
-                :datetime="comment.created_at"
-                class="text-xs uppercase tracking-tighter text-rancho-olive/40"
-            >
-                {{ comment.created_at }}
-            </time>
-        </div>
-
-        <div
-            v-if="comment.rating"
-            class="mb-4 flex items-center gap-0.5 text-rancho-buttercup"
-            role="img"
-            :aria-label="`Рейтинг: ${comment.rating} из 5 звезд`"
-        >
-            <Star
-                v-for="i in 5"
-                :key="i"
-                :size="16"
-                :fill="i <= comment.rating ? 'currentColor' : 'none'"
-                :class="i <= comment.rating ? 'text-rancho-buttercup' : 'text-rancho-olive/20'"
-                aria-hidden="true"
-            />
-        </div>
+            <div class="flex flex-col">
+                <cite class="font-bold not-italic text-rancho-forest">
+                    {{ comment.author_name || 'Гость' }}
+                </cite>
+            </div>
+        </figcaption>
 
         <blockquote class="flex-1">
             <p class="text-base leading-relaxed text-rancho-forest lg:text-lg">
                 «{{ comment.content }}»
             </p>
         </blockquote>
-
-        <figcaption class="mt-6 flex items-center gap-3 border-t border-rancho-paper pt-6">
-            <img
-                v-if="comment.user_avatar"
-                :src="comment.user_avatar"
-                class="shadow-sm h-10 w-10 rounded-full object-cover"
-                :alt="comment.user_name"
-            />
-
-            <div
-                v-else
-                :class="[
-                    'text-white shadow-sm flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold',
-                    getAvatarColor(comment.id),
-                ]"
-            >
-                {{ getInitials(comment.user_name) }}
-            </div>
-
-            <div class="flex flex-col">
-                <cite class="font-bold not-italic text-rancho-forest">
-                    {{ comment.user_name }}
-                </cite>
-                <span class="text-xs text-rancho-olive/50">{{ comment.created_at }}</span>
-            </div>
-        </figcaption>
     </figure>
 </template>

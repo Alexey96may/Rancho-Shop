@@ -11,12 +11,14 @@
         disabled?: boolean;
         autofocus?: boolean;
         uppercase?: boolean;
+        required?: boolean;
     }
 
     const props = withDefaults(defineProps<Props>(), {
         type: 'text',
         disabled: false,
         uppercase: false,
+        required: false,
     });
 
     const inputId = useId();
@@ -37,7 +39,7 @@
             class="ml-4 text-[10px] font-black uppercase tracking-widest transition-colors"
             :class="error ? 'text-red-500' : 'text-slate-500'"
         >
-            {{ label }}
+            {{ label }}{{ required ? '*' : '' }}
         </label>
 
         <input
@@ -45,6 +47,7 @@
             v-model="model"
             :type="type"
             :placeholder="placeholder"
+            :required="required"
             :disabled="disabled"
             :autofocus="autofocus"
             class="w-full rounded-2xl border bg-slate-950 p-4 font-black text-white transition-all focus:ring-0"

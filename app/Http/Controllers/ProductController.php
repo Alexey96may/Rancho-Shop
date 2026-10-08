@@ -18,36 +18,24 @@ class ProductController extends Controller
     */
     public function index(Request $request): Response
     {
-        $products = Product::query()
-            ->with(['category', 'media', 'variants.unit'])
+        $filters = $request->only(['category', 'search', 'sort', 'animal', 'in_stock']);
 
-            ->when(
-                $request->category,
-                fn ($q, $cat) =>
-                    $q->whereHas('category', fn ($c) => $c->where('slug', $cat))
-            )
-            ->when(
-                $request->search,
-                fn ($q, $search) =>
-                    $q->where('name', 'like', "%{$search}%")
-            )
-            ->when($request->sort === 'cheap', function ($q) {
-                $q->withMin('variants', 'price')
-                ->orderBy('variants_price_min', 'asc');
-            })
-            ->when($request->sort === 'expensive', function ($q) {
-                $q->withMax('variants', 'price')
-                ->orderBy('variants_price_max', 'desc');
-            })
-            ->when(!$request->sort, fn ($q) => $q->latest())
-            ->get();
+        $products = Product::query()
+            ->with([
+                'category',
+                'media',
+                'defaultVariant.unit',
+            ])
+            ->filter($filters)
+            ->paginate(setting('products_per_page', 12))
+            ->withQueryString();
 
         $categories = Category::hasActiveProducts()->get();
 
         return Inertia::render('Catalog/Index', [
             'products' => ProductResource::collection($products),
-            'filters' => $request->only(['category', 'search', 'sort']),
             'categories' => CategoryResource::collection($categories),
+            'filters' => $filters,
         ]);
     }
 
@@ -57,13 +45,23 @@ class ProductController extends Controller
             'media',
             'seo',
             'category',
-            'variants.unit',
-            'comments' => fn($query) => $query->published()->latest()->with('user')
+            'defaultVariant.unit',
         ]);
+
+        $comments = $product->comments()
+            ->published()
+            ->latest()
+            ->paginate(setting('products_per_page', 8));
 
         return Inertia::render('Catalog/Show', [
             'product' => new ProductResource($product),
-            'comments' => CommentResource::collection($product->comments),
+            'comments' => [
+                'data' => CommentResource::collection($comments->items())->resolve(),
+                'meta' => [
+                    'current_page' => $comments->currentPage(),
+                    'last_page' => $comments->lastPage(),
+                ],
+            ],
         ]);
     }
 }

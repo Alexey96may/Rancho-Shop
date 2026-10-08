@@ -1,95 +1,193 @@
-<script setup lang="ts" id="a1x9k2">
-    import { computed, onMounted, ref } from 'vue';
+<script setup lang="ts">
+    import { type PropType, onUnmounted, ref, watch } from 'vue';
+
+    import { Head, router } from '@inertiajs/vue3';
+
+    import debounce from 'lodash/debounce';
 
     import AnimalCard from '@/Components/Cards/AnimalCard.vue';
+    import MainPagination from '@/Components/Shared/MainPagination.vue';
+    import BaseInput from '@/Components/UI/BaseInput.vue';
+    import BaseSelect from '@/Components/UI/BaseSelect.vue';
+    import EmptyState from '@/Components/UI/EmptyState.vue';
     import MainLayout from '@/Layouts/MainLayout.vue';
-    import type { BaseAnimal } from '@/types/Animal';
+    import type { Animal, Category, Paginated, ResourceCollection } from '@/types';
+
+    interface AnimalStatus {
+        id: string;
+        name: string;
+    }
+
+    interface AnimalFilters {
+        search?: string;
+        category_id?: string | number;
+        status?: string;
+    }
 
     defineOptions({ layout: MainLayout });
 
-    const animals = ref<BaseAnimal[]>([]);
-    const loading = ref(true);
+    const props = defineProps({
+        animals: {
+            type: Object as PropType<Paginated<Animal>>,
+            required: true,
+            validator: (value: Paginated<Animal>) => {
+                return Boolean(value && Array.isArray(value.data));
+            },
+        },
+        categories: {
+            type: Object as PropType<ResourceCollection<Category>>,
+            required: true,
+            validator: (value: ResourceCollection<Category>) => {
+                return Boolean(value && Array.isArray(value.data));
+            },
+        },
+        statuses: {
+            type: Array as PropType<AnimalStatus[]>,
+            required: true,
+            validator: (value: unknown[]) => {
+                if (!Array.isArray(value)) return false;
+                return value.every(
+                    (item) =>
+                        typeof item === 'object' && item !== null && 'id' in item && 'name' in item,
+                );
+            },
+        },
+        filters: {
+            type: Object as PropType<AnimalFilters>,
+            required: false,
+            default: () => ({}),
+            validator: (value: AnimalFilters) => {
+                return typeof value === 'object' && value !== null;
+            },
+        },
+    });
 
-    const activeStatus = ref<string | null>(null);
+    const search = ref(props.filters.search || '');
+    const categoryId = ref(props.filters.category_id || '');
+    const status = ref(props.filters.status || '');
 
-    const fetchAnimals = async () => {
-        loading.value = true;
-
-        const res = await fetch('/api/animals');
-        const json = await res.json();
-
-        animals.value = json.data;
-        loading.value = false;
+    const applyFilters = () => {
+        router.get(
+            route('animals.index'),
+            {
+                search: search.value,
+                category_id: categoryId.value,
+                status: status.value,
+            },
+            {
+                preserveState: true,
+                replace: true,
+            },
+        );
     };
 
-    onMounted(fetchAnimals);
-
-    // фильтр
-    const filteredAnimals = computed(() => {
-        if (!activeStatus.value) return animals.value;
-        return animals.value.filter((a) => a.status === activeStatus.value);
+    watch([categoryId, status], () => {
+        applyFilters();
     });
 
-    // уникальные статусы
-    const statuses = computed(() => {
-        return [...new Set(animals.value.map((a) => a.status))];
+    const debouncedSearch = debounce(() => {
+        applyFilters();
+    }, 400);
+
+    watch(search, () => {
+        debouncedSearch();
     });
+
+    onUnmounted(() => {
+        debouncedSearch.cancel();
+    });
+
+    const resetFilters = () => {
+        search.value = '';
+        categoryId.value = '';
+        status.value = '';
+        applyFilters();
+    };
 </script>
 
-<template id="b2k4v1">
-    <main class="min-h-screen" style="background: #fcfaf5" aria-label="Список животных фермы">
+<template>
+    <main class="min-h-screen bg-[#fcfaf5]">
+        <Head title="Наши жители фермы" />
         <div class="mx-auto max-w-7xl px-6 py-10">
-            <!-- HEADER -->
-            <header class="mb-10">
-                <h1 class="text-4xl font-black" style="color: #1c3f34">Наши жители фермы</h1>
+            <!-- HEADER & SEARCH -->
+            <header class="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-end">
+                <div>
+                    <h1 class="text-4xl font-black text-[#1c3f34]">Наши жители фермы</h1>
+                    <p class="mt-2 text-sm text-[#597d5b]">
+                        Познакомьтесь с животными, которые живут на нашей ферме
+                    </p>
+                </div>
 
-                <p class="mt-2 text-sm" style="color: #597d5b">
-                    Познакомьтесь с животными, которые живут на нашей ферме
-                </p>
+                <BaseInput
+                    v-model="search"
+                    placeholder="Найти животное..."
+                    class="w-full md:w-72"
+                />
             </header>
 
-            <!-- FILTERS -->
-            <section class="mb-8 flex flex-wrap gap-2" aria-label="Фильтр по статусу">
-                <button
-                    @click="activeStatus = null"
-                    class="rounded-full px-4 py-2 text-sm font-bold transition"
-                    :style="
-                        activeStatus === null
-                            ? 'background:#3B7558;color:white'
-                            : 'background:#E3B44B22;color:#1C3F34'
-                    "
-                >
-                    Все
-                </button>
+            <!-- FILTERS BAR -->
+            <section class="mb-8 border-b border-slate-200/60 pb-6" aria-label="Фильтры">
+                <div class="flex flex-wrap items-center gap-4">
+                    <BaseSelect
+                        label="Категория:"
+                        placeholder="Все категории"
+                        v-model="categoryId"
+                        :options="categories.data"
+                        width-class="w-64"
+                    />
 
-                <button
-                    v-for="status in statuses"
-                    :key="status"
-                    @click="activeStatus = status"
-                    class="rounded-full px-4 py-2 text-sm font-bold transition"
-                    :aria-pressed="activeStatus === status"
-                    :style="
-                        activeStatus === status
-                            ? 'background:#3B7558;color:white'
-                            : 'background:#E3B44B22;color:#1C3F34'
-                    "
-                >
-                    {{ status }}
-                </button>
+                    <BaseSelect
+                        label="Статус:"
+                        placeholder="Все статусы"
+                        v-model="status"
+                        :options="statuses"
+                        width-class="w-64"
+                    />
+
+                    <!-- Кнопка сброса с плавной анимацией появления -->
+                    <Transition name="fade">
+                        <button
+                            v-if="search || categoryId || status"
+                            @click="resetFilters"
+                            class="self-end pb-2 text-xs font-bold text-orange-600 transition-colors hover:underline"
+                        >
+                            Сбросить всё
+                        </button>
+                    </Transition>
+                </div>
             </section>
 
-            <!-- GRID -->
-            <section
-                aria-label="Карточки животных"
-                class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"
-            >
-                <AnimalCard v-for="animal in filteredAnimals" :key="animal.id" :animal="animal" />
-            </section>
+            <Transition name="fade-slide" mode="out-in">
+                <!-- EMPTY STATE -->
+                <EmptyState
+                    v-if="!animals.data.length"
+                    key="empty"
+                    title="Животные не найдены"
+                    description="Попробуйте изменить параметры поиска или сбросить фильтры."
+                    action-label="Сбросить фильтры"
+                    @action="resetFilters"
+                />
 
-            <!-- LOADING -->
-            <div v-if="loading" class="mt-10 text-center text-sm" style="color: #597d5b">
-                Загружаем животных...
-            </div>
+                <!-- GRID -->
+                <div v-else>
+                    <TransitionGroup
+                        key="grid"
+                        mode="out-in"
+                        tag="section"
+                        name="card-list"
+                        aria-label="Карточки животных"
+                        class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+                    >
+                        <AnimalCard
+                            v-for="animal in animals.data"
+                            :key="animal.id"
+                            :animal="animal"
+                        />
+                    </TransitionGroup>
+                </div>
+            </Transition>
         </div>
+
+        <MainPagination :links="animals.meta.links" />
     </main>
 </template>

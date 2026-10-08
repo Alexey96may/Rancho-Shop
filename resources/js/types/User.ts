@@ -25,6 +25,9 @@ export interface User {
     is_admin: boolean;
     is_stuff: boolean;
     created_at: string;
+    last_delivery_address: string | null;
+    last_delivery_lat: number | null;
+    last_delivery_lng: number | null;
 }
 
 export interface AdminUser extends User {

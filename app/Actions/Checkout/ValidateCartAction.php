@@ -10,13 +10,13 @@ use Illuminate\Support\Facades\Log;
 
 class ValidateCartAction
 {
-    public function handle(CheckoutDTO $dto, Collection $products): void
+    /**
+     * @param Collection<int, \App\Models\ProductVariant> $variants Индексированная коллекция вариаций по id
+     */
+    public function handle(CheckoutDTO $dto, Collection $variants): void
     {
         foreach ($dto->items as $item) {
-            $variant = $products
-                ->pluck('variants')
-                ->flatten(1)
-                ->firstWhere('id', $item->variantId);
+            $variant = $variants->get($item->variantId);
 
             if (!$variant) {
                 throw new ProductNotAvailableException($item->variantId);
@@ -28,15 +28,14 @@ class ValidateCartAction
                 throw new ProductNotAvailableException($item->variantId);
             }
 
-            if ($variant->isInStock($item->quantity)) {
-
+            if (!$variant->isInStock($item->quantity)) {
                 Log::warning('Insufficient stock', [
                     'variant_id' => $variant->id,
-                    'requested' => $item->quantity,
-                    'available' => $variant->stock,
+                    'requested'  => $item->quantity,
+                    'available'  => $variant->stock,
                 ]);
 
-                throw new InsufficientStockException($item->variantId);
+                throw new InsufficientStockException($variant->id, $product->name ?? null);
             }
         }
     }

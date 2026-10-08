@@ -2,23 +2,47 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Resources\AnimalResource;
 use App\Http\Resources\CommentResource;
+use App\Http\Resources\AnimalResource;
+use App\Http\Resources\CategoryResource;
 use App\Models\Animal;
-use App\Services\SettingService;
+use App\Models\Category;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Inertia\Response;
 
 class AnimalController extends Controller
 {
-    public function index()
+    public function index(Request $request): Response
     {
+        $filters = $request->only(['search', 'category_id', 'status']);
+
         $animals = Animal::query()
-            ->with(['media', 'seo'])
+            ->with(['media', 'seo', 'category'])
+            ->filter($filters)
             ->latest()
+            ->paginate(setting('animals_per_page', 12))
+            ->withQueryString();
+
+        $categories = Category::query()
+            ->whereHas('animals')
             ->get();
 
+        $statuses = Animal::query()
+            ->whereNotNull('status')
+            ->distinct()
+            ->pluck('status')
+            ->map(fn ($status) => [
+                'id'   => $status,
+                'name' => ucfirst($status),
+            ]);
+
         return Inertia::render('Animals/Index', [
-            'animals' => AnimalResource::collection($animals),
+            'animals'    => AnimalResource::collection($animals),
+            'categories' => CategoryResource::collection($categories),
+            'statuses'   => $statuses,
+            'filters'    => $filters,
+            'seo'        => $this->seo('Наши жители фермы', 'Познакомьтесь с животными, которые живут на нашей ферме'),
         ]);
     }
 

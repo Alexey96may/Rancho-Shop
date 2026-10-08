@@ -7,15 +7,17 @@ use App\DTO\CheckoutDTO;
 
 class DecrementStockAction
 {
-    public function handle(CheckoutDTO $dto, Collection $products): void
+    /**
+     * @param Collection<int, \App\Models\ProductVariant> $variants Индексированная коллекция вариаций
+     */
+    public function handle(CheckoutDTO $dto, Collection $variants): void
     {
         foreach ($dto->items as $item) {
-            $product = $products->get($item->productId);
+            $variant = $variants->get($item->variantId);
 
-            $variant = $product->variants
-                ->firstWhere('id', $item->variantId);
-
-            $variant->decrement('stock', $item->quantity);
+            if ($variant) {
+                $variant->decrement('stock', $item->quantity);
+            }
         }
     }
 }

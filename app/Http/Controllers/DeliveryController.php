@@ -29,6 +29,6 @@ class DeliveryController extends Controller
             ]);
         }
 
-        return back()->with('success', 'Ваше местоположение сохранено!'); // 👈 ВАЖНО: Inertia refresh
+        return back()->with('success', 'Ваше местоположение сохранено!');
     }
 }

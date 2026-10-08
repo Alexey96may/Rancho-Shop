@@ -1,188 +1,221 @@
 <script setup lang="ts">
-    import { computed } from 'vue';
+    import { type PropType, computed, ref } from 'vue';
 
-    import { Head, Link } from '@inertiajs/vue3';
+    import { Head, Link, usePage } from '@inertiajs/vue3';
 
+    import CommentsSection from '@/Components/Sections/CommentsSection.vue';
+    import MediaGallery from '@/Components/Shared/MediaGallery.vue';
+    import BaseModal from '@/Components/UI/BaseModal.vue';
     import BuyButton from '@/Components/UI/BuyButton.vue';
     import MainLayout from '@/Layouts/MainLayout.vue';
-    import type {
-        Comment,
-        Product,
-        ProductVariantDTO,
-        ResourceCollection,
-        ResourceSingle,
-    } from '@/types';
+    import { useComments } from '@/composables/crud/useComments';
+    import type { GalleryItem } from '@/composables/features/useMediaUpload';
+    import type { Comment, Paginated, Product, ResourceSingle, SharedData } from '@/types';
+    import { formatMoney } from '@/utils/format';
 
-    const props = defineProps<{
-        product: ResourceSingle<Product>;
-        comments: ResourceCollection<Comment>;
-    }>();
+    defineOptions({ layout: MainLayout });
+
+    const props = defineProps({
+        product: {
+            type: Object as PropType<ResourceSingle<Product>>,
+            required: true,
+            validator: (value: ResourceSingle<Product>) => {
+                return Boolean(
+                    value &&
+                    typeof value === 'object' &&
+                    value.data &&
+                    typeof value.data.id !== 'undefined',
+                );
+            },
+        },
+        comments: {
+            type: Object as PropType<Paginated<Comment>>,
+            required: true,
+            validator: (value: Paginated<Comment>) => {
+                return Boolean(value && Array.isArray(value.data));
+            },
+        },
+    });
 
     const productData = computed(() => props.product.data);
-
-    /**
-     * DEFAULT VARIANT (single source of truth)
-     */
-    const defaultVariant = computed<ProductVariantDTO | null>(() => {
-        return (
-            productData.value.variants?.find((v) => v.is_default) ??
-            productData.value.variants?.[0] ??
-            null
-        );
-    });
 
     /**
      * PRICES — ONLY FROM VARIANT
      */
     const price = computed(() =>
-        defaultVariant.value ? (defaultVariant.value.price / 100).toFixed(2) : '0.00',
+        productData.value?.default_variant?.price
+            ? formatMoney(productData.value?.default_variant?.price)
+            : null,
     );
 
     const oldPrice = computed(() =>
-        defaultVariant.value?.old_price ? (defaultVariant.value.old_price / 100).toFixed(2) : null,
+        productData.value?.default_variant?.old_price
+            ? formatMoney(productData.value?.default_variant?.old_price)
+            : null,
     );
 
     const discount = computed(() => {
-        if (!defaultVariant.value?.old_price) return null;
+        if (
+            !productData.value?.default_variant?.price ||
+            !productData.value?.default_variant?.old_price
+        )
+            return null;
+        if (
+            productData.value.default_variant.price >= productData.value?.default_variant?.old_price
+        )
+            return null;
 
         return Math.round(
-            100 - (defaultVariant.value.price / defaultVariant.value.old_price) * 100,
+            100 -
+                (productData.value?.default_variant?.price /
+                    productData.value?.default_variant?.old_price) *
+                    100,
         );
     });
 
-    /**
-     * LABELS
-     */
-    const availabilityLabels: Record<string, string> = {
-        stock: 'В наличии на ферме',
-        daily: 'Собираем ежедневно',
-        preorder: 'Доступно по предзаказу',
+    const selectedImage = ref<string | null>(null);
+
+    const openImage = (item: GalleryItem) => {
+        const previewUrl = getPreview(item);
+
+        if (previewUrl) {
+            selectedImage.value = previewUrl;
+        }
     };
 
-    const getDaysNames = (days: number[] | undefined | null) => {
-        if (!Array.isArray(days)) return '';
-        const names = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
-        return days.map((d) => names[d]).join(', ');
+    const getPreview = (item: GalleryItem | string | null | undefined): string => {
+        if (!item) return '';
+
+        if (typeof item === 'string') {
+            return item;
+        }
+
+        return '';
     };
+
+    const isModalOpen = computed({
+        get: () => !!selectedImage.value,
+        set: (value) => {
+            if (!value) selectedImage.value = null;
+        },
+    });
+
+    const { submitComment } = useComments('product', productData.value.id);
+
+    const page = usePage<SharedData>();
+    const isAuthenticated = computed(() => !!page.props.auth?.user);
 </script>
 
 <template>
-    <Head :title="productData.name" />
+    <div class="py-8 md:py-16">
+        <Head :title="productData.name" />
 
-    <MainLayout>
-        <div class="py-8 md:py-16">
-            <AppContainer>
-                <!-- BREADCRUMBS -->
-                <nav class="mb-8 flex text-sm text-slate-400">
-                    <Link :href="route('catalog.index')" class="hover:text-orange-600">
-                        Каталог
-                    </Link>
-                    <span class="mx-2">/</span>
-                    <span class="text-slate-600">
-                        {{ productData.category?.name }}
-                    </span>
-                </nav>
+        <AppContainer>
+            <!-- BREADCRUMBS -->
+            <nav class="mb-8 flex text-sm text-slate-400">
+                <Link :href="route('catalog.index')" class="hover:text-orange-600"> Каталог </Link>
+                <span class="mx-2">/</span>
+                <span class="text-slate-600">
+                    {{ productData.category?.name }}
+                </span>
+            </nav>
 
-                <div class="grid gap-12 lg:grid-cols-2">
-                    <!-- IMAGE -->
-                    <div class="space-y-4">
-                        <div class="aspect-square overflow-hidden rounded-3xl border bg-slate-100">
-                            <AppImage
-                                :src="productData.main_photo?.[0] || ''"
-                                :alt="productData.name"
-                                class-name="h-full w-full object-cover"
-                            />
-                        </div>
+            <div class="grid gap-12 lg:grid-cols-2">
+                <!-- IMAGES -->
+                <div class="space-y-4">
+                    <div class="aspect-square overflow-hidden rounded-3xl border bg-slate-100">
+                        <AppImage
+                            :src="productData.main_photo?.[0] || ''"
+                            :alt="productData.name"
+                            class-name="h-full w-full object-cover"
+                        />
                     </div>
 
-                    <!-- INFO -->
-                    <div class="flex flex-col">
-                        <span class="text-xs font-bold uppercase text-orange-600">
-                            {{ productData.category?.name }}
-                        </span>
-
-                        <h1 class="mt-3 text-4xl font-black">
-                            {{ productData.name }}
-                        </h1>
-
-                        <!-- PRICE -->
-                        <div class="mt-6 flex items-baseline gap-4">
-                            <span class="text-4xl font-black"> {{ price }}₽ </span>
-
-                            <span v-if="oldPrice" class="text-xl text-slate-400 line-through">
-                                {{ oldPrice }}₽
-                            </span>
-
-                            <span
-                                v-if="discount"
-                                class="rounded bg-red-500 px-2 py-1 text-sm font-bold text-white"
-                            >
-                                -{{ discount }}%
-                            </span>
-
-                            <span class="text-slate-400">
-                                / {{ defaultVariant?.unit?.slug ?? 'pcs' }}
-                            </span>
-                        </div>
-
-                        <!-- META -->
-                        <div class="mt-8 space-y-3 border-y py-6 text-sm">
-                            <div class="flex justify-between">
-                                <span class="text-slate-500">Статус</span>
-                                <span class="font-bold">
-                                    {{ productData.availability.label }}
-                                </span>
-                            </div>
-
-                            <div v-if="defaultVariant">
-                                <div class="flex justify-between">
-                                    <span class="text-slate-500">В наличии</span>
-                                    <span class="font-bold">
-                                        {{ defaultVariant.stock }}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- DESCRIPTION -->
-                        <p class="mt-6 text-slate-600">
-                            {{ productData.description || 'Описание пока отсутствует' }}
-                        </p>
-
-                        <!-- BUY -->
-                        <div class="mt-auto pt-10">
-                            <BuyButton v-if="defaultVariant" :product="product.data" />
-                        </div>
-                    </div>
+                    <MediaGallery
+                        v-model="product.data.gallery"
+                        @preview="openImage"
+                        :is-view-mode="true"
+                    ></MediaGallery>
                 </div>
 
-                <!-- COMMENTS -->
-                <section class="mt-24 border-t pt-16">
-                    <h2 class="mb-8 text-2xl font-black">
-                        Отзывы
-                        <span class="ml-2 text-slate-400"> ({{ comments.data.length }}) </span>
-                    </h2>
+                <!-- INFO -->
+                <div class="flex flex-col">
+                    <span class="text-xs font-bold uppercase text-orange-600">
+                        {{ productData.category?.name }}
+                    </span>
 
-                    <div v-if="comments.data.length" class="grid gap-6 md:grid-cols-2">
-                        <div
-                            v-for="comment in comments.data"
-                            :key="comment.id"
-                            class="rounded-2xl border bg-white p-6"
+                    <h1 class="mt-3 text-4xl font-black">
+                        {{ productData.name }}
+                    </h1>
+
+                    <!-- PRICE -->
+                    <div class="mt-6 flex items-baseline gap-4">
+                        <span v-if="price" class="text-4xl font-black"> {{ price }} </span>
+
+                        <span v-if="discount" class="text-xl text-slate-400 line-through">
+                            {{ oldPrice }}
+                        </span>
+
+                        <span
+                            v-if="discount"
+                            class="rounded bg-red-500 px-2 py-1 text-sm font-bold text-white"
                         >
-                            <div class="mb-3 font-bold">
-                                {{ comment.user_name }}
+                            -{{ discount }}%
+                        </span>
+
+                        <span class="text-slate-400">
+                            / {{ productData.default_variant?.unit?.short ?? 'шт' }}
+                        </span>
+                    </div>
+
+                    <!-- META -->
+                    <div class="mt-8 space-y-3 border-y py-6 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-slate-500">Статус</span>
+                            <span class="font-bold">
+                                {{ productData.availability.label }}
+                            </span>
+                        </div>
+
+                        <div v-if="productData.default_variant">
+                            <div class="flex justify-between">
+                                <span class="text-slate-500">В наличии</span>
+                                <span class="font-bold">
+                                    {{ productData.default_variant.stock }} /
+                                    {{ productData.default_variant.unit?.short }}
+                                </span>
                             </div>
-                            <p class="text-slate-600">
-                                {{ comment.content }}
-                            </p>
                         </div>
                     </div>
 
-                    <div v-else class="rounded-2xl bg-slate-50 py-12 text-center">
-                        <p class="italic text-slate-500">Пока нет отзывов</p>
+                    <!-- DESCRIPTION -->
+                    <p class="mt-6 text-slate-600">
+                        {{ productData.description || 'Описание пока отсутствует' }}
+                    </p>
+
+                    <!-- BUY -->
+                    <div class="mt-auto pt-10">
+                        <BuyButton v-if="productData.default_variant" :product="productData" />
                     </div>
-                </section>
-            </AppContainer>
-        </div>
-    </MainLayout>
+                </div>
+            </div>
+
+            <!-- COMMENTS -->
+            <div class="mx-auto mt-12 max-w-4xl px-6 pb-16">
+                <CommentsSection
+                    :comments="comments"
+                    @submit="submitComment"
+                    :is-authenticated="isAuthenticated"
+                />
+            </div>
+        </AppContainer>
+
+        <BaseModal :show="isModalOpen" variant="lightbox" @close="selectedImage = null"
+            ><AppImage
+                v-if="selectedImage"
+                :src="selectedImage"
+                alt="Полноэкранный просмотр изображения"
+            />
+        </BaseModal>
+    </div>
 </template>

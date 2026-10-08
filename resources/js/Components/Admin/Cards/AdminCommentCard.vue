@@ -115,7 +115,7 @@
                         v-else
                         class="flex h-full w-full items-center justify-center bg-gradient-to-br from-slate-700 to-slate-800 text-lg font-black uppercase text-slate-500"
                     >
-                        {{ getInitials(comment.user_name) }}
+                        {{ getInitials(comment.author_name) }}
                     </div>
                 </div>
                 <div>

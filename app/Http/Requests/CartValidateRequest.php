@@ -25,10 +25,10 @@ class CartValidateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'items' => ['required', 'array'],
-            'items.*.product_id' => ['required', 'integer', 'exists:products,id'],
-            'items.*.quantity' => ['required', 'integer', 'min:1'],
-        ];
+        'items' => ['required', 'array'],
+        'items.*.variant_id' => ['required', 'integer', 'exists:product_variants,id'],
+        'items.*.quantity' => ['required', 'numeric', 'min:0.01'],
+    ];
     }
 
     public function toDTO(): Collection

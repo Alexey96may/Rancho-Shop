@@ -16,6 +16,10 @@ class ProductResource extends JsonResource
     {
         $mainVariant = $this->relationLoaded('variants') ? $this->mainVariant() : null;
 
+        $default = $this->whenLoaded('defaultVariant',
+            fn() => $this->defaultVariant ?? $this->variants->first()
+        );
+
         return [
             'id' => $this->id,
             'category_id' => $this->category_id,
@@ -23,8 +27,8 @@ class ProductResource extends JsonResource
             'name' => $this->name,
             'slug' => $this->slug,
             'description' => $this->description,
-            
-            'availability' => $this->availability_type 
+
+            'availability' => $this->availability_type
                 ? [
                     'value' => $this->availability_type->value,
                     'label' => $this->availability_type->label(),
@@ -42,6 +46,8 @@ class ProductResource extends JsonResource
                 : [],
 
             'variants' => ProductVariantResource::collection($this->whenLoaded('variants')),
+            'default_variant' => $default ? new ProductVariantResource($default) : null,
+
             'category' => new CategoryResource($this->whenLoaded('category')),
             'seo' => new SeoResource($this->whenLoaded('seo')),
             'animals' => AnimalResource::collection($this->whenLoaded('animals')),

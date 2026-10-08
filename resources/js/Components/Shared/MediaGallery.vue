@@ -7,6 +7,7 @@
 
     interface Props {
         modelValue: Array<Media | File>;
+        isViewMode?: boolean;
     }
 
     const props = defineProps<Props>();
@@ -20,6 +21,7 @@
             objectUrls.add(url);
             return url;
         }
+
         return item.url;
     };
 
@@ -61,6 +63,7 @@
 
                 <button
                     type="button"
+                    v-if="!isViewMode"
                     @click="remove(index)"
                     class="rounded-full bg-red-500/20 p-2 text-red-400 backdrop-blur-md hover:bg-red-500/40 focus:outline-none focus:ring-2 focus:ring-red-500"
                     title="Удалить"

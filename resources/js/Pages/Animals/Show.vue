@@ -1,18 +1,39 @@
 <script setup lang="ts" id="s1a9x2">
-    import { computed, onMounted, ref } from 'vue';
+    import { type PropType, computed, onMounted, ref } from 'vue';
 
-    import { Head, Link, router } from '@inertiajs/vue3';
+    import { Head, Link, router, usePage } from '@inertiajs/vue3';
 
     import CommentsSection from '@/Components/Sections/CommentsSection.vue';
+    import MediaGallery from '@/Components/Shared/MediaGallery.vue';
+    import BaseModal from '@/Components/UI/BaseModal.vue';
     import MainLayout from '@/Layouts/MainLayout.vue';
-    import type { Comment, FarmAnimal, Paginated, ResourceSingle } from '@/types';
+    import { useComments } from '@/composables/crud/useComments';
+    import type { GalleryItem } from '@/composables/features/useMediaUpload';
+    import type { Animal, Comment, Paginated, ResourceSingle, SharedData } from '@/types';
 
     defineOptions({ layout: MainLayout });
 
-    const props = defineProps<{
-        animal: ResourceSingle<FarmAnimal>;
-        comments: Paginated<Comment>;
-    }>();
+    const props = defineProps({
+        animal: {
+            type: Object as PropType<ResourceSingle<Animal>>,
+            required: true,
+            validator: (value: ResourceSingle<Animal>) => {
+                return Boolean(
+                    value &&
+                    typeof value === 'object' &&
+                    value.data &&
+                    typeof value.data.id !== 'undefined',
+                );
+            },
+        },
+        comments: {
+            type: Object as PropType<Paginated<Comment>>,
+            required: true,
+            validator: (value: Paginated<Comment>) => {
+                return Boolean(value && Array.isArray(value.data));
+            },
+        },
+    });
 
     const animal = computed(() => props.animal.data);
 
@@ -40,26 +61,50 @@
     const activeImage = ref<string | null>(null);
 
     onMounted(() => {
-        activeImage.value = animal.value.media?.[0]?.url ?? null;
+        activeImage.value = animal.value.avatars?.[0]?.url ?? null;
     });
 
-    const submitComment = (content: string) => {
-        router.post(route('comments.store'), {
-            content,
-            commentable_type: 'animal',
-            commentable_id: animal.value.id,
-        });
+    const { submitComment } = useComments('animal', animal.value.id);
+
+    const selectedImage = ref<string | null>(null);
+
+    const openImage = (item: GalleryItem) => {
+        const previewUrl = getPreview(item);
+
+        if (previewUrl) {
+            selectedImage.value = previewUrl;
+        }
     };
+
+    const getPreview = (item: GalleryItem | string | null | undefined): string => {
+        if (!item) return '';
+
+        if (typeof item === 'string') {
+            return item;
+        }
+
+        return '';
+    };
+
+    const isModalOpen = computed({
+        get: () => !!selectedImage.value,
+        set: (value) => {
+            if (!value) selectedImage.value = null;
+        },
+    });
+
+    const page = usePage<SharedData>();
+    const isAuthenticated = computed(() => !!page.props.auth?.user);
 </script>
 
 <template id="s9k2v4">
-    <Head :title="animal.name" />
-
     <main
         class="min-h-screen"
         style="background: #fcfaf5"
         :aria-label="`Страница животного ${animal.name}`"
     >
+        <Head :title="animal.name" />
+
         <div class="mx-auto max-w-6xl px-6 py-10">
             <!-- breadcrumb -->
             <nav class="mb-6 text-sm" style="color: #597d5b">
@@ -70,33 +115,23 @@
 
             <div class="grid gap-10 lg:grid-cols-2">
                 <!-- GALLERY -->
-                <section aria-label="Галерея животного">
-                    <div
-                        class="aspect-square overflow-hidden rounded-3xl border"
-                        style="border-color: #e3b44b33"
-                    >
-                        <img
-                            :src="activeImage || animal.media?.[0]?.url"
-                            class="h-full w-full object-cover"
-                            :alt="`Фото ${animal.name}`"
+                <!-- IMAGES -->
+                <div class="space-y-4">
+                    <div class="aspect-square overflow-hidden rounded-3xl border bg-slate-100">
+                        <AppImage
+                            :src="animal.avatars?.[0] || ''"
+                            :alt="animal.name"
+                            class-name="h-full w-full object-cover"
                         />
                     </div>
 
-                    <!-- thumbnails -->
-                    <div v-if="animal.media?.length > 1" class="mt-4 flex gap-3">
-                        <button
-                            v-for="img in animal.media"
-                            :key="img.id"
-                            @click="activeImage = img.url"
-                            class="h-16 w-16 overflow-hidden rounded-xl border transition hover:scale-105"
-                            :style="{ borderColor: '#E3B44B33' }"
-                            :aria-label="`Выбрать изображение ${animal.name}`"
-                        >
-                            <img :src="img.url" class="h-full w-full object-cover" />
-                        </button>
-                    </div>
-                </section>
-
+                    <MediaGallery
+                        v-if="animal.gallery"
+                        v-model="animal.gallery"
+                        @preview="openImage"
+                        :is-view-mode="true"
+                    ></MediaGallery>
+                </div>
                 <!-- INFO -->
                 <section class="flex flex-col">
                     <!-- status -->
@@ -149,24 +184,24 @@
                     </div>
 
                     <!-- parent -->
-                    <div v-if="animal.parent" class="mt-8 text-sm">
+                    <div v-if="animal.family?.parent" class="mt-8 text-sm">
                         <span style="color: #597d5b">Родитель:</span>
                         <Link
-                            :href="route('animals.show', animal.parent.slug)"
+                            :href="route('animals.show', animal.family.parent.slug)"
                             class="ml-2 font-bold hover:underline"
                             style="color: #1c3f34"
                         >
-                            {{ animal.parent.name }}
+                            {{ animal.family.parent.name }}
                         </Link>
                     </div>
 
                     <!-- children -->
-                    <div v-if="animal.children?.length" class="mt-4 text-sm">
+                    <div v-if="animal.family?.children?.length" class="mt-4 text-sm">
                         <span style="color: #597d5b">Дети:</span>
 
                         <div class="mt-2 flex flex-wrap gap-2">
                             <Link
-                                v-for="child in animal.children"
+                                v-for="child in animal.family.children"
                                 :key="child.slug"
                                 :href="route('animals.show', child.slug)"
                                 class="rounded-full px-3 py-1 text-xs font-bold"
@@ -186,9 +221,22 @@
                         {{ animal.seo.description }}
                     </div>
                 </section>
-
-                <CommentsSection :comments="comments" @submit="submitComment" />
             </div>
+
+            <div class="mx-auto mt-12 max-w-4xl px-6 pb-16">
+                <CommentsSection
+                    :comments="comments"
+                    @submit="submitComment"
+                    :is-authenticated="isAuthenticated"
+                />
+            </div>
+            <BaseModal :show="isModalOpen" variant="lightbox" @close="selectedImage = null"
+                ><AppImage
+                    v-if="selectedImage"
+                    :src="selectedImage"
+                    alt="Полноэкранный просмотр изображения"
+                />
+            </BaseModal>
         </div>
     </main>
 </template>

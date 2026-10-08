@@ -5,9 +5,14 @@ namespace App\Exceptions\Checkout;
 class ProductNotAvailableException extends CheckoutException
 {
     public function __construct(
-        public int $productId
+        public int $productId,
+        public ?string $productName = null
     ) {
-        parent::__construct("Product {$productId} not available");
+        $message = $productName
+            ? "Товар \"{$productName}\" недоступен или снят с продажи."
+            : "Товар (ID: {$productId}) недоступен для заказа.";
+
+        parent::__construct($message);
     }
 
     public function code(): string

@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use App\Observers\ProductVariantObserver;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 
@@ -86,9 +87,19 @@ class ProductVariant extends Model
         return $this->price / 100;
     }
 
+    public function defaultVariant(): HasOne
+    {
+        return $this->hasOne(ProductVariant::class)->where('is_default', true);
+    }
+
     public function isInStock(int $qty = 1): bool
     {
         return $this->stock >= $qty;
+    }
+
+    public function scopeInStock(Builder $query, int $qty = 1)
+    {
+        return $query->where('stock', '>=', $qty);
     }
 
     /**
@@ -102,30 +113,28 @@ class ProductVariant extends Model
     /**
     * Scope for filtering and sorting product variants
     */
-    public function scopeFilter(Builder $query, array $filters): Builder
+    public function scopeFilter(Builder $query, array $filters): void
     {
-        return $query
-            ->when($filters['search'] ?? null, function ($query, $search) {
-                $searchTerm = mb_strtolower($search, 'UTF-8');
+        // Поиск по имени варианта
+        $query->when($filters['search'] ?? null, function ($query, $search) {
+            $search = mb_strtolower($search, 'UTF-8');
+            $query->whereRaw('LOWER(name) LIKE ?', ["%{$search}%"]);
+        });
 
-                $query->where(function ($q) use ($searchTerm) {
-                    $q->whereRaw('LOWER(name) LIKE ?', ["%{$searchTerm}%"])
-                      ->orWhere('id', 'like', "%{$searchTerm}%")
-                      ->orWhereHas('product', function ($pq) use ($searchTerm) {
-                          $pq->whereRaw('LOWER(name) LIKE ?', ["%{$searchTerm}%"]);
-                      });
-                });
-            })
-            ->when($filters['product_id'] ?? null, fn($q, $id) => $q->where('product_id', $id))
-            ->when($filters['unit_id'] ?? null, fn($q, $id) => $q->where('unit_id', $id))
-            ->when($filters['sort'] ?? null, function ($q, $sort) {
-                switch ($sort) {
-                    case 'price_asc':  $q->orderBy('price', 'asc'); break;
-                    case 'price_desc': $q->orderBy('price', 'desc'); break;
-                    case 'stock_desc': $q->orderBy('stock', 'desc'); break;
-                    case 'newest':     $q->latest(); break;
-                    default:           $q->orderBy('position', 'asc');
-                }
-            }, fn($q) => $q->orderBy('position', 'asc'));
+        // Фильтр по наличию самого варианта
+        if (isset($filters['in_stock']) && filter_var($filters['in_stock'], FILTER_VALIDATE_BOOLEAN)) {
+            $query->where('stock', '>', 0);
+        }
+
+        // Сортировка вариантов по их прямой колонке price
+        $sort = $filters['sort'] ?? null;
+
+        if ($sort === 'cheap') {
+            $query->orderBy('price', 'asc');
+        } elseif ($sort === 'expensive') {
+            $query->orderBy('price', 'desc');
+        } else {
+            $query->latest();
+        }
     }
 }

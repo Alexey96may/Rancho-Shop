@@ -4,7 +4,9 @@ type CommentStatus = 'pending' | 'approved' | 'hidden';
 
 export interface Comment {
     id: number;
-    user_name: string;
+    user_name?: string | null;
+    guest_name?: string | null;
+    author_name: string;
     content: string;
     rating: number | null; // From 1 to 5
 

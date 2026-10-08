@@ -32,22 +32,23 @@ class CheckoutService
     {
         return DB::transaction(function () use ($dto, $delivery) {
             $products = $this->getProducts->handle($dto);
-            
+            $variants = $products->pluck('variants')->flatten()->keyBy('id');
+
             Log::info('Checkout started', [
                 'items_count' => $dto->items->count(),
             ]);
 
-            $this->validateCart->handle($dto, $products);
+            $this->validateCart->handle($dto, $variants);
 
             $deliveryResult = $this->validateDelivery->handle($delivery);
 
-            $total = $this->calculatePrice->handle($dto, $products);
+            $total = $this->calculatePrice->handle($dto, $variants);
 
             $order = $this->createOrder->handle($dto, $total, $delivery, $deliveryResult);
 
             $this->createItems->handle($order, $dto, $products);
 
-            $this->decrementStock->handle($dto, $products);
+            $this->decrementStock->handle($dto, $variants);
 
             Log::info('Order created', [
                 'order_id' => $order->id,

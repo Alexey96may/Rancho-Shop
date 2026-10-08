@@ -49,14 +49,17 @@ Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
 
 Route::get('/checkout', [CheckoutPageController::class, 'index'])->name('checkout.index');
 Route::post('/checkout', [CheckoutPageController::class, 'store'])->name('checkout.store');
-    
+
+Route::get('/checkout/success/{order}', [CheckoutPageController::class, 'success'])->name('checkout.success');
+
 Route::get('/delivery', [PageController::class, 'delivery'])->name('delivery');
 Route::get('/about', [PageController::class, 'about'])->name('about');
 
 Route::get('/animals', [AnimalController::class, 'index'])->name('animals.index');
 Route::get('/animals/{animal:slug}', [AnimalController::class, 'show'])->name('animals.show');
 
-Route::post('/comments', [CommentController::class, 'store'])->name('comments.store');
+Route::get('/comments', [CommentController::class, 'index'])->name('reviews.index');
+Route::post('/comments', [CommentController::class, 'store'])->middleware('auth')->name('comments.store');
 
 Route::post('/delivery/draft', [DeliveryController::class, 'store'])->name('delivery.draft.store');
 
@@ -119,7 +122,7 @@ Route::prefix('admin')
 
             Route::prefix('faq')->name('faq.')->group(function () {
                 Route::patch('reorder', [FaqController::class, 'reorder'])->name('reorder');
-                
+
                 Route::patch('{faq}/toggle', [FaqController::class, 'toggle'])->name('toggle');
             });
             Route::resource('faq', FaqController::class);
@@ -137,7 +140,7 @@ Route::prefix('admin')
             Route::resource('orders', AdminOrderController::class);
 
             Route::get('analytics', [AnalyticsController::class, 'index'])->name('analytics.index');
-            
+
             Route::patch('units/reorder', [UnitController::class, 'reorder'])->name('units.reorder');
             Route::resource('units', UnitController::class)->except(['show', 'create']);
         });
@@ -149,7 +152,7 @@ Route::prefix('admin')
             Route::patch('promocodes/{promoCode}/toggle', [PromocodeController::class, 'toggle'])
                 ->name('promocodes.toggle');
             Route::resource('promocodes', PromocodeController::class);
-            
+
             Route::prefix('settings')->name('settings.')->group(function () {
                 Route::get('/', [SettingController::class, 'index'])->name('index');
                 Route::post('/bulk', [SettingController::class, 'bulkUpdate'])->name('bulk');
