@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Resources\CommentResource;
 use App\Http\Resources\AnimalResource;
 use App\Http\Resources\CategoryResource;
+use App\Http\Resources\CommentResource;
 use App\Models\Animal;
 use App\Models\Category;
 use Illuminate\Http\Request;
@@ -33,16 +33,16 @@ class AnimalController extends Controller
             ->distinct()
             ->pluck('status')
             ->map(fn ($status) => [
-                'id'   => $status,
+                'id' => $status,
                 'name' => ucfirst($status),
             ]);
 
         return Inertia::render('Animals/Index', [
-            'animals'    => AnimalResource::collection($animals),
+            'animals' => AnimalResource::collection($animals),
             'categories' => CategoryResource::collection($categories),
-            'statuses'   => $statuses,
-            'filters'    => $filters,
-            'seo'        => $this->seo('Наши жители фермы', 'Познакомьтесь с животными, которые живут на нашей ферме'),
+            'statuses' => $statuses,
+            'filters' => $filters,
+            'seo' => $this->seo('Наши жители фермы', 'Познакомьтесь с животными, которые живут на нашей ферме'),
         ]);
     }
 
@@ -66,8 +66,12 @@ class AnimalController extends Controller
                 'meta' => [
                     'current_page' => $comments->currentPage(),
                     'last_page' => $comments->lastPage(),
+                    'per_page' => $comments->perPage(),
+                    'total' => $comments->total(),
+                    'links' => $comments->linkCollection()->toArray(),
                 ],
             ],
+            'seo' => $this->seoFromModel($animal, $animal->name),
         ]);
     }
 }

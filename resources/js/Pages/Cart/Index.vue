@@ -39,7 +39,7 @@
 </script>
 
 <template>
-    <div class="mx-auto max-w-4xl p-6">
+    <AppContainer class="mx-auto max-w-4xl p-6">
         <h1 class="mb-8 text-3xl font-black uppercase tracking-tight text-slate-900">
             Ваша корзина
         </h1>
@@ -112,7 +112,7 @@
                 </Link>
             </div>
         </Transition>
-    </div>
+    </AppContainer>
 </template>
 
 <style scoped>

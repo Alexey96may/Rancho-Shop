@@ -27,9 +27,9 @@
 </script>
 
 <template>
-    <Head title="Заказ успешно оформлен" />
+    <AppContainer class="min-h-screen bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
+        <Head title="Заказ успешно оформлен" />
 
-    <div class="min-h-screen bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
         <div class="mx-auto max-w-3xl">
             <!-- Карточка подтверждения -->
             <div
@@ -136,5 +136,5 @@
                 </Link>
             </div>
         </div>
-    </div>
+    </AppContainer>
 </template>

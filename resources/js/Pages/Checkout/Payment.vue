@@ -37,9 +37,9 @@
 </script>
 
 <template>
-    <Head title="Оплата заказа" />
+    <AppContainer class="mx-auto max-w-2xl px-4 py-12">
+        <Head title="Оплата заказа" />
 
-    <div class="mx-auto max-w-2xl px-4 py-12">
         <div class="shadow-sm rounded-2xl border border-slate-200 bg-white p-6">
             <h1 class="text-xl font-bold text-slate-900">Оплата заказа #{{ order.id }}</h1>
             <p class="mt-1 text-sm text-slate-500">
@@ -109,5 +109,5 @@
                 </a>
             </div>
         </div>
-    </div>
+    </AppContainer>
 </template>

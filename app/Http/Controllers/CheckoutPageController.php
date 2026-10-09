@@ -68,6 +68,7 @@ class CheckoutPageController extends Controller
         return Inertia::render('Checkout/Index', [
             'delivery_draft' => $deliveryDraft,
             'delivery_result' => $deliveryResult,
+            'seo' => $this->seo('Оплата покупки', 'Оплатите покупки в нашем магазине', robots: 'noindex, nofollow'),
         ]);
     }
 

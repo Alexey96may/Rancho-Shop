@@ -2,125 +2,183 @@
 
 namespace App\Http\Resources;
 
-use Illuminate\Http\Request;
+use App\Models\Animal;
+use App\Models\Page;
+use App\Models\Product;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class SeoResource extends JsonResource
 {
     /**
-     * Transform the resource into an array.
-     *
-     * @param Request $request
-     * @return array<string, mixed>
+     * Cache for og:image to avoid fetching the media twice.
      */
+    private ?string $ogImage = null;
+
     public function toArray(Request $request): array
     {
         /** @var Model|null $model */
         $model = $this->seoable;
-        $canonicalUrl = $this->canonical;
 
-        if (empty($canonicalUrl) && ($request->is('admin*') || $request->wantsJson())) {
-            $canonicalUrl = ''; 
-        }
+        $this->ogImage = $this->resolveOgImage($model);
+
+        $title = $this->title ?? $this->modelTitle($model);
+        $description = $this->description ?? $this->modelDescription($model);
 
         return [
-            'id'          => $this->id,
-            'title'       => $this->title ?? $model?->name,
-            'description' => $this->description ?? $model?->description ?? $model?->bio,
-            'keywords'    => $this->keywords,
+            'id' => $this->id,
+            'title' => $title,
+            'description' => $description,
+            'keywords' => $this->keywords,
 
-            'robots'      => $this->is_noindex ? 'noindex, nofollow' : 'index, follow',
-            'is_noindex'  => (bool) $this->is_noindex,
+            'robots' => $this->is_noindex ? 'noindex, nofollow' : 'index, follow',
+            'is_noindex' => (bool) $this->is_noindex,
 
-            'image'       => $this->getOgImage($model),
+            'image' => $this->ogImage,
 
-            'canonical'   => $canonicalUrl,
-            
+            'canonical' => $this->canonical ?: null,
+
             'og_data' => [
-                'title'       => $this->og_data['title'] ?? $this->title ?? $model?->name,
-                'description' => $this->og_data['description'] ?? $this->description,
-                'type'        => $this->og_data['type'] ?? 'website',
-                'url'         => url()->current(),
-                'image'       => $this->getOgImage($model),
+                'title' => data_get($this->og_data, 'title') ?? $title,
+                'description' => data_get($this->og_data, 'description') ?? $description,
+                'type' => data_get($this->og_data, 'type') ?? 'website',
+                'url' => url()->current(),
+                'image' => $this->ogImage,
             ],
 
-            'json_ld'     => $this->generateJsonLd($model),
+            'json_ld' => $this->generateJsonLd($model) ?: null,
         ];
     }
 
-    /**
-    * Retrieves the Open Graph image, validating the model type.
-    */
-    private function getOgImage(?Model $model): ?string
+    // ============================================================
+    // Model: title and description with type-based fallbacks
+    // ============================================================
+
+    private function modelTitle(?Model $model): ?string
     {
-        // 1. If the link in og_data is manually set
-        if (!empty($this->og_data['image'])) {
-            return $this->og_data['image'];
+        return match (true) {
+            $model instanceof Page => $model->title ?? $model->name,
+            $model instanceof Product => $model->name,
+            $model instanceof Animal => $model->name,
+            default => $model?->name,
+        };
+    }
+
+    private function modelDescription(?Model $model): ?string
+    {
+        return match (true) {
+            $model instanceof Page => $model->excerpt ?? $model->description,
+            $model instanceof Product => $model->short_description ?? $model->description,
+            $model instanceof Animal => $model->bio ?? $model->description,
+            default => $model?->description,
+        };
+    }
+
+    // ============================================================
+    // OG Image
+    // ============================================================
+
+    private function resolveOgImage(?Model $model): string
+    {
+        // 1. Manual image from og_data
+        $manual = data_get($this->og_data, 'image');
+        if (!empty($manual)) {
+            return $manual;
+        }
+        // 2. The first image from a suitable media collection
+        if ($model && method_exists($model, 'getFirstMediaUrl')) {
+            $collection = $this->mediaCollectionFor($model);
+
+            if ($collection) {
+                $url = $model->getFirstMediaUrl($collection, 'preview')
+                    ?: $model->getFirstMediaUrl($collection);
+
+                if ($url) {
+                    return $url;
+                }
+            }
         }
 
-        // 2. If the model has an avatar (Spatie Media)
-        if ($model && method_exists($model, 'getFirstMediaUrl') && $model->getFirstMediaUrl('avatars')) {
-            return $model->getFirstMediaUrl('avatars', 'preview');
-        }
-
-        // 3. Default ranch stub
         return asset('images/og-default-rancho.jpg');
     }
 
     /**
-     * Generating Schema.org (JsonLD)
+     * Name of the media collection for a specific model.
      */
+    private function mediaCollectionFor(Model $model): ?string
+    {
+        return match (true) {
+            $model instanceof Product => 'images',
+            $model instanceof Animal => 'avatars',
+            $model instanceof Page => 'images',
+            default => null,
+        };
+    }
+
+    // ============================================================
+    // Schema.org (json_ld)
+    // ============================================================
+
     private function generateJsonLd(?Model $model): array
     {
-        if (!$model) return [];
+        if (!$model) {
+            return [];
+        }
 
-        // Basic structure for all (Animal, Product, Page)
         $data = [
             '@context' => 'https://schema.org',
-            '@type'    => $this->getSchemaType($model),
-            'name'     => $model->name ?? $this->title,
-            'description' => $this->description,
-            'url'      => url()->current(),
-            'image'    => $this->getOgImage($model),
+            '@type' => $this->getSchemaType($model),
+            'name' => $this->modelTitle($model) ?? $this->title,
+            'description' => $this->description ?? $this->modelDescription($model),
+            'url' => url()->current(),
+            'image' => $this->ogImage,
         ];
 
-        // If it's an Animal, add some specifics
-        if ($model instanceof \App\Models\Animal) {
-            $data['@type'] = 'IndividualProduct'; // Animal on a farm as a unique unit
+        if ($model instanceof Animal) {
             $data['category'] = $model->category?->name;
-            
+
             if (!empty($model->features)) {
-                $data['additionalProperty'] = collect($model->features)->map(fn($val, $key) => [
-                    '@type' => 'PropertyValue',
-                    'name' => $key,
-                    'value' => $val
-                ])->values()->toArray();
+                $data['additionalProperty'] = collect($model->features)
+                    ->map(fn ($val, $key) => [
+                        '@type' => 'PropertyValue',
+                        'name' => $key,
+                        'value' => $val,
+                    ])
+                    ->values()
+                    ->toArray();
             }
         }
 
-        // If this is a Product, add the price
-        if ($model instanceof \App\Models\Product) {
-            $data['@type'] = 'Product';
-            $data['offers'] = [
+        if ($model instanceof Product) {
+            $variant = $model->defaultVariant ?? $model->variants->first();
+
+            // price →  price In Rubles
+            $priceInRubles = $variant?->price
+                ? round($variant->price / 100, 2)
+                : null;
+
+            $inStock = $variant && (float) $variant->stock > 0;
+
+            $data['offers'] = array_filter([
                 '@type' => 'Offer',
-                'price' => $model->price, // assume that there is a price in the model
+                'price' => $priceInRubles,
                 'priceCurrency' => 'RUB',
-                'availability' => 'https://schema.org/InStock',
-            ];
+                'availability' => $inStock
+                    ? 'https://schema.org/InStock'
+                    : 'https://schema.org/OutOfStock',
+                'url' => url()->current(),
+            ], fn ($v) => $v !== null);
         }
 
         return $data;
     }
 
-    /**
-    * Determines the schema type
-    */
     private function getSchemaType(?Model $model): string
     {
         return match (true) {
-            $model instanceof \App\Models\Product => 'Product',
-            $model instanceof \App\Models\Animal  => 'IndividualProduct',
+            $model instanceof Product => 'Product',
+            $model instanceof Animal => 'IndividualProduct',
             default => 'WebPage',
         };
     }

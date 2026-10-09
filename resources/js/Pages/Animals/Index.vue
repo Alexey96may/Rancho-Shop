@@ -1,7 +1,7 @@
 <script setup lang="ts">
     import { type PropType, onUnmounted, ref, watch } from 'vue';
 
-    import { Head, router } from '@inertiajs/vue3';
+    import { router } from '@inertiajs/vue3';
 
     import debounce from 'lodash/debounce';
 
@@ -106,8 +106,7 @@
 </script>
 
 <template>
-    <main class="min-h-screen bg-[#fcfaf5]">
-        <Head title="Наши жители фермы" />
+    <AppContainer class="min-h-screen bg-[#fcfaf5]">
         <div class="mx-auto max-w-7xl px-6 py-10">
             <!-- HEADER & SEARCH -->
             <header class="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-end">
@@ -189,5 +188,5 @@
         </div>
 
         <MainPagination :links="animals.meta.links" />
-    </main>
+    </AppContainer>
 </template>

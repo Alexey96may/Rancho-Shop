@@ -23,6 +23,7 @@ class ProfileCommentController extends Controller
 
         return Inertia::render('Profile/Comments', [
             'comments' => CommentResource::collection($comments),
+            'seo' => $this->seo('Мои Комментарии', robots: 'noindex, nofollow'),
         ]);
     }
 

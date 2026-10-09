@@ -1,7 +1,7 @@
 <script setup lang="ts">
     import { type PropType, computed, ref } from 'vue';
 
-    import { Head, Link, usePage } from '@inertiajs/vue3';
+    import { Link, usePage } from '@inertiajs/vue3';
 
     import CommentsSection from '@/Components/Sections/CommentsSection.vue';
     import MediaGallery from '@/Components/Shared/MediaGallery.vue';
@@ -108,8 +108,6 @@
 
 <template>
     <div class="py-8 md:py-16">
-        <Head :title="productData.name" />
-
         <AppContainer>
             <!-- BREADCRUMBS -->
             <nav class="mb-8 flex text-sm text-slate-400">

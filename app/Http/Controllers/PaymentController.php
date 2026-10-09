@@ -33,6 +33,7 @@ class PaymentController extends Controller
         return inertia('Checkout/Payment', [
             'order' => $order,
             'payment' => $paymentData,
+            'seo' => $this->seo('Оплата покупки', robots: 'noindex, nofollow'),
         ]);
     }
 

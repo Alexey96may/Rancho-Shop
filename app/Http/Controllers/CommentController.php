@@ -36,6 +36,7 @@ class CommentController extends Controller
                 'sort' => $sort,
                 'direction' => $direction,
             ],
+            'seo' => $this->seo('Комментарии - Молочная долина'),
         ]);
     }
 

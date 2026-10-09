@@ -1,7 +1,7 @@
 <script setup lang="ts">
     import { type PropType, onUnmounted, ref, watch } from 'vue';
 
-    import { Head, router } from '@inertiajs/vue3';
+    import { router } from '@inertiajs/vue3';
 
     import debounce from 'lodash/debounce';
 
@@ -103,9 +103,7 @@
 </script>
 
 <template>
-    <main>
-        <Head title="Каталог продукции Ранчо" />
-
+    <AppContainer>
         {{ category }}
 
         <AppContainer>
@@ -181,5 +179,5 @@
         </AppContainer>
 
         <MainPagination :links="products.meta.links" />
-    </main>
+    </AppContainer>
 </template>

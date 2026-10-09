@@ -265,7 +265,7 @@
 </script>
 
 <template>
-    <main class="min-h-screen bg-[#FCFAF5] text-[#1C3F34]">
+    <AppContainer class="min-h-screen bg-[#FCFAF5] text-[#1C3F34]">
         <!-- HEADER -->
         <header class="mx-auto max-w-3xl px-6 pt-10">
             <h1 class="text-3xl font-bold">
@@ -373,5 +373,5 @@
                 :is-authenticated="isAuthenticated"
             />
         </div>
-    </main>
+    </AppContainer>
 </template>

@@ -27,9 +27,9 @@
 </script>
 
 <template>
-    <SeoMeta />
-    <Toaster />
     <div>
+        <SeoMeta />
+        <Toaster />
         <div class="min-h-screen bg-gray-100">
             <nav class="border-b border-gray-100 bg-white">
                 <!-- Primary Navigation Menu -->

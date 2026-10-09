@@ -220,7 +220,7 @@
 </script>
 
 <template>
-    <div class="min-h-screen bg-rancho-paper font-sans">
+    <AppContainer class="min-h-screen bg-rancho-paper font-sans">
         <Head title="Оформление заказа" />
 
         <div class="container mx-auto py-10">
@@ -498,7 +498,7 @@
                 </aside>
             </div>
         </div>
-    </div>
+    </AppContainer>
 </template>
 
 <style scoped>

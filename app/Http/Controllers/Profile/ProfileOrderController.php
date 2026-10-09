@@ -23,6 +23,7 @@ class ProfileOrderController extends Controller
 
         return Inertia::render('Profile/Orders', [
             'orders' => OrderResource::collection($orders),
+            'seo' => $this->seo('Мои Заказы', robots: 'noindex, nofollow'),
         ]);
     }
 

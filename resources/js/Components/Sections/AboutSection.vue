@@ -11,7 +11,7 @@
 </script>
 
 <template>
-    <AppContainer tag="section" class="bg-white py-24" aria-labelledby="philosophy-heading">
+    <AppContainer tag="section" aria-labelledby="philosophy-heading">
         <div class="grid grid-cols-1 items-center gap-16 lg:grid-cols-2">
             <div class="relative order-2 lg:order-1" aria-hidden="true">
                 <div

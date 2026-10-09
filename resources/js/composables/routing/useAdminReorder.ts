@@ -2,9 +2,9 @@ import { onUnmounted } from 'vue';
 
 import { router } from '@inertiajs/vue3';
 
-import { useFlash } from '@/composables/ui/useFlash';
+import { useNotificationsStore } from '@/stores/notifications';
 
-const { notify } = useFlash();
+const notify = useNotificationsStore();
 
 export interface DraggableEvent {
     oldIndex: number;
@@ -59,7 +59,7 @@ export function useAdminReorder() {
                 preserveScroll: true,
                 preserveState: true,
                 onError: (error) => {
-                    notify('Ошибка при смене позиции', 'error');
+                    notify.error('Ошибка при смене позиции');
                     console.error('Error on position changing', error);
                 },
             },

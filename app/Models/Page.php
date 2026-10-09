@@ -2,16 +2,21 @@
 
 namespace App\Models;
 
+use App\Enums\PageType;
 use App\Traits\HasActiveScope;
 use App\Traits\HasInteractions;
+use App\Traits\HasSeoActions;
 use App\Traits\HasStandardMedia;
-use App\Enums\PageType;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
-use Spatie\MediaLibrary\HasMedia;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
-use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Carbon;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\MediaCollections\Models\Collections\MediaCollection;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 /**
  * @property int $id
@@ -20,17 +25,18 @@ use Illuminate\Database\Eloquent\Builder;
  * @property string|null $content
  * @property PageType $type
  * @property bool $is_active
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
  * @property string $template
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Comment> $comments
+ * @property-read Collection<int, Comment> $comments
  * @property-read int|null $comments_count
- * @property-read \Spatie\MediaLibrary\MediaCollections\Models\Collections\MediaCollection<int, \Spatie\MediaLibrary\MediaCollections\Models\Media> $media
+ * @property-read MediaCollection<int, Media> $media
  * @property-read int|null $media_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Comment> $reviews
+ * @property-read Collection<int, Comment> $reviews
  * @property-read int|null $reviews_count
- * @property-read \App\Models\Seo|null $seo
+ * @property-read Seo|null $seo
  * @property-read mixed $url
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Page active()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Page newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Page newQuery()
@@ -44,11 +50,12 @@ use Illuminate\Database\Eloquent\Builder;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Page whereTitle($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Page whereType($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Page whereUpdatedAt($value)
+ *
  * @mixin \Eloquent
  */
 class Page extends Model implements HasMedia
 {
-    use HasActiveScope, HasInteractions, HasStandardMedia;
+    use HasActiveScope, HasInteractions, HasSeoActions, HasStandardMedia;
 
     protected $fillable = ['title', 'slug', 'content', 'type', 'template', 'is_active'];
 
@@ -83,14 +90,14 @@ class Page extends Model implements HasMedia
     {
         return Attribute::make(
             get: fn () => $this->type === PageType::HOME
-                ? route('home') 
+                ? route('home')
                 : route('pages.show', $this->slug)
         );
     }
 
     /**
-    * Case-insensitive search by page title
-    */
+     * Case-insensitive search by page title
+     */
     public function scopeFilter(Builder $query, array $filters): Builder
     {
         return $query->when($filters['search'] ?? null, function ($query, $search) {

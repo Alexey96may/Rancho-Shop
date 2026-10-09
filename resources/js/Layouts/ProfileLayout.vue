@@ -13,6 +13,7 @@
 
     import TheFooter from '@/Components/Sections/TheFooter.vue';
     import TheHeader from '@/Components/Sections/TheHeader.vue';
+    import SeoMeta from '@/Components/Shared/SeoMeta.vue';
     import Toaster from '@/Components/Shared/Toaster.vue';
     import { useFlashToasts } from '@/composables/useFlashToasts';
     import { SharedData } from '@/types';
@@ -29,10 +30,12 @@
 
 <template>
     <div class="bg-slate-950 text-white">
-        <TheHeader />
+        <SeoMeta :force-robots="'nofollow, noindex'" />
         <Toaster />
 
-        <div class="mx-auto min-h-screen max-w-6xl px-4 py-12">
+        <TheHeader theme="dark" />
+
+        <div class="mx-auto min-h-screen max-w-6xl px-4 pb-28 pt-20">
             <h1 class="mb-8 text-3xl font-black">Личный кабинет</h1>
 
             <div class="grid grid-cols-1 gap-8 md:grid-cols-4">
@@ -109,6 +112,6 @@
             </div>
         </div>
 
-        <TheFooter />
+        <TheFooter theme="dark" />
     </div>
 </template>

@@ -1,7 +1,7 @@
 <script setup lang="ts">
     import { computed, ref, watch } from 'vue';
 
-    import { Head, router, useForm, usePage } from '@inertiajs/vue3';
+    import { router, useForm, usePage } from '@inertiajs/vue3';
 
     import CommentCard from '@/Components/Cards/ReviewsPageCard.vue';
     import MainPagination from '@/Components/Shared/MainPagination.vue';
@@ -88,9 +88,7 @@
 </script>
 
 <template>
-    <main class="min-h-screen bg-[#fcfaf5]">
-        <Head title="Отзывы о нашем сервисе" />
-
+    <AppContainer class="min-h-screen bg-[#fcfaf5]">
         <div class="mx-auto max-w-5xl px-6 py-10">
             <!-- HEADER -->
             <header class="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-center">
@@ -189,5 +187,5 @@
                 <MainPagination :links="comments.meta.links" />
             </div>
         </div>
-    </main>
+    </AppContainer>
 </template>

@@ -26,10 +26,9 @@ use App\Http\Controllers\PageController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\Profile\ProfileCommentController;
+use App\Http\Controllers\Profile\ProfileController;
 use App\Http\Controllers\Profile\ProfileOrderController;
-use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 
 Route::get('/', [LandingController::class, 'index'])->name('home');
 
@@ -80,20 +79,6 @@ Route::middleware('auth')->prefix('profile')->name('profile.')->group(function (
 
     Route::get('/orders', [ProfileOrderController::class, 'index'])->name('orders.index');
     Route::delete('/orders/{order}', [ProfileOrderController::class, 'destroy'])->name('orders.destroy');
-});
-
-Route::middleware(['auth', 'role:admin'])->group(function () {
-    // Route::get('/admin/dashboard', function () {
-    //     return Inertia::render('Admin/Dashboard', [
-    //         'stats' => [/* твои данные */]
-    //     ]);
-    // });
-});
-
-Route::middleware(['auth', 'role:worker'])->group(function () {
-    // Route::get('/worker/tasks', function () {
-    //     return Inertia::render('Worker/TaskList');
-    // });
 });
 
 require __DIR__ . '/auth.php';

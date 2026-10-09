@@ -10,9 +10,10 @@
 </script>
 
 <template>
-    <SeoMeta />
-    <Toaster />
     <div class="flex min-h-screen flex-col items-center bg-gray-100 pt-6 sm:justify-center sm:pt-0">
+        <SeoMeta />
+        <Toaster />
+
         <div>
             <Link href="/">
                 <ApplicationLogo class="h-20 w-20 fill-current text-gray-500" />

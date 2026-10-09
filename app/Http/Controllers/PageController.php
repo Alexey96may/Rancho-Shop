@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Resources\PageResource;
 use App\Http\Resources\CommentResource;
+use App\Http\Resources\PageResource;
 use App\Models\Page;
+use App\Services\SettingService;
 use Inertia\Inertia;
 
 class PageController extends Controller
@@ -24,10 +25,11 @@ class PageController extends Controller
         $data = [
             'page' => new PageResource($page),
             'comments' => CommentResource::collection($comments),
+            'seo' => $this->seoFromModel($page, $page->title),
         ];
 
         if ($page->template === 'delivery') {
-            $settings = app(\App\Services\SettingService::class);
+            $settings = app(SettingService::class);
             $data['delivery'] = [
                 'farm_coords' => $settings->get('farm_coords'),
                 'delivery_schedule' => $settings->get('delivery_schedule'),
@@ -37,10 +39,10 @@ class PageController extends Controller
             ];
         }
 
-        $view = match($page->template) {
+        $view = match ($page->template) {
             'delivery' => 'Delivery/Index',
-            'about'    => 'AboutView',
-            default    => 'DefaultView',
+            'about' => 'AboutView',
+            default => 'DefaultView',
         };
 
         return Inertia::render($view, $data);
@@ -61,12 +63,13 @@ class PageController extends Controller
         return Inertia::render('AboutView', [
             'page' => new PageResource($page),
             'comments' => CommentResource::collection($comments),
+            'seo' => $this->seoFromModel($page, $page->title),
         ]);
     }
 
     public function delivery()
     {
-        $settings = app(\App\Services\SettingService::class);
+        $settings = app(SettingService::class);
 
         $page = Page::query()
             ->where('slug', 'delivery')
@@ -81,6 +84,7 @@ class PageController extends Controller
         return Inertia::render('Delivery/Index', [
             'page' => new PageResource($page),
             'comments' => CommentResource::collection($comments),
+            'seo' => $this->seoFromModel($page, $page->title),
 
             // delivery-specific data
             'delivery' => [

@@ -35,7 +35,7 @@
     const userName = computed(() => page.props.auth.user?.data?.name ?? '');
 
     const userRole = computed(() => {
-        return page.props.auth.user?.data?.role;
+        return page.props.auth.user?.data?.role.label;
     });
 
     const isMounted = ref(false);

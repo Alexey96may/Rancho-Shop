@@ -1,5 +1,17 @@
 <script setup lang="ts">
+    import { computed } from 'vue';
+
     import { Link } from '@inertiajs/vue3';
+
+    interface Props {
+        theme?: 'light' | 'dark';
+    }
+
+    const props = withDefaults(defineProps<Props>(), {
+        theme: 'light',
+    });
+
+    const isDark = computed(() => props.theme === 'dark');
 
     const sectionsItems = [
         { name: 'Весь Каталог', pathName: 'catalog.index' },
@@ -18,28 +30,54 @@
 
 <template>
     <footer
-        class="rounded-t-[1rem] bg-rancho-forest pb-8 pt-16 text-rancho-paper md:rounded-t-[2rem]"
+        class="rounded-t-[1rem] pb-8 pt-16 transition-colors md:rounded-t-[2rem]"
+        :class="
+            isDark
+                ? 'border-t border-sky-600 bg-slate-950 text-slate-200'
+                : 'border-t border-emerald-800 bg-rancho-forest text-rancho-paper'
+        "
     >
         <AppContainer>
             <div class="mb-16 grid grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-4">
+                <!-- BRAND -->
                 <div class="flex flex-col gap-6">
                     <div class="flex items-center gap-3">
                         <div
-                            class="flex h-10 w-10 items-center justify-center rounded-full bg-rancho-buttercup"
+                            class="flex h-10 w-10 items-center justify-center rounded-full transition-colors"
+                            :class="
+                                isDark
+                                    ? 'bg-orange-500 text-slate-950'
+                                    : 'bg-rancho-buttercup text-rancho-forest'
+                            "
                         >
-                            <span class="font-header text-xl text-rancho-forest">МД</span>
+                            <span class="font-header text-xl">МД</span>
                         </div>
-                        <span class="font-header text-2xl tracking-wide">Молочная Долина</span>
+                        <span
+                            class="font-header text-2xl tracking-wide transition-colors"
+                            :class="isDark ? 'text-slate-100' : 'text-rancho-paper'"
+                        >
+                            Молочная Долина
+                        </span>
                     </div>
-                    <p class="max-w-xs font-sans text-sm leading-relaxed opacity-80">
+
+                    <p
+                        class="max-w-xs font-sans text-sm leading-relaxed opacity-80 transition-colors"
+                        :class="isDark ? 'text-slate-400' : 'text-rancho-paper'"
+                    >
                         Мы верим, что еда должна быть честной. Наше ранчо — это место, где природа и
                         современные технологии встречаются для создания идеальных продуктов.
                     </p>
+
                     <div class="flex gap-4">
                         <a
                             href="https://t.me/elenikaglossa"
                             target="_blank"
-                            class="transition-colors hover:text-rancho-buttercup"
+                            class="transition-colors"
+                            :class="
+                                isDark
+                                    ? 'text-slate-400 hover:text-orange-400'
+                                    : 'text-rancho-paper hover:text-rancho-buttercup'
+                            "
                         >
                             <span class="sr-only">Telegram</span>
                             <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
@@ -51,8 +89,14 @@
                     </div>
                 </div>
 
+                <!-- SECTIONS -->
                 <div>
-                    <h4 class="mb-6 font-header text-xl text-rancho-buttercup">Разделы</h4>
+                    <h4
+                        class="mb-6 font-header text-xl transition-colors"
+                        :class="isDark ? 'text-orange-400' : 'text-rancho-buttercup'"
+                    >
+                        Разделы
+                    </h4>
                     <ul class="space-y-4 font-sans text-sm opacity-90">
                         <li v-for="section in sectionsItems" :key="section.pathName">
                             <Link
@@ -65,25 +109,42 @@
                     </ul>
                 </div>
 
+                <!-- PRODUCTION -->
                 <div>
-                    <h4 class="mb-6 font-header text-xl text-rancho-buttercup">Продукция</h4>
+                    <h4
+                        class="mb-6 font-header text-xl transition-colors"
+                        :class="isDark ? 'text-orange-400' : 'text-rancho-buttercup'"
+                    >
+                        Продукция
+                    </h4>
                     <ul class="space-y-4 font-sans text-sm opacity-90">
                         <li v-for="production in productionItems" :key="production.params">
                             <Link
                                 :href="route(production.pathName, { category: production.params })"
-                                class="hover:text-rancho-buttercup"
-                                >{{ production.name }}</Link
+                                class="transition-colors"
+                                :class="
+                                    isDark ? 'hover:text-orange-400' : 'hover:text-rancho-buttercup'
+                                "
                             >
+                                {{ production.name }}
+                            </Link>
                         </li>
                     </ul>
                 </div>
 
+                <!-- CONTACTS -->
                 <div>
-                    <h4 class="mb-6 font-header text-xl text-rancho-buttercup">Связаться</h4>
+                    <h4
+                        class="mb-6 font-header text-xl transition-colors"
+                        :class="isDark ? 'text-orange-400' : 'text-rancho-buttercup'"
+                    >
+                        Связаться
+                    </h4>
                     <ul class="space-y-4 font-sans text-sm opacity-90">
                         <li class="flex items-start gap-3">
                             <svg
-                                class="h-5 w-5 shrink-0 text-rancho-buttercup"
+                                class="h-5 w-5 shrink-0 transition-colors"
+                                :class="isDark ? 'text-orange-400' : 'text-rancho-buttercup'"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -105,7 +166,8 @@
                         </li>
                         <li class="flex items-center gap-3">
                             <svg
-                                class="h-5 w-5 text-rancho-buttercup"
+                                class="h-5 w-5 transition-colors"
+                                :class="isDark ? 'text-orange-400' : 'text-rancho-buttercup'"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -123,13 +185,21 @@
                 </div>
             </div>
 
+            <!-- BOTTOM -->
             <div
-                class="flex flex-col items-center justify-between gap-4 border-t border-rancho-paper/10 pt-8 md:flex-row"
+                class="flex flex-col items-center justify-between gap-4 border-t pt-8 transition-colors md:flex-row"
+                :class="isDark ? 'border-slate-800' : 'border-rancho-paper/10'"
             >
-                <p class="font-sans text-xs opacity-60">
+                <p
+                    class="font-sans text-xs opacity-60 transition-colors"
+                    :class="isDark ? 'text-slate-500' : 'text-rancho-paper'"
+                >
                     © 2026 Молочная Долина. Сделано с любовью к природе.
                 </p>
-                <div class="flex gap-6 font-sans text-xs opacity-60">
+                <div
+                    class="flex gap-6 font-sans text-xs opacity-60 transition-colors"
+                    :class="isDark ? 'text-slate-500' : 'text-rancho-paper'"
+                >
                     <a href="#" class="hover:opacity-100">Политика конфиденциальности</a>
                     <a href="#" class="hover:opacity-100">Публичная оферта</a>
                 </div>
@@ -137,5 +207,3 @@
         </AppContainer>
     </footer>
 </template>
-
-<style scoped></style>

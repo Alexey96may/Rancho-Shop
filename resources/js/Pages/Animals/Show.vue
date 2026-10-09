@@ -1,7 +1,7 @@
 <script setup lang="ts" id="s1a9x2">
     import { type PropType, computed, onMounted, ref } from 'vue';
 
-    import { Head, Link, router, usePage } from '@inertiajs/vue3';
+    import { Link, usePage } from '@inertiajs/vue3';
 
     import CommentsSection from '@/Components/Sections/CommentsSection.vue';
     import MediaGallery from '@/Components/Shared/MediaGallery.vue';
@@ -97,14 +97,13 @@
     const isAuthenticated = computed(() => !!page.props.auth?.user);
 </script>
 
-<template id="s9k2v4">
-    <main
+<template>
+    <AppContainer
         class="min-h-screen"
         style="background: #fcfaf5"
-        :aria-label="`Страница животного ${animal.name}`"
+        :aria-label="`Страница животного
+        ${animal.name}`"
     >
-        <Head :title="animal.name" />
-
         <div class="mx-auto max-w-6xl px-6 py-10">
             <!-- breadcrumb -->
             <nav class="mb-6 text-sm" style="color: #597d5b">
@@ -238,5 +237,5 @@
                 />
             </BaseModal>
         </div>
-    </main>
+    </AppContainer>
 </template>

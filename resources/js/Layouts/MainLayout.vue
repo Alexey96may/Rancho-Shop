@@ -46,11 +46,12 @@
 </script>
 
 <template>
-    <SeoMeta />
-    <Toaster />
     <div
         class="flex min-h-screen flex-col bg-rancho-paper selection:bg-rancho-buttercup selection:text-rancho-forest"
     >
+        <SeoMeta />
+        <Toaster />
+
         <TheHeader />
 
         <main class="flex-grow">

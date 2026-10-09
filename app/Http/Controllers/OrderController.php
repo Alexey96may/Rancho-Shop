@@ -3,10 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\OrderResource;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use App\Models\Order;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
-use App\Models\ProductVariant;
 use Inertia\Inertia;
 
 class OrderController extends Controller
@@ -27,6 +26,7 @@ class OrderController extends Controller
         return Inertia::render('User/Orders/Index', [
             'orders' => OrderResource::collection($orders),
             'filters' => $request->only(['status']),
+            'seo' => $this->seo('Мои Заказы', robots: 'noindex, nofollow'),
         ]);
     }
 
@@ -38,8 +38,7 @@ class OrderController extends Controller
 
         return Inertia::render('User/Orders/Show', [
             'order' => new OrderResource($order),
+            'seo' => $this->seo('Мой Заказ', robots: 'noindex, nofollow'),
         ]);
     }
-
-
 }
