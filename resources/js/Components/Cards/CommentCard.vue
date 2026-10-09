@@ -12,7 +12,7 @@
 
     interface Comment {
         id: number;
-        rating: number;
+        rating: number | null;
         content: string;
         created_at: string;
         status: 'approved' | 'pending' | 'hidden';
@@ -40,7 +40,7 @@
         (
             e: 'update',
             id: number,
-            data: { rating: number; content: string },
+            data: { rating: number | null; content: string },
             callback: () => void,
         ): void;
         (e: 'delete', id: number): void;

@@ -17,7 +17,7 @@
     import { useAdminCrud } from '@/composables/crud/useAdminCrud';
     import { useAdminFilters } from '@/composables/routing/useAdminFilters';
     import { useAdminNavigation } from '@/composables/routing/useAdminNavigation';
-    import { useFlash } from '@/composables/ui/useFlash';
+    import { useNotificationsStore } from '@/stores/notifications';
     import type { AdminProductVariantDTO, Paginated, QuickUpdatePayload } from '@/types';
 
     defineOptions({ layout: AdminLayout });
@@ -91,7 +91,7 @@
         sort: props.filters.sort || '',
     });
 
-    const { notify } = useFlash();
+    const notify = useNotificationsStore();
     const { navigateWithContext } = useAdminNavigation();
     const { deleteEntity, isDeleting } = useAdminCrud();
     const { isFiltering, submitFilters, clearFilters } = useAdminFilters();
@@ -102,11 +102,11 @@
             preserveState: true,
             onError: (e) => {
                 if (e.price) {
-                    notify(e.price, 'error');
+                    notify.error(e.price);
                 } else if (e.stock) {
-                    notify(e.stock, 'error');
+                    notify.error(e.stock);
                 } else if (e.is_default) {
-                    notify(e.is_default, 'error');
+                    notify.error(e.is_default);
                 }
             },
         });

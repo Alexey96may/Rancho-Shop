@@ -7,7 +7,7 @@
     import AdminEditButton from '@/Components/Admin/UI/AdminEditButton.vue';
     import BaseDateBadge from '@/Components/UI/BaseDateBadge.vue';
     import BaseVisibilityToggle from '@/Components/UI/BaseVisibilityToggle.vue';
-    import { useFlash } from '@/composables/ui/useFlash';
+    import { useNotificationsStore } from '@/stores/notifications';
     import { AdminPromoCode } from '@/types';
     import { formatMoney } from '@/utils/format';
 
@@ -18,13 +18,13 @@
 
     defineEmits(['edit', 'delete', 'toggle']);
 
-    const { notify } = useFlash();
+    const notify = useNotificationsStore();
 
     const copyToClipboard = (text: string) => {
         if (!navigator) return;
 
         navigator.clipboard.writeText(text);
-        notify(`Промокод «${text}» скопирован!`, 'success');
+        notify.success(`Промокод «${text}» скопирован!`);
     };
 
     const compMinOrderAmount = computed(() => formatMoney(props.promo.min_order_amount));

@@ -1,38 +1,35 @@
 <?php
 
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\LandingController;
-use App\Http\Controllers\ProductController;
-use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
-// use App\Http\Controllers\Auth\SocialController;
-use App\Http\Controllers\OrderController;
-use App\Http\Controllers\CheckoutPageController;
-use App\Http\Controllers\AnimalController;
-use App\Http\Controllers\CommentController;
-use App\Http\Controllers\PageController;
-use App\Http\Controllers\DeliveryController;
-
-use App\Http\Controllers\Admin\DashboardController;
-use App\Http\Controllers\Admin\UserController;
-use App\Http\Controllers\Admin\ProductController as AdminProductController;
-use App\Http\Controllers\Admin\OrderController as AdminOrderController;
-use App\Http\Controllers\Admin\CategoryController;
-use App\Http\Controllers\Admin\CommentController as AdminCommentController;
+use App\Enums\Permission;
+use App\Http\Controllers\Admin\AnalyticsController;
 use App\Http\Controllers\Admin\AnimalController as AdminAnimalController;
 use App\Http\Controllers\Admin\CatalogController;
-use App\Http\Controllers\Admin\PageController as AdminPageController;
-use App\Http\Controllers\Admin\PromocodeController;
-use App\Http\Controllers\Admin\UnitController;
+use App\Http\Controllers\Admin\CategoryController;
+// use App\Http\Controllers\Auth\SocialController;
+use App\Http\Controllers\Admin\CommentController as AdminCommentController;
+use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\FaqController;
 use App\Http\Controllers\Admin\FeatureController;
+use App\Http\Controllers\Admin\OrderController as AdminOrderController;
+use App\Http\Controllers\Admin\PageController as AdminPageController;
+use App\Http\Controllers\Admin\ProductController as AdminProductController;
+use App\Http\Controllers\Admin\PromocodeController;
 use App\Http\Controllers\Admin\SettingController;
-use App\Http\Controllers\Admin\AnalyticsController;
+use App\Http\Controllers\Admin\UnitController;
+use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\AnimalController;
+use App\Http\Controllers\CheckoutPageController;
+use App\Http\Controllers\CommentController;
+use App\Http\Controllers\DeliveryController;
+use App\Http\Controllers\LandingController;
+use App\Http\Controllers\PageController;
+use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\ProductController;
 use App\Http\Controllers\Profile\ProfileCommentController;
 use App\Http\Controllers\Profile\ProfileOrderController;
-use App\Http\Controllers\PaymentController;
-
-use App\Enums\Permission;
+use App\Http\Controllers\ProfileController;
+use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 
 Route::get('/', [LandingController::class, 'index'])->name('home');
 
@@ -82,7 +79,7 @@ Route::middleware('auth')->prefix('profile')->name('profile.')->group(function (
     Route::delete('/comments/{comment}', [ProfileCommentController::class, 'destroy'])->name('comments.destroy');
 
     Route::get('/orders', [ProfileOrderController::class, 'index'])->name('orders.index');
-    Route::patch('/orders/{order}/cancel', [ProfileOrderController::class, 'cancel'])->name('orders.cancel');
+    Route::delete('/orders/{order}', [ProfileOrderController::class, 'destroy'])->name('orders.destroy');
 });
 
 Route::middleware(['auth', 'role:admin'])->group(function () {
@@ -167,6 +164,6 @@ Route::prefix('admin')
                 Route::post('/clear-cache', [SettingController::class, 'clearCache'])->name('clear-cache');
             });
         });
-});
+    });
 
 Route::get('/{slug}', [PageController::class, 'show'])->name('pages.show');

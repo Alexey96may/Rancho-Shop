@@ -9,7 +9,6 @@ export interface ProductVariant {
     price: number;
     old_price: number | null;
 
-    amount: number;
     unit: {
         slug: string;
     };
@@ -30,7 +29,6 @@ export interface ProductVariantDTO {
 
     price: number;
     old_price: number | null;
-    amount: number;
     stock: number;
 
     is_in_stock: boolean;

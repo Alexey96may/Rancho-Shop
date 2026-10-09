@@ -2,7 +2,7 @@ import { nextTick, onUnmounted, ref } from 'vue';
 
 import imageCompression from 'browser-image-compression';
 
-import { useFlash } from '@/composables/ui/useFlash';
+import { useNotificationsStore } from '@/stores/notifications';
 
 export function useImageUpload(onFileSelect?: (file: File | null) => void) {
     const isCompressing = ref(false);
@@ -10,21 +10,20 @@ export function useImageUpload(onFileSelect?: (file: File | null) => void) {
     const imagePreview = ref<string | null>(null);
     const fileInput = ref<HTMLInputElement | null>(null);
 
-    const { notify } = useFlash();
+    const notify = useNotificationsStore();
 
     const processFile = async (file: File | undefined) => {
         if (!file) return;
 
         if (!file.type.startsWith('image/')) {
-            notify('Только изображения могут быть загружены!', 'warning');
+            notify.warning('Только изображения могут быть загружены!');
             return;
         }
 
         const MAX_SIZE = 25 * 1024 * 1024;
         if (file.size > MAX_SIZE) {
-            notify(
-                'Размер файла слишком велик (более 5 МБ). Пожалуйста, уменьшите его вручную.',
-                'warning',
+            notify.warning(
+                'Размер файла слишком велик (более 25 МБ). Пожалуйста, уменьшите его вручную.',
             );
             return;
         }
@@ -56,7 +55,7 @@ export function useImageUpload(onFileSelect?: (file: File | null) => void) {
             }
         } catch (error) {
             console.error('Compression error:', error);
-            notify('Ошибка сжатия.', 'error');
+            notify.error('Ошибка сжатия.');
             // If compression fails, send the original
             if (onFileSelect) onFileSelect(file);
         } finally {

@@ -23,7 +23,6 @@ export interface CartItem {
 
     media: Media;
     unit: BaseUnit;
-    amount: number;
 
     product_id?: number;
     slug: string; // Чтобы из корзины можно было перейти обратно на товар

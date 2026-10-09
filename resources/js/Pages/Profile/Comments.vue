@@ -1,20 +1,25 @@
 <script setup lang="ts">
-    import { ref } from 'vue';
+    import { type PropType, ref } from 'vue';
 
     import { useForm } from '@inertiajs/vue3';
 
     import UserCommentCard from '@/Components/Cards/CommentCard.vue';
+    import MainPagination from '@/Components/Shared/MainPagination.vue';
     import ProfileLayout from '@/Layouts/ProfileLayout.vue';
     import { useAdminCrud } from '@/composables/crud/useAdminCrud';
+    import { Comment, Paginated } from '@/types';
 
     defineOptions({ layout: ProfileLayout });
 
-    defineProps<{
+    const props = defineProps({
         comments: {
-            data: Array<any>;
-            links: Array<any>;
-        };
-    }>();
+            type: Object as PropType<Paginated<Comment>>,
+            required: true,
+            validator: (value: Paginated<Comment>) => {
+                return Boolean(value && Array.isArray(value.data));
+            },
+        },
+    });
 
     const { deleteEntity, isDeleting } = useAdminCrud();
 
@@ -36,8 +41,12 @@
         });
     };
 
-    const handleDelete = (id: number) => {
-        deleteEntity('profile.comments', id, 'Отзыв удаляется');
+    const handleDelete = (comment: Comment) => {
+        const orderDate = new Date(comment.created_at).toLocaleString();
+        const message = 'Удалить отзыв от ' + orderDate + '?';
+        deleteEntity('profile.comments', comment.id, message);
+
+        console.log(props.comments.links);
     };
 </script>
 
@@ -63,29 +72,12 @@
                     :is-deleting="isDeleting(comment.id)"
                     :is-saving="editForm.processing"
                     @update="submitUpdateComment(comment.id)"
-                    @delete="handleDelete(comment.id)"
+                    @delete="handleDelete(comment)"
                 />
             </div>
         </section>
 
-        <div
-            v-if="comments.links && comments.links.length > 3"
-            class="flex justify-center gap-1 pt-4"
-        >
-            <Component
-                :is="link.url ? 'Link' : 'span'"
-                v-for="(link, k) in comments.links"
-                :key="k"
-                :href="link.url"
-                v-html="link.label"
-                class="rounded-lg px-3 py-1.5 text-xs transition-all"
-                :class="{
-                    'bg-slate-800 font-bold text-white ring-1 ring-slate-700': link.active,
-                    'text-slate-500': !link.url,
-                    'text-slate-400 hover:bg-slate-900': link.url && !link.active,
-                }"
-            />
-        </div>
+        <MainPagination :links="comments?.meta?.links" />
     </div>
 </template>
 

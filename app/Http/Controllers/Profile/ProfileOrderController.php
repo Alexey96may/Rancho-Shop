@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers\Profile;
 
+use App\Enums\OrderStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\OrderResource;
 use App\Models\Order;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use App\Http\Resources\OrderResource;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -25,11 +26,11 @@ class ProfileOrderController extends Controller
         ]);
     }
 
-    public function cancel(Request $request, Order $order): RedirectResponse
+    public function destroy(Request $request, Order $order): RedirectResponse
     {
         abort_if($order->user_id !== $request->user()->id, 403);
 
-        if (!in_array($order->status, ['new', 'confirmed'])) {
+        if ($order->status !== OrderStatus::NEW) {
             return back()->with('error', 'Этот заказ уже нельзя отменить.');
         }
 

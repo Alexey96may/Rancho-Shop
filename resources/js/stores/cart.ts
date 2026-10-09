@@ -2,6 +2,7 @@ import { computed, ref } from 'vue';
 
 import { defineStore } from 'pinia';
 
+import { useNotificationsStore } from '@/stores/notifications';
 import type { CartItem, Media, Product, ProductVariantDTO, ServerCartItem } from '@/types';
 
 export const useCartStore = defineStore(
@@ -10,10 +11,18 @@ export const useCartStore = defineStore(
         const items = ref<CartItem[]>([]);
         const lastValidatedAt = ref<number | null>(null);
 
+        const pendingDestroyIds = ref<Set<number>>(new Set());
+
+        const notify = useNotificationsStore();
+
         // ======================
         // GETTERS
         // ======================
         const totalCleanItems = computed(() => items.value.length);
+
+        function isPendingDestroy(variantId: number): boolean {
+            return pendingDestroyIds.value.has(variantId);
+        }
 
         const totalItems = computed(() =>
             items.value.reduce((acc, item) => acc + item.quantity, 0),
@@ -58,7 +67,7 @@ export const useCartStore = defineStore(
                     existingItem.reason = 'quantity_exceeded';
                     return;
                 }
-                existingItem.quantity = quantityFallback(variant.unit?.slug ?? '');
+                existingItem.quantity = quantityFallback(variant.unit?.slug ?? '', variant.stock);
                 return;
             }
 
@@ -73,8 +82,6 @@ export const useCartStore = defineStore(
                 order_column: 0,
             };
 
-            // Если передан продукт — берем имя и главную картинку от него.
-            // Если нет (например, если вызывается откуда-то еще) — фоллбечимся.
             items.value.push({
                 variant_id: variant.id,
                 product_id: product?.id ?? 0, // если ID нет, ставим 0
@@ -83,12 +90,11 @@ export const useCartStore = defineStore(
                 variant_name: variant.name,
 
                 price: variant.price,
-                quantity: quantityFallback(variant.unit?.slug ?? ''),
+                quantity: quantityFallback(variant.unit?.slug ?? '', variant.stock),
 
                 media: product?.main_photo?.[0] || fallbackMedia,
 
                 unit: variant.unit || { name: '', short: '', slug: '' },
-                amount: variant.amount,
 
                 slug: product?.slug ?? '',
                 stock: variant.stock,
@@ -96,24 +102,34 @@ export const useCartStore = defineStore(
                 valid: true,
                 reason: null,
             });
+
+            notify.success(`«${product?.name ?? 'Товар'}» добавлен в корзину`);
         }
 
         // Removing one unit or the entire product
-        function remove(variantId: number) {
-            const index = items.value.findIndex((i) => i.variant_id === variantId);
-
-            if (index !== -1) {
-                if (items.value[index].quantity > 1) {
-                    items.value[index].quantity--;
-                } else {
-                    items.value.splice(index, 1);
-                }
-            }
-        }
-
-        // Complete deletion of a position (trash can)
         function destroy(variantId: number) {
-            items.value = items.value.filter((i) => i.variant_id !== variantId);
+            const index = items.value.findIndex((i) => i.variant_id === variantId);
+            if (index === -1) return;
+
+            // запоминаем что удалили + куда вернуть
+            const removed = { ...items.value[index] };
+            items.value.splice(index, 1);
+
+            pendingDestroyIds.value.add(variantId);
+
+            notify.withUndo(
+                `«${removed.name}» удалён из корзины`,
+                () => {
+                    const at = items.value.findIndex((i) => i.variant_id === variantId);
+                    const insertAt = at === -1 ? items.value.length : at;
+                    items.value.splice(insertAt, 0, removed);
+                    pendingDestroyIds.value.delete(variantId);
+                }, // Undo
+                () => {
+                    pendingDestroyIds.value.delete(variantId);
+                },
+                5000,
+            );
         }
 
         // Clearing the entire cart (after ordering)
@@ -197,36 +213,34 @@ export const useCartStore = defineStore(
             }
         }
 
-        function decrement(variantId: number, step: number = 1) {
+        function decrement(variantId: number, step = 1) {
             const item = items.value.find((i) => i.variant_id === variantId);
-
             if (!item) return;
 
-            const next = item.quantity - step;
+            const next = round(item.quantity - step);
 
-            if (next <= 0) {
-                item.quantity = round(next);
-                remove(variantId);
+            if (next > 0) {
+                item.quantity = next;
                 return;
             }
 
-            item.quantity = round(next);
+            destroy(variantId);
         }
 
         function round(value: number) {
             return Math.round(value * 100) / 100;
         }
 
-        function quantityFallback(slug: string) {
+        function quantityFallback(slug: string, limit: number) {
             switch (slug) {
                 case 'kg':
                 case 'l':
-                    return 0.5;
+                    return limit >= 0.5 ? 0.5 : limit;
                 case 'g':
                 case 'ml':
-                    return 50;
+                    return limit >= 50 ? 50 : limit;
                 default:
-                    return 1;
+                    return limit >= 1 ? 1 : limit;
             }
         }
 
@@ -239,15 +253,18 @@ export const useCartStore = defineStore(
             hasInvalidItems,
             groupedItems,
             add,
-            remove,
             destroy,
             clear,
             validate,
             increment,
             decrement,
+            isPendingDestroy,
         };
     },
     {
-        persist: true, // The cart will be saved in localStorage
+        persist: {
+            key: 'cart',
+            pick: ['items'],
+        },
     },
 );

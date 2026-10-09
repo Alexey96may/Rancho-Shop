@@ -13,8 +13,11 @@
 
     import TheFooter from '@/Components/Sections/TheFooter.vue';
     import TheHeader from '@/Components/Sections/TheHeader.vue';
-    import Toast from '@/Components/Shared/Toast.vue';
+    import Toaster from '@/Components/Shared/Toaster.vue';
+    import { useFlashToasts } from '@/composables/useFlashToasts';
     import { SharedData } from '@/types';
+
+    useFlashToasts();
 
     defineProps<{ title: string }>();
 
@@ -27,7 +30,7 @@
 <template>
     <div class="bg-slate-950 text-white">
         <TheHeader />
-        <Toast />
+        <Toaster />
 
         <div class="mx-auto min-h-screen max-w-6xl px-4 py-12">
             <h1 class="mb-8 text-3xl font-black">Личный кабинет</h1>

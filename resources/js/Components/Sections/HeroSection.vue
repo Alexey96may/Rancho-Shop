@@ -38,7 +38,7 @@
 <template>
     <AppContainer class="relative pb-14 lg:pb-8">
         <section
-            class="relative w-full overflow-hidden md:aspect-[213/117]"
+            class="pointer-events-none relative w-full overflow-hidden md:aspect-[213/117]"
             aria-label="Популярные разделы сайта"
         >
             <swiper
@@ -50,7 +50,6 @@
                 :pagination="{
                     el: '.custom-pagination',
                     clickable: true,
-                    dynamicBullets: true,
                 }"
                 role="region"
                 :autoplay="{ delay: 5000, disableOnInteraction: false, pauseOnMouseEnter: true }"
@@ -84,37 +83,44 @@
             <div class="absolute bottom-10 right-10 z-20 hidden gap-4 lg:flex"></div>
         </section>
 
-        <div
-            class="custom-pagination absolute bottom-0 left-1/2 z-20 flex -translate-x-1/2 justify-center gap-2 rounded-full lg:gap-4"
-        ></div>
+        <div class="custom-pagination z-10 rounded-full py-2 lg:gap-4"></div>
     </AppContainer>
 </template>
 
 <style scoped>
     .custom-pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 14px;
+        padding: 30px 0;
         min-width: 80px;
         height: 32px;
     }
 
-    custom-pagination :deep(.swiper-pagination-bullet) {
-        background-color: #ffffff !important;
-        opacity: 0.5;
+    .custom-pagination :deep(.swiper-pagination-bullet) {
         width: 10px;
         height: 10px;
-        margin: 0 4px;
-        transition: all 0.3s ease;
+        margin: 0; /* gap уже даёт отступ */
+        background-color: #393939;
+        opacity: 0.5;
+        border-radius: 9999px;
+        transition:
+            transform 0.3s ease,
+            opacity 0.3s ease,
+            background-color 0.3s ease;
         cursor: pointer;
+    }
+
+    .custom-pagination :deep(.swiper-pagination-bullet-active) {
+        background-color: #d4a373;
+        opacity: 1;
+        transform: scale(1.3);
     }
 
     .hero-slider :deep(.swiper-pagination-bullets-dynamic) {
         bottom: 40px !important;
-        transform: translateX(-50%) scale(1.1); /* Можно чуть увеличить для кликабельности */
-    }
-
-    .custom-pagination :deep(.swiper-pagination-bullet-active) {
-        background-color: #d4a373 !important;
-        opacity: 1;
-        transform: scale(1.3);
+        transform: translateX(-50%) scale(1.4);
     }
 
     .hero-slider :deep(.swiper-pagination) {

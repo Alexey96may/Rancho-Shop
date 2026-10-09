@@ -3,9 +3,9 @@ import { ref } from 'vue';
 import { router } from '@inertiajs/vue3';
 import type { InertiaForm } from '@inertiajs/vue3';
 
-import { useFlash } from '@/composables/ui/useFlash';
+import { useNotificationsStore } from '@/stores/notifications';
 
-const { notify } = useFlash();
+const notify = useNotificationsStore();
 
 type DeepNullablePartial<T> = {
     [P in keyof T]?: T[P] | null;
@@ -24,14 +24,6 @@ export const useAdminForm = () => {
     const editMode = ref(false);
     const currentId = ref<number | string | null>(null);
 
-    /**
-     * Universal Form Submission (Create or Update)
-     *
-     * @param form              The Inertia form object (useForm)
-     * @param baseRouteName     The base part of the route (e.g., 'admin.products')
-     * @param id                The ID of the entity (null for create mode, string/number for edit mode)
-     * @param options       Optional configuration (onSuccess callback, hasFiles flag)
-     */
     const submitForm = async <T extends object>(
         form: InertiaForm<T>,
         baseRouteName: string,
@@ -50,7 +42,7 @@ export const useAdminForm = () => {
             },
             onError: (errors: Record<string, string>) => {
                 console.error(errors);
-                notify('Ошибка валидации', 'error');
+                notify.error('Ошибка валидации');
             },
         };
 
@@ -74,7 +66,7 @@ export const useAdminForm = () => {
                     onError: (errors) => {
                         form.setError(errors as unknown as Parameters<typeof form.setError>[0]);
                         console.error(errors);
-                        notify('Ошибка валидации', 'error');
+                        notify.error('Ошибка валидации');
                     },
                 };
 
@@ -94,12 +86,6 @@ export const useAdminForm = () => {
         }
     };
 
-    /**
-     * Generic modal opener (Create or Edit)
-     *
-     * @param form   Inertia form object (useForm)
-     * @param entity The entity to edit (or null for creation)
-     */
     const openModal = <T extends object>(
         form: InertiaForm<T>,
         entity: (DeepNullablePartial<T> & { id?: number | string }) | null = null,

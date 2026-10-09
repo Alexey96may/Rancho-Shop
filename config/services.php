@@ -51,10 +51,10 @@ return [
     ],
 
     'direct' => [
-        'phone'     => env('PAYMENT_DIRECT_PHONE'),
-        'bank'      => env('PAYMENT_DIRECT_BANK'),
+        'phone' => env('PAYMENT_DIRECT_PHONE'),
+        'bank' => env('PAYMENT_DIRECT_BANK'),
         'recipient' => env('PAYMENT_DIRECT_RECIPIENT'),
-        'note'      => env('PAYMENT_DIRECT_NOTE_TEMPLATE', 'Оплата заказа #:order_id'),
+        'note' => env('PAYMENT_DIRECT_NOTE_TEMPLATE', 'Оплата заказа #:order_id'),
     ],
 
 ];

@@ -24,7 +24,7 @@
     import { useAdminForm } from '@/composables/crud/useAdminForm';
     import { useAdminFilters } from '@/composables/routing/useAdminFilters';
     import { type DraggableEvent, useAdminReorder } from '@/composables/routing/useAdminReorder';
-    import { useFlash } from '@/composables/ui/useFlash';
+    import { useNotificationsStore } from '@/stores/notifications';
     import { AdminFaq, Paginated } from '@/types';
     import { triggerVibration } from '@/utils/navigator';
 
@@ -73,7 +73,7 @@
     const { isModalOpen, editMode, currentId, openModal, closeModal } = useAdminForm();
     const { handleReorder } = useAdminReorder();
 
-    const { notify } = useFlash();
+    const notify = useNotificationsStore();
 
     const vibrateDraggable = () => {
         triggerVibration('click');
@@ -98,7 +98,7 @@
                 preserveScroll: true,
                 preserveState: true,
                 onError: (error) => {
-                    notify('Ошибка при смены статуса', 'error');
+                    notify.error('Ошибка при смены статуса');
                     console.error('Error on status changing', error);
                 },
             },

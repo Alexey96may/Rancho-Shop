@@ -3,8 +3,11 @@
 
     import { Head, Link } from '@inertiajs/vue3';
 
+    import MainLayout from '@/Layouts/MainLayout.vue';
     import type { Order } from '@/types';
     import { formatMoney } from '@/utils/format';
+
+    defineOptions({ layout: MainLayout });
 
     const props = defineProps<{
         order: Order;

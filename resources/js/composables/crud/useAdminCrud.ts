@@ -2,9 +2,7 @@ import { ref } from 'vue';
 
 import { router } from '@inertiajs/vue3';
 
-import { useFlash } from '@/composables/ui/useFlash';
-
-const { notifyWithUndo } = useFlash();
+import { useNotificationsStore } from '@/stores/notifications';
 
 export function useAdminCrud() {
     const deletingIds = ref<Set<number | string>>(new Set());
@@ -18,7 +16,7 @@ export function useAdminCrud() {
      * @param message The text of the notification message
      * @param delay The cancellation timeout in milliseconds (default: 4000)
      */
-    const deleteEntity = async (
+    const deleteEntity = (
         baseRouteName: string,
         id: number | string,
         message: string = 'Удаление записи',
@@ -27,6 +25,8 @@ export function useAdminCrud() {
         if (typeof window === 'undefined') return;
         if (deletingIds.value.has(id)) return;
 
+        const notify = useNotificationsStore();
+
         // Save the current search string (e.g., "?page=2&search=rex")
         const currentParams = window.location.search;
         const queryParams = currentParams ? { back: currentParams } : {};
@@ -34,23 +34,26 @@ export function useAdminCrud() {
         deletingIds.value.add(id);
 
         try {
-            const confirmed = await notifyWithUndo(message, delay);
+            notify.withUndo(
+                message,
+                () => {
+                    deletingIds.value.delete(id);
+                },
+                () => {
+                    const url = route(`${baseRouteName}.destroy`, {
+                        id: id,
+                        ...queryParams,
+                    });
 
-            if (confirmed) {
-                const url = route(`${baseRouteName}.destroy`, {
-                    id: id,
-                    ...queryParams,
-                });
-
-                router.delete(url, {
-                    preserveScroll: true,
-                    onFinish: () => {
-                        deletingIds.value.delete(id);
-                    },
-                });
-            } else {
-                deletingIds.value.delete(id);
-            }
+                    router.delete(url, {
+                        preserveScroll: true,
+                        onFinish: () => {
+                            deletingIds.value.delete(id);
+                        },
+                    });
+                },
+                delay,
+            );
         } catch (error) {
             deletingIds.value.delete(id);
             console.error(`Failed to delete entity on ${baseRouteName}.destroy:`, error);
@@ -65,50 +68,41 @@ export function useAdminCrud() {
      * @param delay The cancellation timeout in milliseconds (default: 4000)
      */
 
-    const restoreEntity = async (
+    const restoreEntity = (
         baseRouteName: string,
         id: number | string,
         name: string,
-        delay: number = 4000,
+        delay = 4000,
     ) => {
         if (typeof window === 'undefined') return;
         if (restoringIds.value.has(id)) return;
+
+        const notify = useNotificationsStore();
 
         const currentParams = window.location.search;
         const queryParams = currentParams ? { back: currentParams } : {};
 
         restoringIds.value.add(id);
 
-        try {
-            const isTimeOut = await notifyWithUndo(
-                `Вы уверены, что хотите восстановить «${name}»?`,
-                delay,
-            );
-
-            if (!isTimeOut) {
+        notify.withUndo(
+            `Восстановить «${name}»?`,
+            () => {
                 restoringIds.value.delete(id);
-                return;
-            }
+            },
+            () => {
+                const url = route(`${baseRouteName}.restore`, { id, ...queryParams });
 
-            const url = route(`${baseRouteName}.restore`, {
-                id: id,
-                ...queryParams,
-            });
-
-            router.patch(
-                url,
-                {},
-                {
-                    preserveScroll: true,
-                    onFinish: () => {
-                        restoringIds.value.delete(id);
+                router.patch(
+                    url,
+                    {},
+                    {
+                        preserveScroll: true,
+                        onFinish: () => restoringIds.value.delete(id),
                     },
-                },
-            );
-        } catch (error) {
-            restoringIds.value.delete(id);
-            console.error(`Failed to restore entity on ${baseRouteName}.restore:`, error);
-        }
+                );
+            },
+            delay,
+        );
     };
 
     const isDeleting = (id: number | string): boolean => {

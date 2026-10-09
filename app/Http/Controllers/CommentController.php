@@ -4,12 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Enums\CommentableType;
 use App\Enums\CommentStatus;
+use App\Http\Resources\CommentResource;
 use App\Models\Comment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Enum;
-use App\Http\Resources\CommentResource;
 use Inertia\Inertia;
 
 class CommentController extends Controller
@@ -32,8 +32,8 @@ class CommentController extends Controller
 
         return Inertia::render('Reviews/index', [
             'comments' => CommentResource::collection($comments),
-            'filters'  => [
-                'sort'      => $sort,
+            'filters' => [
+                'sort' => $sort,
                 'direction' => $direction,
             ],
         ]);
@@ -44,11 +44,11 @@ class CommentController extends Controller
         $user = Auth::user();
 
         $data = $request->validate([
-            'commentable_id'   => ['nullable', 'integer'],
+            'commentable_id' => ['nullable', 'integer'],
             'commentable_type' => ['nullable', 'string', new Enum(CommentableType::class)],
-            'content'          => ['required', 'string', 'min:1'],
-            'rating'           => ['nullable', 'numeric', 'between:1,5'],
-            'guest_name'       => [Rule::requiredIf(!$user), 'nullable', 'string', 'max:50'],
+            'content' => ['required', 'string', 'min:1'],
+            'rating' => ['nullable', 'numeric', 'between:1,5'],
+            'guest_name' => [Rule::requiredIf(!$user), 'nullable', 'string', 'max:50'],
         ]);
 
         $status = $user->is_admin ?? false
@@ -56,13 +56,13 @@ class CommentController extends Controller
             : CommentStatus::PENDING;
 
         Comment::create([
-            'commentable_id'   => $data['commentable_id'],
+            'commentable_id' => $data['commentable_id'],
             'commentable_type' => $data['commentable_type'],
-            'content'          => $data['content'],
-            'rating'           => $data['rating'] ?? null,
-            'user_id'          => $user?->id,
-            'guest_name'       => $user ? null : $data['guest_name'],
-            'status'           => $status,
+            'content' => $data['content'],
+            'rating' => $data['rating'] ?? null,
+            'user_id' => $user?->id,
+            'guest_name' => $user ? null : $data['guest_name'],
+            'status' => $status,
         ]);
 
         $message = $status === CommentStatus::PENDING

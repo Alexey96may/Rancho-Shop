@@ -13,7 +13,7 @@
     import BaseSwitch from '@/Components/UI/BaseSwitch.vue';
     import AdminLayout from '@/Layouts/AdminLayout.vue';
     import { useAdminForm } from '@/composables/crud/useAdminForm';
-    import { useFlash } from '@/composables/ui/useFlash';
+    import { useNotificationsStore } from '@/stores/notifications';
     import { AdminLandingBlock, LandingContentItem, ResourceSingle } from '@/types';
 
     defineOptions({ layout: AdminLayout });
@@ -63,7 +63,7 @@
         ),
     });
 
-    const { notifyWithUndo } = useFlash();
+    const notify = useNotificationsStore();
 
     const deletingIds = ref(new Set<number>());
 
@@ -82,13 +82,15 @@
         if (deletingIds.value.has(index)) return;
         deletingIds.value.add(index);
 
-        const isDeleted = await notifyWithUndo('Удаление карточки #' + (index + 1), 3000);
-
-        if (isDeleted) {
-            form.content.splice(index, 1);
-        }
-
-        deletingIds.value.delete(index);
+        notify.withUndo(
+            'Удаление карточки #' + (index + 1),
+            () => {
+                deletingIds.value.delete(index);
+            },
+            () => {
+                form.content.splice(index, 1);
+            },
+        );
     };
 
     const moveItem = (index: number, direction: 'up' | 'down') => {

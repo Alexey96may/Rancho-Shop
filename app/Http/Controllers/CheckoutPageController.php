@@ -2,16 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use Inertia\Response;
-
-use App\Http\Requests\CheckoutRequest;
-use Illuminate\Http\Request;
-use App\Models\Order;
-use Inertia\Inertia;
-use App\Services\CheckoutService;
-use App\DTO\DeliveryDTO;
 use App\Actions\Checkout\ValidateDeliveryAction;
+use App\DTO\DeliveryDTO;
+use App\Http\Requests\CheckoutRequest;
+use App\Models\Order;
+use App\Services\CheckoutService;
+use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class CheckoutPageController extends Controller
 {
@@ -21,19 +20,19 @@ class CheckoutPageController extends Controller
 
         if ($user) {
             $deliveryDraft = [
-                'address'   => $user->last_delivery_address ?? $user->defaultDeliveryAddress?->address,
-                'lat'       => $user->last_delivery_lat ?? $user->defaultDeliveryAddress?->lat,
-                'lng'       => $user->last_delivery_lng ?? $user->defaultDeliveryAddress?->lng,
+                'address' => $user->last_delivery_address ?? $user->defaultDeliveryAddress?->address,
+                'lat' => $user->last_delivery_lat ?? $user->defaultDeliveryAddress?->lat,
+                'lng' => $user->last_delivery_lng ?? $user->defaultDeliveryAddress?->lng,
                 'is_pickup' => false,
-                'is_valid'  => true,
+                'is_valid' => true,
             ];
         } else {
             $deliveryDraft = session('delivery_draft', [
-                'address'   => null,
-                'lat'       => null,
-                'lng'       => null,
+                'address' => null,
+                'lat' => null,
+                'lng' => null,
                 'is_pickup' => false,
-                'is_valid'  => false,
+                'is_valid' => false,
             ]);
         }
 
@@ -61,13 +60,13 @@ class CheckoutPageController extends Controller
                 // Если адрес вне зоны доставки
                 $deliveryResult = [
                     'is_valid' => false,
-                    'error'    => $e->getMessage(),
+                    'error' => $e->getMessage(),
                 ];
             }
         }
 
         return Inertia::render('Checkout/Index', [
-            'delivery_draft'  => $deliveryDraft,
+            'delivery_draft' => $deliveryDraft,
             'delivery_result' => $deliveryResult,
         ]);
     }
@@ -88,10 +87,8 @@ class CheckoutPageController extends Controller
     public function success(Order $order)
     {
         // TODO проверить, принадлежит ли заказ текущему пользователю/сессии
-
         return Inertia::render('Checkout/Success', [
             'order' => $order->load('items.variant.product'),
         ]);
     }
-
 }

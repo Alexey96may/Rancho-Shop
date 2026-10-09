@@ -6,8 +6,8 @@ use App\Contracts\PaymentGatewayInterface;
 use App\Enums\OrderStatus;
 use App\Models\Order;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class PaymentController extends Controller
 {
@@ -43,6 +43,7 @@ class PaymentController extends Controller
     {
         if (!$paymentGateway->validateCallback($request->all())) {
             Log::warning('PayMaster Callback: Неверная подпись', $request->all());
+
             return response('Invalid signature', 400);
         }
 

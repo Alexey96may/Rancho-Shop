@@ -17,7 +17,7 @@
     import BaseDeleteButton from '@/Components/UI/BaseDeleteButton.vue';
     import BaseSwitch from '@/Components/UI/BaseSwitch.vue';
     import AdminLayout from '@/Layouts/AdminLayout.vue';
-    import { useFlash } from '@/composables/useFlash';
+    import { useNotificationsStore } from '@/stores/notifications';
     import { AdminPage, ResourceSingle } from '@/types';
     import { formatDateTime } from '@/utils/format';
 
@@ -55,7 +55,7 @@
     });
 
     const submit = () => form.put(route('admin.pages.update', props.page.data.id));
-    const { notifyWithUndo } = useFlash();
+    const notify = useNotificationsStore();
 
     const isDeleting = ref(false);
 
@@ -65,17 +65,19 @@
         if (isDeleting.value) return;
         isDeleting.value = true;
 
-        const isDeleted = await notifyWithUndo(`Удаление страницы "${props.page.data.title}"`);
-
-        if (isDeleted) {
-            router.delete(route('admin.pages.destroy', props.page.data.id), {
-                onFinish: () => {
-                    isDeleting.value = false;
-                },
-            });
-        } else {
-            isDeleting.value = false;
-        }
+        notify.withUndo(
+            `Удаление страницы "${props.page.data.title}"`,
+            () => {
+                isDeleting.value = false;
+            },
+            () => {
+                router.delete(route('admin.pages.destroy', props.page.data.id), {
+                    onFinish: () => {
+                        isDeleting.value = false;
+                    },
+                });
+            },
+        );
     };
 </script>
 
@@ -173,6 +175,8 @@
                             v-model:template="form.template"
                             :page_types="page_types"
                             :templates="templates"
+                            :disabled="form.processing"
+                            :errors="form.errors"
                         />
                     </div>
 
@@ -181,7 +185,7 @@
                     </div>
 
                     <div v-else-if="activeTab === 'seo'" key="seo" role="tabpanel">
-                        <SeoSection v-model="form.seo" />
+                        <SeoSection v-model="form.seo" :disabled="form.processing" />
                     </div>
                 </TransitionGroup>
 

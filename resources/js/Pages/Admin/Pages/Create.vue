@@ -111,6 +111,8 @@
                             v-model:template="form.template"
                             :page_types="page_types"
                             :templates="templates"
+                            :errors="form.errors"
+                            :disabled="form.processing"
                         />
                     </div>
 
@@ -119,7 +121,7 @@
                     </div>
 
                     <div v-else-if="activeTab === 'seo'" key="seo">
-                        <SeoSection v-model="form.seo" />
+                        <SeoSection v-model="form.seo" :disabled="form.processing" />
                     </div>
                 </TransitionGroup>
             </div>

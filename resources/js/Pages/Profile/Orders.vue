@@ -5,7 +5,8 @@
 
     import BaseSmartTime from '@/Components/UI/BaseSmartTime.vue';
     import ProfileLayout from '@/Layouts/ProfileLayout.vue';
-    import { useFlash } from '@/composables/ui/useFlash';
+    import { useAdminCrud } from '@/composables/crud/useAdminCrud';
+    import { useNotificationsStore } from '@/stores/notifications';
     import { Order, Paginated } from '@/types';
     import { formatMoney } from '@/utils/format';
 
@@ -18,20 +19,12 @@
         },
     });
 
-    const { notifyWithUndo } = useFlash();
+    const { deleteEntity, isDeleting } = useAdminCrud();
 
-    const cancelOrder = async (orderId: number) => {
-        const isTimeOut = await notifyWithUndo('Отмена заказа!');
-
-        if (isTimeOut) {
-            router.patch(
-                route('profile.orders.cancel', orderId),
-                {},
-                {
-                    preserveScroll: true,
-                },
-            );
-        }
+    const cancelOrder = async (order: Order) => {
+        const orderDate = new Date(order.created_at).toLocaleString();
+        const message = 'Отменить заказ от ' + orderDate + '?';
+        deleteEntity('profile.orders', order.id, message);
     };
 
     const getStatusStyles = (status: string) => {
@@ -71,7 +64,10 @@
                 v-for="order in orders.data"
                 :key="order.id"
                 class="rounded-2xl border border-slate-800 bg-slate-950 p-5 transition-all"
-                :class="{ 'opacity-60': order.status === 'cancelled' }"
+                :class="{
+                    'opacity-60': order.status === 'cancelled',
+                    'scale-95 opacity-60': isDeleting(order.id),
+                }"
             >
                 <div
                     class="mb-4 flex flex-wrap items-center justify-between gap-4 border-b border-slate-900 pb-3"
@@ -121,8 +117,8 @@
                     </div>
 
                     <button
-                        v-if="['new', 'confirmed'].includes(order.status)"
-                        @click="cancelOrder(order.id)"
+                        v-if="['new'].includes(order.status)"
+                        @click="cancelOrder(order)"
                         class="rounded-xl border border-red-500/30 px-4 py-2 text-[11px] font-black uppercase tracking-wider text-red-400 transition-all hover:bg-red-500 hover:text-black"
                     >
                         Отменить заказ

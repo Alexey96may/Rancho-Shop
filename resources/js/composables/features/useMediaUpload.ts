@@ -2,7 +2,7 @@ import { computed } from 'vue';
 
 import type { InertiaForm } from '@inertiajs/vue3';
 
-import { useFlash } from '@/composables/ui/useFlash';
+import { useNotificationsStore } from '@/stores/notifications';
 import type { Media } from '@/types';
 
 export type GalleryItem = File | Media;
@@ -43,7 +43,7 @@ export const useSingleImagePreview = (
 export const useMediaUpload = (modelValue: InertiaForm<MediaFormFields>) => {
     const MAX_POST_SIZE = 20 * 1024 * 1024; // 20 MB
 
-    const { notify } = useFlash();
+    const notify = useNotificationsStore();
 
     // Check: Is the user currently uploading a new file?
     const isNewVoiceSelected = computed(() => modelValue.voice instanceof File);
@@ -97,7 +97,7 @@ export const useMediaUpload = (modelValue: InertiaForm<MediaFormFields>) => {
         const newFilesSize = incomingFiles.reduce((acc, file) => acc + file.size, 0);
 
         if (currentTotalSize + newFilesSize > MAX_POST_SIZE) {
-            notify('Общий размер файлов слишком велик! Лимит 20 МБ.', 'error');
+            notify.error('Общий размер файлов слишком велик! Лимит 20 МБ.');
             target.value = '';
             return;
         }

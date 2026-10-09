@@ -2,25 +2,24 @@
 
 namespace App\Providers;
 
+use App\Contracts\PaymentGatewayInterface;
+use App\DTO\DeliveryDTO;
+use App\Enums\Permission;
+use App\Enums\UserRole;
 use App\Models\Animal;
+use App\Models\Order;
 use App\Models\Page;
 use App\Models\Product;
-use Illuminate\Database\Eloquent\Relations\Relation;
-use Illuminate\Support\Facades\Vite;
-use Illuminate\Support\ServiceProvider;
-use Illuminate\Http\Request;
-use App\DTO\DeliveryDTO;
-use Illuminate\Support\Str;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\Gate;
-use App\Enums\UserRole;
-use App\Enums\Permission;
-
-use App\Contracts\PaymentGatewayInterface;
+use App\Models\User;
 use App\Services\Payments\DirectPaymentGateway;
 use App\Services\Payments\FakePaymentGateway;
 use App\Services\Payments\PayMasterGateway;
-
+use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Vite;
+use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Str;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -33,10 +32,14 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(PaymentGatewayInterface::class, function () {
             $driver = config('services.payment.driver', 'fake');
 
+            if (app()->isProduction() && config('services.payment.driver') === 'fake') {
+                throw new \RuntimeException('PAYMENT_DRIVER=fake недопустим в production');
+            }
+
             return match ($driver) {
-                'paymaster' => new PayMasterGateway(),
-                'direct'    => new DirectPaymentGateway(),
-                default     => new FakePaymentGateway(),
+                'paymaster' => new PayMasterGateway,
+                'direct' => new DirectPaymentGateway,
+                default => new FakePaymentGateway,
             };
         });
     }
@@ -48,7 +51,7 @@ class AppServiceProvider extends ServiceProvider
     {
         Vite::prefetch(concurrency: 3);
 
-        //Gate::authorize('view-admin-panel');
+        // Gate::authorize('view-admin-panel');
         Gate::define('view-admin-panel', fn ($user) => $user->isStaff());
 
         foreach (Permission::cases() as $permission) {
@@ -69,20 +72,17 @@ class AppServiceProvider extends ServiceProvider
                     Permission::MANAGE_PAGES,
                     Permission::MANAGE_FAQ,
                     Permission::MANAGE_FEATURES,
-                    Permission::MANAGE_COMMENTS
-                        => $user->role === UserRole::MODERATOR,
+                    Permission::MANAGE_COMMENTS => $user->role === UserRole::MODERATOR,
 
                     // WORKER + ADMIN
                     Permission::MANAGE_DELIVERY,
                     Permission::MANAGE_ANALITICS,
-                    Permission::MANAGE_ORDERS
-                        => $user->role === UserRole::WORKER,
+                    Permission::MANAGE_ORDERS => $user->role === UserRole::WORKER,
 
                     // ADMIN only
                     Permission::MANAGE_USERS,
                     Permission::MANAGE_SETTINGS,
-                    Permission::MANAGE_PROMOCODES
-                        => false,
+                    Permission::MANAGE_PROMOCODES => false,
 
                     default => false,
                 };
@@ -97,8 +97,8 @@ class AppServiceProvider extends ServiceProvider
             'animal' => Animal::class,
             'product' => Product::class,
             'page' => Page::class,
-            'user' => \App\Models\User::class,
-            'order' => \App\Models\Order::class,
+            'user' => User::class,
+            'order' => Order::class,
         ]);
 
         $this->app->bind(DeliveryDTO::class, function ($app) {
@@ -159,10 +159,10 @@ class AppServiceProvider extends ServiceProvider
                 'кг' => 'kg',
                 'гр' => 'g',
                 'мл' => 'ml',
-                'м'  => 'm',
+                'м' => 'm',
                 'см' => 'cm',
                 'мм' => 'mm',
-                'л'  => 'l',
+                'л' => 'l',
             ];
 
             $title = mb_strtolower($title);

@@ -4,8 +4,11 @@
     import TheFooter from '@/Components/Sections/TheFooter.vue';
     import TheHeader from '@/Components/Sections/TheHeader.vue';
     import SeoMeta from '@/Components/Shared/SeoMeta.vue';
-    import Toast from '@/Components/Shared/Toast.vue';
+    import Toaster from '@/Components/Shared/Toaster.vue';
+    import { useFlashToasts } from '@/composables/useFlashToasts';
     import { useCartStore } from '@/stores/cart';
+
+    useFlashToasts();
 
     const showScrollTop = ref(false);
 
@@ -44,7 +47,7 @@
 
 <template>
     <SeoMeta />
-    <Toast />
+    <Toaster />
     <div
         class="flex min-h-screen flex-col bg-rancho-paper selection:bg-rancho-buttercup selection:text-rancho-forest"
     >

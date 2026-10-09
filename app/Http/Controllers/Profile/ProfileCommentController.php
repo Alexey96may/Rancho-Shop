@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Profile;
 
 use App\Enums\CommentStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\CommentResource;
 use App\Models\Comment;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -21,7 +22,7 @@ class ProfileCommentController extends Controller
             ->withQueryString();
 
         return Inertia::render('Profile/Comments', [
-            'comments' => $comments,
+            'comments' => CommentResource::collection($comments),
         ]);
     }
 
@@ -43,14 +44,14 @@ class ProfileCommentController extends Controller
         // 3. Синхронизированная валидация
         $validated = $request->validate([
             'content' => ['required', 'string', 'min:1', 'max:1000'],
-            'rating'  => ['nullable', 'numeric', 'between:1,5'],
+            'rating' => ['nullable', 'numeric', 'between:1,5'],
         ]);
 
         // 4. Явное обновление полей
         $comment->update([
             'content' => $validated['content'],
-            'rating'  => $validated['rating'] ?? null,
-            'status'  => CommentStatus::PENDING,
+            'rating' => $validated['rating'] ?? null,
+            'status' => CommentStatus::PENDING,
         ]);
 
         return back()->with('success', 'Отзыв успешно обновлен и отправлен на модерацию!');
@@ -64,6 +65,6 @@ class ProfileCommentController extends Controller
 
         $comment->delete();
 
-        return back()->with('success', 'Отзыв успешно удален.');
+        return back()->with('success', 'Отзыв успешно удален!');
     }
 }

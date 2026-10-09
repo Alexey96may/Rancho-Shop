@@ -11,6 +11,10 @@
         product: Product;
     }>();
 
+    const isAvailable = computed(
+        () => !!props.product.default_variant && !!props.product.default_variant.is_in_stock,
+    );
+
     const discountBadge = computed(() => {
         if (
             !props.product.default_variant?.old_price ||
@@ -31,7 +35,7 @@
     <div
         class="shadow-sm hover:shadow-xl group flex h-full flex-col overflow-hidden rounded-2xl border transition-all duration-300"
         :class="[
-            product.default_variant
+            isAvailable
                 ? 'border-slate-100 bg-white'
                 : 'hover:shadow-sm border-slate-200 bg-slate-50/60 opacity-80',
         ]"
@@ -46,14 +50,14 @@
                 :src="product.main_photo?.[0] || ''"
                 :class-name="
                     'h-full w-full object-cover transition-transform duration-500 ' +
-                    (product.default_variant ? 'group-hover:scale-110' : 'grayscale-[30%]')
+                    (isAvailable ? 'group-hover:scale-110' : 'grayscale-[30%]')
                 "
             />
 
             <!-- Бейдж наличия/доступности -->
             <div class="absolute left-3 top-3 flex flex-col gap-2">
                 <span
-                    v-if="product.default_variant"
+                    v-if="isAvailable"
                     :class="[
                         'shadow-sm rounded-lg px-2 py-1 text-[10px] font-black uppercase tracking-wider',
                         product.availability?.value === 'daily'
@@ -91,20 +95,20 @@
             </div>
 
             <!-- Блок с ценой (если вариант есть) -->
-            <div v-if="product.default_variant" class="mb-4 flex items-center gap-3">
+            <div v-if="isAvailable" class="mb-4 flex items-center gap-3">
                 <span class="text-2xl font-black text-slate-900">
-                    {{ formatMoney(product.default_variant.price) }}
+                    {{ formatMoney(product.default_variant?.price) }}
                 </span>
 
                 <div v-if="discountBadge" class="flex flex-col">
                     <span class="text-xs leading-none text-slate-400 line-through">
-                        {{ formatMoney(product.default_variant.old_price) }}
+                        {{ formatMoney(product.default_variant?.old_price) }}
                     </span>
                     <span class="text-[10px] font-bold text-red-500">-{{ discountBadge }}%</span>
                 </div>
 
                 <span class="ml-auto text-sm text-slate-400">
-                    / {{ product.default_variant.unit?.short ?? 'шт' }}
+                    / {{ product.default_variant?.unit?.short ?? 'шт' }}
                 </span>
             </div>
 
@@ -115,7 +119,7 @@
 
             <!-- Кнопка действия -->
             <div class="mt-auto">
-                <BuyButton v-if="product.default_variant" :product="product" />
+                <BuyButton v-if="isAvailable" :product="product" />
 
                 <button
                     v-else

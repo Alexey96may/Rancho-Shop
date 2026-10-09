@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use App\Observers\ProductVariantObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
@@ -20,11 +21,12 @@ use Illuminate\Database\Eloquent\Attributes\ObservedBy;
  * @property bool $is_default
  * @property int $position
  * @property array<array-key, mixed>|null $attributes
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
  * @property-read string $price_formatted
- * @property-read \App\Models\Product|null $product
- * @property-read \App\Models\Unit $unit
+ * @property-read Product|null $product
+ * @property-read Unit $unit
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductVariant newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductVariant newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductVariant query()
@@ -41,6 +43,7 @@ use Illuminate\Database\Eloquent\Attributes\ObservedBy;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductVariant whereUnitId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductVariant whereUpdatedAt($value)
  * @method static Builder<static>|ProductVariant filter(array $filters)
+ *
  * @mixin \Eloquent
  */
 #[ObservedBy(ProductVariantObserver::class)]
@@ -111,8 +114,8 @@ class ProductVariant extends Model
     }
 
     /**
-    * Scope for filtering and sorting product variants
-    */
+     * Scope for filtering and sorting product variants
+     */
     public function scopeFilter(Builder $query, array $filters): void
     {
         // Поиск по имени варианта

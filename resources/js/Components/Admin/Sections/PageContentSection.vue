@@ -39,9 +39,9 @@
     } from 'lucide-vue-next';
 
     import BaseModal from '@/Components/UI/BaseModal.vue';
-    import { useFlash } from '@/composables/ui/useFlash';
+    import { useNotificationsStore } from '@/stores/notifications';
 
-    const { notify } = useFlash();
+    const notify = useNotificationsStore();
 
     const props = defineProps<{
         modelValue?: string;
@@ -85,14 +85,14 @@
         const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
         if (!allowedTypes.includes(file.type)) {
-            notify('Неподдерживаемый формат файла', 'error');
+            notify.error('Неподдерживаемый формат файла');
             return;
         }
 
         const maxSizeInBytes = 3 * 1024 * 1024;
 
         if (file.size > maxSizeInBytes) {
-            notify('Ошибка! Файл слишком велик (макс. 3 МБ)', 'error');
+            notify.error('Ошибка! Файл слишком велик (макс. 3 МБ)');
             if (fileInput.value) fileInput.value.value = '';
             return;
         }
@@ -119,7 +119,7 @@
                     console.log(e);
 
                     const errorMessage = e.image || 'Произошла ошибка при загрузке файла';
-                    notify(errorMessage, 'error');
+                    notify.error(errorMessage);
                 },
                 onFinish: () => {
                     isUploading.value = false;

@@ -46,6 +46,7 @@
 
     const isDisabled = computed(() => {
         if (props.disabled || !props.product.default_variant) return true;
+        if (cart.isPendingDestroy(props.product.default_variant.id)) return true;
         if (action.value === 'cart' && isOutOfStock.value) return true;
         return false;
     });
@@ -59,27 +60,50 @@
 
 <template>
     <div class="w-full">
-        <!-- STEP CONTROL -->
-        <QuantityControl
-            v-if="isInCart && props.product.default_variant"
-            :item="props.product.default_variant"
-        />
+        <Transition name="swap" mode="out-in">
+            <!-- STEP CONTROL -->
+            <QuantityControl
+                v-if="isInCart && props.product.default_variant"
+                key="quantity"
+                :item="props.product.default_variant"
+            />
 
-        <!-- BUTTON -->
-        <button
-            v-else
-            @click.stop="handleClick"
-            :disabled="isDisabled"
-            class="flex w-full items-center justify-center rounded-xl p-2 text-lg font-bold transition-all duration-300 active:scale-95"
-            :class="[
-                !isDisabled
-                    ? 'shadow-lg bg-slate-900 text-white hover:bg-orange-600'
-                    : 'cursor-not-allowed bg-slate-200 text-slate-400',
-                'focus:outline-none focus-visible:ring-4 focus-visible:ring-orange-500/20',
-                classes,
-            ]"
-        >
-            {{ buttonText }}
-        </button>
+            <!-- BUTTON -->
+            <button
+                v-else
+                key="button"
+                @click.stop="handleClick"
+                :disabled="isDisabled"
+                class="flex w-full items-center justify-center rounded-xl p-2 text-lg font-bold transition-all duration-300 active:scale-95"
+                :class="[
+                    !isDisabled
+                        ? 'shadow-lg bg-slate-900 text-white hover:bg-orange-600'
+                        : 'cursor-not-allowed bg-slate-200 text-slate-400',
+                    'focus:outline-none focus-visible:ring-4 focus-visible:ring-orange-500/20',
+                    classes,
+                ]"
+            >
+                {{ buttonText }}
+            </button>
+        </Transition>
     </div>
 </template>
+
+<style scoped>
+    .swap-enter-active,
+    .swap-leave-active {
+        transition:
+            opacity 0.2s ease,
+            transform 0.2s ease;
+    }
+
+    .swap-enter-from {
+        opacity: 0;
+        transform: translateY(6px) scale(0.95);
+    }
+
+    .swap-leave-to {
+        opacity: 0;
+        transform: translateY(-6px) scale(0.95);
+    }
+</style>

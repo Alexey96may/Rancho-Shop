@@ -11,7 +11,7 @@
 <template>
     <Transition name="fade-slide" mode="out-in">
         <nav
-            v-if="links.length > 3"
+            v-if="links?.length > 3"
             role="navigation"
             aria-label="Навигация по страницам"
             class="mt-12 flex justify-center"

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-    import { computed } from 'vue';
+    import { computed, ref, watch } from 'vue';
 
     import { useCartStore } from '@/stores/cart';
     import type { CartItem, ProductVariantDTO } from '@/types';
@@ -45,6 +45,17 @@
     const decrease = () => {
         cart.decrement(variantId.value, step.value);
     };
+
+    const bump = ref(false);
+
+    watch(quantity, () => {
+        bump.value = false;
+
+        requestAnimationFrame(() => {
+            bump.value = true;
+            setTimeout(() => (bump.value = false), 200);
+        });
+    });
 </script>
 
 <template>
@@ -55,7 +66,12 @@
             −
         </button>
 
-        <span class="text-lg font-bold"> {{ quantity }} {{ item.unit?.short }} </span>
+        <span
+            class="text-lg font-bold tabular-nums transition-transform duration-200"
+            :class="bump ? 'scale-110' : 'scale-100'"
+        >
+            {{ quantity }} {{ item.unit?.short }}
+        </span>
 
         <button @click.stop="increase" class="px-2 text-lg transition-transform active:scale-90">
             +

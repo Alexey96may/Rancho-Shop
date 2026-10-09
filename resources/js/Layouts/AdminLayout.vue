@@ -1,5 +1,5 @@
 <script setup lang="ts">
-    import { onMounted, ref } from 'vue';
+    import { computed, onMounted, ref } from 'vue';
 
     import { usePage } from '@inertiajs/vue3';
 
@@ -23,11 +23,20 @@
 
     import AdminSidebarLink from '@/Components/Admin/UI/AdminSidebarLink.vue';
     import SeoMeta from '@/Components/Shared/SeoMeta.vue';
-    import Toast from '@/Components/Shared/Toast.vue';
+    import Toaster from '@/Components/Shared/Toaster.vue';
+    import { useFlashToasts } from '@/composables/useFlashToasts';
     import { SharedData } from '@/types';
+
+    useFlashToasts();
 
     const page = usePage<SharedData>();
     const can = page.props.can;
+
+    const userName = computed(() => page.props.auth.user?.data?.name ?? '');
+
+    const userRole = computed(() => {
+        return page.props.auth.user?.data?.role;
+    });
 
     const isMounted = ref(false);
     onMounted(() => {
@@ -37,7 +46,8 @@
 
 <template>
     <SeoMeta :force-robots="'nofollow, noindex'" :seo="page.props?.seo" />
-    <Toast />
+
+    <Toaster />
     <div class="flex min-h-screen bg-slate-950 font-sans text-slate-200">
         <aside
             id="admin-sidebar"
@@ -208,11 +218,11 @@
                 <div class="flex items-center gap-4">
                     <div class="hidden text-right sm:block">
                         <p class="text-sm font-bold leading-none text-white">
-                            {{ page.props.auth.user?.name }}
+                            {{ userName }}
                         </p>
                         <span
                             class="text-[10px] font-bold uppercase tracking-tighter text-orange-500"
-                            >{{ page.props.auth.user?.role }}</span
+                            >{{ userRole }}</span
                         >
                     </div>
                 </div>

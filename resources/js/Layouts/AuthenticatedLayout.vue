@@ -1,7 +1,7 @@
 <script setup lang="ts">
-    import { ref } from 'vue';
+    import { computed, ref } from 'vue';
 
-    import { Link } from '@inertiajs/vue3';
+    import { Link, usePage } from '@inertiajs/vue3';
 
     import ApplicationLogo from '@/Components/ApplicationLogo.vue';
     import Dropdown from '@/Components/Dropdown.vue';
@@ -9,14 +9,26 @@
     import NavLink from '@/Components/NavLink.vue';
     import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
     import SeoMeta from '@/Components/Shared/SeoMeta.vue';
-    import Toast from '@/Components/Shared/Toast.vue';
+    import Toaster from '@/Components/Shared/Toaster.vue';
+    import { useFlashToasts } from '@/composables/useFlashToasts';
+    import type { SharedData } from '@/types';
+
+    const page = usePage<SharedData>();
+
+    const userName = computed(() => page.props.auth.user?.data?.name ?? '');
+
+    const userMail = computed(() => {
+        return page.props.auth.user?.data?.email;
+    });
+
+    useFlashToasts();
 
     const showingNavigationDropdown = ref(false);
 </script>
 
 <template>
     <SeoMeta />
-    <Toast />
+    <Toaster />
     <div>
         <div class="min-h-screen bg-gray-100">
             <nav class="border-b border-gray-100 bg-white">
@@ -54,7 +66,7 @@
                                                 type="button"
                                                 class="inline-flex items-center rounded-md border border-transparent bg-white px-3 py-2 text-sm font-medium leading-4 text-gray-500 transition duration-150 ease-in-out hover:text-gray-700 focus:outline-none"
                                             >
-                                                {{ $page.props.auth.user.name }}
+                                                {{ userName }}
 
                                                 <svg
                                                     class="-me-0.5 ms-2 h-4 w-4"
@@ -147,10 +159,10 @@
                     <div class="border-t border-gray-200 pb-1 pt-4">
                         <div class="px-4">
                             <div class="text-base font-medium text-gray-800">
-                                {{ $page.props.auth.user.name }}
+                                {{ userName }}
                             </div>
                             <div class="text-sm font-medium text-gray-500">
-                                {{ $page.props.auth.user.email }}
+                                {{ userMail }}
                             </div>
                         </div>
 

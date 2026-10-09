@@ -15,13 +15,13 @@ class DirectPaymentGateway implements PaymentGatewayInterface
         return [
             'type' => 'direct',
             'details' => [
-                'phone'     => config('payments.direct.phone'),
-                'bank'      => config('payments.direct.bank'),
-                'recipient' => config('payments.direct.recipient'),
-                'note'      => str_replace(
+                'phone' => config('services.direct.phone'),
+                'bank' => config('services.direct.bank'),
+                'recipient' => config('services.direct.recipient'),
+                'note' => str_replace(
                     ':order_id',
                     (string) $order->id,
-                    config('payments.direct.note', 'Оплата заказа #:order_id')
+                    config('services.direct.note', 'Оплата заказа #:order_id')
                 ),
             ],
         ];

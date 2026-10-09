@@ -2,10 +2,9 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\DTO\CatalogDataDTO;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
-use App\DTO\CatalogDataDTO;
-
 
 class CatalogRequest extends FormRequest
 {
@@ -24,16 +23,16 @@ class CatalogRequest extends FormRequest
      */
     public function rules(): array
     {
-        $variant = $this->route('catalog'); 
+        $variant = $this->route('catalog');
 
         return [
             'product_id' => 'required|exists:products,id',
-            'unit_id'    => 'required|exists:units,id',
-            'name'       => 'required|string|max:255',
-            'price'      => 'required|numeric|min:0',
-            'old_price'  => 'nullable|numeric|min:0',
-            'stock'      => 'required|integer|min:0',
-            'position'   => 'nullable|integer',
+            'unit_id' => 'required|exists:units,id',
+            'name' => 'required|string|max:255',
+            'price' => 'required|numeric|min:0',
+            'old_price' => 'nullable|numeric|min:0',
+            'stock' => ['required', 'numeric', 'min:0', 'decimal:0,1'],
+            'position' => 'nullable|integer',
             'attributes' => 'nullable|array',
             'is_default' => [
                 'boolean',

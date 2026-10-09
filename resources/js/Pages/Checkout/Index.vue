@@ -9,7 +9,7 @@
     import BaseTextarea from '@/Components/UI/BaseTextarea.vue';
     import MainLayout from '@/Layouts/MainLayout.vue';
     import { useCartStore } from '@/stores/cart';
-    import { AuthProps, DeliveryDraft, FlashPayload, Permission, SharedData } from '@/types';
+    import { DeliveryDraft, SharedData } from '@/types';
     import { formatMoney } from '@/utils/format';
 
     defineOptions({ layout: MainLayout });
@@ -263,144 +263,166 @@
 
                     <!-- DELIVERY BLOCK -->
                     <div class="space-y-3 rounded-xl border bg-white p-4">
-                        <!-- CASE: PICKUP -->
-                        <div v-if="isPickup">
-                            <div class="text-sm font-medium text-gray-700">📦 Самовывоз</div>
-                            <p class="mt-1 text-sm text-gray-500">Адрес доставки не выбран</p>
+                        <!-- CASE: PICKUP ↔ DELIVERY -->
+                        <Transition name="slide-fade" mode="out-in">
+                            <!-- CASE: PICKUP -->
+                            <div v-if="isPickup" key="pickup">
+                                <div class="text-sm font-medium text-gray-700">📦 Самовывоз</div>
+                                <p class="mt-1 text-sm text-gray-500">Адрес доставки не выбран</p>
 
-                            <button
-                                type="button"
-                                @click="goToDeliveryPage"
-                                class="mt-3 w-full rounded-lg bg-green-700 px-3 py-2 text-white transition-colors hover:bg-green-800"
-                            >
-                                Выбрать адрес доставки
-                            </button>
-                        </div>
-
-                        <!-- CASE: DELIVERY -->
-                        <div v-else>
-                            <div class="text-sm font-medium text-green-700">
-                                🚚 Доставка выбрана
-                            </div>
-
-                            <p class="mt-1 text-sm">{{ form.delivery_address }}</p>
-
-                            <!-- РЕЗУЛЬТАТ РАСЧЁТА -->
-                            <div
-                                v-if="deliveryResult"
-                                class="mt-3 rounded-lg border p-3 text-sm"
-                                :class="
-                                    deliveryResult.is_valid
-                                        ? 'border-green-200 bg-green-50 text-green-900'
-                                        : 'border-red-200 bg-red-50 text-red-700'
-                                "
-                            >
-                                <template v-if="deliveryResult.is_valid">
-                                    <div class="flex justify-between">
-                                        <span>Стоимость доставки</span>
-                                        <span class="font-medium">
-                                            <template v-if="deliveryPrice === 0"
-                                                >бесплатно</template
-                                            >
-                                            <template v-else>
-                                                {{
-                                                    deliveryPrice !== null
-                                                        ? formatMoney(deliveryPrice)
-                                                        : '—'
-                                                }}
-                                            </template>
-                                        </span>
-                                    </div>
-
-                                    <div
-                                        v-if="deliveryResult.zone?.name"
-                                        class="mt-1 flex justify-between text-gray-600"
-                                    >
-                                        <span>Зона</span>
-                                        <span>{{ deliveryResult.zone.name }}</span>
-                                    </div>
-
-                                    <div
-                                        v-if="deliveryResult.distance_to_route != null"
-                                        class="mt-1 flex justify-between text-gray-600"
-                                    >
-                                        <span>До маршрута</span>
-                                        <span
-                                            >{{
-                                                Math.round(deliveryResult.distance_to_route)
-                                            }}
-                                            м</span
-                                        >
-                                    </div>
-
-                                    <div
-                                        v-if="deliveryResult.distance_to_farm != null"
-                                        class="mt-1 flex justify-between text-gray-600"
-                                    >
-                                        <span>От фермы</span>
-                                        <span
-                                            >{{
-                                                Math.round(deliveryResult.distance_to_farm)
-                                            }}
-                                            м</span
-                                        >
-                                    </div>
-
-                                    <!-- Подсказка про бесплатную доставку -->
-                                    <div
-                                        v-if="amountUntilFreeDelivery !== null"
-                                        class="mt-2 rounded bg-amber-50 p-2 text-xs text-amber-800"
-                                    >
-                                        До бесплатной доставки осталось
-                                        <strong>{{ formatMoney(amountUntilFreeDelivery) }}</strong>
-                                    </div>
-                                </template>
-
-                                <template v-else>
-                                    ⚠️ {{ deliveryResult.error ?? 'Адрес вне зоны доставки' }}
-                                </template>
-                            </div>
-
-                            <div class="mt-3 flex gap-2">
                                 <button
                                     type="button"
                                     @click="goToDeliveryPage"
-                                    class="flex-1 rounded-lg border px-3 py-2 hover:bg-gray-50"
+                                    class="mt-3 w-full rounded-lg bg-green-700 px-3 py-2 text-white transition-colors hover:bg-green-800"
                                 >
-                                    Изменить
-                                </button>
-
-                                <button
-                                    type="button"
-                                    @click="togglePickup"
-                                    class="flex-1 rounded-lg border border-red-300 px-3 py-2 text-red-700 transition-colors hover:bg-red-50"
-                                >
-                                    Самовывоз
+                                    Выбрать адрес доставки
                                 </button>
                             </div>
-                        </div>
 
-                        <div
-                            v-if="$page.props.errors.cart"
-                            class="mb-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"
-                        >
-                            ⚠️ {{ $page.props.errors.cart }}
-                        </div>
+                            <!-- CASE: DELIVERY -->
+                            <div v-else key="delivery">
+                                <div class="text-sm font-medium text-green-700">
+                                    🚚 Доставка выбрана
+                                </div>
 
-                        <div
-                            v-if="$page.props.errors.delivery"
-                            class="mb-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"
-                        >
-                            ⚠️ {{ $page.props.errors.delivery }}
-                        </div>
+                                <p class="mt-1 text-sm">{{ form.delivery_address }}</p>
 
-                        <p v-if="deliveryError" class="mt-1 text-sm text-amber-700">
-                            {{ deliveryError }}
-                        </p>
+                                <!-- РЕЗУЛЬТАТ РАСЧЁТА -->
+                                <Transition name="fade-scale" appear>
+                                    <div
+                                        v-if="deliveryResult"
+                                        class="mt-3 rounded-lg border p-3 text-sm"
+                                        :class="
+                                            deliveryResult.is_valid
+                                                ? 'border-green-200 bg-green-50 text-green-900'
+                                                : 'border-red-200 bg-red-50 text-red-700'
+                                        "
+                                    >
+                                        <template v-if="deliveryResult.is_valid">
+                                            <div class="flex justify-between">
+                                                <span>Стоимость доставки</span>
+                                                <span class="font-medium">
+                                                    <template v-if="deliveryPrice === 0"
+                                                        >бесплатно</template
+                                                    >
+                                                    <template v-else>
+                                                        {{
+                                                            deliveryPrice !== null
+                                                                ? formatMoney(deliveryPrice)
+                                                                : '—'
+                                                        }}
+                                                    </template>
+                                                </span>
+                                            </div>
 
-                        <p v-if="hasError('delivery_address')" class="mt-1 text-sm text-red-600">
-                            {{ getError('delivery_address') }}
-                        </p>
+                                            <div
+                                                v-if="deliveryResult.zone?.name"
+                                                class="mt-1 flex justify-between text-gray-600"
+                                            >
+                                                <span>Зона</span>
+                                                <span>{{ deliveryResult.zone.name }}</span>
+                                            </div>
+
+                                            <div
+                                                v-if="deliveryResult.distance_to_route != null"
+                                                class="mt-1 flex justify-between text-gray-600"
+                                            >
+                                                <span>До маршрута</span>
+                                                <span
+                                                    >{{
+                                                        Math.round(deliveryResult.distance_to_route)
+                                                    }}
+                                                    м</span
+                                                >
+                                            </div>
+
+                                            <div
+                                                v-if="deliveryResult.distance_to_farm != null"
+                                                class="mt-1 flex justify-between text-gray-600"
+                                            >
+                                                <span>От фермы</span>
+                                                <span
+                                                    >{{
+                                                        Math.round(deliveryResult.distance_to_farm)
+                                                    }}
+                                                    м</span
+                                                >
+                                            </div>
+
+                                            <div
+                                                v-if="amountUntilFreeDelivery !== null"
+                                                class="mt-2 rounded bg-amber-50 p-2 text-xs text-amber-800"
+                                            >
+                                                До бесплатной доставки осталось
+                                                <strong>{{
+                                                    formatMoney(amountUntilFreeDelivery)
+                                                }}</strong>
+                                            </div>
+                                        </template>
+
+                                        <template v-else>
+                                            ⚠️
+                                            {{ deliveryResult.error ?? 'Адрес вне зоны доставки' }}
+                                        </template>
+                                    </div>
+                                </Transition>
+
+                                <div class="mt-3 flex gap-2">
+                                    <button
+                                        type="button"
+                                        @click="goToDeliveryPage"
+                                        class="flex-1 rounded-lg border px-3 py-2 hover:bg-gray-50"
+                                    >
+                                        Изменить
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        @click="togglePickup"
+                                        class="flex-1 rounded-lg border border-red-300 px-3 py-2 text-red-700 transition-colors hover:bg-red-50"
+                                    >
+                                        Самовывоз
+                                    </button>
+                                </div>
+                            </div>
+                        </Transition>
+
+                        <!-- CART ERROR -->
+                        <Transition name="fade-up">
+                            <div
+                                v-if="$page.props.errors.cart"
+                                class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"
+                            >
+                                ⚠️ {{ $page.props.errors.cart }}
+                            </div>
+                        </Transition>
+
+                        <!-- DELIVERY ERROR -->
+                        <Transition name="fade-up">
+                            <div
+                                v-if="$page.props.errors.delivery"
+                                class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"
+                            >
+                                ⚠️ {{ $page.props.errors.delivery }}
+                            </div>
+                        </Transition>
+
+                        <!-- DELIVERY VALIDATION -->
+                        <Transition name="fade-up">
+                            <p v-if="deliveryError" class="mt-1 text-sm text-amber-700">
+                                {{ deliveryError }}
+                            </p>
+                        </Transition>
+
+                        <!-- DELIVERY ADDRESS ERROR -->
+                        <Transition name="fade-up">
+                            <p
+                                v-if="hasError('delivery_address')"
+                                class="mt-1 text-sm text-red-600"
+                            >
+                                {{ getError('delivery_address') }}
+                            </p>
+                        </Transition>
                     </div>
 
                     <!-- COMMENT -->
@@ -421,7 +443,7 @@
                     <div class="mb-4 space-y-2">
                         <div
                             v-for="item in cart.items"
-                            :key="item.product_id"
+                            :key="item.variant_id"
                             class="flex justify-between text-sm"
                         >
                             <span>{{ item.name }} × {{ item.quantity }}</span>
@@ -431,28 +453,35 @@
                         </div>
                     </div>
 
-                    <div
-                        v-if="isPickup"
-                        class="mt-2 flex justify-between border-t pt-2 text-sm text-gray-700"
-                    >
-                        <span>Самовывоз</span>
-                        <span>бесплатно</span>
-                    </div>
+                    <!-- PICKUP / DELIVERY ROW -->
+                    <Transition name="slide-fade" mode="out-in">
+                        <div
+                            v-if="isPickup"
+                            key="pickup-row"
+                            class="mt-2 flex justify-between border-t pt-2 text-sm text-gray-700"
+                        >
+                            <span>Самовывоз</span>
+                            <span>бесплатно</span>
+                        </div>
 
-                    <div
-                        v-else-if="deliveryPrice !== null"
-                        class="mt-2 flex justify-between border-t pt-2 text-sm text-gray-700"
-                    >
-                        <span>Доставка</span>
-                        <span>
-                            <template v-if="deliveryPrice === 0">бесплатно</template>
-                            <template v-else>{{ formatMoney(deliveryPrice) }}</template>
-                        </span>
-                    </div>
+                        <div
+                            v-else-if="deliveryPrice !== null"
+                            key="delivery-row"
+                            class="mt-2 flex justify-between border-t pt-2 text-sm text-gray-700"
+                        >
+                            <span>Доставка</span>
+                            <span>
+                                <template v-if="deliveryPrice === 0">бесплатно</template>
+                                <template v-else>{{ formatMoney(deliveryPrice) }}</template>
+                            </span>
+                        </div>
+                    </Transition>
 
-                    <div v-if="cart.items.length === 0" class="text-sm text-gray-400">
-                        Корзина пуста
-                    </div>
+                    <Transition name="fade-up">
+                        <div v-if="cart.items.length === 0" class="text-sm text-gray-400">
+                            Корзина пуста
+                        </div>
+                    </Transition>
 
                     <div class="flex justify-between border-t pt-4 font-bold text-gray-900">
                         <span>Итого</span>
@@ -471,3 +500,62 @@
         </div>
     </div>
 </template>
+
+<style scoped>
+    /* Slide + fade для переключения pickup/delivery */
+    .slide-fade-enter-active {
+        transition:
+            opacity 0.25s ease,
+            transform 0.25s ease;
+    }
+    .slide-fade-leave-active {
+        transition:
+            opacity 0.15s ease,
+            transform 0.15s ease;
+    }
+    .slide-fade-enter-from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    .slide-fade-leave-to {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+
+    /* Fade + лёгкий scale для блока расчёта */
+    .fade-scale-enter-active {
+        transition:
+            opacity 0.3s ease,
+            transform 0.3s ease;
+    }
+    .fade-scale-leave-active {
+        transition:
+            opacity 0.2s ease,
+            transform 0.2s ease;
+    }
+    .fade-scale-enter-from {
+        opacity: 0;
+        transform: scale(0.98);
+    }
+    .fade-scale-leave-to {
+        opacity: 0;
+        transform: scale(0.98);
+    }
+
+    /* Fade-up для подсказок и ошибок */
+    .fade-up-enter-active {
+        transition:
+            opacity 0.25s ease,
+            transform 0.25s ease;
+    }
+    .fade-up-leave-active {
+        transition:
+            opacity 0.15s ease,
+            transform 0.15s ease;
+    }
+    .fade-up-enter-from,
+    .fade-up-leave-to {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+</style>
