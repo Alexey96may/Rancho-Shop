@@ -57,4 +57,16 @@ return [
         'note' => env('PAYMENT_DIRECT_NOTE_TEMPLATE', 'Оплата заказа #:order_id'),
     ],
 
+    'tinkoff' => [
+        'terminal_key' => env('TINKOFF_TERMINAL_KEY'),
+        'secret_key' => env('TINKOFF_SECRET_KEY'),
+        'api_url' => env('TINKOFF_API_URL', 'https://rest-api-test.tinkoff.ru/v2/'),
+    ],
+
+    'yookassa' => [
+        'shop_id' => env('YOOKASSA_SHOP_ID'),
+        'secret_key' => env('YOOKASSA_SECRET_KEY'),
+        'api_url' => env('YOOKASSA_API_URL', 'https://api.yookassa.ru/v3/'),
+    ],
+
 ];

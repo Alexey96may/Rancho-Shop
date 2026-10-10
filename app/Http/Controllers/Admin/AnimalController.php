@@ -3,22 +3,21 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Inertia\Inertia;
+use App\Http\Requests\Admin\StoreAnimalRequest;
 use App\Http\Resources\Admin\AnimalResource as AdminAnimalResource;
-use App\Enums\UserRole;
-use App\Http\Requests\Admin\{StoreAnimalRequest};
 use App\Models\Animal;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Gate;
-use Spatie\MediaLibrary\MediaCollections\Models\Media;
-use App\Traits\Http\Controllers\HandlesSmartPagination;
 use App\Models\Category;
 use App\Traits\HandlesAdminMedia;
+use App\Traits\Http\Controllers\HandlesSmartPagination;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
+use Inertia\Inertia;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class AnimalController extends Controller
 {
-    use HandlesSmartPagination, HandlesAdminMedia;
+    use HandlesAdminMedia, HandlesSmartPagination;
 
     /**
      * Display a listing of the resource.
@@ -29,10 +28,9 @@ class AnimalController extends Controller
 
         $animals = Animal::query()
             ->with(['category', 'parent', 'seo'])
-            ->orderBy('is_active', 'desc')
             ->withTrashControl($request, $filters)
             ->filter($filters)
-            ->latest()
+            ->sortAdmin()
             ->paginate(setting('admin_per_page', 10))
             ->withQueryString();
 
@@ -40,7 +38,7 @@ class AnimalController extends Controller
             'animals' => AdminAnimalResource::collection($animals),
             'categories' => Category::where('type', 'animal')->get(['id', 'name', 'slug']),
             'filters' => $filters,
-            'seo' => $this->seo('Панель управления: Животные', robots: 'noindex, nofollow')
+            'seo' => $this->seo('Панель управления: Животные', robots: 'noindex, nofollow'),
         ]);
     }
 
@@ -53,8 +51,8 @@ class AnimalController extends Controller
             'animal' => null,
             'categories' => Category::where('type', 'animal')->get(['id', 'name', 'slug']),
             'seo' => $this->seo('Добавление новой особи', robots: 'noindex, nofollow'),
-            'backUrl' => $request->query('back') 
-                    ? route('admin.animals.index') . $request->query('back') 
+            'backUrl' => $request->query('back')
+                    ? route('admin.animals.index') . $request->query('back')
                     : route('admin.animals.index'),
         ]);
     }
@@ -69,7 +67,7 @@ class AnimalController extends Controller
         $animal = DB::transaction(function () use ($dto, $request) {
             $animal = Animal::create($dto->toArray());
             $animal->syncSeo($dto->seoData);
-            
+
             $this->syncModelMedia($animal, $request);
 
             return $animal;
@@ -86,11 +84,11 @@ class AnimalController extends Controller
         $animal->load(['seo', 'category', 'parent']);
 
         return Inertia::render('Admin/Animals/FormPage', [
-            'animal' => new AdminAnimalResource($animal), 
+            'animal' => new AdminAnimalResource($animal),
             'categories' => Category::where('type', 'animal')->get(['id', 'name', 'slug']),
             'seo' => $this->seo("Редактирование {$animal->name}", robots: 'noindex, nofollow'),
-            'backUrl' => $request->query('back') 
-                ? route('admin.animals.index') . $request->query('back') 
+            'backUrl' => $request->query('back')
+                ? route('admin.animals.index') . $request->query('back')
                 : route('admin.animals.index'),
         ]);
     }
@@ -98,7 +96,7 @@ class AnimalController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Animal $animal)
+    public function update(StoreAnimalRequest $request, Animal $animal)
     {
         $dto = $request->toDto();
 
@@ -123,9 +121,9 @@ class AnimalController extends Controller
             Gate::authorize('forceDelete', $animal);
 
             $name = $animal->name;
-            
+
             DB::transaction(function () use ($animal) {
-                $animal->seo()?->delete();
+                $animal->seo?->delete();
                 $animal->media()->delete();
                 $animal->forceDelete();
             });
@@ -135,8 +133,8 @@ class AnimalController extends Controller
 
         Gate::authorize('delete', $animal);
         $animal->delete();
-        
-        return back()->with('success', "Животное «{$animal->name}» окончательно удалено!");
+
+        return back()->with('success', "Животное «{$animal->name}» перемещено в корзину");
     }
 
     public function restore(Animal $animal)
@@ -150,14 +148,14 @@ class AnimalController extends Controller
     public function getPotentialParents(Request $request)
     {
         return Animal::query()
-            ->where('id', '!=', $request->current_id)
+            ->when($request->current_id, fn ($q, $id) => $q->where('id', '!=', $id))
             ->where('category_id', $request->category_id)
             ->get(['id', 'name']);
     }
 
     public function deleteMedia(Animal $animal, Media $media)
     {
-        if ($media->model_id !== $animal->id || $media->model_type !== Animal::class) {
+        if ($media->model_id !== $animal->id || $media->model_type !== $animal->getMorphClass()) {
             return redirect()->back()->with('error', 'Доступ запрещен');
         }
         $media->delete();

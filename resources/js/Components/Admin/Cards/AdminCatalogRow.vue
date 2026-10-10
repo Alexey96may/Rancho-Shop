@@ -1,4 +1,7 @@
 <script setup lang="ts">
+    import { onBeforeUnmount } from 'vue';
+
+    import { debounce } from 'lodash';
     import { PackageIcon } from 'lucide-vue-next';
 
     import AdminDeleteButton from '@/Components/Admin/UI/AdminDeleteButton.vue';
@@ -19,12 +22,20 @@
         (e: 'delete', variant: AdminProductVariantDTO): void;
     }>();
 
+    const debouncedPriceUpdate = debounce((id: number, price: number) => {
+        emit('quick-update', id, { price });
+    }, 500);
+
+    const debouncedStockUpdate = debounce((id: number, stock: number) => {
+        emit('quick-update', id, { stock });
+    }, 500);
+
     const handlePriceChange = (newPrice: number | null | undefined) => {
         if (newPrice === undefined || newPrice === null || newPrice === props.variant.price) {
             return;
         }
 
-        emit('quick-update', props.variant.id, { price: newPrice });
+        debouncedPriceUpdate(props.variant.id, newPrice);
     };
 
     const handleStockChange = (newStock: number | null | undefined) => {
@@ -32,12 +43,17 @@
             return;
         }
 
-        emit('quick-update', props.variant.id, { stock: newStock });
+        debouncedStockUpdate(props.variant.id, newStock);
     };
 
-    const handleDefaultChange = (newStock: boolean) => {
-        emit('quick-update', props.variant.id, { is_default: newStock });
+    const handleDefaultChange = (isDefault: boolean) => {
+        emit('quick-update', props.variant.id, { is_default: isDefault });
     };
+
+    onBeforeUnmount(() => {
+        debouncedPriceUpdate.flush();
+        debouncedStockUpdate.flush();
+    });
 </script>
 
 <template>

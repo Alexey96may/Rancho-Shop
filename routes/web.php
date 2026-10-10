@@ -30,6 +30,7 @@ use App\Http\Controllers\Profile\ProfileController;
 use App\Http\Controllers\Profile\ProfileOrderController;
 use App\Http\Controllers\RobotsController;
 use App\Http\Controllers\SitemapController;
+use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [LandingController::class, 'index'])->name('home');
@@ -61,13 +62,33 @@ Route::post('/comments', [CommentController::class, 'store'])->middleware('auth'
 Route::post('/delivery/draft', [DeliveryController::class, 'store'])->name('delivery.draft.store');
 
 // Публичные маршруты оплаты (доступны и для гостей, и для авторизованных)
+// Публичные роуты оплаты
 Route::get('/orders/{order}/pay', [PaymentController::class, 'checkout'])
     ->name('payments.checkout');
+
+Route::get('/orders/{order}/success', [PaymentController::class, 'success'])
+    ->name('payments.tinkoff.success');
+
 Route::get('/orders/{order}/fake-pay', [PaymentController::class, 'fakeProcess'])
     ->name('payments.fake.process');
-// Webhook от PayMaster
-Route::post('/payments/paymaster/callback', [PaymentController::class, 'callback'])
-    ->name('payments.paymaster.callback');
+
+// Возврат пользователя после оплаты в ЮKassa
+Route::get('/orders/{order}/yookassa/success', [PaymentController::class, 'successYooKassa'])
+    ->name('payments.yookassa.success');
+
+// Webhook от ЮKassa
+Route::post('/payments/yookassa/callback', [PaymentController::class, 'callbackYooKassa'])
+    ->name('payments.yookassa.callback')
+    ->withoutMiddleware([VerifyCsrfToken::class]);
+
+// Webhooks (без auth, без CSRF)
+Route::post('/payments/tinkoff/callback', [PaymentController::class, 'callbackTinkoff'])
+    ->name('payments.tinkoff.callback')
+    ->withoutMiddleware([VerifyCsrfToken::class]);
+
+Route::post('/payments/paymaster/callback', [PaymentController::class, 'callbackPaymaster'])
+    ->name('payments.paymaster.callback')
+    ->withoutMiddleware([VerifyCsrfToken::class]);
 
 // SEO
 Route::get('/robots.txt', [RobotsController::class, 'index'])->name('robots');

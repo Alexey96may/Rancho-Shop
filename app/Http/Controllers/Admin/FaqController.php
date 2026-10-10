@@ -3,13 +3,14 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\FaqRequest;
+use App\Http\Requests\Admin\ReorderFaqRequest;
 use App\Http\Resources\Admin\AdminFaqResource;
 use App\Models\Faq;
-use App\Http\Requests\Admin\{FaqRequest, ReorderFaqRequest};
-use Illuminate\Http\Request;
-use Inertia\Inertia;
-use Illuminate\Support\Facades\DB;
 use App\Traits\Http\Controllers\HandlesSmartPagination;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Inertia\Inertia;
 
 class FaqController extends Controller
 {
@@ -25,13 +26,14 @@ class FaqController extends Controller
         $faqs = Faq::query()
             ->filter($filters)
             ->orderBy('sort_order', 'asc')
+            ->orderBy('id', 'asc')
             ->paginate(setting('admin_per_page', 10))
             ->withQueryString();
 
         return Inertia::render('Admin/Faq/Index', [
             'faqs' => AdminFaqResource::collection($faqs),
             'filters' => $filters,
-            'seo' => $this->seo('Панель управления: Вопросы и Ответы', robots: 'noindex, nofollow')
+            'seo' => $this->seo('Панель управления: Вопросы и Ответы', robots: 'noindex, nofollow'),
         ]);
     }
 
@@ -43,7 +45,7 @@ class FaqController extends Controller
         $dto = $request->toDto();
         Faq::create($dto->toArray());
 
-        return redirect()->route('admin.faq.index')->with('success',  "Вопрос успешно добавлен!");
+        return redirect()->route('admin.faq.index')->with('success', 'Вопрос успешно добавлен!');
     }
 
     /**
@@ -58,21 +60,22 @@ class FaqController extends Controller
     }
 
     /**
-    * Quickly switch publication status
-    */
+     * Quickly switch publication status
+     */
     public function toggle(Faq $faq)
     {
         $faq->update([
-            'is_published' => !$faq->is_published 
+            'is_published' => !$faq->is_published,
         ]);
 
         $message = $faq->is_published ? "Вопрос #{$faq->id} опубликован!" : "Вопрос #{$faq->id} скрыт!";
+
         return redirect()->back()->with('success', $message);
     }
 
     /**
-    * Bulk order update (if we're doing drag-n-drop)
-    */
+     * Bulk order update (if we're doing drag-n-drop)
+     */
     public function reorder(ReorderFaqRequest $request)
     {
         $ids = $request->validated()['ids'];
@@ -84,7 +87,7 @@ class FaqController extends Controller
         $params = [];
 
         foreach ($ids as $index => $id) {
-            $cases[] = "WHEN id = ? THEN ?::integer";
+            $cases[] = 'WHEN id = ? THEN ?::integer';
             $params[] = $id;
             $params[] = $index;
         }
@@ -92,14 +95,15 @@ class FaqController extends Controller
         $params = array_merge($params, $ids);
         $idsPlaceholder = implode(',', array_fill(0, count($ids), '?'));
 
-        $query = "
-            UPDATE faqs 
-            SET sort_order = (CASE " . implode(' ', $cases) . " END) 
+        $query = '
+            UPDATE faqs
+            SET sort_order = (CASE ' . implode(' ', $cases) . " END)
             WHERE id IN ($idsPlaceholder)
         ";
 
         try {
-            DB::transaction(fn() => DB::update($query, $params));
+            DB::transaction(fn () => DB::update($query, $params));
+
             return redirect()->back()->with('success', 'Порядок вопросов обновлён!');
         } catch (\Exception $e) {
             return redirect()->back()->withErrors(['error' => 'Ошибка базы данных: ' . $e->getMessage()]);
@@ -110,7 +114,7 @@ class FaqController extends Controller
      * Remove the specified resource from storage.
      */
     public function destroy(Request $request, Faq $faq)
-    {   
+    {
         $faq->delete();
 
         return $this->redirectWithFilters($request, 'admin.faq.index', "Вопрос #{$faq->id} удалён!");

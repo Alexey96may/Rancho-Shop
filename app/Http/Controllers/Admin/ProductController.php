@@ -3,45 +3,51 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Http\Requests\Admin\StoreProductRequest;
+use App\Http\Requests\Admin\UpdateProductRequest;
 use App\Http\Resources\Admin\AdminProductResource;
-use App\Http\Resources\{CommentResource, CategoryResource, AnimalResource};
-use App\Http\Requests\Admin\{StoreProductRequest, UpdateProductRequest};
-use App\Models\{Product, Category, Animal};
-use Illuminate\Support\Facades\DB;
-use Inertia\Inertia;
-use App\Traits\Http\Controllers\HandlesSmartPagination;
+use App\Http\Resources\CategoryResource;
+use App\Http\Resources\CommentResource;
+use App\Models\Animal;
+use App\Models\Category;
+use App\Models\Product;
 use App\Traits\HandlesAdminMedia;
-use Illuminate\Support\Facades\Gate;
-use App\Enums\UserRole;
+use App\Traits\Http\Controllers\HandlesSmartPagination;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
+use Inertia\Inertia;
 
 class ProductController extends Controller
 {
-    use HandlesSmartPagination, HandlesAdminMedia;
+    use HandlesAdminMedia, HandlesSmartPagination;
 
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
     {
-        $filters = $request->only(['search', 'category', 'animal', 'status']);
-        
+        $filters = $request->only(['search', 'category', 'animal']);
+
         $products = Product::query()
             ->with(['category', 'variants.unit'])
-            ->withCount(['variants', 'comments']) 
+            ->withCount(['variants', 'comments'])
             ->withAvg('comments', 'rating')
             ->withTrashControl($request, $filters)
             ->filter($filters)
+            ->sortAdmin()
             ->paginate(setting('admin_per_page', 10))
             ->withQueryString();
-        
+
         return Inertia::render('Admin/Products/Index', [
             'products' => AdminProductResource::collection($products),
             'filters' => $filters,
-            'categories' => CategoryResource::collection(Category::forProducts()->orderBy('name')->get()),
-            'animals' => AnimalResource::collection(Animal::orderBy('name')->get()),
-            'seo' => $this->seo('Панель управления: Продукты', 'Просмотр продуктов',  robots: 'noindex, nofollow')
+            'categories' => CategoryResource::collection(
+                Category::forProducts()->orderBy('name')->get()
+            ),
+            'animals' => $this->getAnimalOptions(),
+            'seo' => $this->seo('Панель управления: Продукты', 'Просмотр продуктов', robots: 'noindex, nofollow'),
         ]);
     }
 
@@ -52,10 +58,8 @@ class ProductController extends Controller
     {
         return Inertia::render('Admin/Products/Form', array_merge([
             'seo' => $this->seo('Создание продукта', robots: 'noindex, nofollow'),
-            'backUrl' => $request->query('back') 
-                    ? route('admin.products.index') . $request->query('back') 
-                    : route('admin.products.index'),
-            ], $this->getFormOptions()));
+            'backUrl' => $this->backUrl($request),
+        ], $this->getFormOptions()));
     }
 
     /**
@@ -67,16 +71,20 @@ class ProductController extends Controller
 
         $product = DB::transaction(function () use ($dto, $request) {
             $product = Product::create($dto->toArray());
-            
-            $product->animals()->sync($dto->animal_ids);  
+
+            $product->animals()->sync($dto->animal_ids);
             $product->syncSeo($dto->seoData);
-            
+
             $this->syncModelMedia($product, $request);
 
             return $product;
         });
-        
-        return $this->redirectWithFilters($request, 'admin.products.index', "Товар «{$product->name}» создан!");
+
+        return $this->redirectWithFilters(
+            $request,
+            'admin.products.index',
+            "Товар «{$product->name}» создан!"
+        );
     }
 
     /**
@@ -85,18 +93,16 @@ class ProductController extends Controller
     public function edit(Request $request, Product $product)
     {
         $product->load(['variants.unit', 'category', 'media', 'animals', 'seo'])
-                ->loadCount(['variants', 'comments'])
-                ->loadAvg('comments', 'rating');
+            ->loadCount(['variants', 'comments'])
+            ->loadAvg('comments', 'rating');
 
         return Inertia::render('Admin/Products/Form', array_merge([
             'product' => AdminProductResource::make($product),
             'seo' => $this->seo('Редактирование: ' . $product->name, robots: 'noindex, nofollow'),
             'comments' => CommentResource::collection(
-                $product->comments()->latest()->paginate(10)
+                $product->comments()->with('user')->latest()->paginate(10)
             ),
-            'backUrl' => $request->query('back') 
-                ? route('admin.products.index') . $request->query('back') 
-                : route('admin.products.index'),
+            'backUrl' => $this->backUrl($request),
         ], $this->getFormOptions()));
     }
 
@@ -109,14 +115,18 @@ class ProductController extends Controller
 
         DB::transaction(function () use ($dto, $request, $product) {
             $product->update($dto->toArray());
-            
+
             $product->animals()->sync($dto->animal_ids);
             $product->syncSeo($dto->seoData);
-            
+
             $this->syncModelMedia($product, $request);
         });
 
-        return $this->redirectWithFilters($request, 'admin.products.index', "Товар «{$product->name}» обновлён!");
+        return $this->redirectWithFilters(
+            $request,
+            'admin.products.index',
+            "Товар «{$product->name}» обновлён!"
+        );
     }
 
     /**
@@ -130,15 +140,31 @@ class ProductController extends Controller
             Gate::authorize('forceDelete', $product);
 
             $name = $product->name;
-            $product->forceDelete();
 
-            return back()->with('success', "Товар «{$name}» окончательно удалён!");
+            DB::transaction(function () use ($product) {
+                $product->seo?->delete();
+                $product->clearMediaCollection('main');
+                $product->clearMediaCollection('gallery');
+                $product->variants()->delete();
+                $product->animals()->detach();
+                $product->forceDelete();
+            });
+
+            return $this->redirectWithFilters(
+                $request,
+                'admin.products.index',
+                "Товар «{$name}» окончательно удалён!"
+            );
         }
 
-        Gate::authorize('delete', $product); // ProductPolicy@delete
+        Gate::authorize('delete', $product);
         $product->delete();
-        
-        return $this->redirectWithFilters($request, 'admin.products.index', "Товар «{$product->name}» помечен как удалённый!");
+
+        return $this->redirectWithFilters(
+            $request,
+            'admin.products.index',
+            "Товар «{$product->name}» помечен как удалённый!"
+        );
     }
 
     public function restore(Product $product): RedirectResponse
@@ -150,12 +176,42 @@ class ProductController extends Controller
         return back()->with('success', "Товар «{$product->name}» успешно восстановлен!");
     }
 
-    private function getFormOptions()
+    /**
+     * Общие опции форм create / edit.
+     */
+    private function getFormOptions(): array
     {
         return [
-            'categories' => CategoryResource::collection(Category::forProducts()->orderBy('name')->get()),
-            'animals'    => AnimalResource::collection(Animal::select('id', 'name')->get()),
+            'categories' => CategoryResource::collection(
+                Category::forProducts()->orderBy('name')->get()
+            ),
+            'animals' => $this->getAnimalOptions(),
         ];
     }
-    
+
+    /**
+     * Лёгкий список животных для select'ов — только id и name.
+     */
+    private function getAnimalOptions(): array
+    {
+        return Animal::query()
+            ->select(['id', 'name'])
+            ->orderBy('name')
+            ->get()
+            ->map(fn ($animal) => [
+                'id' => $animal->id,
+                'name' => $animal->name,
+            ])
+            ->all();
+    }
+
+    /**
+     * URL возврата с учётом фильтров.
+     */
+    private function backUrl(Request $request): string
+    {
+        return $request->query('back')
+            ? route('admin.products.index') . $request->query('back')
+            : route('admin.products.index');
+    }
 }

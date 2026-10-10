@@ -26,7 +26,9 @@ class ProductController extends Controller
                 'media',
                 'defaultVariant.unit',
             ])
+            ->withStockFlag()
             ->filter($filters)
+            ->sort($filters['sort'] ?? null)
             ->paginate(setting('products_per_page', 12))
             ->withQueryString();
 

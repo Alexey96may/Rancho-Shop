@@ -4,10 +4,10 @@ namespace App\Http\Controllers\Admin;
 
 use App\Enums\PromoCodeType;
 use App\Http\Controllers\Controller;
-use App\Http\Resources\Admin\AdminPromoCodeResource;
 use App\Http\Requests\Admin\PromoCodeSaveRequest;
-use App\Traits\Http\Controllers\HandlesSmartPagination;
+use App\Http\Resources\Admin\AdminPromoCodeResource;
 use App\Models\PromoCode;
+use App\Traits\Http\Controllers\HandlesSmartPagination;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -20,25 +20,21 @@ class PromocodeController extends Controller
      */
     public function index(Request $request)
     {
-        $filters = $request->only(['search', 'type', 'status']);
-
-        $sort = in_array((string) $request->query('sort'), ['latest', 'expires_at'], true)
-            ? (string) $request->query('sort')
-            : 'latest';
+        $filters = $request->only(['search', 'type', 'status', 'sort']);
 
         $promoCodes = PromoCode::query()
-            ->filter($filters)
-            ->applySorting($sort)
+            ->filter(collect($filters)->only(['search', 'type', 'status'])->all())
+            ->applySorting($filters['sort'] ?? 'latest')
             ->paginate(setting('admin_per_page', 10))
             ->withQueryString();
 
         return Inertia::render('Admin/PromoCodes/Index', [
             'promoCodes' => AdminPromoCodeResource::collection($promoCodes),
-            'filters'    => $filters,
+            'filters' => $filters,
             'typeOptions' => $this->getTypeOptions(),
             'statusOptions' => $this->getStatusOptions(),
             'sortOptions' => $this->getSortOptions(),
-            'seo' => $this->seo('Панель управления: Промокоды', robots: 'noindex, nofollow')
+            'seo' => $this->seo('Панель управления: Промокоды', robots: 'noindex, nofollow'),
         ]);
     }
 
@@ -51,10 +47,10 @@ class PromocodeController extends Controller
         PromoCode::create($dto->toArray());
 
         if ($request->boolean('create_another')) {
-            return redirect()->back()->with('success', "Промокод создан. Можете добавить следующий.");
+            return redirect()->back()->with('success', 'Промокод создан. Можете добавить следующий.');
         }
 
-        return $this->redirectWithFilters($request, 'admin.promocodes.index', "Промокод создан!");
+        return $this->redirectWithFilters($request, 'admin.promocodes.index', 'Промокод создан!');
     }
 
     /**
@@ -64,21 +60,21 @@ class PromocodeController extends Controller
     {
         $dto = $request->toDto();
         $promocode->update($dto->toArray());
-        
+
         return $this->redirectWithFilters($request, 'admin.promocodes.index', "Промокод «{$promocode->code}» успешно обновлён!");
     }
 
     public function create(Request $request)
     {
-        $typeOptions = collect(PromoCodeType::cases())->map(fn($type) => [
+        $typeOptions = collect(PromoCodeType::cases())->map(fn ($type) => [
             'value' => $type->value,
             'label' => $type->label(),
         ]);
 
         return Inertia::render('Admin/PromoCodes/Create', [
             'typeOptions' => $typeOptions,
-            'backUrl' => $request->query('back') 
-                    ? route('admin.promocodes.index') . $request->query('back') 
+            'backUrl' => $request->query('back')
+                    ? route('admin.promocodes.index') . $request->query('back')
                     : route('admin.promocodes.index'),
             'seo' => $this->seo('Новый промокод', robots: 'noindex, nofollow'),
         ]);
@@ -89,8 +85,8 @@ class PromocodeController extends Controller
         return Inertia::render('Admin/PromoCodes/Edit', [
             'promo' => new AdminPromoCodeResource($promocode),
             'typeOptions' => $this->getTypeOptions(),
-            'backUrl' => $request->query('back') 
-                    ? route('admin.promocodes.index') . $request->query('back') 
+            'backUrl' => $request->query('back')
+                    ? route('admin.promocodes.index') . $request->query('back')
                     : route('admin.promocodes.index'),
             'seo' => $this->seo('Редактирование промокода ' . $promocode->code, robots: 'noindex, nofollow'),
         ]);
@@ -112,6 +108,7 @@ class PromocodeController extends Controller
     public function toggle(PromoCode $promoCode)
     {
         $promoCode->update(['is_active' => !$promoCode->is_active]);
+
         return redirect()->back();
     }
 
@@ -121,7 +118,7 @@ class PromocodeController extends Controller
 
     private function getTypeOptions(): array
     {
-        return collect(PromoCodeType::cases())->map(fn($type) => [
+        return collect(PromoCodeType::cases())->map(fn ($type) => [
             'value' => $type->value,
             'label' => $type->label(),
         ])->toArray();

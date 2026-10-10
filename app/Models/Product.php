@@ -2,20 +2,24 @@
 
 namespace App\Models;
 
+use App\Enums\AvailabilityType;
 use App\Traits\HasActiveScope;
 use App\Traits\HasInteractions;
-use App\Traits\HasStandardMedia;
 use App\Traits\HasSeoActions;
+use App\Traits\HasStandardMedia;
+use App\Traits\Models\HasAdminTrash;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Builder;
-use App\Traits\Models\HasAdminTrash;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use App\Enums\AvailabilityType;
 // Spatie
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\MediaLibrary\MediaCollections\Models\Collections\MediaCollection;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 /**
  * @property int $id
@@ -28,20 +32,21 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  * @property array<array-key, mixed>|null $schedule
  * @property array<array-key, mixed>|null $attributes
  * @property bool $is_active
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property \Illuminate\Support\Carbon|null $deleted_at
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Animal> $animals
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property Carbon|null $deleted_at
+ * @property-read Collection<int, Animal> $animals
  * @property-read int|null $animals_count
- * @property-read \App\Models\Category|null $category
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Comment> $comments
+ * @property-read Category|null $category
+ * @property-read Collection<int, Comment> $comments
  * @property-read int|null $comments_count
- * @property-read \App\Models\ProductVariant|null $defaultVariant
- * @property-read \Spatie\MediaLibrary\MediaCollections\Models\Collections\MediaCollection<int, \Spatie\MediaLibrary\MediaCollections\Models\Media> $media
+ * @property-read ProductVariant|null $defaultVariant
+ * @property-read MediaCollection<int, Media> $media
  * @property-read int|null $media_count
- * @property-read \App\Models\Seo|null $seo
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\ProductVariant> $variants
+ * @property-read Seo|null $seo
+ * @property-read Collection<int, ProductVariant> $variants
  * @property-read int|null $variants_count
+ *
  * @method static Builder<static>|Product active()
  * @method static \Database\Factories\ProductFactory factory($count = null, $state = [])
  * @method static Builder<static>|Product filter(array $filters)
@@ -64,11 +69,12 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  * @method static Builder<static>|Product whereUpdatedAt($value)
  * @method static Builder<static>|Product withTrashed(bool $withTrashed = true)
  * @method static Builder<static>|Product withoutTrashed()
+ *
  * @mixin \Eloquent
  */
 class Product extends Model implements HasMedia
 {
-    use HasActiveScope, HasFactory, HasSeoActions, HasInteractions, HasStandardMedia, HasAdminTrash, InteractsWithMedia, SoftDeletes {
+    use HasActiveScope, HasAdminTrash, HasFactory, HasInteractions, HasSeoActions, HasStandardMedia, InteractsWithMedia, SoftDeletes {
         HasStandardMedia::registerMediaConversions insteadof InteractsWithMedia;
     }
 
@@ -120,84 +126,85 @@ class Product extends Model implements HasMedia
         return $default ?? $this->variants->first();
     }
 
+    public function scopeFilter(Builder $query, array $filters): Builder
+    {
+        return $query
+            ->when($filters['search'] ?? null, function ($query, $search) {
+                $search = mb_strtolower($search, 'UTF-8');
+                $query->where(function ($q) use ($search) {
+                    $q->whereRaw('LOWER(name) LIKE ?', ["%{$search}%"])
+                        ->orWhereRaw('LOWER(description) LIKE ?', ["%{$search}%"]);
+                });
+            })
+            ->when($filters['category'] ?? null, function ($query, $category) {
+                $query->whereHas('category', function ($q) use ($category) {
+                    if (is_numeric($category)) {
+                        $q->where('id', $category);
+                    } else {
+                        $q->where('slug', $category);
+                    }
+                });
+            })
+            ->when($filters['animal'] ?? null, function ($query, $animal) {
+                $query->whereHas('animals', function ($q) use ($animal) {
+                    $q->where('animals.id', $animal);
+                });
+            })
+            ->when(
+                !empty($filters['in_stock']) && filter_var($filters['in_stock'], FILTER_VALIDATE_BOOLEAN),
+                function ($query) {
+                    $query->whereHas('variants', function ($q) {
+                        $q->where('is_default', true)->where('stock', '>', 0);
+                    });
+                }
+            );
+    }
+
     /**
-    * Scope for retrieving in-stock products based on the default variant
-    */
+     * Scope for retrieving in-stock products based on the default variant
+     */
     public function scopeInStock(Builder $query): Builder
     {
         return $query->whereHas('variants', function ($q) {
             $q->where('is_default', true)
-            ->where('stock', '>', 0);
+                ->where('stock', '>', 0);
         });
     }
 
-    public function scopeFilter(Builder $query, array $filters): void
+    public function scopeSort(Builder $query, ?string $sort = null): Builder
     {
-        // 1. Добавляем алиас для использования на фронтенде/в ресурсе, если нужно
-        $query->addSelect([
-            'has_default_in_stock' => ProductVariant::selectRaw('CASE WHEN stock > 0 THEN 1 ELSE 0 END')
-                ->whereColumn('product_id', 'products.id')
-                ->where('is_default', true)
-                ->limit(1)
-        ]);
-
-        // 2. Поиск (name и description)
-        $query->when($filters['search'] ?? null, function ($query, $search) {
-            $search = mb_strtolower($search, 'UTF-8');
-            $query->where(function ($q) use ($search) {
-                $q->whereRaw('LOWER(name) LIKE ?', ["%{$search}%"])
-                ->orWhereRaw('LOWER(description) LIKE ?', ["%{$search}%"]);
-            });
-        });
-
-        // 3. Категория (ID и Slug)
-        $query->when($filters['category'] ?? null, function ($query, $category) {
-            $query->whereHas('category', function ($q) use ($category) {
-                if (is_numeric($category)) {
-                    $q->where('id', $category);
-                } else {
-                    $q->where('slug', $category);
-                }
-            });
-        });
-
-        // 4. Животные
-        $query->when($filters['animal'] ?? null, function ($query, $animal) {
-            $query->whereHas('animals', function ($q) use ($animal) {
-                $q->where('animals.id', $animal);
-            });
-        });
-
-        // 5. ФИЛЬТР ПО НАЛИЧИЮ
-        if (isset($filters['in_stock']) && filter_var($filters['in_stock'], FILTER_VALIDATE_BOOLEAN)) {
-            $query->whereHas('variants', function ($q) {
-                $q->where('is_default', true)
-                ->where('stock', '>', 0);
-            });
-        }
-
-        // 6. СОРТИРОВКА
-        $sort = $filters['sort'] ?? null;
-
-        // Первичная сортировка: сначала товары в наличии по дефолтному варианту
+        // 1. in_stock сверху — только для каталога
         $inStockSubQuery = ProductVariant::selectRaw('CASE WHEN stock > 0 THEN 1 ELSE 0 END')
             ->whereColumn('product_id', 'products.id')
             ->where('is_default', true)
             ->limit(1);
 
-        $query->orderByRaw('COALESCE((' . $inStockSubQuery->toSql() . '), 0) DESC', $inStockSubQuery->getBindings());
+        $query->orderByRaw(
+            'COALESCE((' . $inStockSubQuery->toSql() . '), 0) DESC',
+            $inStockSubQuery->getBindings()
+        );
 
-        // Вторичная сортировка по фильтру пользователя
+        // 2. Пользовательская сортировка
         if ($sort === 'cheap') {
-            $query->withMin('variants', 'price')
-                ->orderBy('variants_min_price', 'asc'); // Исправлено: variants_min_price
+            $query->withMin('variants', 'price')->orderBy('variants_min_price', 'asc');
         } elseif ($sort === 'expensive') {
-            $query->withMax('variants', 'price')
-                ->orderBy('variants_max_price', 'desc'); // Исправлено: variants_max_price
+            $query->withMax('variants', 'price')->orderBy('variants_max_price', 'desc');
         } else {
-            // По умолчанию
-            $query->orderBy('products.created_at', 'desc');
+            $query->orderByDesc('products.created_at');
         }
+
+        // 3. Тайбрейкер — иначе записи «прыгают»
+        return $query->orderByDesc('products.id');
+    }
+
+    public function scopeWithStockFlag(Builder $query): Builder
+    {
+        return $query->addSelect([
+            'has_default_in_stock' => ProductVariant::selectRaw('CASE WHEN stock > 0 THEN 1 ELSE 0 END')
+                ->whereColumn('product_id', 'products.id')
+                ->where('is_default', true)
+                ->limit(1),
+        ]);
     }
 
     /**
@@ -217,7 +224,7 @@ class Product extends Model implements HasMedia
 
     public function isInStock(int $quantity = 1): bool
     {
-        return $this->stock >= $quantity;
+        return ($this->defaultVariant?->stock ?? 0) >= $quantity;
     }
 
     public function isPurchasable(int $quantity = 1): bool
@@ -226,5 +233,4 @@ class Product extends Model implements HasMedia
             && !$this->trashed()
             && $this->isInStock($quantity);
     }
-
 }

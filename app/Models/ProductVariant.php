@@ -116,28 +116,35 @@ class ProductVariant extends Model
     /**
      * Scope for filtering and sorting product variants
      */
-    public function scopeFilter(Builder $query, array $filters): void
+    public function scopeFilter(Builder $query, array $filters): Builder
     {
-        // Поиск по имени варианта
-        $query->when($filters['search'] ?? null, function ($query, $search) {
-            $search = mb_strtolower($search, 'UTF-8');
-            $query->whereRaw('LOWER(name) LIKE ?', ["%{$search}%"]);
-        });
+        return $query
+            ->when($filters['search'] ?? null, function ($query, $search) {
+                $search = mb_strtolower($search, 'UTF-8');
+                $query->whereRaw('LOWER(name) LIKE ?', ["%{$search}%"]);
+            })
+            ->when($filters['product_id'] ?? null, function ($query, $productId) {
+                $query->where('product_id', $productId);
+            })
+            ->when($filters['unit_id'] ?? null, function ($query, $unitId) {
+                $query->where('unit_id', $unitId);
+            })
+            ->when(
+                !empty($filters['in_stock']) && filter_var($filters['in_stock'], FILTER_VALIDATE_BOOLEAN),
+                fn ($q) => $q->where('stock', '>', 0)
+            );
+    }
 
-        // Фильтр по наличию самого варианта
-        if (isset($filters['in_stock']) && filter_var($filters['in_stock'], FILTER_VALIDATE_BOOLEAN)) {
-            $query->where('stock', '>', 0);
-        }
+    public function scopeSort(Builder $query, ?string $sort = null): Builder
+    {
+        $query = match ($sort) {
+            'price_asc' => $query->orderBy('price', 'asc'),
+            'price_desc' => $query->orderBy('price', 'desc'),
+            'stock_desc' => $query->orderByDesc('stock'),
+            'newest' => $query->orderByDesc('created_at'),
+            default => $query->orderByDesc('created_at'),
+        };
 
-        // Сортировка вариантов по их прямой колонке price
-        $sort = $filters['sort'] ?? null;
-
-        if ($sort === 'cheap') {
-            $query->orderBy('price', 'asc');
-        } elseif ($sort === 'expensive') {
-            $query->orderBy('price', 'desc');
-        } else {
-            $query->latest();
-        }
+        return $query->orderByDesc('id');   // ← тайбрейкер
     }
 }

@@ -20,7 +20,7 @@ class AnimalController extends Controller
         $animals = Animal::query()
             ->with(['media', 'seo', 'category'])
             ->filter($filters)
-            ->latest()
+            ->sortPublic()
             ->paginate(setting('animals_per_page', 12))
             ->withQueryString();
 

@@ -1,5 +1,7 @@
 import { router } from '@inertiajs/vue3';
 
+import { useNotificationsStore } from '@/stores/notifications';
+
 export type CommentableType = 'animal' | 'product' | 'page' | null;
 
 export interface CommentSubmitPayload {
@@ -12,6 +14,8 @@ export function useComments(
     commentableType: CommentableType = null,
     commentableId: number | null = null,
 ) {
+    const notify = useNotificationsStore();
+
     const submitComment = (payload: CommentSubmitPayload) => {
         router.post(
             route('comments.store'),
@@ -24,6 +28,10 @@ export function useComments(
             },
             {
                 preserveScroll: true,
+                onError: (errors: Record<string, string>) => {
+                    console.error(errors);
+                    notify.error('Ошибка валидации');
+                },
             },
         );
     };

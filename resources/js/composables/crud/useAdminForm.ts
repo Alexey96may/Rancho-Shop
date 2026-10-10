@@ -5,8 +5,6 @@ import type { InertiaForm } from '@inertiajs/vue3';
 
 import { useNotificationsStore } from '@/stores/notifications';
 
-const notify = useNotificationsStore();
-
 type DeepNullablePartial<T> = {
     [P in keyof T]?: T[P] | null;
 };
@@ -20,6 +18,8 @@ interface SubmitOptions {
 type RouterPostOptions = Parameters<typeof router.post>[2];
 
 export const useAdminForm = () => {
+    const notify = useNotificationsStore();
+
     const isModalOpen = ref(false);
     const editMode = ref(false);
     const currentId = ref<number | string | null>(null);

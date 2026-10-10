@@ -18,6 +18,8 @@ use App\Observers\SitemapCacheObserver;
 use App\Services\Payments\DirectPaymentGateway;
 use App\Services\Payments\FakePaymentGateway;
 use App\Services\Payments\PayMasterGateway;
+use App\Services\Payments\TinkoffGateway;
+use App\Services\Payments\YooKassaGateway;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -41,6 +43,8 @@ class AppServiceProvider extends ServiceProvider
             }
 
             return match ($driver) {
+                'tinkoff' => new TinkoffGateway,
+                'yookassa' => new YooKassaGateway,
                 'paymaster' => new PayMasterGateway,
                 'direct' => new DirectPaymentGateway,
                 default => new FakePaymentGateway,

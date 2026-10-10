@@ -4,13 +4,16 @@ namespace App\Http\Controllers\Admin;
 
 use App\Enums\PageType;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\PageSaveRequest;
+use App\Http\Requests\Admin\UploadPageMediaRequest;
 use App\Http\Resources\Admin\AdminPageResource;
-use App\Http\Requests\Admin\{PageSaveRequest, UploadPageMediaRequest};
 use App\Models\Page;
+use App\Models\User;
+use App\Traits\Http\Controllers\HandlesSmartPagination;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Traits\Http\Controllers\HandlesSmartPagination;
 use Inertia\Inertia;
+use Spatie\MediaLibrary\HasMedia;
 
 class PageController extends Controller
 {
@@ -27,15 +30,15 @@ class PageController extends Controller
             ->with(['seo', 'media'])
             ->withCount('reviews')
             ->filter($filters)
-            ->latest()
+            ->latest('id')
             ->paginate(setting('admin_per_page', 10))
             ->withQueryString();
 
         return Inertia::render('Admin/Pages/Index', [
-            'pages'         => AdminPageResource::collection($pages),
-            'filters'       => $filters,
-            'seo'           => $this->seo('Панель управления: Страницы', robots: 'noindex, nofollow'),
-            'page_types'    => PageType::cases()
+            'pages' => AdminPageResource::collection($pages),
+            'filters' => $filters,
+            'seo' => $this->seo('Панель управления: Страницы', robots: 'noindex, nofollow'),
+            'page_types' => PageType::cases(),
         ]);
     }
 
@@ -47,9 +50,9 @@ class PageController extends Controller
         return Inertia::render('Admin/Pages/Form', [
             'seo' => $this->seo('Создание новой страницы', robots: 'noindex, nofollow'),
             'page_types' => $this->getFormattedPageTypes(),
-            'templates'  => $this->getPageTemplates(),
-            'backUrl' => $request->query('back') 
-                    ? route('admin.pages.index') . $request->query('back') 
+            'templates' => $this->getPageTemplates(),
+            'backUrl' => $request->query('back')
+                    ? route('admin.pages.index') . $request->query('back')
                     : route('admin.pages.index'),
         ]);
     }
@@ -60,16 +63,14 @@ class PageController extends Controller
     public function store(PageSaveRequest $request)
     {
         $dto = $request->toDto();
-        
+
         $page = Page::create($dto->toPageArray());
 
         if ($page->content) {
             $this->moveTemporaryMedia($page->content, $page);
         }
 
-        if (!empty($dto->seoData)) {
-            $page->seo()->create($dto->seoData);
-        }
+        $page->syncSeo($dto->seoData);
 
         return $this->redirectWithFilters($request, 'admin.pages.index', "Страница «{$page->title}» созданa!");
     }
@@ -87,12 +88,7 @@ class PageController extends Controller
 
         $page->update($dto->toPageArray());
 
-        if (!empty($dto->seoData)) {
-            $page->seo()->updateOrCreate(
-                ['seoable_id' => $page->id, 'seoable_type' => Page::class],
-                $dto->seoData
-            );
-        }
+        $page->syncSeo($dto->seoData);
 
         return $this->redirectWithFilters($request, 'admin.pages.index', "Контент страницы «{$page->title}» обновлён!");
     }
@@ -109,8 +105,8 @@ class PageController extends Controller
             'seo' => $this->seo("Редактирование: {$page->title}", robots: 'noindex, nofollow'),
             'page_types' => $this->getFormattedPageTypes(),
             'templates' => $this->getPageTemplates(),
-            'backUrl' => $request->query('back') 
-                ? route('admin.pages.index') . $request->query('back') 
+            'backUrl' => $request->query('back')
+                ? route('admin.pages.index') . $request->query('back')
                 : route('admin.pages.index'),
         ]);
     }
@@ -130,9 +126,9 @@ class PageController extends Controller
         return $this->redirectWithFilters($request, 'admin.pages.index', "Страница «{$page->title}» успешно удалена!");
     }
 
-    /** 
+    /**
      * Upload Media files to pages (from text-editor or etc)
-    */
+     */
     public function uploadMedia(UploadPageMediaRequest $request, Page $page)
     {
         $media = $page->addMediaFromInput($request, 'image')->toMediaCollection('content_images');
@@ -140,21 +136,20 @@ class PageController extends Controller
         return back()->with('last_uploaded_url', $media->getFullUrl());
     }
 
-    /** 
+    /**
      * Upload Unsociated Media files to pages (from text-editor or etc)
-    */
+     */
     public function uploadTemporaryMedia(UploadPageMediaRequest $request)
     {
-        /** @var \App\Models\User|\Spatie\MediaLibrary\HasMedia $user */
-
+        /** @var User|HasMedia $user */
         $user = Auth::user();
         $media = $user->addMediaFromInput($request, 'image')->toMediaCollection('tmp');
 
         return back()->with('last_uploaded_url', $media->getFullUrl());
     }
-    
+
     /**
-     * Delete Unusable Media 
+     * Delete Unusable Media
      */
     private function sanitizeMedia(string $content, Page $page): void
     {
@@ -167,12 +162,12 @@ class PageController extends Controller
         }
     }
 
-    /** 
+    /**
      * Move Temporary Media files to the admin/moder tmp
-    */
+     */
     private function moveTemporaryMedia(string $content, Page $page)
     {
-        /** @var \App\Models\User|\Spatie\MediaLibrary\HasMedia $user */
+        /** @var User|HasMedia $user */
         $user = Auth::user();
         $temporaryMedia = $user->getMedia('tmp');
 
@@ -181,16 +176,16 @@ class PageController extends Controller
                 $media->move($page, 'content_images');
             }
         }
-        
+
         $user->clearMediaCollectionExcept('tmp', $user->getMedia('tmp')->where('created_at', '>', now()->subDay()));
     }
 
     private function getFormattedPageTypes(): array
     {
-        return array_map(fn($case) => [
-            'id'   => $case->value,
+        return array_map(fn ($case) => [
+            'id' => $case->value,
             'name' => $case->label(),
-            'slug' => $case->value
+            'slug' => $case->value,
         ], PageType::cases());
     }
 

@@ -3,8 +3,6 @@
 
     import { router, useForm } from '@inertiajs/vue3';
 
-    import { debounce } from 'lodash';
-
     import AdminCatalogRow from '@/Components/Admin/Cards/AdminCatalogRow.vue';
     import AdminEmptyState from '@/Components/Admin/Shared/AdminEmptyState.vue';
     import AdminPageHeader from '@/Components/Admin/Shared/AdminPageHeader.vue';
@@ -96,21 +94,17 @@
     const { deleteEntity, isDeleting } = useAdminCrud();
     const { isFiltering, submitFilters, clearFilters } = useAdminFilters();
 
-    const quickUpdate = debounce((id: number, data: QuickUpdatePayload) => {
+    const quickUpdate = (id: number, data: QuickUpdatePayload) => {
         router.patch(route('admin.catalog.quick', id), data, {
             preserveScroll: true,
             preserveState: true,
             onError: (e) => {
-                if (e.price) {
-                    notify.error(e.price);
-                } else if (e.stock) {
-                    notify.error(e.stock);
-                } else if (e.is_default) {
-                    notify.error(e.is_default);
-                }
+                if (e.price) notify.error(e.price);
+                else if (e.stock) notify.error(e.stock);
+                else if (e.is_default) notify.error(e.is_default);
             },
         });
-    }, 300);
+    };
 
     watch(
         () => [filterForm.search, filterForm.product_id, filterForm.unit_id, filterForm.sort],

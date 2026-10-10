@@ -3,13 +3,12 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Http\Requests\Admin\CategoryRequest;
 use App\Http\Resources\Admin\CategoryResource;
 use App\Models\Category;
-use App\Http\Requests\Admin\CategoryRequest;
 use App\Traits\Http\Controllers\HandlesSmartPagination;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
-use Illuminate\Support\Str;
 
 class CategoryController extends Controller
 {
@@ -26,13 +25,14 @@ class CategoryController extends Controller
             ->filter($filters)
             ->orderBy('is_active', 'desc')
             ->orderBy('sort_order')
+            ->orderBy('id')
             ->paginate(setting('admin_per_page', 10))
             ->withQueryString();
 
         return Inertia::render('Admin/Categories/Index', [
             'categories' => CategoryResource::collection($categories),
             'filters' => $filters,
-            'seo' => $this->seo('Панель управления: Категории', robots: 'noindex, nofollow')
+            'seo' => $this->seo('Панель управления: Категории', robots: 'noindex, nofollow'),
         ]);
     }
 

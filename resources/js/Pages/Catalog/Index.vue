@@ -103,9 +103,7 @@
 </script>
 
 <template>
-    <AppContainer>
-        {{ category }}
-
+    <div>
         <AppContainer>
             <div class="flex flex-col justify-between gap-4 md:flex-row md:items-end">
                 <div>
@@ -179,5 +177,5 @@
         </AppContainer>
 
         <MainPagination :links="products.meta.links" />
-    </AppContainer>
+    </div>
 </template>

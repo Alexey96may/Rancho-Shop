@@ -2,9 +2,10 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
@@ -12,8 +13,9 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $answer
  * @property bool $is_published
  * @property int $sort_order
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Faq newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Faq newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Faq published()
@@ -26,6 +28,7 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Faq whereSortOrder($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Faq whereUpdatedAt($value)
  * @method static Builder<static>|Faq filter(array $filters)
+ *
  * @mixin \Eloquent
  */
 class Faq extends Model
@@ -46,13 +49,15 @@ class Faq extends Model
 
     public function scopePublished(Builder $query)
     {
-        return $query->where('is_published', true)
-                     ->orderBy('sort_order', 'asc');
+        return $query
+            ->where('is_published', true)
+            ->orderBy('sort_order', 'asc')
+            ->orderBy('id', 'asc');
     }
 
     /**
-    * Scope for case-insensitive question filtering
-    */
+     * Scope for case-insensitive question filtering
+     */
     public function scopeFilter(Builder $query, array $filters): Builder
     {
         return $query->when($filters['search'] ?? null, function ($query, $search) {

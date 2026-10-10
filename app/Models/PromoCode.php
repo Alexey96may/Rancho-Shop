@@ -5,9 +5,10 @@ namespace App\Models;
 use App\Enums\PromoCodeType;
 use App\Traits\HasActiveScope;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
@@ -19,11 +20,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  * @property int|null $max_discount
  * @property int|null $usage_limit
  * @property int $used_count
- * @property \Illuminate\Support\Carbon|null $expires_at
+ * @property Carbon|null $expires_at
  * @property bool $is_active
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
  * @property-read string $status
+ *
  * @method static Builder<static>|PromoCode active()
  * @method static \Database\Factories\PromoCodeFactory factory($count = null, $state = [])
  * @method static Builder<static>|PromoCode newModelQuery()
@@ -43,6 +45,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  * @method static Builder<static>|PromoCode whereUsageLimit($value)
  * @method static Builder<static>|PromoCode whereUsedCount($value)
  * @method static Builder<static>|PromoCode whereValue($value)
+ *
  * @mixin \Eloquent
  */
 class PromoCode extends Model
@@ -123,8 +126,8 @@ class PromoCode extends Model
     }
 
     /**
-    * Scope for complex filtering of promo codes
-    */
+     * Scope for complex filtering of promo codes
+     */
     public function scopeFilter(Builder $query, array $filters): Builder
     {
         return $query
@@ -132,7 +135,7 @@ class PromoCode extends Model
                 $search = mb_strtolower($search, 'UTF-8');
                 $query->where(function ($q) use ($search) {
                     $q->whereRaw('LOWER(code) LIKE ?', ["%{$search}%"])
-                      ->orWhereRaw('LOWER(description) LIKE ?', ["%{$search}%"]);
+                        ->orWhereRaw('LOWER(description) LIKE ?', ["%{$search}%"]);
                 });
             })
             ->when($filters['type'] ?? null, function ($query, $type) {
@@ -143,24 +146,26 @@ class PromoCode extends Model
                     $query->where('created_at', '>=', now()->subDays(7));
                 } elseif ($status === 'expiring') {
                     $query->whereNotNull('expires_at')
-                          ->where('expires_at', '>', now())
-                          ->where('expires_at', '<=', now()->addDays(3));
+                        ->where('expires_at', '>', now())
+                        ->where('expires_at', '<=', now()->addDays(3));
                 }
             });
     }
 
     /**
-    * Scope for flexible list sorting
-    */
+     * Scope for flexible list sorting
+     */
     public function scopeApplySorting(Builder $query, ?string $sort): Builder
     {
-        $query->orderBy('is_active', 'desc');
+        $query->orderByDesc('is_active');
 
         if ($sort === 'expires_at') {
-            return $query->orderByRaw('expires_at IS NULL ASC')
-                         ->orderBy('expires_at', 'asc');
+            $query->orderByRaw('expires_at IS NULL ASC')
+                ->orderBy('expires_at', 'asc');
+        } else {
+            $query->orderByDesc('created_at');
         }
 
-        return $query->latest();
+        return $query->orderByDesc('id');
     }
 }

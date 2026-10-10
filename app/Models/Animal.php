@@ -4,18 +4,22 @@ namespace App\Models;
 
 use App\Traits\HasActiveScope;
 use App\Traits\HasInteractions;
-use App\Traits\HasStandardMedia;
 use App\Traits\HasSeoActions;
+use App\Traits\HasStandardMedia;
+use App\Traits\Models\HasAdminTrash;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Traits\Models\HasAdminTrash;
-use Illuminate\Database\Eloquent\Casts\Attribute;
 // Spatie
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\MediaCollections\Models\Collections\MediaCollection;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 /**
  * @property int $id
@@ -28,21 +32,22 @@ use Spatie\MediaLibrary\HasMedia;
  * @property string $status
  * @property string|null $bio
  * @property array<array-key, mixed>|null $features
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property \Illuminate\Support\Carbon|null $deleted_at
- * @property-read \App\Models\Category $category
- * @property-read \Illuminate\Database\Eloquent\Collection<int, Animal> $children
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property Carbon|null $deleted_at
+ * @property-read Category $category
+ * @property-read Collection<int, Animal> $children
  * @property-read int|null $children_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Comment> $comments
+ * @property-read Collection<int, Comment> $comments
  * @property-read int|null $comments_count
- * @property-read \Spatie\MediaLibrary\MediaCollections\Models\Collections\MediaCollection<int, \Spatie\MediaLibrary\MediaCollections\Models\Media> $media
+ * @property-read MediaCollection<int, Media> $media
  * @property-read int|null $media_count
  * @property-read Animal|null $parent
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Product> $products
+ * @property-read Collection<int, Product> $products
  * @property-read int|null $products_count
- * @property-read \App\Models\Seo|null $seo
+ * @property-read Seo|null $seo
  * @property-read mixed $voice_url
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Animal active()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Animal cows()
  * @method static \Database\Factories\AnimalFactory factory($count = null, $state = [])
@@ -66,11 +71,12 @@ use Spatie\MediaLibrary\HasMedia;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Animal withTrashed(bool $withTrashed = true)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Animal withoutTrashed()
  * @method static Builder<static>|Animal filter(array $filters)
+ *
  * @mixin \Eloquent
  */
 class Animal extends Model implements HasMedia
 {
-    use HasActiveScope, HasFactory, HasSeoActions, HasInteractions, HasStandardMedia, SoftDeletes, HasAdminTrash;
+    use HasActiveScope, HasAdminTrash, HasFactory, HasInteractions, HasSeoActions, HasStandardMedia, SoftDeletes;
 
     protected $fillable = [
         'parent_id',
@@ -138,23 +144,40 @@ class Animal extends Model implements HasMedia
 
         $this->addMediaCollection('voice')
             ->acceptsMimeTypes([
-                'audio/mpeg', 
-                'audio/mp3', 
-                'audio/wav', 
-                'audio/x-wav'
+                'audio/mpeg',
+                'audio/mp3',
+                'audio/wav',
+                'audio/x-wav',
             ])
             ->singleFile();
     }
 
+    public function scopeSortAdmin(Builder $query): Builder
+    {
+        return $query
+            ->orderByRaw('deleted_at IS NOT NULL ASC')  // живые сверху
+            ->orderByDesc('is_active')                  // активные сверху
+            ->orderByDesc('updated_at')                 // свежеизменённые сверху
+            ->orderByDesc('id');                        // ← тайбрейкер
+    }
+
+    public function scopeSortPublic(Builder $query): Builder
+    {
+        return $query
+            ->orderByDesc('is_active')
+            ->orderByDesc('created_at')
+            ->orderByDesc('id');                        // ← тайбрейкер
+    }
+
     /**
-    * Scope for filtering animals in the admin panel (and elsewhere)
-    */
+     * Scope for filtering animals in the admin panel (and elsewhere)
+     */
     public function scopeFilter(Builder $query, array $filters): Builder
     {
         return $query
             ->when($filters['search'] ?? null, function ($query, $search) {
                 $search = mb_strtolower($search, 'UTF-8');
-                
+
                 $query->where(function ($q) use ($search) {
                     $q->whereRaw('LOWER(name) LIKE ?', ["%{$search}%"]);
                 });
@@ -172,8 +195,7 @@ class Animal extends Model implements HasMedia
                 if ($status !== 'trash') {
                     $query->where('status', $status);
                 }
-            })
-            ->orderByRaw('deleted_at IS NOT NULL ASC');
+            });
     }
 
     protected function voiceUrl(): Attribute
@@ -184,8 +206,8 @@ class Animal extends Model implements HasMedia
     }
 
     /**
-    * Filter: cows only
-    */
+     * Filter: cows only
+     */
     public function scopeCows(Builder $query)
     {
         return $query->whereHas('category', function (Builder $q) {

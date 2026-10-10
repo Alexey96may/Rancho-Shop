@@ -4,8 +4,6 @@ import { router } from '@inertiajs/vue3';
 
 import { useNotificationsStore } from '@/stores/notifications';
 
-const notify = useNotificationsStore();
-
 export interface DraggableEvent {
     oldIndex: number;
     newIndex: number;
@@ -29,6 +27,7 @@ export function useAdminReorder() {
         routeName: string,
         itemsData: Array<{ id: number | string }>,
     ) => {
+        const notify = useNotificationsStore();
         if (e.oldIndex === e.newIndex) return;
 
         const droppedItem = e.item;

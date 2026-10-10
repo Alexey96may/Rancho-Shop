@@ -1,19 +1,20 @@
 <?php
 
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\RoleMiddleware;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Exceptions\PostTooLargeException;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
+use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
-use Illuminate\Http\Exceptions\PostTooLargeException;
-use Illuminate\Support\Facades\Redirect;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__ . '/../routes/web.php',
-        api: __DIR__.'/../routes/api.php',
+        api: __DIR__ . '/../routes/api.php',
         commands: __DIR__ . '/../routes/console.php',
         health: '/up',
     )
@@ -24,7 +25,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->alias([
-            'role' => \App\Http\Middleware\RoleMiddleware::class,
+            'role' => RoleMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
@@ -39,10 +40,10 @@ return Application::configure(basePath: dirname(__DIR__))
 
             if ($status === 403) {
                 return Inertia::render('NotFound', [
-                    'message' => 'У вас нет прав для просмотра этой страницы'
+                    'message' => 'У вас нет прав для просмотра этой страницы',
                 ])
-                ->toResponse($request)
-                ->setStatusCode(403);
+                    ->toResponse($request)
+                    ->setStatusCode(403);
             }
 
             return null;
@@ -52,9 +53,10 @@ return Application::configure(basePath: dirname(__DIR__))
             if ($e instanceof PostTooLargeException) {
                 return Redirect::back()->withErrors([
                     'voice' => 'Файлы слишком тяжелые. Попробуйте загрузить файлы поменьше или по одному.',
-                    'gallery' => 'Превышен лимит размера данных (POST limit).'
+                    'gallery' => 'Превышен лимит размера данных (POST limit).',
                 ]);
             }
+
             return $response;
         });
     })->create();
