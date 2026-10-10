@@ -28,6 +28,8 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\Profile\ProfileCommentController;
 use App\Http\Controllers\Profile\ProfileController;
 use App\Http\Controllers\Profile\ProfileOrderController;
+use App\Http\Controllers\RobotsController;
+use App\Http\Controllers\SitemapController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [LandingController::class, 'index'])->name('home');
@@ -66,6 +68,10 @@ Route::get('/orders/{order}/fake-pay', [PaymentController::class, 'fakeProcess']
 // Webhook от PayMaster
 Route::post('/payments/paymaster/callback', [PaymentController::class, 'callback'])
     ->name('payments.paymaster.callback');
+
+// SEO
+Route::get('/robots.txt', [RobotsController::class, 'index'])->name('robots');
+Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
 
 Route::middleware('auth')->prefix('profile')->name('profile.')->group(function () {
     Route::get('/', [ProfileController::class, 'edit'])->name('edit');

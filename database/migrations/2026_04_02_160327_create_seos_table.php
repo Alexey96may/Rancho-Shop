@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class() extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -21,6 +21,8 @@ return new class() extends Migration
             $table->jsonb('og_data')->nullable(); // (Open Graph)
             $table->boolean('is_noindex')->default(false);
             $table->timestamps();
+
+            $table->unique(['seoable_type', 'seoable_id']);
         });
     }
 

@@ -17,6 +17,7 @@
         "laravel/socialite": "^5.26",
         "laravel/tinker": "^3.0",
         "spatie/laravel-medialibrary": "^11.21",
+        "spatie/laravel-sitemap": "^8.2",
         "tightenco/ziggy": "^2.6"
     },
     "require-dev": {

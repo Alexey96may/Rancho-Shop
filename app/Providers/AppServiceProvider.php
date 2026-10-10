@@ -10,7 +10,11 @@ use App\Models\Animal;
 use App\Models\Order;
 use App\Models\Page;
 use App\Models\Product;
+use App\Models\Seo;
 use App\Models\User;
+use App\Observers\SeoCleanupObserver;
+use App\Observers\SeoObserver;
+use App\Observers\SitemapCacheObserver;
 use App\Services\Payments\DirectPaymentGateway;
 use App\Services\Payments\FakePaymentGateway;
 use App\Services\Payments\PayMasterGateway;
@@ -92,6 +96,19 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('edit-admin-note', fn ($user) => $user->role === UserRole::ADMIN);
         Gate::define('restore', fn ($user) => $user->role === UserRole::ADMIN);
         Gate::define('force-delete', fn ($user) => $user->role === UserRole::ADMIN);
+
+        $models = [
+            Product::class,
+            Page::class,
+            Animal::class,
+        ];
+
+        foreach ($models as $model) {
+            $model::observe(SeoCleanupObserver::class);
+            $model::observe(SitemapCacheObserver::class);
+        }
+
+        Seo::observe(SeoObserver::class);
 
         Relation::enforceMorphMap([
             'animal' => Animal::class,
