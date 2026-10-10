@@ -8,10 +8,10 @@
     import AdminUserCard from '@/Components/Admin/Cards/AdminUserCard.vue';
     import AdminEmptyState from '@/Components/Admin/Shared/AdminEmptyState.vue';
     import AdminPageHeader from '@/Components/Admin/Shared/AdminPageHeader.vue';
-    import AdminPagination from '@/Components/Admin/Shared/AdminPagination.vue';
     import AdminLoader from '@/Components/Admin/UI/AdminLoader.vue';
     import AdminRoleFilter from '@/Components/Admin/UI/AdminRoleFilter.vue';
     import AdminSearchInput from '@/Components/Admin/UI/AdminSearchInput.vue';
+    import AdminPagination from '@/Components/Shared/MainPagination.vue';
     import BaseCancelButton from '@/Components/UI/BaseCancelButton.vue';
     import BaseCreateButton from '@/Components/UI/BaseCreateButton.vue';
     import BaseInput from '@/Components/UI/BaseInput.vue';

@@ -2,12 +2,12 @@
 
 namespace App\Http\Middleware;
 
-use Illuminate\Http\Request;
-use Inertia\Middleware;
-use App\Http\Resources\UserResource;
 use App\Enums\Permission;
+use App\Http\Resources\UserResource;
+use App\Services\NavigationService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Str;
+use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -38,12 +38,14 @@ class HandleInertiaRequests extends Middleware
 
         return [
             ...parent::share($request),
-            
+
             'auth' => [
                 'user' => $user
                     ? UserResource::make($user)
                     : null,
             ],
+
+            'navigation' => fn () => NavigationService::items(),
 
             'permissions' => Permission::options(),
 
@@ -64,18 +66,18 @@ class HandleInertiaRequests extends Middleware
                 'manageSettings' => Gate::allows('manage-settings'),
                 'manageNomenclature' => Gate::allows('manage-nomenclature'),
 
-                'editAdminNote'      => Gate::allows('edit-admin-note'),
-                'restore'            => Gate::allows('restore'),
-                'forceDelete'        => Gate::allows('force-delete'),
+                'editAdminNote' => Gate::allows('edit-admin-note'),
+                'restore' => Gate::allows('restore'),
+                'forceDelete' => Gate::allows('force-delete'),
             ],
 
             'flash' => [
-                'success' => fn() => $request->session()->get('success'),
-                'error'   => fn() => $request->session()->get('error'),
-                'message' => fn() => $request->session()->get('message'),
-                'warning' => fn() => $request->session()->get('warning'),
+                'success' => fn () => $request->session()->get('success'),
+                'error' => fn () => $request->session()->get('error'),
+                'message' => fn () => $request->session()->get('message'),
+                'warning' => fn () => $request->session()->get('warning'),
 
-                'last_uploaded_url' => fn() => $request->session()->get('last_uploaded_url'),
+                'last_uploaded_url' => fn () => $request->session()->get('last_uploaded_url'),
             ],
 
             'deliveryDraft' => $request->user()
@@ -88,19 +90,19 @@ class HandleInertiaRequests extends Middleware
                 : session('delivery_draft'),
 
             'seo' => [
-                'title'       => 'Молочная Долина',
+                'title' => 'Молочная Долина',
                 'description' => 'Крымский магазин натуральной молочной продукции.',
-                'keywords'    => 'домашнее молоко, крым, творог, масло, сыр',
-                'robots'      => $this->getRobotsForRoute($request),
-                'image'       => asset('images/og-default.png'),
-                'canonical'   => url()->current(),
+                'keywords' => 'домашнее молоко, крым, творог, масло, сыр',
+                'robots' => $this->getRobotsForRoute($request),
+                'image' => asset('images/og-default.png'),
+                'canonical' => url()->current(),
             ],
         ];
     }
 
     /**
-    * Automatically close the admin panel from indexing
-    */
+     * Automatically close the admin panel from indexing
+     */
     private function getRobotsForRoute(Request $request): string
     {
         return $request->is('admin*') ? 'noindex, nofollow' : 'index, follow';

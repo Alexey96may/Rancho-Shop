@@ -1,16 +1,16 @@
 <script setup lang="ts">
     import { PropType, watch } from 'vue';
 
-    import { router, useForm } from '@inertiajs/vue3';
+    import { useForm } from '@inertiajs/vue3';
 
     import { FunnelIcon } from '@heroicons/vue/24/outline';
 
     import AdminProductCard from '@/Components/Admin/Cards/AdminProductCard.vue';
     import AdminEmptyState from '@/Components/Admin/Shared/AdminEmptyState.vue';
     import AdminPageHeader from '@/Components/Admin/Shared/AdminPageHeader.vue';
-    import AdminPagination from '@/Components/Admin/Shared/AdminPagination.vue';
     import AdminLoader from '@/Components/Admin/UI/AdminLoader.vue';
     import AdminSearchInput from '@/Components/Admin/UI/AdminSearchInput.vue';
+    import AdminPagination from '@/Components/Shared/MainPagination.vue';
     import BaseCreateButton from '@/Components/UI/BaseCreateButton.vue';
     import BaseSelect from '@/Components/UI/BaseSelect.vue';
     import AdminLayout from '@/Layouts/AdminLayout.vue';
@@ -54,19 +54,8 @@
             },
         },
         animals: {
-            type: Object as PropType<ResourceCollection<Animal>>,
+            type: Array as PropType<Array<{ id: number; name: string }>>,
             required: true,
-            validator: (value: unknown): boolean => {
-                const val = value as Record<string, unknown>;
-                const hasData = Array.isArray(val?.data);
-
-                if (!hasData) {
-                    console.warn(
-                        'Runtime Error: The "animals" prop must be a ResourceCollection containing a "data" array.',
-                    );
-                }
-                return hasData;
-            },
         },
         filters: {
             type: Object as PropType<{
@@ -139,7 +128,7 @@
 
                 <BaseSelect
                     v-model="filterForm.animal"
-                    :options="animals.data"
+                    :options="animals"
                     placeholder="Все товары"
                     class="w-48"
                     variant="admin"
@@ -228,7 +217,7 @@
     /* Чтобы удаляемый элемент не выбивал соседей из потока во время анимации */
     .product-grid-leave-active {
         position: absolute;
-        /* Нужна логика для ширины, если используется absolute в гридах. 
+        /* Нужна логика для ширины, если используется absolute в гридах.
        В простых гридах лучше оставить без absolute или ограничить ширину. */
         visibility: hidden;
     }

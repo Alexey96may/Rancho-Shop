@@ -6,9 +6,9 @@
     import PromoCodeCard from '@/Components/Admin/Cards/PromoCodeCard.vue';
     import AdminEmptyState from '@/Components/Admin/Shared/AdminEmptyState.vue';
     import AdminPageHeader from '@/Components/Admin/Shared/AdminPageHeader.vue';
-    import AdminPagination from '@/Components/Admin/Shared/AdminPagination.vue';
     import AdminLoader from '@/Components/Admin/UI/AdminLoader.vue';
     import AdminSearchInput from '@/Components/Admin/UI/AdminSearchInput.vue';
+    import AdminPagination from '@/Components/Shared/MainPagination.vue';
     import BaseCreateButton from '@/Components/UI/BaseCreateButton.vue';
     import BaseSelect from '@/Components/UI/BaseSelect.vue';
     import AdminLayout from '@/Layouts/AdminLayout.vue';
@@ -92,12 +92,7 @@
     </Teleport>
 
     <div class="animate-in fade-in space-y-8 duration-500">
-        <div class="flex flex-wrap items-center justify-between gap-4">
-            <BaseCreateButton
-                label="Создать код"
-                @click="navigateWithContext('admin.promocodes', 'create')"
-            />
-
+        <div class="flex flex-col flex-wrap items-center justify-between gap-4 sm:flex-row">
             <div class="grid flex-1 grid-cols-1 gap-4 sm:grid-cols-2 lg:flex lg:items-center">
                 <AdminSearchInput v-model="filterForm.search" placeholder="Поиск по коду..." />
 
@@ -131,6 +126,12 @@
                     class="w-full lg:w-56"
                 />
             </div>
+
+            <BaseCreateButton
+                class="self-end"
+                label="Создать код"
+                @click="navigateWithContext('admin.promocodes', 'create')"
+            />
         </div>
 
         <Transition name="fade-slide" mode="out-in">

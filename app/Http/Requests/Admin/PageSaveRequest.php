@@ -2,11 +2,11 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\DTO\PageDataDTO;
 use App\Enums\PageType;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rules\Enum;
-use App\DTO\PageDataDTO;
 
 class PageSaveRequest extends FormRequest
 {
@@ -29,18 +29,20 @@ class PageSaveRequest extends FormRequest
         $pageId = $page ? $page->id : null;
 
         return [
-            'title'           => 'required|string|max:255',
-            'content'         => 'nullable|string',
-            'type'            => ['required', new Enum(PageType::class)],
-            'is_active'       => 'boolean',
-            'template'        => 'required|string|in:default,delivery,about',
-            'slug'            => 'nullable|string|max:255|unique:pages,slug,' . $pageId,
-            
-            'seo.title'       => 'nullable|string|max:255',
+            'title' => 'required|string|max:255',
+            'content' => 'nullable|string',
+            'type' => ['required', new Enum(PageType::class)],
+            'is_active' => 'boolean',
+            'show_in_menu' => 'boolean',
+            'menu_order' => 'nullable|integer|min:0',
+            'template' => 'required|string|in:default,delivery,about',
+            'slug' => 'nullable|string|max:255|unique:pages,slug,' . $pageId,
+
+            'seo.title' => 'nullable|string|max:255',
             'seo.description' => 'nullable|string',
-            'seo.keywords'    => 'nullable|string',
-            'seo.canonical'   => 'nullable|string|url',
-            'seo.is_noindex'  => 'boolean',
+            'seo.keywords' => 'nullable|string',
+            'seo.canonical' => 'nullable|string|url',
+            'seo.is_noindex' => 'boolean',
         ];
     }
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-    import { type PropType, onUnmounted, ref, watch } from 'vue';
+    import { type PropType, computed, onUnmounted, ref, watch } from 'vue';
 
     import { router } from '@inertiajs/vue3';
 
@@ -43,7 +43,6 @@
             required: false,
             default: () => ({}),
             validator: (value: CatalogFilters) => {
-                // Проверяем, что передается объект, а значение in_stock (если есть) является boolean
                 if (typeof value !== 'object' || value === null) return false;
                 if ('in_stock' in value && typeof value.in_stock !== 'boolean') return false;
                 return true;
@@ -54,7 +53,7 @@
     const search = ref(props.filters.search || '');
     const category = ref(props.filters.category ? Number(props.filters.category) : '');
     const sort = ref(props.filters.sort || '');
-    const inStock = ref(props.filters.in_stock || false);
+    const inStock = ref(Boolean(props.filters.in_stock) || false);
 
     const applyFilters = () => {
         router.get(
@@ -100,44 +99,64 @@
         inStock.value = false;
         applyFilters();
     };
+
+    const hasActiveFilters = computed(() => {
+        if (search.value.trim() !== '') return true;
+        if (category.value) return true;
+
+        const validSorts = sortArray.map((s) => s.id);
+        if (sort.value && validSorts.includes(String(sort.value))) return true;
+
+        if (inStock.value === true) return true;
+
+        return false;
+    });
 </script>
 
 <template>
-    <div>
-        <AppContainer>
-            <div class="flex flex-col justify-between gap-4 md:flex-row md:items-end">
+    <AppContainer>
+        <div class="py-10">
+            <header class="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-end">
                 <div>
-                    <h1 class="text-3xl font-black text-slate-900">Наши продукты</h1>
-                    <p class="mt-1 text-slate-500">Свежее к вашему столу</p>
+                    <h1 class="text-4xl font-black text-[#1c3f34]">Наши продукты</h1>
+                    <p class="mt-2 text-sm text-[#597d5b]">Свежее к вашему столу</p>
                 </div>
 
-                <BaseInput v-model="search" placeholder="Найти продукт..." />
-            </div>
+                <BaseInput
+                    v-model="search"
+                    placeholder="Найти продукт..."
+                    theme="light"
+                    variant="search"
+                    class="w-full md:w-72"
+                />
+            </header>
 
-            <div class="py-12">
+            <div>
                 <div class="mb-8 border-b border-slate-100 pb-6">
-                    <div class="flex flex-wrap items-center gap-4 pb-6">
-                        <BaseSelect
-                            label="Категория:"
-                            placeholder="Все продукты"
-                            v-model="category"
-                            :options="categories.data"
-                            :width-class="'w-64'"
-                        />
+                    <div class="flex flex-col items-start gap-4 pb-6">
+                        <div class="flex flex-wrap items-center gap-4">
+                            <BaseSelect
+                                label="Категория:"
+                                placeholder="Все продукты"
+                                v-model="category"
+                                :options="categories.data"
+                                :width-class="'w-64'"
+                            />
 
-                        <BaseSelect
-                            label="Сортировка:"
-                            placeholder="По умолчанию"
-                            v-model="sort"
-                            :options="sortArray"
-                            :width-class="'w-64'"
-                        />
+                            <BaseSelect
+                                label="Сортировка:"
+                                placeholder="По умолчанию"
+                                v-model="sort"
+                                :options="sortArray"
+                                :width-class="'w-64'"
+                            />
+                        </div>
 
-                        <BaseSwitch v-model="inStock" label="Только в наличии" />
+                        <BaseSwitch v-model="inStock" label="Только в наличии" theme="light" />
                     </div>
 
                     <button
-                        v-if="category || search || sort || inStock"
+                        v-if="hasActiveFilters"
                         @click="resetFilters"
                         class="self-center text-xs font-bold text-orange-600 hover:underline"
                     >
@@ -174,8 +193,7 @@
                     </div>
                 </Transition>
             </div>
-        </AppContainer>
-
-        <MainPagination :links="products.meta.links" />
-    </div>
+        </div>
+        <MainPagination :links="products.meta.links" theme="light" />
+    </AppContainer>
 </template>

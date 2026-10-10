@@ -7,9 +7,6 @@ use App\Services\SlugService;
 
 class PageDataDTO
 {
-    /**
-     * Create a new class instance.
-     */
     public function __construct(
         public string $title,
         public ?string $content,
@@ -17,7 +14,9 @@ class PageDataDTO
         public bool $is_active,
         public string $template,
         public string $slug,
-        public array $seoData
+        public bool $show_in_menu,
+        public int $menu_order,
+        public array $seoData,
     ) {}
 
     public static function fromRequest(array $validated): self
@@ -34,22 +33,23 @@ class PageDataDTO
             is_active: (bool) ($validated['is_active'] ?? false),
             template: $validated['template'],
             slug: SlugService::prepare($validated['slug'] ?? null, $validated['title']),
-            seoData: $validated['seo'] ?? []
+            show_in_menu: (bool) ($validated['show_in_menu'] ?? false),
+            menu_order: (int) ($validated['menu_order'] ?? 0),
+            seoData: $validated['seo'] ?? [],
         );
     }
 
-    /**
-    * Returns an array for the pages table only
-    */
     public function toPageArray(): array
     {
         return [
-            'title'     => $this->title,
-            'content'   => $this->content,
-            'type'      => $this->type,
+            'title' => $this->title,
+            'content' => $this->content,
+            'type' => $this->type,
             'is_active' => $this->is_active,
-            'template'  => $this->template,
-            'slug'      => $this->slug,
+            'template' => $this->template,
+            'slug' => $this->slug,
+            'show_in_menu' => $this->show_in_menu,
+            'menu_order' => $this->menu_order,
         ];
     }
 }

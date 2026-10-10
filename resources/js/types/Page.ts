@@ -20,6 +20,8 @@ export interface AdminPage extends Page {
     type_label: string;
     type_color: string;
     is_active: boolean;
+    show_in_menu: boolean;
+    menu_order: number;
     can_delete: boolean;
     created_at: string; // ISO 8601
     updated_at: string; // ISO 8601

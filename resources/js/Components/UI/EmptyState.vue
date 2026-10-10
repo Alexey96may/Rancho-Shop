@@ -9,8 +9,14 @@
             action-label="Сбросить фильтры"
             @action="resetFilters"
         />
+
+        <EmptyState theme="light" ... />
     */
     import { computed, useSlots } from 'vue';
+
+    import { MagnifyingGlassIcon } from '@heroicons/vue/24/outline';
+
+    type Theme = 'light' | 'dark';
 
     interface Props {
         /** Message title */
@@ -23,6 +29,8 @@
         actionHref?: string;
         /** aria-live attribute for the container ('polite' | 'assertive' | 'off') */
         ariaLive?: 'polite' | 'assertive' | 'off';
+        /** Цветовая тема */
+        theme?: Theme;
     }
 
     const props = withDefaults(defineProps<Props>(), {
@@ -30,6 +38,7 @@
         description:
             'По вашему запросу ничего не удалось найти. Попробуйте изменить параметры поиска или фильтры.',
         ariaLive: 'polite',
+        theme: 'light',
     });
 
     const emit = defineEmits<{
@@ -38,64 +47,72 @@
 
     const slots = useSlots();
     const hasAction = computed(() => Boolean(props.actionLabel || slots.action));
+
+    const isDark = computed(() => props.theme === 'dark');
+
+    /* ===== Классы ===== */
+
+    const wrapperClasses = computed(() => [
+        'flex flex-col items-center justify-center rounded-2xl border border-dashed p-6 text-center sm:p-8 md:p-12',
+        isDark.value
+            ? 'border-slate-800 bg-slate-900/30'
+            : 'border-rancho-olive/30 bg-rancho-paper',
+    ]);
+
+    const iconWrapperClasses = computed(() => [
+        'mb-4 flex h-14 w-14 items-center justify-center rounded-2xl sm:h-16 sm:w-16',
+        isDark.value ? 'bg-slate-800/60 text-slate-500' : 'bg-rancho-olive/10 text-rancho-olive',
+    ]);
+
+    const titleClasses = computed(() => [
+        'text-base font-black tracking-tight sm:text-lg',
+        isDark.value ? 'text-slate-100' : 'text-rancho-forest',
+    ]);
+
+    const descriptionClasses = computed(() => [
+        'mt-2 max-w-sm text-xs leading-relaxed sm:text-sm',
+        isDark.value ? 'text-slate-400' : 'text-rancho-olive',
+    ]);
+
+    const actionClasses = computed(() => [
+        // Базовая
+        'inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-[10px] font-black uppercase tracking-widest shadow-md transition-all duration-200 active:scale-95 sm:rounded-2xl sm:px-6 sm:py-3 sm:text-xs',
+        // Тема
+        isDark.value
+            ? 'bg-orange-600 text-white hover:bg-orange-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950'
+            : 'bg-rancho-pine text-white hover:bg-rancho-forest focus:outline-none focus-visible:ring-2 focus-visible:ring-rancho-pine focus-visible:ring-offset-2 focus-visible:ring-offset-rancho-paper',
+    ]);
 </script>
 
 <template>
-    <div
-        class="flex flex-col items-center justify-center rounded-2xl border border-dashed border-gray-300 bg-gray-50/50 p-8 text-center dark:border-gray-700 dark:bg-gray-800/30"
-        role="status"
-        :aria-live="ariaLive"
-        aria-atomic="true"
-    >
-        <!-- Слоты для сложной иконки / Иконка по умолчанию -->
-        <div class="aria-hidden:true mb-4 text-gray-400 dark:text-gray-500" aria-hidden="true">
+    <div :class="wrapperClasses" role="status" :aria-live="ariaLive" aria-atomic="true">
+        <!-- Иконка -->
+        <div :class="iconWrapperClasses" aria-hidden="true">
             <slot name="icon">
-                <svg
-                    class="stroke-1.5 h-16 w-16"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                >
-                    <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
-                    />
-                </svg>
+                <MagnifyingGlassIcon class="h-7 w-7 sm:h-8 sm:w-8" />
             </slot>
         </div>
 
         <!-- Заголовок -->
-        <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">
+        <h3 :class="titleClasses">
             <slot name="title">{{ title }}</slot>
         </h3>
 
         <!-- Описание -->
-        <p
-            v-if="description || slots.description"
-            class="mt-1.5 max-w-sm text-sm leading-relaxed text-gray-500 dark:text-gray-400"
-        >
+        <p v-if="description || slots.description" :class="descriptionClasses">
             <slot name="description">{{ description }}</slot>
         </p>
 
-        <!-- Слот или стандартная кнопка действия -->
+        <!-- Действие -->
         <div v-if="hasAction" class="mt-6">
             <slot name="action">
-                <a
-                    v-if="actionHref"
-                    :href="actionHref"
-                    class="inline-flex items-center rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
-                >
+                <!-- Ссылка -->
+                <a v-if="actionHref" :href="actionHref" :class="actionClasses">
                     {{ actionLabel }}
                 </a>
 
-                <button
-                    v-else
-                    type="button"
-                    class="inline-flex items-center rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
-                    @click="emit('action')"
-                >
+                <!-- Кнопка -->
+                <button v-else type="button" :class="actionClasses" @click="emit('action')">
                     {{ actionLabel }}
                 </button>
             </slot>

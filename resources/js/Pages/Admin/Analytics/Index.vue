@@ -1,5 +1,5 @@
 <script setup lang="ts">
-    import { PropType, computed } from 'vue';
+    import { PropType, computed, onMounted, onUnmounted, ref } from 'vue';
 
     import { Deferred, router, usePage } from '@inertiajs/vue3';
 
@@ -22,50 +22,15 @@
                 users_count: number;
             }>,
             required: true,
-            validator: (value: unknown): boolean => {
-                const val = value as Record<string, unknown>;
-
-                const hasRevenue = typeof val?.total_revenue === 'number';
-                const hasOrders = typeof val?.orders_count === 'number';
-                const hasUsers = typeof val?.users_count === 'number';
-
-                if (!hasRevenue || !hasOrders || !hasUsers) {
-                    console.warn(
-                        'Runtime Error: The "overview" prop must contain numeric total_revenue, orders_count, and users_count.',
-                    );
-                }
-
-                return !!(hasRevenue && hasOrders && hasUsers);
-            },
         },
         filters: {
             type: Object as PropType<{ days: number }>,
             required: false,
             default: () => ({ days: 30 }),
-            validator: (value: unknown): boolean => {
-                const val = value as Record<string, unknown>;
-                return typeof val?.days === 'number';
-            },
         },
         charts: {
             type: Object as PropType<{ sales: DailySalesResource }>,
             required: false,
-            validator: (value: unknown): boolean => {
-                if (value === undefined || value === null) return true;
-
-                const val = value as Record<string, unknown>;
-                const sales = val?.sales as Record<string, unknown>;
-
-                const hasSalesData = Array.isArray(sales?.data);
-
-                if (!hasSalesData) {
-                    console.warn(
-                        'Runtime Error: The "charts.sales" prop is missing a valid "data" array.',
-                    );
-                }
-
-                return hasSalesData;
-            },
         },
     });
 
@@ -75,7 +40,7 @@
         { label: '7д', value: 7 },
         { label: '30д', value: 30 },
         { label: '90д', value: 90 },
-        { label: 'Всё время', value: 0 },
+        { label: 'Всё', value: 0 },
     ];
 
     const page = usePage();
@@ -84,27 +49,44 @@
         router.get(
             route('admin.analytics.index'),
             { days: value },
-            {
-                preserveState: true,
-                preserveScroll: true,
-                only: ['charts', 'filters'],
-            },
+            { preserveState: true, preserveScroll: true, only: ['charts', 'filters'] },
         );
     };
 
     const apexchart = VueApexCharts;
 
-    // ApexCharts
+    /* ===== Реактивная ширина экрана для ApexCharts ===== */
+    const viewportWidth = ref(typeof window !== 'undefined' ? window.innerWidth : 1280);
+
+    function handleResize() {
+        viewportWidth.value = window.innerWidth;
+    }
+
+    onMounted(() => window.addEventListener('resize', handleResize, { passive: true }));
+    onUnmounted(() => window.removeEventListener('resize', handleResize));
+
+    const isMobile = computed(() => viewportWidth.value < 640);
+    const isTablet = computed(() => viewportWidth.value >= 640 && viewportWidth.value < 1024);
+
+    /* ===== Высота графика ===== */
+    const chartHeight = computed(() => {
+        if (isMobile.value) return 240;
+        if (isTablet.value) return 300;
+        return 350;
+    });
+
+    /* ===== ApexOptions — реактивно зависит от ширины ===== */
     const chartOptions = computed<ApexOptions>(() => ({
         chart: {
             type: 'area',
-            toolbar: { show: true },
-            zoom: { enabled: true },
+            toolbar: { show: !isMobile.value }, // на мобилке тулбар скрыт
+            zoom: { enabled: !isMobile.value }, // зум только на десктопе
             fontFamily: 'inherit',
             background: 'transparent',
+            sparkline: { enabled: false },
         },
         dataLabels: { enabled: false },
-        stroke: { curve: 'smooth', width: 2, colors: ['#6366f1'] },
+        stroke: { curve: 'smooth', width: isMobile.value ? 1.5 : 2, colors: ['#6366f1'] },
         fill: {
             type: 'gradient',
             gradient: {
@@ -118,20 +100,40 @@
             categories: props.charts?.sales.data.map((s) => s.label) || [],
             axisBorder: { show: false },
             axisTicks: { show: false },
+            tickAmount: isMobile.value ? 4 : undefined,
             labels: {
-                style: { colors: '#64748b', fontSize: '10px' },
-                rotate: -45,
+                style: {
+                    colors: '#64748b',
+                    fontSize: isMobile.value ? '9px' : '10px',
+                },
+                rotate: isMobile.value ? 0 : -45,
+                hideOverlappingLabels: true,
+                trim: true,
             },
         },
         yaxis: {
             labels: {
-                style: { colors: '#64748b' },
-                formatter: (val: number) => `${val.toLocaleString()} ₽`,
+                style: {
+                    colors: '#64748b',
+                    fontSize: isMobile.value ? '9px' : '11px',
+                },
+                formatter: (val: number) => {
+                    if (isMobile.value && Math.abs(val) >= 1000) {
+                        return `${Math.round(val / 1000)}к`;
+                    }
+                    return `${val.toLocaleString()} ₽`;
+                },
+                minWidth: isMobile.value ? 32 : 60,
             },
         },
-        grid: { borderColor: '#1e293b', strokeDashArray: 4 },
+        grid: {
+            borderColor: '#1e293b',
+            strokeDashArray: 4,
+            padding: { left: isMobile.value ? 0 : 10, right: isMobile.value ? 0 : 10 },
+        },
         theme: { mode: 'dark' },
         tooltip: { x: { show: false }, theme: 'dark' },
+        legend: { show: false },
     }));
 
     const series = computed(() => [
@@ -155,8 +157,9 @@
         <AdminPageHeader title="Аналитика" subtitle="Данные обновляются в реальном времени" />
     </Teleport>
 
-    <div class="space-y-8">
-        <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
+    <div class="space-y-6 sm:space-y-8">
+        <!-- KPI Cards -->
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 lg:gap-6">
             <StatCard
                 label="Общая выручка"
                 :value="computedTotalRev"
@@ -166,28 +169,41 @@
 
             <StatCard label="Заказов всего" :value="computedOrdersCount" :icon="ShoppingBagIcon" />
 
-            <StatCard label="Клиентов" :value="computedUsersCount" :icon="UsersIcon" />
+            <StatCard
+                label="Клиентов"
+                :value="computedUsersCount"
+                :icon="UsersIcon"
+                class="sm:col-span-2 lg:col-span-1"
+            />
         </div>
 
-        <!-- Charts Section (Lazy Loading with Deferred) -->
-        <div class="rounded-3xl border border-slate-800/50 bg-slate-900/50 p-8">
+        <!-- Chart Card -->
+        <div
+            class="rounded-2xl border border-slate-800/50 bg-slate-900/50 py-4 sm:rounded-3xl sm:p-6 md:p-8"
+        >
+            <!-- Заголовок -->
             <h3
-                class="mb-8 flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.3em] text-slate-400"
+                class="mb-4 flex items-center gap-2 px-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 sm:mb-6 sm:text-[11px] sm:tracking-[0.3em] md:mb-8"
             >
-                <span class="h-2 w-2 animate-pulse rounded-full bg-indigo-500"></span>
-                <span v-if="filters?.days > 0"
-                    >Динамика продаж за последние {{ filters?.days }} дней</span
-                >
-                <span v-else>Динамика продаж за всё время</span>
+                <span class="h-2 w-2 shrink-0 animate-pulse rounded-full bg-indigo-500"></span>
+                <span class="truncate">
+                    <template v-if="filters?.days > 0">
+                        Динамика продаж за {{ filters.days }} дней
+                    </template>
+                    <template v-else>Динамика продаж за всё время</template>
+                </span>
             </h3>
 
-            <div class="mb-8 flex gap-1 rounded-xl border border-slate-800 bg-slate-950 p-1">
+            <!-- Переключатель периодов -->
+            <div
+                class="mb-4 flex w-full gap-0.5 overflow-x-auto rounded-xl border border-slate-800 bg-slate-950 p-1 sm:mb-6 sm:inline-flex sm:w-auto sm:gap-1 md:mb-8"
+            >
                 <button
                     v-for="period in periods"
                     :key="period.value"
                     @click="setPeriod(period.value)"
                     :disabled="isProcessing"
-                    class="rounded-lg px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest transition-all"
+                    class="flex-1 whitespace-nowrap rounded-lg px-2 py-1.5 text-[10px] font-bold uppercase tracking-widest transition-all sm:flex-none sm:px-4"
                     :class="[
                         filters?.days === period.value
                             ? 'shadow-lg bg-indigo-600 text-white shadow-indigo-500/20'
@@ -198,11 +214,12 @@
                 </button>
             </div>
 
+            <!-- Deferred chart -->
             <Deferred data="charts">
-                <!-- Скелетон (Fallback) -->
                 <template #fallback>
                     <div
-                        class="flex h-[350px] w-full flex-col items-center justify-center space-y-4"
+                        class="flex w-full flex-col items-center justify-center space-y-4"
+                        :style="{ height: chartHeight + 'px' }"
                     >
                         <AdminLoader text="Сборка данных" />
                         <div
@@ -216,7 +233,7 @@
                 </template>
 
                 <Transition name="chart-fade" appear>
-                    <div v-if="charts" class="h-[350px]">
+                    <div v-if="charts" :style="{ height: chartHeight + 'px' }">
                         <apexchart
                             width="100%"
                             height="100%"
@@ -247,5 +264,14 @@
     .chart-fade-enter-from {
         opacity: 0;
         transform: scale(0.98) translateY(10px);
+    }
+
+    /* Скрыть скроллбар переключателя периодов на мобилке */
+    .overflow-x-auto::-webkit-scrollbar {
+        display: none;
+        height: 0;
+    }
+    .overflow-x-auto {
+        scrollbar-width: none;
     }
 </style>

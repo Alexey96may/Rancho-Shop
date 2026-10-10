@@ -267,19 +267,19 @@
 <template>
     <AppContainer class="min-h-screen bg-[#FCFAF5] text-[#1C3F34]">
         <!-- HEADER -->
-        <header class="mx-auto max-w-3xl px-6 pt-10">
+        <header class="mx-auto max-w-3xl pt-10">
             <h1 class="text-3xl font-bold">
                 {{ page.data.title }}
             </h1>
         </header>
 
         <!-- CONTENT -->
-        <section v-if="page.data.content" class="prose mx-auto mt-6 max-w-3xl px-6">
+        <section v-if="page.data.content" class="prose mx-auto mt-6 max-w-3xl">
             <div v-html="page.data.content" />
         </section>
 
         <!-- MAIN -->
-        <section class="mx-auto mt-10 grid max-w-5xl gap-6 px-6 md:grid-cols-2">
+        <section class="mx-auto mt-10 grid max-w-5xl gap-6 md:grid-cols-2">
             <!-- LEFT -->
             <div class="space-y-4 rounded-xl border bg-white p-6">
                 <div>
@@ -365,7 +365,7 @@
         </section>
 
         <!-- COMMENTS -->
-        <div class="mx-auto mt-12 max-w-4xl px-6 pb-16">
+        <div class="mx-auto mt-12 max-w-4xl pb-16">
             <CommentsSection
                 :comments="comments"
                 title="Отзывы о доставке"

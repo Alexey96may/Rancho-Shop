@@ -71,17 +71,8 @@
             },
         },
         animals: {
-            type: Object as PropType<{ data: Animal[] }>,
+            type: Array as PropType<Array<{ id: number; name: string }>>,
             required: true,
-            validator: (value: unknown): boolean => {
-                const val = value as Record<string, unknown>;
-                const hasDataArray = Array.isArray(val?.data);
-
-                if (!hasDataArray) {
-                    console.warn('Runtime Error: The "animals" prop must contain a "data" array.');
-                }
-                return hasDataArray;
-            },
         },
         backUrl: {
             type: String,
@@ -274,7 +265,7 @@
                         </label>
                         <div class="flex flex-wrap gap-3">
                             <label
-                                v-for="animal in animals.data"
+                                v-for="animal in animals"
                                 :key="animal.id"
                                 class="flex cursor-pointer items-center gap-2 rounded-2xl border px-4 py-2 transition-all"
                                 :class="

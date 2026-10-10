@@ -6,9 +6,9 @@
     import AnimalCard from '@/Components/Admin/Cards/AdminAnimalCard.vue';
     import AdminEmptyState from '@/Components/Admin/Shared/AdminEmptyState.vue';
     import AdminPageHeader from '@/Components/Admin/Shared/AdminPageHeader.vue';
-    import AdminPagination from '@/Components/Admin/Shared/AdminPagination.vue';
     import AdminLoader from '@/Components/Admin/UI/AdminLoader.vue';
     import AdminSearchInput from '@/Components/Admin/UI/AdminSearchInput.vue';
+    import AdminPagination from '@/Components/Shared/MainPagination.vue';
     import BaseCreateButton from '@/Components/UI/BaseCreateButton.vue';
     import BaseSelect from '@/Components/UI/BaseSelect.vue';
     import AdminLayout from '@/Layouts/AdminLayout.vue';
@@ -101,7 +101,7 @@
         <AdminPageHeader title="Список Животных" subtitle="Управление базой животных" />
     </Teleport>
 
-    <div class="p-8">
+    <div class="py-8">
         <div class="space-y-10">
             <section class="flex flex-col gap-4 lg:flex-row lg:items-end" aria-label="Фильтрация">
                 <AdminSearchInput
@@ -119,6 +119,7 @@
                 />
 
                 <BaseCreateButton
+                    class="self-end lg:self-auto"
                     label="Добавить"
                     @click="navigateWithContext('admin.animals', 'create')"
                 />

@@ -18,10 +18,14 @@
 
     defineOptions({ layout: AdminLayout });
 
-    // Убираем пропс page, оставляем только справочники
+    interface SelectOption {
+        id: string;
+        name: string;
+    }
+
     const props = defineProps<{
-        page_types: Array<{ id: string; name: string }>;
-        templates: Array<{ id: string; name: string }>;
+        page_types: SelectOption[];
+        templates: SelectOption[];
     }>();
 
     const activeTab = ref('general');
@@ -32,14 +36,17 @@
         { id: 'seo', name: 'SEO', icon: GlobeAltIcon },
     ];
 
-    // Инициализируем пустые значения
     const form = useForm({
         title: '',
         slug: '',
         content: '',
-        type: props.page_types[0]?.id || '', // Предзаполняем первым типом
+        type: props.page_types[0]?.id || '',
         template: props.templates[0]?.id || 'default',
         is_active: true,
+
+        // ← новое
+        show_in_menu: false,
+        menu_order: 0,
 
         seo: {
             title: '',
@@ -61,23 +68,21 @@
     </Teleport>
 
     <div class="mx-auto max-w-6xl space-y-6">
-        <div class="flex items-center justify-between">
-            <div class="flex items-center gap-4">
-                <Link
-                    :href="route('admin.pages.index')"
-                    class="rounded-full border border-slate-800 p-2 text-slate-500 transition-all hover:border-orange-500 hover:text-orange-500"
-                    title="Назад"
-                >
-                    <ChevronLeftIcon class="h-5 w-5" />
-                </Link>
-                <div class="space-y-1">
-                    <h1 class="max-w-md truncate text-2xl font-black uppercase tracking-tighter">
-                        Новая страница
-                    </h1>
-                </div>
-            </div>
+        <!-- Header -->
+        <div class="flex items-center gap-4">
+            <Link
+                :href="route('admin.pages.index')"
+                class="rounded-full border border-slate-800 p-2 text-slate-500 transition-all hover:border-orange-500 hover:text-orange-500"
+                title="Назад"
+            >
+                <ChevronLeftIcon class="h-5 w-5" />
+            </Link>
+            <h1 class="max-w-md truncate text-2xl font-black uppercase tracking-tighter">
+                Новая страница
+            </h1>
         </div>
 
+        <!-- Tabs -->
         <div class="flex border-b border-slate-800/50" role="tablist">
             <button
                 v-for="tab in tabs"
@@ -95,20 +100,27 @@
             </button>
         </div>
 
-        <form @submit.prevent="submit" class="grid grid-cols-1 gap-8">
-            <div class="space-y-6">
+        <!-- Form -->
+        <form @submit.prevent="submit" class="grid grid-cols-1 gap-8 lg:grid-cols-12">
+            <!-- Main column -->
+            <div class="space-y-6 lg:col-span-8">
                 <TransitionGroup
                     enter-active-class="transition duration-300 ease-out"
                     enter-from-class="transform translate-y-4 opacity-0"
                     enter-to-class="transform translate-y-0 opacity-100"
+                    leave-active-class="transition duration-200 ease-in"
+                    leave-from-class="transform translate-y-0 opacity-100"
+                    leave-to-class="transform -translate-y-4 opacity-0"
                     mode="out-in"
                 >
-                    <div v-if="activeTab === 'general'" key="general" class="space-y-6">
+                    <div v-if="activeTab === 'general'" key="general">
                         <GeneralSection
                             v-model:title="form.title"
                             v-model:slug="form.slug"
                             v-model:type="form.type"
                             v-model:template="form.template"
+                            v-model:show-in-menu="form.show_in_menu"
+                            v-model:menu-order="form.menu_order"
                             :page_types="page_types"
                             :templates="templates"
                             :errors="form.errors"
@@ -126,7 +138,8 @@
                 </TransitionGroup>
             </div>
 
-            <div class="space-y-6">
+            <!-- Sidebar -->
+            <div class="space-y-6 lg:col-span-4">
                 <div class="sticky top-6 space-y-6">
                     <div
                         class="space-y-6 rounded-[2.5rem] border border-slate-800 bg-slate-900/30 p-8"

@@ -6,7 +6,6 @@
     import BaseSmartTime from '@/Components/UI/BaseSmartTime.vue';
     import ProfileLayout from '@/Layouts/ProfileLayout.vue';
     import { useAdminCrud } from '@/composables/crud/useAdminCrud';
-    import { useNotificationsStore } from '@/stores/notifications';
     import { Order, Paginated } from '@/types';
     import { formatMoney } from '@/utils/format';
 
@@ -109,8 +108,8 @@
                     <div>
                         <span
                             class="block text-[10px] font-bold uppercase tracking-wider text-slate-500"
-                            >Итого к оплате</span
-                        >
+                            >Итого к оплате
+                        </span>
                         <span class="text-base font-black text-orange-400"
                             >{{ formatMoney(order.total_price) }}
                         </span>

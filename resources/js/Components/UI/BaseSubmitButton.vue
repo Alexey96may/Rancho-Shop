@@ -28,7 +28,7 @@
     <button
         type="submit"
         :disabled="processing"
-        class="group relative flex items-center justify-center gap-3 rounded-2xl bg-orange-600 px-12 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-white transition-all hover:bg-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/50 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70"
+        class="group relative flex items-center justify-center gap-3 rounded-2xl bg-orange-600 px-6 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-white transition-all hover:bg-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/50 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70 sm:px-8"
         :aria-busy="processing"
     >
         <div v-if="processing" class="flex items-center gap-3">

@@ -107,7 +107,7 @@
 
 <template>
     <AppContainer class="min-h-screen bg-[#fcfaf5]">
-        <div class="mx-auto max-w-7xl px-6 py-10">
+        <div class="py-10">
             <!-- HEADER & SEARCH -->
             <header class="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-end">
                 <div>
@@ -120,6 +120,8 @@
                 <BaseInput
                     v-model="search"
                     placeholder="Найти животное..."
+                    theme="light"
+                    variant="search"
                     class="w-full md:w-72"
                 />
             </header>
@@ -187,6 +189,6 @@
             </Transition>
         </div>
 
-        <MainPagination :links="animals.meta.links" />
+        <MainPagination :links="animals.meta.links" theme="light" />
     </AppContainer>
 </template>

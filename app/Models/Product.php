@@ -171,6 +171,15 @@ class Product extends Model implements HasMedia
         });
     }
 
+    public function scopeSortAdmin(Builder $query): Builder
+    {
+        return $query
+            ->orderByRaw('deleted_at IS NOT NULL ASC')   // живые сверху
+            ->orderByDesc('is_active')                   // активные сверху
+            ->orderByDesc('updated_at')                  // свежеизменённые сверху
+            ->orderByDesc('id');                         // тайбрейкер
+    }
+
     public function scopeSort(Builder $query, ?string $sort = null): Builder
     {
         // 1. in_stock сверху — только для каталога

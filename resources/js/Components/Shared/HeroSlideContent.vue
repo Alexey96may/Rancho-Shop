@@ -15,7 +15,7 @@
 </script>
 
 <template>
-    <div class="relative z-10 flex h-full items-center px-6 lg:px-20">
+    <div class="relative z-10 flex h-full items-center sm:px-6 lg:px-20">
         <div
             class="animate-in fade-in slide-in-from-bottom-10 fill-mode-forwards shadow-2xl max-w-full translate-y-[-10%] rounded-xl border border-rancho-olive bg-rancho-paper/10 p-4 opacity-0 backdrop-blur-lg duration-1000 md:max-w-sm lg:p-8 2xl:max-w-lg"
         >
@@ -28,14 +28,14 @@
                 {{ title }}
             </h2>
 
-            <p class="text-zinc-900 mb-8 text-sm leading-relaxed lg:text-lg">
+            <p class="mb-8 text-sm leading-relaxed text-zinc-900 lg:text-lg">
                 {{ description }}
             </p>
 
             <Link
                 :href="route(routeName)"
                 :aria-label="`${buttonText}: ${title}`"
-                class="hover:bg-white hover:shadow-xl focus:ring-white inline-flex items-center gap-3 rounded-full bg-rancho-buttercup px-8 py-4 text-sm font-bold text-rancho-forest transition-all focus:outline-none focus:ring-2 active:scale-95"
+                class="inline-flex items-center gap-3 rounded-xl bg-rancho-buttercup px-8 py-4 text-sm font-bold text-rancho-forest transition-colors duration-200 hover:bg-rancho-pine hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-rancho-pine focus-visible:ring-offset-2 active:scale-95 sm:rounded-full"
             >
                 {{ buttonText }}
                 <MoveRight :size="18" aria-hidden="true" />

@@ -5,13 +5,13 @@
 
     import CommentsSection from '@/Components/Sections/CommentsSection.vue';
     import MainLayout from '@/Layouts/MainLayout.vue';
-    import type { Comment, Page, Paginated, SharedData } from '@/types';
+    import type { Comment, Page, Paginated, ResourceSingle } from '@/types';
 
     defineOptions({ layout: MainLayout });
 
     const props = defineProps({
         page: {
-            type: Object as PropType<Page>,
+            type: Object as PropType<ResourceSingle<Page>>,
             required: true,
             validator: (value: Page) => {
                 return Boolean(value && typeof value.id !== 'undefined' && value.title);
@@ -26,7 +26,7 @@
         },
     });
 
-    const pageData = computed(() => props.page);
+    const pageData = computed(() => props.page.data);
 </script>
 
 <template>
@@ -67,18 +67,12 @@
                         {{ pageData.seo.description }}
                     </p>
                 </header>
-
                 <!-- MEDIA (SINGLE HERO IMAGE IF EXISTS) -->
                 <section v-if="pageData.media?.length" class="mb-12" aria-label="Иллюстрация">
                     <figure
                         class="shadow-sm hover:shadow-md overflow-hidden rounded-3xl bg-white transition"
                     >
-                        <img
-                            :src="pageData.media[0].url"
-                            :alt="pageData.media[0].name || pageData.title"
-                            class="h-auto max-h-[500px] w-full object-cover"
-                            loading="lazy"
-                        />
+                        <AppImage :src="pageData.media[0]" type="thumbnails" />
                     </figure>
                 </section>
 

@@ -25,6 +25,8 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property string|null $content
  * @property PageType $type
  * @property bool $is_active
+ * @property bool $show_in_menu
+ * @property int $menu_order
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property string $template
@@ -37,6 +39,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property-read Seo|null $seo
  * @property-read mixed $url
  *
+ * @method static Builder<static>|Page inMenu()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Page active()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Page newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Page newQuery()
@@ -57,7 +60,7 @@ class Page extends Model implements HasMedia
 {
     use HasActiveScope, HasInteractions, HasSeoActions, HasStandardMedia;
 
-    protected $fillable = ['title', 'slug', 'content', 'type', 'template', 'is_active'];
+    protected $fillable = ['title', 'slug', 'content', 'type', 'template', 'is_active', 'show_in_menu', 'menu_order'];
 
     protected $appends = ['url'];
 
@@ -68,6 +71,8 @@ class Page extends Model implements HasMedia
 
     protected $casts = [
         'is_active' => 'boolean',
+        'show_in_menu' => 'boolean',
+        'menu_order' => 'integer',
         'type' => PageType::class,
     ];
 
@@ -84,6 +89,15 @@ class Page extends Model implements HasMedia
     public function isDeletable(): bool
     {
         return $this->type !== PageType::SYSTEM && $this->type !== PageType::HOME;
+    }
+
+    public function scopeInMenu(Builder $query): Builder
+    {
+        return $query
+            ->where('is_active', true)
+            ->where('show_in_menu', true)
+            ->orderBy('menu_order')
+            ->orderBy('title');
     }
 
     public function url(): Attribute

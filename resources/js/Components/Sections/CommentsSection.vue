@@ -3,7 +3,15 @@
 
     import { router } from '@inertiajs/vue3';
 
+    import AppRating from '@/Components/UI/AppRating.vue';
+    import BaseInput from '@/Components/UI/BaseInput.vue';
+    import BaseSmartTime from '@/Components/UI/BaseSmartTime.vue';
+    import BaseTextarea from '@/Components/UI/BaseTextarea.vue';
+    import { useAdminCrud } from '@/composables/crud/useAdminCrud';
     import type { Comment, Paginated } from '@/types';
+    import { getInitials } from '@/utils/user';
+
+    const { deleteEntity, isDeleting } = useAdminCrud();
 
     const props = withDefaults(
         defineProps<{
@@ -109,6 +117,12 @@
     onBeforeUnmount(() => {
         observer?.disconnect();
     });
+
+    const handleDelete = (comment: Comment) => {
+        const orderDate = new Date(comment.created_at).toLocaleString();
+        const message = 'Удалить отзыв от ' + orderDate + '?';
+        deleteEntity('profile.comments', comment.id, message);
+    };
 </script>
 
 <template>
@@ -136,34 +150,27 @@
             aria-label="Форма добавления комментария"
         >
             <!-- GUEST NAME FIELD -->
-            <div v-if="!isAuthenticated">
-                <label :for="guestNameId" class="mb-1 block text-sm font-bold text-rancho-forest">
-                    Ваше имя <span class="text-red-500">*</span>
-                </label>
-                <input
-                    :id="guestNameId"
-                    v-model="guestName"
-                    type="text"
-                    maxlength="50"
-                    placeholder="Как к вам обращаться?"
-                    class="w-full rounded-2xl border border-slate-200 bg-white p-3.5 text-sm focus:border-rancho-pine focus:outline-none focus:ring-2 focus:ring-rancho-pine/20"
-                    required
-                />
-            </div>
+            <BaseInput
+                v-if="isAuthenticated"
+                v-model="guestName"
+                placeholder="Как к вам обращаться?"
+                type="text"
+                label="Ваше имя"
+                theme="light"
+                required
+            />
 
             <!-- COMMENT CONTENT FIELD -->
-            <div>
-                <label :for="textareaId" class="sr-only">Ваш комментарий</label>
-                <textarea
-                    :id="textareaId"
-                    v-model="content"
-                    rows="4"
-                    class="w-full rounded-2xl border border-slate-200 bg-white p-4 text-sm focus:border-rancho-pine focus:outline-none focus:ring-2 focus:ring-rancho-pine/20"
-                    placeholder="Оставьте ваш отзыв..."
-                    aria-describedby="comment-help"
-                    required
-                />
-            </div>
+            <BaseTextarea
+                v-model="content"
+                label="Редактировать текст"
+                placeholder="Ваш комментарий"
+                :disabled="false"
+                :rows="7"
+                theme="light"
+                required
+                :max-height="150"
+            />
 
             <div class="flex items-center justify-between">
                 <p id="comment-help" class="text-xs text-slate-500">
@@ -188,7 +195,7 @@
             role="status"
             aria-live="polite"
         >
-            <p class="italic text-rancho-olive">Пока нет отзывов — станьте первым 🌿</p>
+            <p class="italic text-rancho-olive">Пока нет отзывов — станьте первым!</p>
         </div>
 
         <!-- LIST -->
@@ -207,10 +214,17 @@
             >
                 <header class="mb-3 flex items-center gap-3">
                     <div
-                        class="flex h-10 w-10 items-center justify-center rounded-full bg-rancho-buttercup font-bold text-white"
+                        class="h-12 w-12 shrink-0 overflow-hidden rounded-2xl bg-slate-800 ring-2 transition-transform group-hover:scale-110"
                         aria-hidden="true"
                     >
-                        {{ comment.author_name?.[0]?.toUpperCase() || '?' }}
+                        <AppImage v-if="comment.avatar" :src="comment.avatar" alt="Аватар" />
+
+                        <div
+                            v-else
+                            class="flex h-full w-full items-center justify-center bg-gradient-to-br from-slate-700 to-slate-800 text-lg font-black uppercase text-slate-500"
+                        >
+                            {{ getInitials(comment.author_name) }}
+                        </div>
                     </div>
 
                     <div>
@@ -218,9 +232,9 @@
                             {{ comment.author_name }}
                         </p>
 
-                        <time class="text-xs text-rancho-olive/60" :datetime="comment.created_at">
-                            {{ comment.created_at }}
-                        </time>
+                        <AppRating :rating="comment.rating" />
+
+                        <BaseSmartTime :date="comment.created_at" />
                     </div>
                 </header>
 

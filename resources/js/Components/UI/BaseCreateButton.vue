@@ -11,12 +11,14 @@
         disabled?: boolean;
         type?: 'button' | 'submit' | 'reset';
         icon?: Component;
+        compactOnMobile?: boolean;
     }
 
     const props = withDefaults(defineProps<Props>(), {
         label: 'Создать',
         disabled: false,
         type: 'button',
+        compactOnMobile: true,
     });
 
     const componentType = computed(() => (props.href ? Link : 'button'));
@@ -33,15 +35,19 @@
     <component
         :is="componentType"
         v-bind="bindingProps"
-        class="group flex h-[54px] items-center gap-3 rounded-2xl bg-orange-600 px-8 text-[10px] font-black uppercase tracking-[0.2em] text-white transition-all hover:bg-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/50 disabled:pointer-events-none disabled:opacity-50"
+        class="group flex h-10 items-center justify-center gap-2 rounded-xl bg-orange-600 px-4 text-[10px] font-black uppercase tracking-[0.15em] text-white transition-all hover:bg-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/50 active:scale-95 disabled:pointer-events-none disabled:opacity-50 sm:h-12 sm:gap-3 sm:rounded-2xl sm:px-6 sm:tracking-[0.2em] lg:h-[54px] lg:px-8"
+        :class="compactOnMobile ? 'w-10 px-0 sm:w-auto sm:px-6 lg:px-8' : ''"
     >
         <component
             v-if="icon"
             :is="icon"
-            class="h-5 w-5 transition-transform group-hover:scale-110"
-        ></component>
-        <PlusIcon v-else class="h-5 w-5 transition-transform group-hover:scale-110" />
+            class="h-4 w-4 shrink-0 transition-transform group-hover:scale-110 sm:h-5 sm:w-5"
+        />
+        <PlusIcon
+            v-else
+            class="h-4 w-4 shrink-0 transition-transform group-hover:scale-110 sm:h-5 sm:w-5"
+        />
 
-        <span>{{ label }}</span>
+        <span :class="compactOnMobile ? 'hidden sm:inline' : ''">{{ label }}</span>
     </component>
 </template>

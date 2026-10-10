@@ -30,7 +30,7 @@ use App\Http\Controllers\Profile\ProfileController;
 use App\Http\Controllers\Profile\ProfileOrderController;
 use App\Http\Controllers\RobotsController;
 use App\Http\Controllers\SitemapController;
-use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
+use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [LandingController::class, 'index'])->name('home');
@@ -79,16 +79,16 @@ Route::get('/orders/{order}/yookassa/success', [PaymentController::class, 'succe
 // Webhook от ЮKassa
 Route::post('/payments/yookassa/callback', [PaymentController::class, 'callbackYooKassa'])
     ->name('payments.yookassa.callback')
-    ->withoutMiddleware([VerifyCsrfToken::class]);
+    ->withoutMiddleware([PreventRequestForgery::class]);
 
 // Webhooks (без auth, без CSRF)
 Route::post('/payments/tinkoff/callback', [PaymentController::class, 'callbackTinkoff'])
     ->name('payments.tinkoff.callback')
-    ->withoutMiddleware([VerifyCsrfToken::class]);
+    ->withoutMiddleware([PreventRequestForgery::class]);
 
 Route::post('/payments/paymaster/callback', [PaymentController::class, 'callbackPaymaster'])
     ->name('payments.paymaster.callback')
-    ->withoutMiddleware([VerifyCsrfToken::class]);
+    ->withoutMiddleware([PreventRequestForgery::class]);
 
 // SEO
 Route::get('/robots.txt', [RobotsController::class, 'index'])->name('robots');

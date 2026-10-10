@@ -61,7 +61,7 @@
 <template>
     <article
         :aria-labelledby="`comment-author-${comment.id}`"
-        class="group relative flex flex-col gap-4 rounded-3xl border p-6 transition-all duration-300"
+        class="group relative flex flex-col gap-6 rounded-3xl border p-6 transition-all duration-300"
         :class="[
             comment.is_trashed
                 ? 'border-red-500/10 bg-red-950/5 opacity-75'
@@ -96,7 +96,7 @@
             {{ comment.is_trashed ? 'В корзине' : comment.status_label }}
         </div>
 
-        <header class="flex items-start justify-between">
+        <header class="flex flex-col items-start justify-between gap-3 sm:flex-row">
             <div class="flex items-center gap-3">
                 <div
                     class="h-12 w-12 shrink-0 overflow-hidden rounded-2xl bg-slate-800 ring-2 transition-transform group-hover:scale-110"
@@ -157,11 +157,11 @@
             :class="comment.status === 'pending' ? 'bg-orange-500/10' : 'bg-black/20'"
             aria-label="Связанный контент"
         >
-            <div class="flex flex-col gap-1">
+            <div class="flex flex-col gap-2">
                 <span class="text-[9px] font-black uppercase tracking-widest text-slate-600"
                     >Относится к</span
                 >
-                <div class="flex items-center gap-2">
+                <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
                     <span
                         :class="[
                             'rounded-md border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider',

@@ -23,10 +23,15 @@
 
     defineOptions({ layout: AdminLayout });
 
+    interface SelectOption {
+        id: string;
+        name: string;
+    }
+
     const props = defineProps<{
         page: ResourceSingle<AdminPage>;
-        page_types: Array<{ id: string; name: string }>;
-        templates: Array<{ id: string; name: string }>;
+        page_types: SelectOption[];
+        templates: SelectOption[];
     }>();
 
     const activeTab = ref('general');
@@ -45,6 +50,10 @@
         template: props.page.data.template,
         is_active: props.page.data.is_active,
 
+        // ← новое
+        show_in_menu: props.page.data.show_in_menu ?? false,
+        menu_order: props.page.data.menu_order ?? 0,
+
         seo: {
             title: props.page.data.seo?.title || '',
             description: props.page.data.seo?.description || '',
@@ -54,15 +63,17 @@
         },
     });
 
-    const submit = () => form.put(route('admin.pages.update', props.page.data.id));
+    const submit = () => {
+        form.put(route('admin.pages.update', props.page.data.id));
+    };
     const notify = useNotificationsStore();
 
     const isDeleting = ref(false);
 
     const deletePage = async () => {
         if (!props.page.data.can_delete) return;
-
         if (isDeleting.value) return;
+
         isDeleting.value = true;
 
         notify.withUndo(
@@ -87,7 +98,9 @@
             Редактирование страницы "{{ page.data.title }}"
         </h1>
     </Teleport>
+
     <div class="mx-auto max-w-6xl space-y-6">
+        <!-- Header -->
         <div class="flex items-center justify-between">
             <div class="flex items-center gap-4">
                 <Link
@@ -111,9 +124,9 @@
                         >
                             {{ page.data.type_label }}
                         </span>
-                        <span class="text-[10px] font-medium text-slate-600"
-                            >ID: {{ page.data.id }}</span
-                        >
+                        <span class="text-[10px] font-medium text-slate-600">
+                            ID: {{ page.data.id }}
+                        </span>
                     </div>
                 </div>
             </div>
@@ -123,10 +136,12 @@
                 target="_blank"
                 class="group flex items-center gap-2 text-[10px] font-black uppercase text-slate-500 transition-colors hover:text-orange-500"
             >
-                <EyeIcon class="h-4 w-4 transition-transform group-hover:scale-110" /> Просмотр
+                <EyeIcon class="h-4 w-4 transition-transform group-hover:scale-110" />
+                Просмотр
             </a>
         </div>
 
+        <!-- Tabs -->
         <div
             class="flex border-b border-slate-800/50"
             role="tablist"
@@ -151,7 +166,8 @@
             </button>
         </div>
 
-        <form @submit.prevent="submit" class="grid grid-cols-1 gap-8">
+        <!-- Form -->
+        <form @submit.prevent="submit" class="grid grid-cols-1 gap-8 lg:grid-cols-12">
             <div class="space-y-6 lg:col-span-8">
                 <TransitionGroup
                     enter-active-class="transition duration-300 ease-out"
@@ -162,17 +178,14 @@
                     leave-to-class="transform -translate-y-4 opacity-0"
                     mode="out-in"
                 >
-                    <div
-                        v-if="activeTab === 'general'"
-                        key="general"
-                        role="tabpanel"
-                        class="space-y-6"
-                    >
+                    <div v-if="activeTab === 'general'" key="general" role="tabpanel">
                         <GeneralSection
                             v-model:title="form.title"
                             v-model:slug="form.slug"
                             v-model:type="form.type"
                             v-model:template="form.template"
+                            v-model:show-in-menu="form.show_in_menu"
+                            v-model:menu-order="form.menu_order"
                             :page_types="page_types"
                             :templates="templates"
                             :disabled="form.processing"
@@ -188,68 +201,71 @@
                         <SeoSection v-model="form.seo" :disabled="form.processing" />
                     </div>
                 </TransitionGroup>
+            </div>
 
-                <div class="space-y-6 lg:col-span-4">
-                    <div class="sticky top-6 space-y-6">
-                        <div
-                            class="space-y-6 rounded-[2.5rem] border border-slate-800 bg-slate-900/30 p-8"
+            <!-- Sidebar -->
+            <div class="space-y-6 lg:col-span-4">
+                <div class="sticky top-6 space-y-6">
+                    <div
+                        class="space-y-6 rounded-[2.5rem] border border-slate-800 bg-slate-900/30 p-8"
+                    >
+                        <BaseSwitch
+                            v-model="form.is_active"
+                            label="Статус страницы"
+                            active-text="Опубликовано"
+                            inactive-text="В архиве"
+                            :disabled="form.processing"
+                        />
+
+                        <button
+                            type="submit"
+                            :disabled="form.processing"
+                            class="group relative w-full overflow-hidden rounded-2xl bg-orange-600 py-4 text-xs font-black uppercase text-white transition-all hover:bg-orange-500 disabled:opacity-50"
                         >
-                            <BaseSwitch
-                                v-model="form.is_active"
-                                label="Статус страницы"
-                                active-text="Опубликовано"
-                                inactive-text="В архиве"
-                                :disabled="form.processing"
-                            />
+                            <span v-if="form.processing">Сохранение...</span>
+                            <span v-else>Применить изменения</span>
+                        </button>
+                    </div>
 
-                            <button
-                                type="submit"
-                                :disabled="form.processing"
-                                class="group relative w-full overflow-hidden rounded-2xl bg-orange-600 py-4 text-xs font-black uppercase text-white transition-all hover:bg-orange-500 disabled:opacity-50"
+                    <div
+                        class="space-y-4 rounded-[2.5rem] border border-slate-800 bg-slate-900/30 p-8"
+                    >
+                        <div class="flex justify-between text-[10px] font-black uppercase">
+                            <span class="text-slate-500">Отзывы</span>
+                            <Link
+                                :href="
+                                    route('admin.comments.index', {
+                                        status: 'approved',
+                                        type: 'page',
+                                    })
+                                "
                             >
-                                <span v-if="form.processing">Сохранение...</span>
-                                <span v-else>Применить изменения</span>
-                            </button>
+                                <span class="text-white">
+                                    {{ page.data.reviews_count || 0 }}
+                                </span>
+                            </Link>
+                        </div>
+                        <div class="flex justify-between text-[10px] font-black uppercase">
+                            <span class="text-slate-500">Обновлено</span>
+                            <span class="text-slate-400">
+                                {{ formatDateTime(page.data.updated_at, 'dd.MM.yyyy HH:mm') }}
+                            </span>
                         </div>
 
-                        <div
-                            class="space-y-4 rounded-[2.5rem] border border-slate-800 bg-slate-900/30 p-8"
+                        <BaseDeleteButton
+                            v-if="page.data.can_delete"
+                            :disabled="isDeleting"
+                            @confirm="deletePage"
                         >
-                            <div class="flex justify-between text-[10px] font-black uppercase">
-                                <span class="text-slate-500">Отзывы</span>
-                                <Link
-                                    :href="
-                                        route('admin.comments.index', {
-                                            status: 'approved',
-                                            type: 'page',
-                                        })
-                                    "
-                                    ><span class="text-white">{{
-                                        page.data.reviews_count || 0
-                                    }}</span></Link
-                                >
-                            </div>
-                            <div class="flex justify-between text-[10px] font-black uppercase">
-                                <span class="text-slate-500">Обновлено</span>
-                                <span class="text-slate-400">{{
-                                    formatDateTime(page.data.updated_at, 'dd.MM.yyyy HH:mm')
-                                }}</span>
-                            </div>
+                            <span v-if="isDeleting">Удаление...</span>
+                            <span v-else>Удалить страницу</span>
+                        </BaseDeleteButton>
 
-                            <BaseDeleteButton
-                                v-if="page.data.can_delete"
-                                :disabled="isDeleting"
-                                @confirm="deletePage"
-                                ><span v-if="isDeleting">Удаление...</span>
-                                <span v-else>Удалить страницу</span>
-                            </BaseDeleteButton>
-
-                            <div
-                                v-else
-                                class="rounded-xl bg-orange-500/10 p-3 text-center text-[9px] font-bold uppercase text-orange-500"
-                            >
-                                Системная страница: удаление запрещено
-                            </div>
+                        <div
+                            v-else
+                            class="rounded-xl bg-orange-500/10 p-3 text-center text-[9px] font-bold uppercase text-orange-500"
+                        >
+                            Системная страница: удаление запрещено
                         </div>
                     </div>
                 </div>
@@ -257,5 +273,3 @@
         </form>
     </div>
 </template>
-
-<style scoped></style>

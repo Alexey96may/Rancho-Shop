@@ -54,8 +54,6 @@
 <template>
     <Teleport to="#admin-header-content">
         <AdminPageHeader title="Редактирование промокода" :subtitle="promo.data.code" />
-
-        {{ backUrl }}
     </Teleport>
 
     <BaseCancelButton :href="backUrl" label="Назад" />

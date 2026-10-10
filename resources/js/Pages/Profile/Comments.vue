@@ -45,8 +45,6 @@
         const orderDate = new Date(comment.created_at).toLocaleString();
         const message = 'Удалить отзыв от ' + orderDate + '?';
         deleteEntity('profile.comments', comment.id, message);
-
-        console.log(props.comments.links);
     };
 </script>
 

@@ -1,11 +1,12 @@
 <script setup lang="ts">
-    import { computed, onMounted, ref } from 'vue';
+    import { computed, onMounted, ref, watch } from 'vue';
 
-    import { usePage } from '@inertiajs/vue3';
+    import { Link, usePage } from '@inertiajs/vue3';
 
     import {
         AcademicCapIcon,
         AdjustmentsHorizontalIcon,
+        Bars3Icon,
         ChartBarIcon,
         ChatBubbleBottomCenterTextIcon,
         Cog6ToothIcon,
@@ -19,6 +20,7 @@
         TagIcon,
         TicketIcon,
         UsersIcon,
+        XMarkIcon,
     } from '@heroicons/vue/24/outline';
 
     import AdminSidebarLink from '@/Components/Admin/UI/AdminSidebarLink.vue';
@@ -33,14 +35,31 @@
     const can = page.props.can;
 
     const userName = computed(() => page.props.auth.user?.data?.name ?? '');
-
-    const userRole = computed(() => {
-        return page.props.auth.user?.data?.role.label;
-    });
+    const userRole = computed(() => page.props.auth.user?.data?.role.label ?? '');
 
     const isMounted = ref(false);
     onMounted(() => {
         isMounted.value = true;
+    });
+
+    // === Mobile sidebar ===
+    const isSidebarOpen = ref(false);
+
+    function closeSidebar() {
+        isSidebarOpen.value = false;
+    }
+
+    watch(() => page.url, closeSidebar);
+
+    watch(isSidebarOpen, (open) => {
+        document.body.style.overflow = open ? 'hidden' : '';
+    });
+
+    // === Инициалы для аватарки ===
+    const userInitial = computed(() => {
+        const name = userName.value.trim();
+        if (!name) return '?';
+        return name.charAt(0).toUpperCase();
     });
 </script>
 
@@ -48,19 +67,47 @@
     <SeoMeta :force-robots="'nofollow, noindex'" :seo="page.props?.seo" />
 
     <Toaster />
+
     <div class="flex min-h-screen bg-slate-950 font-sans text-slate-200">
+        <!-- Backdrop -->
+        <Transition name="backdrop">
+            <div
+                v-if="isSidebarOpen"
+                class="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden"
+                @click="closeSidebar"
+                aria-hidden="true"
+            />
+        </Transition>
+
+        <!-- SIDEBAR -->
         <aside
             id="admin-sidebar"
-            class="sticky top-0 flex h-screen w-72 flex-col gap-8 overflow-y-auto border-r border-slate-900 bg-slate-950 p-6"
+            class="fixed inset-y-0 left-0 z-50 flex h-screen w-72 shrink-0 flex-col gap-6 overflow-y-auto border-r border-slate-900 bg-slate-950 p-4 transition-transform duration-300 sm:gap-8 sm:p-6 lg:sticky lg:top-0 lg:translate-x-0"
+            :class="isSidebarOpen ? 'translate-x-0' : '-translate-x-full'"
         >
-            <div class="flex items-center gap-2 px-4">
-                <span class="text-2xl font-black uppercase tracking-tighter text-white">
+            <!-- Закрытие -->
+            <button
+                type="button"
+                class="absolute right-3 top-3 rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-900 hover:text-white lg:hidden"
+                @click="closeSidebar"
+                aria-label="Закрыть меню"
+            >
+                <XMarkIcon class="h-5 w-5 sm:h-6 sm:w-6" />
+            </button>
+
+            <!-- Логотип -->
+            <div class="flex items-center gap-2 pl-2 sm:pl-4">
+                <Link
+                    :href="route('home')"
+                    class="text-xl font-black uppercase leading-none tracking-tighter text-white sm:text-2xl"
+                >
                     Ранчо <span class="text-orange-600">Admin</span>
-                </span>
+                </Link>
             </div>
 
+            <!-- Меню -->
             <nav role="navigation">
-                <ul class="flex flex-col gap-1">
+                <ul class="flex flex-col gap-0.5 sm:gap-1">
                     <li>
                         <AdminSidebarLink
                             :href="route('admin.dashboard')"
@@ -71,7 +118,7 @@
                     </li>
 
                     <li
-                        class="mb-2 mt-6 px-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-600"
+                        class="mb-1 mt-5 px-3 text-[9px] font-black uppercase tracking-[0.2em] text-slate-600 sm:mb-2 sm:mt-6 sm:px-4 sm:text-[10px]"
                     >
                         Магазин
                     </li>
@@ -117,7 +164,7 @@
                     </li>
 
                     <li
-                        class="mb-2 mt-6 px-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-600"
+                        class="mb-1 mt-5 px-3 text-[9px] font-black uppercase tracking-[0.2em] text-slate-600 sm:mb-2 sm:mt-6 sm:px-4 sm:text-[10px]"
                     >
                         Ферма
                     </li>
@@ -131,7 +178,7 @@
                     </li>
 
                     <li
-                        class="mb-2 mt-6 px-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-600"
+                        class="mb-1 mt-5 px-3 text-[9px] font-black uppercase tracking-[0.2em] text-slate-600 sm:mb-2 sm:mt-6 sm:px-4 sm:text-[10px]"
                     >
                         Контент
                     </li>
@@ -177,7 +224,7 @@
                     </li>
 
                     <li
-                        class="mb-2 mt-6 px-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-600"
+                        class="mb-1 mt-5 px-3 text-[9px] font-black uppercase tracking-[0.2em] text-slate-600 sm:mb-2 sm:mt-6 sm:px-4 sm:text-[10px]"
                     >
                         Система
                     </li>
@@ -209,27 +256,73 @@
             </nav>
         </aside>
 
-        <div class="flex flex-1 flex-col">
+        <!-- CONTENT -->
+        <div class="flex min-w-0 flex-1 flex-col">
             <header
-                class="sticky top-0 z-10 flex h-20 items-center justify-between border-b border-slate-900 bg-slate-950/50 px-10 backdrop-blur-md"
+                class="sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-slate-900 bg-slate-950/80 px-3 backdrop-blur-md sm:h-16 sm:gap-3 sm:px-4 md:h-20 md:gap-4 md:px-6 lg:px-10"
             >
-                <div id="admin-header-content" class="flex-1"></div>
+                <!-- Hamburger -->
+                <button
+                    type="button"
+                    class="shrink-0 rounded-lg p-2 text-slate-300 transition-colors hover:bg-slate-900 hover:text-white lg:hidden"
+                    @click="isSidebarOpen = true"
+                    aria-label="Открыть меню"
+                >
+                    <Bars3Icon class="h-5 w-5 sm:h-6 sm:w-6" />
+                </button>
 
-                <div class="flex items-center gap-4">
-                    <div class="hidden text-right sm:block">
-                        <p class="text-sm font-bold leading-none text-white">
-                            {{ userName }}
+                <!-- Заголовок страницы (слот) -->
+                <h1 id="admin-header-content" class="min-w-0 flex-1 truncate"></h1>
+
+                <!-- Правый блок: юзер -->
+                <div class="flex shrink-0 items-center gap-2 sm:gap-3 md:gap-4">
+                    <div class="hidden text-right md:block">
+                        <p class="text-xs font-bold leading-tight text-white md:text-sm">
+                            <Link :href="route('profile.edit')" class="hover:text-orange-500">
+                                {{ userName }}
+                            </Link>
                         </p>
                         <span
-                            class="text-[10px] font-bold uppercase tracking-tighter text-orange-500"
-                            >{{ userRole }}</span
+                            class="text-[9px] font-bold uppercase tracking-tighter text-orange-500 md:text-[10px]"
                         >
+                            {{ userRole }}
+                        </span>
                     </div>
+
+                    <!-- Аватарка (показывается до md) -->
+                    <Link
+                        :href="route('profile.edit')"
+                        class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-800 text-xs font-black text-orange-500 transition-colors hover:bg-slate-700 sm:h-9 sm:w-9 md:hidden"
+                        :aria-label="userName"
+                    >
+                        {{ userInitial }}
+                    </Link>
                 </div>
             </header>
-            <div id="main-content" class="p-10">
+
+            <div id="main-content" class="min-w-0 flex-1 p-3 sm:p-4 md:p-6 lg:p-8 xl:p-10">
                 <slot v-if="isMounted" />
             </div>
         </div>
     </div>
 </template>
+
+<style scoped>
+    .backdrop-enter-active,
+    .backdrop-leave-active {
+        transition: opacity 0.25s ease;
+    }
+    .backdrop-enter-from,
+    .backdrop-leave-to {
+        opacity: 0;
+    }
+
+    /* Скрыть скроллбар у сайдбара на мобилке */
+    #admin-sidebar::-webkit-scrollbar {
+        width: 4px;
+    }
+    #admin-sidebar::-webkit-scrollbar-thumb {
+        background-color: rgb(51 65 85);
+        border-radius: 9999px;
+    }
+</style>

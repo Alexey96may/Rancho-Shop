@@ -91,7 +91,7 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <StatCard
                 label="Заказов оформлено"
                 :value="computedTotalOrders"
@@ -200,19 +200,8 @@
             <div class="flex items-center justify-between pt-2">
                 <BaseSubmitButton
                     :processing="form.processing"
-                    :label="form.processing ? 'Сохранение...' : 'Сохранить изменения'"
+                    :label="form.processing ? 'Сохранение...' : 'Сохранить'"
                 />
-
-                <Transition
-                    enter-active-class="transition ease-out duration-300"
-                    enter-from-class="opacity-0 translate-x-2"
-                    leave-active-class="transition ease-in duration-300"
-                    leave-to-class="opacity-0"
-                >
-                    <span v-if="form.recentlySuccessful" class="text-xs font-bold text-emerald-400">
-                        ✓ Изменения сохранены
-                    </span>
-                </Transition>
             </div>
         </form>
     </div>

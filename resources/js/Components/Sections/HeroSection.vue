@@ -36,7 +36,7 @@
 </script>
 
 <template>
-    <AppContainer class="relative pb-14 lg:pb-8">
+    <AppContainer class="relative py-4 lg:pb-8">
         <section
             class="pointer-events-none relative w-full overflow-hidden md:aspect-[213/117]"
             aria-label="Популярные разделы сайта"
@@ -64,7 +64,7 @@
                 >
                     <div class="relative h-full w-full">
                         <div
-                            class="aspect-[213/117] w-full bg-contain bg-center bg-no-repeat transition-transform duration-700 md:absolute md:inset-0"
+                            class="mb-4 aspect-[213/117] w-full bg-contain bg-center bg-no-repeat transition-transform duration-700 md:absolute md:inset-0"
                             :style="{ backgroundImage: `url(${slide.image})` }"
                             aria-hidden="true"
                         ></div>
