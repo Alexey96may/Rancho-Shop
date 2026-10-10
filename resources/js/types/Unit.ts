@@ -11,6 +11,7 @@ export interface Unit extends BaseUnit {
 
 export interface UnitAdmin extends Unit {
     created_at: string;
+    low_stock_threshold: number;
     product_variants_count?: number;
     can_delete: boolean;
 }

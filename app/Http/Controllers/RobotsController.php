@@ -14,7 +14,7 @@ class RobotsController extends Controller
             '/dashboard',
             '/cart',
             '/checkout',
-            '/api',
+            '/api/',
         ];
 
         if (!app()->isProduction()) {

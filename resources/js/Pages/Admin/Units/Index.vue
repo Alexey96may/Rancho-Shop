@@ -10,6 +10,7 @@
     import AdminPageHeader from '@/Components/Admin/Shared/AdminPageHeader.vue';
     import AdminPagination from '@/Components/Admin/Shared/AdminPagination.vue';
     import AdminLoader from '@/Components/Admin/UI/AdminLoader.vue';
+    import AdminNumberInput from '@/Components/Admin/UI/AdminNumberInput.vue';
     import AdminSearchInput from '@/Components/Admin/UI/AdminSearchInput.vue';
     import BaseCreateButton from '@/Components/UI/BaseCreateButton.vue';
     import BaseInput from '@/Components/UI/BaseInput.vue';
@@ -54,6 +55,7 @@
         short: '',
         slug: '',
         position: 0,
+        low_stock_threshold: 1,
     });
 
     const filterForm = useForm({
@@ -200,6 +202,16 @@
                     label="Slug"
                     placeholder="kg"
                     :disabled="form.processing"
+                />
+
+                <AdminNumberInput
+                    v-model.number="form.low_stock_threshold"
+                    v-model:error="form.errors.low_stock_threshold"
+                    label="Порог низкого остатка"
+                    :step="1"
+                    placeholder="1"
+                    :disabled="form.processing"
+                    :min="0"
                 />
             </div>
 

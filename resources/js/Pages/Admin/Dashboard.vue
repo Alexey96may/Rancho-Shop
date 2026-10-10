@@ -1,10 +1,13 @@
 <script setup lang="ts">
+    import { computed } from 'vue';
+
     import { usePage } from '@inertiajs/vue3';
 
     import {
         AcademicCapIcon,
         ChartBarIcon,
         ChatBubbleLeftRightIcon,
+        CubeIcon,
         InboxIcon,
         ShoppingCartIcon,
         TicketIcon,
@@ -15,25 +18,51 @@
     import AdminPageHeader from '@/Components/Admin/Shared/AdminPageHeader.vue';
     import AdminLayout from '@/Layouts/AdminLayout.vue';
     import { SharedData } from '@/types';
+    import { formatMoney } from '@/utils/format';
 
     defineOptions({ layout: AdminLayout });
 
-    const props = defineProps({
+    interface StatBlock {
+        total: number;
+        new?: number;
+        week?: number;
+        active?: number;
+        pending?: number;
+        revenue?: number;
+        in_stock?: number;
+        out_of_stock?: number;
+        low_stock?: number;
+    }
+
+    interface Props {
         stats: {
-            type: Object,
-            required: true,
-            default: () => ({
-                products_count: 0,
-                orders_pending: 0,
-                new_comments: 0,
-                total_users: 0,
-                active_animals: 0,
-                active_promocodes: 0,
-            }),
-        },
-    });
+            users: StatBlock;
+            orders: StatBlock;
+            comments: StatBlock;
+            products: StatBlock;
+            variants: StatBlock;
+            animals: StatBlock;
+        };
+    }
+
+    const props = defineProps<Props>();
 
     const can = usePage<SharedData>().props.can;
+
+    const variantsDescription = computed(() => {
+        const v = props.stats.variants;
+
+        if (v.out_of_stock === 0 && v.low_stock === 0) {
+            return `${v.in_stock ?? 0} в наличии`;
+        }
+
+        const parts: string[] = [];
+        if (v.in_stock) parts.push(`${v.in_stock} в наличии`);
+        if (v.low_stock) parts.push(`${v.low_stock} заканчивается`);
+        if (v.out_of_stock) parts.push(`${v.out_of_stock} нет`);
+
+        return parts.join(' · ');
+    });
 </script>
 
 <template>
@@ -43,15 +72,17 @@
 
     <section>
         <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <!-- ORDERS -->
             <AdminDashboardCard
                 v-if="can.manageOrders"
                 title="Заказы"
-                description="Ожидают обработки"
+                :description="`${stats.orders.new ?? 0} новых · +${stats.orders.week ?? 0} за неделю`"
                 :href="route('admin.orders.index')"
                 :icon="ShoppingCartIcon"
-                :count="stats.orders_pending"
+                :count="stats.orders.total"
             />
 
+            <!-- ANALYTICS (без count) -->
             <AdminDashboardCard
                 v-if="can.manageAnalitics"
                 title="Аналитика"
@@ -61,50 +92,76 @@
                 :icon="ChartBarIcon"
             />
 
+            <!-- PRODUCTS -->
             <AdminDashboardCard
                 v-if="can.manageProducts"
-                title="Продукты"
-                description="Всего в базе"
+                title="Товары"
+                :description="`${stats.products.active ?? 0} активных`"
                 :href="route('admin.products.index')"
                 :icon="InboxIcon"
-                :count="stats.products_count"
+                :count="stats.products.total"
             />
 
+            <!-- VARIANTS -->
+            <AdminDashboardCard
+                v-if="can.manageProducts"
+                title="Варианты"
+                :description="variantsDescription"
+                :href="route('admin.catalog.index')"
+                :icon="CubeIcon"
+                :count="stats.variants.total"
+            />
+
+            <!-- ANIMALS -->
             <AdminDashboardCard
                 title="Животные"
-                description="Наше поголовье"
+                :description="`${stats.animals.active ?? 0} активных`"
                 :href="route('admin.animals.index')"
                 :icon="AcademicCapIcon"
-                :count="stats.active_animals || 0"
+                :count="stats.animals.total"
             />
 
+            <!-- PROMOCODES -->
             <AdminDashboardCard
                 title="Промокоды"
                 description="Активные акции"
                 :href="route('admin.promocodes.index')"
                 :icon="TicketIcon"
-                :count="stats.active_promocodes || 0"
+                :count="0"
             />
 
+            <!-- COMMENTS -->
             <AdminDashboardCard
                 v-if="can.manageComments"
                 title="Отзывы"
-                description="Новые сообщения"
+                :description="`${stats.comments.pending ?? 0} на модерации · +${stats.comments.week ?? 0} за неделю`"
                 :href="route('admin.comments.index')"
                 :icon="ChatBubbleLeftRightIcon"
-                :count="stats.new_comments"
+                :count="stats.comments.total"
             />
 
+            <!-- USERS -->
             <AdminDashboardCard
                 v-if="can.manageUsers"
-                title="Персонал"
-                description="Доступ к админке"
+                title="Пользователи"
+                :description="`+${stats.users.new ?? 0} за неделю`"
                 :href="route('admin.users.index')"
                 :icon="UsersIcon"
-                :count="stats.total_users"
+                :count="stats.users.total"
             />
         </div>
-    </section>
 
-    <section class="mt-12"></section>
+        <!-- REVENUE BLOCK -->
+        <div
+            v-if="can.manageOrders && stats.orders.revenue"
+            class="mt-6 rounded-2xl border border-slate-200 bg-white p-6"
+        >
+            <div class="text-xs uppercase tracking-wider text-slate-500">
+                Выручка (оплаченные заказы)
+            </div>
+            <div class="mt-2 text-3xl font-black text-emerald-600">
+                {{ formatMoney(stats.orders.revenue) }}
+            </div>
+        </div>
+    </section>
 </template>

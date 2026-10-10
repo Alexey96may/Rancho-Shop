@@ -16,7 +16,8 @@ return new class extends Migration
             $table->string('name'); // килограмм
             $table->string('short'); // кг
             $table->string('slug')->unique(); // kg
-            $table->unsignedInteger('position')->default(0); //for sorting
+            $table->decimal('low_stock_threshold', 10, 3)->default(1);
+            $table->unsignedInteger('position')->default(0); // for sorting
             $table->timestamps();
         });
     }
