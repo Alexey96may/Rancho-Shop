@@ -59,14 +59,16 @@
         <Head title="Оплата заказа" />
 
         <div class="shadow-sm rounded-2xl border border-slate-200 bg-white p-6">
-            <h1 class="text-xl font-bold text-slate-900">Оплата заказа #{{ order.id }}</h1>
-            <p class="mt-1 text-sm text-slate-500">
+            <h1 v-scroll-reveal class="text-xl font-bold text-slate-900">
+                Оплата заказа #{{ order.id }}
+            </h1>
+            <p v-scroll-reveal class="mt-1 text-sm text-slate-500">
                 К оплате:
                 <span class="font-semibold text-slate-900">{{ computedTotalPrice }}</span>
             </p>
 
             <!-- 1. REDIRECT: ЮKassa / Тинькофф / PayMaster -->
-            <div v-if="payment.type === 'redirect'" class="mt-8 text-center">
+            <div v-scroll-reveal v-if="payment.type === 'redirect'" class="mt-8 text-center">
                 <div
                     class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-indigo-600"
                 ></div>
@@ -100,7 +102,7 @@
             </div>
 
             <!-- 2. DIRECT: ручной перевод (СБП / карта) -->
-            <div v-else-if="payment.type === 'direct'" class="mt-6 space-y-4">
+            <div v-scroll-reveal v-else-if="payment.type === 'direct'" class="mt-6 space-y-4">
                 <div class="rounded-xl border border-slate-100 bg-slate-50 p-4">
                     <h3 class="font-medium text-slate-800">Реквизиты для перевода:</h3>
                     <ul class="mt-3 space-y-2 text-sm text-slate-600">
@@ -127,7 +129,7 @@
             </div>
 
             <!-- 3. FAKE: симуляция оплаты (локалка) -->
-            <div v-else-if="payment.type === 'fake'" class="mt-6 text-center">
+            <div v-scroll-reveal v-else-if="payment.type === 'fake'" class="mt-6 text-center">
                 <div
                     class="mb-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800"
                 >
@@ -144,7 +146,7 @@
             </div>
 
             <!-- 4. ERROR: не удалось создать платёж -->
-            <div v-else-if="payment.type === 'error'" class="mt-6">
+            <div v-scroll-reveal v-else-if="payment.type === 'error'" class="mt-6">
                 <div class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
                     ⚠️ {{ payment.error ?? 'Не удалось создать платёж. Попробуйте позже.' }}
                 </div>

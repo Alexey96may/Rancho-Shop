@@ -131,7 +131,7 @@ class PageController extends Controller
      */
     public function uploadMedia(UploadPageMediaRequest $request, Page $page)
     {
-        $media = $page->addMediaFromInput($request, 'image')->toMediaCollection('content_images');
+        $media = $page->addMediaFromRequest('image')->toMediaCollection('content_images');
 
         return back()->with('last_uploaded_url', $media->getFullUrl());
     }
@@ -143,7 +143,7 @@ class PageController extends Controller
     {
         /** @var User|HasMedia $user */
         $user = Auth::user();
-        $media = $user->addMediaFromInput($request, 'image')->toMediaCollection('tmp');
+        $media = $user->addMediaFromRequest('image')->toMediaCollection('tmp');
 
         return back()->with('last_uploaded_url', $media->getFullUrl());
     }
@@ -177,7 +177,12 @@ class PageController extends Controller
             }
         }
 
-        $user->clearMediaCollectionExcept('tmp', $user->getMedia('tmp')->where('created_at', '>', now()->subDay()));
+        $keepIds = $user->getMedia('tmp')
+            ->where('created_at', '>', now()->subDay())
+            ->pluck('id')
+            ->all();
+
+        $user->clearMediaCollectionExcept('tmp', $keepIds);
     }
 
     private function getFormattedPageTypes(): array

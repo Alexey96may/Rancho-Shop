@@ -107,3 +107,27 @@
         background-color: theme('colors.slate.600');
     }
 }
+
+@layer components {
+    .scroll-reveal {
+        opacity: 0;
+        transform: translateY(25px);
+        transition:
+            opacity 0.6s ease-out,
+            transform 0.6s ease-out;
+        will-change: opacity, transform;
+    }
+
+    .scroll-reveal--visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .scroll-reveal {
+            opacity: 1;
+            transform: none;
+            transition: none;
+        }
+    }
+}

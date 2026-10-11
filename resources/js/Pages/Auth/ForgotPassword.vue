@@ -7,6 +7,8 @@
     import TextInput from '@/Components/TextInput.vue';
     import GuestLayout from '@/Layouts/GuestLayout.vue';
 
+    defineOptions({ layout: GuestLayout });
+
     defineProps<{
         status?: string;
     }>();
@@ -21,45 +23,44 @@
 </script>
 
 <template>
-    <GuestLayout>
-        <AppContainer>
-            <Head title="Forgot Password" />
+    <Head title="Восстановление пароля" />
 
-            <div class="mb-4 text-sm text-gray-600">
-                Forgot your password? No problem. Just let us know your email address and we will
-                email you a password reset link that will allow you to choose a new one.
-            </div>
+    <header v-scroll-reveal class="mb-6">
+        <h1 class="text-2xl font-semibold tracking-tight text-slate-900">Восстановление пароля</h1>
+        <p class="mt-2 text-sm text-slate-500">
+            Забыли пароль? Ничего страшного. Укажите email — мы отправим ссылку для сброса пароля.
+        </p>
+    </header>
 
-            <div v-if="status" class="mb-4 text-sm font-medium text-green-600">
-                {{ status }}
-            </div>
+    <div
+        v-scroll-reveal
+        v-if="status"
+        class="mb-4 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm font-medium text-green-700"
+    >
+        {{ status }}
+    </div>
 
-            <form @submit.prevent="submit">
-                <div>
-                    <InputLabel for="email" value="Email" />
+    <form v-scroll-reveal @submit.prevent="submit" class="space-y-4">
+        <div>
+            <InputLabel for="email" value="Email" />
 
-                    <TextInput
-                        id="email"
-                        type="email"
-                        class="mt-1 block w-full"
-                        v-model="form.email"
-                        required
-                        autofocus
-                        autocomplete="username"
-                    />
+            <TextInput
+                id="email"
+                type="email"
+                class="mt-1 block w-full"
+                v-model="form.email"
+                required
+                autofocus
+                autocomplete="username"
+            />
 
-                    <InputError class="mt-2" :message="form.errors.email" />
-                </div>
+            <InputError class="mt-2" :message="form.errors.email" />
+        </div>
 
-                <div class="mt-4 flex items-center justify-end">
-                    <PrimaryButton
-                        :class="{ 'opacity-25': form.processing }"
-                        :disabled="form.processing"
-                    >
-                        Email Password Reset Link
-                    </PrimaryButton>
-                </div>
-            </form>
-        </AppContainer>
-    </GuestLayout>
+        <div class="flex items-center justify-end pt-2">
+            <PrimaryButton :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
+                Отправить ссылку
+            </PrimaryButton>
+        </div>
+    </form>
 </template>

@@ -1,7 +1,5 @@
 <script setup lang="ts">
-    import { Link } from '@inertiajs/vue3';
-
-    import ApplicationLogo from '@/Components/ApplicationLogo.vue';
+    import TheHeader from '@/Components/Sections/TheHeader.vue';
     import SeoMeta from '@/Components/Shared/SeoMeta.vue';
     import Toaster from '@/Components/Shared/Toaster.vue';
     import { useFlashToasts } from '@/composables/useFlashToasts';
@@ -10,20 +8,22 @@
 </script>
 
 <template>
-    <div class="flex min-h-screen flex-col items-center bg-gray-100 pt-6 sm:justify-center sm:pt-0">
+    <div class="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
         <SeoMeta />
         <Toaster />
 
-        <div>
-            <Link href="/">
-                <ApplicationLogo class="h-20 w-20 fill-current text-gray-500" />
-            </Link>
-        </div>
+        <TheHeader />
 
         <div
-            class="shadow-md mt-6 w-full overflow-hidden bg-white px-6 py-4 sm:max-w-md sm:rounded-lg"
+            class="flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center px-4 py-12 sm:px-6"
         >
-            <slot />
+            <div class="w-full sm:max-w-md">
+                <div
+                    class="shadow-lg overflow-hidden rounded-2xl border border-slate-200 bg-white/80 px-6 py-6 shadow-slate-200/50 backdrop-blur sm:px-8 sm:py-8"
+                >
+                    <slot />
+                </div>
+            </div>
         </div>
     </div>
 </template>

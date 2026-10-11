@@ -40,7 +40,7 @@
         ]"
     >
         <!-- Верхняя/Левая часть: Изображение + Название + Кнопка удаления (на моб.) -->
-        <div class="flex items-start gap-3 sm:flex-1 sm:items-center">
+        <div class="flex flex-col items-start gap-3 sm:flex-1 sm:flex-row sm:items-center">
             <AppImage
                 :src="item.media"
                 :alt="item.name"
@@ -91,7 +91,7 @@
 
             <!-- Итоговая стоимость позиций -->
             <div class="text-right sm:min-w-[90px]">
-                <p class="text-base font-black text-slate-900 sm:text-lg">
+                <p class="text-xs font-black text-slate-900 sm:text-lg">
                     {{ totalPriceFormatted }}
                 </p>
             </div>

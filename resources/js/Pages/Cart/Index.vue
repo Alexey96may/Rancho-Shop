@@ -40,13 +40,13 @@
 
 <template>
     <AppContainer class="mx-auto max-w-4xl p-6">
-        <h1 class="mb-8 text-3xl font-black uppercase tracking-tight text-slate-900">
+        <h1 class="text-md mb-8 font-black uppercase tracking-tight text-slate-900 md:text-2xl">
             Ваша корзина
         </h1>
 
         <Transition name="fade-up" appear>
             <div v-if="cart.items.length > 0" class="grid gap-8 lg:grid-cols-3">
-                <div class="space-y-4 lg:col-span-2">
+                <div v-scroll-reveal class="space-y-4 lg:col-span-2">
                     <TransitionGroup name="cart-item" tag="div" class="space-y-4">
                         <CartItemCard
                             v-for="item in cart.items"
@@ -56,7 +56,10 @@
                 </div>
 
                 <!-- Правая колонка с итогом -->
-                <div class="shadow-xl h-fit space-y-8 rounded-xl bg-slate-900 p-6 pb-10 text-white">
+                <div
+                    v-scroll-reveal
+                    class="shadow-xl h-fit space-y-8 rounded-xl bg-slate-900 p-6 pb-10 text-white"
+                >
                     <h2 class="text-xl font-bold">Итог заказа</h2>
 
                     <!-- Оповещение в блоке заказа, если есть невалидные товары -->
@@ -82,16 +85,19 @@
                         </div>
                     </div>
 
-                    <div class="flex justify-between py-2 text-2xl font-black">
+                    <div
+                        v-scroll-reveal
+                        class="text-md flex justify-between py-2 font-black md:text-xl"
+                    >
                         <span>Всего:</span>
                         <span>{{ computedTotalPrice }}</span>
                     </div>
 
-                    <div>
+                    <div v-scroll-reveal>
                         <Link
                             :href="route('checkout.index')"
                             :disabled="hasInvalidItems"
-                            class="shadow-lg w-full rounded-xl bg-orange-600 p-4 font-bold uppercase tracking-widest shadow-orange-900/20 transition-all hover:bg-orange-500 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100"
+                            class="shadow-lg w-full rounded-xl bg-orange-700 p-4 text-sm font-bold uppercase tracking-widest shadow-orange-900/20 transition-all hover:bg-orange-500 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100"
                         >
                             Оформить заказ
                         </Link>
@@ -99,7 +105,11 @@
                 </div>
             </div>
 
-            <div v-else class="flex flex-col items-center justify-center py-20 text-center">
+            <div
+                v-scroll-reveal
+                v-else
+                class="flex flex-col items-center justify-center py-20 text-center"
+            >
                 <div class="mb-6 rounded-full bg-slate-100 p-8 text-slate-300">
                     <ShoppingCartIcon class="h-16 w-16" />
                 </div>

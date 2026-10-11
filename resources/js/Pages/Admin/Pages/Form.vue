@@ -67,6 +67,7 @@
         type: props.page?.data.type || props.page_types[0]?.id || '',
         template: props.page?.data.template || props.templates[0]?.id || 'default',
         is_active: props.page?.data.is_active ?? true,
+        is_commentable: props.page?.data.is_commentable ?? true,
         show_in_menu: props.page?.data.show_in_menu ?? false,
         menu_order: props.page?.data.menu_order ?? 0,
         seo: {
@@ -194,6 +195,7 @@
                                 v-model:show-in-menu="form.show_in_menu"
                                 v-model:menu-order="form.menu_order"
                                 v-model:template="form.template"
+                                v-model:is-commentable="form.is_commentable"
                                 :errors="form.errors"
                                 :page_types="page_types"
                                 :disabled="form.processing"

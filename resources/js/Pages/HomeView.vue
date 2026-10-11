@@ -91,13 +91,13 @@
 
 <template>
     <div>
-        <HeroSection />
-        <BestProductSection v-if="products.data.length" :products="products.data" />
-        <BestAnimalsSection v-if="cows.data.length" :animals="cows.data" />
-        <FeaturesSection v-if="values.data" :values="values.data" />
-        <HowItWorksSection v-if="how_it_works.data" :block="how_it_works.data" />
-        <ReviewsSection :comments="comments.data" />
-        <AboutSection v-if="about.data" :about="about.data" />
-        <FaqSection v-if="faqs.data.length" :faqs="faqs.data" />
+        <HeroSection v-scroll-reveal />
+        <BestProductSection v-scroll-reveal v-if="products.data.length" :products="products.data" />
+        <BestAnimalsSection v-scroll-reveal v-if="cows.data.length" :animals="cows.data" />
+        <FeaturesSection v-scroll-reveal v-if="values.data" :values="values.data" />
+        <HowItWorksSection v-scroll-reveal v-if="how_it_works.data" :block="how_it_works.data" />
+        <ReviewsSection v-scroll-reveal :comments="comments.data" />
+        <AboutSection v-scroll-reveal v-if="about.data" :about="about.data" />
+        <FaqSection v-scroll-reveal v-if="faqs.data.length" :faqs="faqs.data" />
     </div>
 </template>

@@ -76,7 +76,7 @@
 
 <template>
     <div class="space-y-6">
-        <div class="flex items-center justify-between">
+        <div v-scroll-reveal class="flex items-center justify-between">
             <div>
                 <span class="mb-1 block text-xs font-medium text-slate-500"
                     >Ваша роль на сайте:</span
@@ -91,7 +91,7 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div v-scroll-reveal class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <StatCard
                 label="Заказов оформлено"
                 :value="computedTotalOrders"
@@ -106,6 +106,7 @@
         </div>
 
         <div
+            v-scroll-reveal
             v-if="latestOrder"
             class="flex items-center justify-between gap-4 rounded-2xl border border-slate-800/60 bg-gradient-to-r from-slate-950 to-slate-900/50 p-4"
         >
@@ -131,7 +132,7 @@
 
         <hr class="border-slate-900" />
 
-        <form @submit.prevent="submit" class="space-y-6">
+        <form v-scroll-reveal @submit.prevent="submit" class="space-y-6">
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <BaseInput
                     v-model="form.name"

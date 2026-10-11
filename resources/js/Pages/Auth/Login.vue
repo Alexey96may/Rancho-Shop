@@ -8,6 +8,8 @@
     import TextInput from '@/Components/TextInput.vue';
     import GuestLayout from '@/Layouts/GuestLayout.vue';
 
+    defineOptions({ layout: GuestLayout });
+
     defineProps<{
         canResetPassword?: boolean;
         status?: string;
@@ -29,71 +31,87 @@
 </script>
 
 <template>
-    <GuestLayout>
-        <AppContainer>
-            <Head title="Log in" />
+    <Head title="Вход" />
 
-            <div v-if="status" class="mb-4 text-sm font-medium text-green-600">
-                {{ status }}
-            </div>
+    <header v-scroll-reveal class="mb-6">
+        <h1 class="text-2xl font-semibold tracking-tight text-slate-900">Вход</h1>
+        <p class="mt-2 text-sm text-slate-500">Введите email и пароль, чтобы продолжить.</p>
+    </header>
 
-            <form @submit.prevent="submit">
-                <div>
-                    <InputLabel for="email" value="Email" />
+    <div
+        v-scroll-reveal
+        v-if="status"
+        class="mb-4 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm font-medium text-green-700"
+    >
+        {{ status }}
+    </div>
 
-                    <TextInput
-                        id="email"
-                        type="email"
-                        class="mt-1 block w-full"
-                        v-model="form.email"
-                        required
-                        autofocus
-                        autocomplete="username"
-                    />
+    <form v-scroll-reveal @submit.prevent="submit" class="space-y-4">
+        <div>
+            <InputLabel for="email" value="Email" />
 
-                    <InputError class="mt-2" :message="form.errors.email" />
-                </div>
+            <TextInput
+                id="email"
+                type="email"
+                class="mt-1 block w-full"
+                v-model="form.email"
+                required
+                autofocus
+                autocomplete="username"
+            />
 
-                <div class="mt-4">
-                    <InputLabel for="password" value="Password" />
+            <InputError class="mt-2" :message="form.errors.email" />
+        </div>
 
-                    <TextInput
-                        id="password"
-                        type="password"
-                        class="mt-1 block w-full"
-                        v-model="form.password"
-                        required
-                        autocomplete="current-password"
-                    />
+        <div>
+            <InputLabel for="password" value="Пароль" />
 
-                    <InputError class="mt-2" :message="form.errors.password" />
-                </div>
+            <TextInput
+                id="password"
+                type="password"
+                class="mt-1 block w-full"
+                v-model="form.password"
+                required
+                autocomplete="current-password"
+            />
 
-                <div class="mt-4 block">
-                    <label class="flex items-center">
-                        <Checkbox name="remember" v-model:checked="form.remember" />
-                        <span class="ms-2 text-sm text-gray-600">Remember me</span>
-                    </label>
-                </div>
+            <InputError class="mt-2" :message="form.errors.password" />
+        </div>
 
-                <div class="mt-4 flex items-center justify-end">
-                    <Link
-                        v-if="canResetPassword"
-                        :href="route('password.request')"
-                        class="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                    >
-                        Forgot your password?
-                    </Link>
+        <label class="flex items-center">
+            <Checkbox name="remember" v-model:checked="form.remember" />
+            <span class="ms-2 text-sm text-slate-600">Запомнить меня</span>
+        </label>
 
-                    <PrimaryButton
-                        class="ms-4"
-                        :class="{ 'opacity-25': form.processing }"
-                        :disabled="form.processing"
-                    >
-                        Log in
-                    </PrimaryButton>
-                </div>
-            </form>
-        </AppContainer>
-    </GuestLayout>
+        <div class="flex items-center justify-between pt-2">
+            <Link
+                v-if="canResetPassword"
+                :href="route('password.request')"
+                class="rounded-md text-sm text-slate-500 underline hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+            >
+                Забыли пароль?
+            </Link>
+
+            <PrimaryButton
+                class="ms-4"
+                :class="{ 'opacity-25': form.processing }"
+                :disabled="form.processing"
+            >
+                Войти
+            </PrimaryButton>
+        </div>
+    </form>
+
+    <div
+        v-scroll-reveal
+        class="mt-6 border-t border-slate-200 pt-6 text-center text-sm text-slate-500"
+    >
+        Нет аккаунта?
+        <Link
+            :href="route('register')"
+            class="ml-1 font-semibold text-indigo-600 underline-offset-2 hover:text-indigo-500 hover:underline focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+        >
+            Зарегистрироваться
+        </Link>
+    </div>
 </template>

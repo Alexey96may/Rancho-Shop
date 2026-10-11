@@ -34,6 +34,7 @@ class PageSaveRequest extends FormRequest
             'type' => ['required', new Enum(PageType::class)],
             'is_active' => 'boolean',
             'show_in_menu' => 'boolean',
+            'is_commentable' => 'boolean',
             'menu_order' => 'nullable|integer|min:0',
             'template' => 'required|string|in:default,delivery,about',
             'slug' => 'nullable|string|max:255|unique:pages,slug,' . $pageId,

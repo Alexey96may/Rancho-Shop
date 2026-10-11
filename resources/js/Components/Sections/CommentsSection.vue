@@ -50,6 +50,7 @@
 
     const content = ref('');
     const guestName = ref('');
+    const rating = ref(5);
     const textareaId = `comment-form-${Math.random().toString(36).slice(2)}`;
     const guestNameId = `guest-name-${Math.random().toString(36).slice(2)}`;
 
@@ -70,10 +71,12 @@
         emit('submit', {
             content: content.value.trim(),
             guest_name: props.isAuthenticated ? undefined : guestName.value.trim(),
+            rating: rating.value,
         });
 
         content.value = '';
         guestName.value = '';
+        rating.value = 5;
     };
 
     const loadMore = () => {
@@ -129,7 +132,7 @@
     <section class="mt-24 border-t border-slate-100 pt-16" aria-labelledby="comments-title">
         <!-- HEADER -->
         <header class="mb-10 flex items-center justify-between">
-            <h2 id="comments-title" class="text-2xl font-black text-rancho-forest">
+            <h2 id="comments-title" class="text-lg font-black text-rancho-forest lg:text-xl">
                 {{ title || 'Отзывы' }}
             </h2>
 
@@ -146,12 +149,12 @@
         <form
             v-if="!onlyShow"
             @submit.prevent="submit"
-            class="mb-10 space-y-4"
+            class="mb-10 space-y-6 rounded-xl bg-emerald-800/20 p-6"
             aria-label="Форма добавления комментария"
         >
             <!-- GUEST NAME FIELD -->
             <BaseInput
-                v-if="isAuthenticated"
+                v-if="!isAuthenticated"
                 v-model="guestName"
                 placeholder="Как к вам обращаться?"
                 type="text"
@@ -159,6 +162,11 @@
                 theme="light"
                 required
             />
+
+            <div class="flex flex-wrap items-center gap-2">
+                <span class="text-xs md:text-lg">Ваша оценка:</span>
+                <AppRating v-model:rating="rating" :readonly="false" :max="5" />
+            </div>
 
             <!-- COMMENT CONTENT FIELD -->
             <BaseTextarea

@@ -100,22 +100,14 @@
 <template>
     <AppContainer
         class="min-h-screen"
-        style="background: #fcfaf5"
         :aria-label="`Страница животного
         ${animal.name}`"
     >
-        <div class="mx-auto max-w-6xl px-6 py-10">
-            <!-- breadcrumb -->
-            <nav class="mb-6 text-sm" style="color: #597d5b">
-                <Link :href="route('animals.index')" class="hover:underline"> Животные </Link>
-                <span class="mx-2">/</span>
-                <span style="color: #1c3f34">{{ animal.name }}</span>
-            </nav>
-
+        <div class="mx-auto max-w-6xl px-6 py-20">
             <div class="grid gap-10 lg:grid-cols-2">
                 <!-- GALLERY -->
                 <!-- IMAGES -->
-                <div class="space-y-4">
+                <div v-scroll-reveal class="space-y-4">
                     <div class="aspect-square overflow-hidden rounded-3xl border bg-slate-100">
                         <AppImage
                             :src="animal.avatars?.[0] || ''"
@@ -132,7 +124,7 @@
                     ></MediaGallery>
                 </div>
                 <!-- INFO -->
-                <section class="flex flex-col">
+                <section v-scroll-reveal class="flex flex-col">
                     <!-- status -->
                     <span
                         class="mb-3 inline-flex w-fit items-center rounded-full px-3 py-1 text-xs font-bold"
@@ -222,7 +214,7 @@
                 </section>
             </div>
 
-            <div class="mx-auto mt-12 max-w-4xl px-6 pb-16">
+            <div v-scroll-reveal>
                 <CommentsSection
                     :comments="comments"
                     @submit="submitComment"

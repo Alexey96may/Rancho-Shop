@@ -20,12 +20,13 @@
             <div class="w-full max-w-2xl space-y-12 text-center" role="main">
                 <div class="group relative inline-block">
                     <div
+                        v-scroll-reveal
                         class="select-none text-[12rem] font-black leading-none text-slate-100 transition-transform duration-700 group-hover:scale-105 md:text-[20rem]"
                     >
                         404
                     </div>
 
-                    <div class="absolute inset-0 flex items-center justify-center">
+                    <div v-scroll-reveal class="absolute inset-0 flex items-center justify-center">
                         <div
                             class="shadow-2xl flex h-32 w-32 -rotate-12 items-center justify-center rounded-[3rem] bg-slate-900 shadow-slate-900/40 transition-transform duration-500 group-hover:rotate-0 md:h-48 md:w-48"
                         >
@@ -37,7 +38,7 @@
                     </div>
                 </div>
 
-                <div class="relative z-10 space-y-4">
+                <div v-scroll-reveal class="relative z-10 space-y-4">
                     <h1
                         class="text-4xl font-black uppercase italic tracking-tighter text-slate-900 md:text-6xl"
                     >
@@ -48,7 +49,10 @@
                     </p>
                 </div>
 
-                <div class="flex flex-col items-center justify-center gap-4 sm:flex-row">
+                <div
+                    v-scroll-reveal
+                    class="flex flex-col items-center justify-center gap-4 sm:flex-row"
+                >
                     <button
                         @click="goBack"
                         class="flex w-full items-center justify-center gap-2 rounded-3xl border-2 border-slate-200 bg-white px-8 py-5 text-xs font-black uppercase tracking-widest text-slate-900 transition-all hover:border-slate-900 active:scale-95 sm:w-auto"

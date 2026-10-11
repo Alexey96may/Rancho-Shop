@@ -7,6 +7,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import { createPinia } from 'pinia';
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate';
 
+import Directives from '@/Plugins/directives';
 import GlobalComponents from '@/Plugins/global-components';
 
 import { ZiggyVue } from '../../vendor/tightenco/ziggy';
@@ -30,6 +31,7 @@ createInertiaApp({
             .use(plugin)
             .use(pinia)
             .use(GlobalComponents)
+            .use(Directives)
             .use(ZiggyVue)
             .mount(el);
     },

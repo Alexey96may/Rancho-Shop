@@ -67,7 +67,7 @@
         </button>
 
         <span
-            class="text-lg font-bold tabular-nums transition-transform duration-200"
+            class="text-nowrap text-xs font-bold tabular-nums transition-transform duration-200 sm:text-sm"
             :class="bump ? 'scale-110' : 'scale-100'"
         >
             {{ quantity }} {{ item.unit?.short }}

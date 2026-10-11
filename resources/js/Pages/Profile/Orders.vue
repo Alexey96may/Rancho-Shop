@@ -54,7 +54,11 @@
 
 <template>
     <div class="space-y-6">
-        <div v-if="orders.data.length === 0" class="py-12 text-center text-sm text-slate-500">
+        <div
+            v-scroll-reveal
+            v-if="orders.data.length === 0"
+            class="py-12 text-center text-sm text-slate-500"
+        >
             Вы ещё не совершали заказов на нашем сайте.
         </div>
 
@@ -69,6 +73,7 @@
                 }"
             >
                 <div
+                    v-scroll-reveal
                     class="mb-4 flex flex-wrap items-center justify-between gap-4 border-b border-slate-900 pb-3"
                 >
                     <div>
@@ -88,7 +93,7 @@
                     </div>
                 </div>
 
-                <div class="mb-4 space-y-2">
+                <div v-scroll-reveal class="mb-4 space-y-2">
                     <div
                         v-for="item in order.items"
                         :key="item.id"
@@ -103,6 +108,7 @@
                 </div>
 
                 <div
+                    v-scroll-reveal
                     class="mt-2 flex items-center justify-between gap-4 border-t border-slate-900 pt-3"
                 >
                     <div>

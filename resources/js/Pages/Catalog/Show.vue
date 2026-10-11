@@ -109,18 +109,9 @@
 <template>
     <div class="py-8 md:py-16">
         <AppContainer>
-            <!-- BREADCRUMBS -->
-            <nav class="mb-8 flex text-sm text-slate-400">
-                <Link :href="route('catalog.index')" class="hover:text-orange-600"> Каталог </Link>
-                <span class="mx-2">/</span>
-                <span class="text-slate-600">
-                    {{ productData.category?.name }}
-                </span>
-            </nav>
-
-            <div class="grid gap-12 lg:grid-cols-2">
+            <div class="grid gap-12 py-20 lg:grid-cols-2">
                 <!-- IMAGES -->
-                <div class="space-y-4">
+                <div v-scroll-reveal class="space-y-4">
                     <div class="aspect-square overflow-hidden rounded-3xl border bg-slate-100">
                         <AppImage
                             :src="productData.main_photo?.[0] || ''"
@@ -137,7 +128,7 @@
                 </div>
 
                 <!-- INFO -->
-                <div class="flex flex-col">
+                <div v-scroll-reveal class="flex flex-col">
                     <span class="text-xs font-bold uppercase text-orange-600">
                         {{ productData.category?.name }}
                     </span>
@@ -199,7 +190,7 @@
             </div>
 
             <!-- COMMENTS -->
-            <div class="mx-auto mt-12 max-w-4xl px-6 pb-16">
+            <div v-scroll-reveal>
                 <CommentsSection
                     :comments="comments"
                     @submit="submitComment"

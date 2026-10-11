@@ -21,11 +21,12 @@ class PageResource extends JsonResource
             'slug' => $this->slug,
             'content' => $this->when($request->routeIs('pages.show'), $this->content),
             'template' => $this->template,
+            'is_commentable' => $this->is_commentable,
 
             'url' => $this->url,
 
-            'media' => $this->media->isNotEmpty() 
-                        ? MediaResource::collection($this->media) 
+            'media' => $this->media->isNotEmpty()
+                        ? MediaResource::collection($this->media)
                         : [MediaResource::fallback($this->resource)],
 
             'seo' => new SeoResource($this->whenLoaded('seo')),

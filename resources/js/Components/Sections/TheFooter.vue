@@ -1,7 +1,11 @@
 <script setup lang="ts">
     import { computed } from 'vue';
 
-    import { Link } from '@inertiajs/vue3';
+    import { Link, usePage } from '@inertiajs/vue3';
+
+    import { EnvelopeIcon, MapPinIcon, PhoneIcon } from '@heroicons/vue/24/outline';
+
+    import { SharedData } from '@/types';
 
     interface Props {
         theme?: 'light' | 'dark';
@@ -11,7 +15,10 @@
         theme: 'light',
     });
 
+    const page = usePage<SharedData>();
     const isDark = computed(() => props.theme === 'dark');
+
+    const footer = computed(() => page.props.footer ?? {});
 
     const sectionsItems = [
         { name: 'Весь Каталог', pathName: 'catalog.index' },
@@ -26,6 +33,10 @@
         { name: 'Творог', pathName: 'catalog.index', params: 5 },
         { name: 'Фермерские Яйца', pathName: 'catalog.index', params: 15 },
     ];
+
+    function telHref(phone: string): string {
+        return `tel:${phone.replace(/\D/g, '')}`;
+    }
 </script>
 
 <template>
@@ -56,33 +67,55 @@
                             class="font-header text-2xl tracking-wide transition-colors"
                             :class="isDark ? 'text-slate-100' : 'text-rancho-paper'"
                         >
-                            Молочная Долина
+                            {{ footer.site_name || 'Молочная Долина' }}
                         </span>
                     </div>
 
                     <p
+                        v-if="footer.site_description"
                         class="max-w-xs font-sans text-sm leading-relaxed opacity-80 transition-colors"
                         :class="isDark ? 'text-slate-400' : 'text-rancho-paper'"
                     >
-                        Мы верим, что еда должна быть честной. Наше ранчо — это место, где природа и
-                        современные технологии встречаются для создания идеальных продуктов.
+                        {{ footer.site_description }}
                     </p>
 
-                    <div class="flex gap-4">
+                    <div class="flex gap-3">
                         <a
-                            href="https://t.me/elenikaglossa"
+                            v-if="footer.contact_telegram"
+                            :href="footer.contact_telegram"
                             target="_blank"
+                            rel="noopener noreferrer"
                             class="transition-colors"
                             :class="
                                 isDark
                                     ? 'text-slate-400 hover:text-orange-400'
                                     : 'text-rancho-paper hover:text-rancho-buttercup'
                             "
+                            aria-label="Telegram"
                         >
-                            <span class="sr-only">Telegram</span>
                             <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
                                 <path
                                     d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.91-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"
+                                />
+                            </svg>
+                        </a>
+
+                        <a
+                            v-if="footer.contact_vk"
+                            :href="footer.contact_vk"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="transition-colors"
+                            :class="
+                                isDark
+                                    ? 'text-slate-400 hover:text-orange-400'
+                                    : 'text-rancho-paper hover:text-rancho-buttercup'
+                            "
+                            aria-label="VK"
+                        >
+                            <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+                                <path
+                                    d="M13.162 18.994c.609 0 .858-.406.851-.915-.031-1.917.714-2.949 2.059-1.604 1.488 1.488 1.796 2.519 3.603 2.519h3.2c.808 0 1.126-.26 1.126-.668 0-.863-1.421-2.386-2.625-3.504-1.686-1.565-1.765-1.602-.313-3.486 1.801-2.339 4.157-5.336 2.073-5.336h-3.981c-.772 0-.828.435-1.103 1.083-.995 2.347-2.886 5.387-3.604 4.922-.751-.485-.407-2.406-.35-5.261.015-.754.011-1.271-1.141-1.539-.629-.145-1.241-.205-1.809-.205-2.273 0-3.841.953-2.95 1.119 1.571.293 1.42 3.692 1.054 5.16-.638 2.556-3.036-2.024-4.035-4.305-.241-.548-.315-.974-1.175-.974H.952c-.492 0-.787.16-.787.516 0 .602 2.96 6.72 5.786 9.77 2.756 2.975 5.48 2.708 7.211 2.708z"
                                 />
                             </svg>
                         </a>
@@ -141,50 +174,50 @@
                         Связаться
                     </h4>
                     <ul class="space-y-4 font-sans text-sm opacity-90">
-                        <li class="flex items-start gap-3">
-                            <svg
+                        <li v-if="footer.address_farm" class="flex items-start gap-3">
+                            <MapPinIcon
                                 class="h-5 w-5 shrink-0 transition-colors"
                                 :class="isDark ? 'text-orange-400' : 'text-rancho-buttercup'"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                                />
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                                />
-                            </svg>
-                            <span>Крым, Симферопольский р-н,<br />с. Долинное</span>
+                            />
+                            <span>{{ footer.address_farm }}</span>
                         </li>
-                        <li class="flex items-center gap-3">
-                            <svg
-                                class="h-5 w-5 transition-colors"
+
+                        <li v-if="footer.contact_phone" class="flex items-center gap-3">
+                            <PhoneIcon
+                                class="h-5 w-5 shrink-0 transition-colors"
                                 :class="isDark ? 'text-orange-400' : 'text-rancho-buttercup'"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
+                            />
+                            <a
+                                :href="telHref(footer.contact_phone)"
+                                class="transition-colors"
+                                :class="
+                                    isDark ? 'hover:text-orange-400' : 'hover:text-rancho-buttercup'
+                                "
                             >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
-                                />
-                            </svg>
-                            <a href="tel:79780000000">+7 (978) 000-00-00</a>
+                                {{ footer.contact_phone }}
+                            </a>
+                        </li>
+
+                        <li v-if="footer.contact_email" class="flex items-center gap-3">
+                            <EnvelopeIcon
+                                class="h-5 w-5 shrink-0 transition-colors"
+                                :class="isDark ? 'text-orange-400' : 'text-rancho-buttercup'"
+                            />
+                            <a
+                                :href="`mailto:${footer.contact_email}`"
+                                class="transition-colors"
+                                :class="
+                                    isDark ? 'hover:text-orange-400' : 'hover:text-rancho-buttercup'
+                                "
+                            >
+                                {{ footer.contact_email }}
+                            </a>
                         </li>
                     </ul>
                 </div>
             </div>
 
+            <!-- BOTTOM -->
             <!-- BOTTOM -->
             <div
                 class="flex flex-col items-center justify-between gap-4 border-t pt-8 transition-colors md:flex-row"
@@ -194,14 +227,29 @@
                     class="font-sans text-xs opacity-60 transition-colors"
                     :class="isDark ? 'text-slate-500' : 'text-rancho-paper'"
                 >
-                    © 2026 Молочная Долина. Сделано с любовью к природе.
+                    © {{ new Date().getFullYear() }} {{ footer.site_name || 'Молочная Долина' }}.
+                    Сделано с любовью к природе.
                 </p>
+
                 <div
                     class="flex gap-6 font-sans text-xs opacity-60 transition-colors"
                     :class="isDark ? 'text-slate-500' : 'text-rancho-paper'"
                 >
-                    <a href="#" class="hover:opacity-100">Политика конфиденциальности</a>
-                    <a href="#" class="hover:opacity-100">Публичная оферта</a>
+                    <Link
+                        :href="route('pages.show', 'privacy')"
+                        class="transition-colors hover:opacity-100"
+                        :class="isDark ? 'hover:text-orange-400' : 'hover:text-rancho-buttercup'"
+                    >
+                        Политика конфиденциальности
+                    </Link>
+
+                    <Link
+                        :href="route('pages.show', 'offer')"
+                        class="transition-colors hover:opacity-100"
+                        :class="isDark ? 'hover:text-orange-400' : 'hover:text-rancho-buttercup'"
+                    >
+                        Публичная оферта
+                    </Link>
                 </div>
             </div>
         </AppContainer>

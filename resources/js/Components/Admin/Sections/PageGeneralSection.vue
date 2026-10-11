@@ -24,6 +24,7 @@
     const template = defineModel<string>('template');
     const showInMenu = defineModel<boolean>('showInMenu');
     const menuOrder = defineModel<number>('menuOrder');
+    const isCommentable = defineModel<boolean>('isCommentable');
 </script>
 
 <template>
@@ -68,8 +69,17 @@
             />
         </div>
 
+        <BaseSwitch
+            v-if="isCommentable !== undefined"
+            v-model="isCommentable"
+            label="Разрешить комментарии"
+            active-text="Посетители могут оставлять отзывы"
+            inactive-text="Комментарии отключены"
+            :disabled="disabled"
+        />
+
         <!-- Навигация в меню -->
-        <div class="space-y-4 rounded-2xl border border-slate-800 bg-slate-950/50 p-4 sm:p-5">
+        <div class="space-y-4">
             <BaseSwitch
                 v-if="showInMenu !== undefined"
                 v-model="showInMenu"

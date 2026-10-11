@@ -89,9 +89,12 @@
 
 <template>
     <AppContainer class="min-h-screen bg-[#fcfaf5]">
-        <div class="mx-auto max-w-5xl px-6 py-10">
+        <div class="py-10">
             <!-- HEADER -->
-            <header class="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-center">
+            <header
+                v-scroll-reveal
+                class="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-center"
+            >
                 <div>
                     <h1 class="text-4xl font-black text-[#1c3f34]">Отзывы о сайте</h1>
                     <p class="mt-2 text-sm text-[#597d5b]">
@@ -111,6 +114,7 @@
             <!-- FORM SECTION -->
             <Transition name="fade">
                 <section
+                    v-scroll-reveal
                     v-if="isFormVisible"
                     class="shadow-sm mb-12 rounded-2xl border border-slate-200/80 bg-white p-6"
                 >
@@ -123,6 +127,7 @@
                                 label="Ваше имя"
                                 placeholder="Как к вам обращаться?"
                                 required
+                                theme="light"
                                 :error="form.errors.guest_name"
                             />
                         </div>
@@ -132,6 +137,7 @@
                         <BaseTextarea
                             v-model="form.content"
                             :required="true"
+                            theme="light"
                             :error="form.errors.content"
                             placeholder="Расскажите о вашем опыте работы с сайтом..."
                         />
@@ -150,7 +156,10 @@
             </Transition>
 
             <!-- SORTING BAR -->
-            <div class="mb-6 flex items-center justify-between border-b border-slate-200/60 pb-4">
+            <div
+                v-scroll-reveal
+                class="mb-6 flex flex-col justify-between border-b border-slate-200/60 pb-4 sm:flex-row sm:items-center"
+            >
                 <span class="text-sm font-medium text-slate-500">
                     Всего отзывов: {{ comments.meta?.total ?? comments.data.length }}
                 </span>
@@ -167,6 +176,7 @@
 
             <!-- REVIEWS LIST / EMPTY STATE -->
             <EmptyState
+                v-scroll-reveal
                 v-if="!comments.data.length"
                 title="Отзывов пока нет"
                 description="Станьте первым, кто поделится мнением о нашей работе!"
@@ -174,7 +184,7 @@
                 @action="isFormVisible = true"
             />
 
-            <section v-else aria-label="Список отзывов" class="space-y-4">
+            <section v-scroll-reveal v-else aria-label="Список отзывов" class="space-y-4">
                 <CommentCard
                     v-for="comment in comments.data"
                     :key="comment.id"
@@ -183,7 +193,7 @@
             </section>
 
             <!-- PAGINATION -->
-            <div class="mt-8">
+            <div v-scroll-reveal class="mt-8">
                 <MainPagination :links="comments.meta.links" />
             </div>
         </div>

@@ -18,6 +18,7 @@ return new class extends Migration
             $table->longText('content')->nullable();
             $table->string('type')->default('default');
             $table->boolean('is_active')->default(true);
+            $table->boolean('is_commentable')->default(false);
             $table->boolean('show_in_menu')->default(false);
             $table->integer('menu_order')->default(0);
             $table->timestamps();

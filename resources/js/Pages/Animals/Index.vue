@@ -109,7 +109,10 @@
     <AppContainer class="min-h-screen bg-[#fcfaf5]">
         <div class="py-10">
             <!-- HEADER & SEARCH -->
-            <header class="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-end">
+            <header
+                v-scroll-reveal
+                class="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-end"
+            >
                 <div>
                     <h1 class="text-4xl font-black text-[#1c3f34]">Наши жители фермы</h1>
                     <p class="mt-2 text-sm text-[#597d5b]">
@@ -127,7 +130,11 @@
             </header>
 
             <!-- FILTERS BAR -->
-            <section class="mb-8 border-b border-slate-200/60 pb-6" aria-label="Фильтры">
+            <section
+                v-scroll-reveal
+                class="mb-8 border-b border-slate-200/60 pb-6"
+                aria-label="Фильтры"
+            >
                 <div class="flex flex-wrap items-center gap-4">
                     <BaseSelect
                         label="Категория:"
@@ -170,7 +177,7 @@
                 />
 
                 <!-- GRID -->
-                <div v-else>
+                <div v-scroll-reveal v-else>
                     <TransitionGroup
                         key="grid"
                         mode="out-in"
@@ -189,6 +196,6 @@
             </Transition>
         </div>
 
-        <MainPagination :links="animals.meta.links" theme="light" />
+        <MainPagination v-scroll-reveal :links="animals.meta.links" theme="light" />
     </AppContainer>
 </template>

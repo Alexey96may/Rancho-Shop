@@ -19,10 +19,12 @@
     <article
         class="shadow-sm hover:shadow-md rounded-2xl border border-slate-200/60 bg-white p-6 transition-shadow"
     >
-        <header class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <header
+            class="flex flex-col-reverse gap-6 border-b border-slate-100 pb-3 sm:flex-row sm:items-center sm:justify-between"
+        >
             <div class="flex items-center gap-3">
                 <div
-                    class="flex h-10 w-10 items-center justify-center rounded-full text-sm font-black text-gray-300"
+                    class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-black text-gray-300"
                     :class="[getAvatarColor(comment.id)]"
                     aria-hidden="true"
                 >
@@ -37,7 +39,7 @@
                 </div>
             </div>
 
-            <AppRating :rating="comment.rating" :max="5" />
+            <AppRating class="self-end sm:self-auto" :rating="comment.rating" :max="5" />
         </header>
 
         <p class="mt-4 text-sm leading-relaxed text-slate-600">

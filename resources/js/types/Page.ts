@@ -9,6 +9,7 @@ export interface Page {
     slug: string;
     content?: string;
     template: string;
+    is_commentable: boolean;
     url: string;
     media: Media[];
     seo?: SeoData;

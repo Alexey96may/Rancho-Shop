@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Enums\Permission;
 use App\Http\Resources\UserResource;
 use App\Services\NavigationService;
+use App\Services\SettingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Middleware;
@@ -33,6 +34,8 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+
+        $settings = app(SettingService::class);
         $address = $request->user()?->defaultDeliveryAddress;
         $user = $request->user();
 
@@ -97,6 +100,16 @@ class HandleInertiaRequests extends Middleware
                 'image' => asset('images/og-default.png'),
                 'canonical' => url()->current(),
             ],
+
+            'footer' => fn () => $settings->group([
+                'site_name',
+                'site_description',
+                'contact_phone',
+                'contact_email',
+                'contact_telegram',
+                'contact_vk',
+                'address_farm',
+            ]),
         ];
     }
 

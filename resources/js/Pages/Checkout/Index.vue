@@ -223,16 +223,16 @@
     <AppContainer class="min-h-screen bg-rancho-paper font-sans">
         <Head title="Оформление заказа" />
 
-        <div class="container mx-auto py-10">
+        <div class="py-10">
             <!-- HEADER -->
             <header class="mb-10">
-                <h1 class="text-3xl font-bold text-rancho-forest">Оформление заказа</h1>
-                <p class="mt-2 text-rancho-olive">Доставка или самовывоз</p>
+                <h1 class="text-xl font-bold text-rancho-forest md:text-2xl">Оформление заказа</h1>
+                <p class="mt-2 text-sm text-rancho-olive md:text-lg">Доставка или самовывоз</p>
             </header>
 
-            <div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
+            <div class="relative grid grid-cols-1 items-start gap-8 lg:grid-cols-3">
                 <!-- LEFT -->
-                <section class="space-y-6 lg:col-span-2">
+                <section v-scroll-reveal class="space-y-6 lg:col-span-2">
                     <BaseInput
                         ref="nameRef"
                         label="Имя"
@@ -240,6 +240,7 @@
                         placeholder="Введите своё имя"
                         v-model="form.customer_name"
                         :error="errors.customer_name"
+                        theme="light"
                     />
 
                     <BaseInput
@@ -250,6 +251,7 @@
                         placeholder="Введите номер телефона"
                         v-model="form.customer_phone"
                         :error="errors.customer_phone"
+                        theme="light"
                     />
 
                     <BaseSwitch
@@ -259,6 +261,7 @@
                         label="Создать аккаунт"
                         active-text="Аккаунт будет создан автоматически"
                         inactive-text="Аккаунт не будет создан автоматически"
+                        theme="light"
                     />
 
                     <!-- DELIVERY BLOCK -->
@@ -367,11 +370,11 @@
                                     </div>
                                 </Transition>
 
-                                <div class="mt-3 flex gap-2">
+                                <div class="mt-3 flex flex-wrap gap-2">
                                     <button
                                         type="button"
                                         @click="goToDeliveryPage"
-                                        class="flex-1 rounded-lg border px-3 py-2 hover:bg-gray-50"
+                                        class="flex-1 rounded-lg border px-3 py-2 text-xs hover:bg-gray-50 md:text-lg"
                                     >
                                         Изменить
                                     </button>
@@ -379,7 +382,7 @@
                                     <button
                                         type="button"
                                         @click="togglePickup"
-                                        class="flex-1 rounded-lg border border-red-300 px-3 py-2 text-red-700 transition-colors hover:bg-red-50"
+                                        class="flex-1 rounded-lg border border-red-300 px-3 py-2 text-xs text-red-700 transition-colors hover:bg-red-50 md:text-lg"
                                     >
                                         Самовывоз
                                     </button>
@@ -433,18 +436,22 @@
                         label="Комментарий к заказу"
                         placeholder="Ваш комментарий для модератора или доставщика"
                         :max-height="500"
+                        theme="light"
                     />
                 </section>
 
                 <!-- RIGHT -->
-                <aside class="shadow-sm rounded-2xl bg-white p-6">
+                <aside
+                    v-scroll-reveal
+                    class="shadow-sm sticky right-0 top-0 rounded-2xl bg-white p-6"
+                >
                     <h2 class="mb-4 font-bold text-gray-900">Ваш заказ</h2>
 
                     <div class="mb-4 space-y-2">
                         <div
                             v-for="item in cart.items"
                             :key="item.variant_id"
-                            class="flex justify-between text-sm"
+                            class="flex justify-between gap-2 text-sm"
                         >
                             <span>{{ item.name }} × {{ item.quantity }}</span>
                             <span class="font-medium">{{
@@ -458,7 +465,7 @@
                         <div
                             v-if="isPickup"
                             key="pickup-row"
-                            class="mt-2 flex justify-between border-t pt-2 text-sm text-gray-700"
+                            class="mt-2 flex justify-between gap-2 border-t pt-2 text-sm text-gray-700"
                         >
                             <span>Самовывоз</span>
                             <span>бесплатно</span>
@@ -483,7 +490,7 @@
                         </div>
                     </Transition>
 
-                    <div class="flex justify-between border-t pt-4 font-bold text-gray-900">
+                    <div class="flex justify-between gap-2 border-t pt-4 font-bold text-gray-900">
                         <span>Итого</span>
                         <span>{{ computedTotalPrice }}</span>
                     </div>

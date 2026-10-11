@@ -8,6 +8,7 @@ export default {
         './storage/framework/views/*.php',
         './resources/views/**/*.blade.php',
         './resources/js/**/*.vue',
+        './resources/js/**/*.ts',
     ],
 
     safelist: [
@@ -16,6 +17,8 @@ export default {
         'bg-amber-600',
         'bg-emerald-600',
         'bg-stone-500',
+        'scroll-reveal',
+        'scroll-reveal--visible',
     ],
 
     theme: {

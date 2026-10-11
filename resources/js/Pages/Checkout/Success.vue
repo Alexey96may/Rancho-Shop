@@ -33,6 +33,7 @@
         <div class="mx-auto max-w-3xl">
             <!-- Карточка подтверждения -->
             <div
+                v-scroll-reveal
                 class="shadow-sm mb-8 rounded-2xl border border-gray-100 bg-white p-6 text-center sm:p-10"
             >
                 <div
@@ -57,7 +58,10 @@
             </div>
 
             <!-- Детали заказа -->
-            <div class="shadow-sm mb-8 rounded-2xl border border-gray-100 bg-white p-6 sm:p-8">
+            <div
+                v-scroll-reveal
+                class="shadow-sm mb-8 rounded-2xl border border-gray-100 bg-white p-6 sm:p-8"
+            >
                 <h2 class="mb-4 border-b border-gray-100 pb-3 text-lg font-semibold text-gray-900">
                     Состав заказа
                 </h2>

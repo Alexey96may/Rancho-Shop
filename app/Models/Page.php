@@ -24,6 +24,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property string $slug
  * @property string|null $content
  * @property PageType $type
+ * @property bool $is_commentable
  * @property bool $is_active
  * @property bool $show_in_menu
  * @property int $menu_order
@@ -60,7 +61,7 @@ class Page extends Model implements HasMedia
 {
     use HasActiveScope, HasInteractions, HasSeoActions, HasStandardMedia;
 
-    protected $fillable = ['title', 'slug', 'content', 'type', 'template', 'is_active', 'show_in_menu', 'menu_order'];
+    protected $fillable = ['title', 'slug', 'content', 'type', 'template', 'is_active', 'show_in_menu', 'is_commentable', 'menu_order'];
 
     protected $appends = ['url'];
 
@@ -72,6 +73,7 @@ class Page extends Model implements HasMedia
     protected $casts = [
         'is_active' => 'boolean',
         'show_in_menu' => 'boolean',
+        'is_commentable' => 'boolean',
         'menu_order' => 'integer',
         'type' => PageType::class,
     ];

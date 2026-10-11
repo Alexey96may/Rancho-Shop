@@ -6,6 +6,8 @@
     import PrimaryButton from '@/Components/PrimaryButton.vue';
     import GuestLayout from '@/Layouts/GuestLayout.vue';
 
+    defineOptions({ layout: GuestLayout });
+
     const props = defineProps<{
         status?: string;
     }>();
@@ -20,39 +22,38 @@
 </script>
 
 <template>
-    <GuestLayout>
-        <AppContainer>
-            <Head title="Email Verification" />
+    <Head title="Подтверждение email" />
 
-            <div class="mb-4 text-sm text-gray-600">
-                Thanks for signing up! Before getting started, could you verify your email address
-                by clicking on the link we just emailed to you? If you didn't receive the email, we
-                will gladly send you another.
-            </div>
+    <header v-scroll-reveal class="mb-6">
+        <h1 class="text-2xl font-semibold tracking-tight text-slate-900">Подтверждение email</h1>
+        <p class="mt-2 text-sm text-slate-500">
+            Спасибо за регистрацию! Прежде чем начать, подтвердите, пожалуйста, ваш email — мы
+            отправили вам письмо со ссылкой. Если письмо не пришло, мы отправим его снова.
+        </p>
+    </header>
 
-            <div class="mb-4 text-sm font-medium text-green-600" v-if="verificationLinkSent">
-                A new verification link has been sent to the email address you provided during
-                registration.
-            </div>
+    <div
+        v-scroll-reveal
+        v-if="verificationLinkSent"
+        class="mb-4 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm font-medium text-green-700"
+    >
+        Новая ссылка для подтверждения отправлена на email, указанный при регистрации.
+    </div>
 
-            <form @submit.prevent="submit">
-                <div class="mt-4 flex items-center justify-between">
-                    <PrimaryButton
-                        :class="{ 'opacity-25': form.processing }"
-                        :disabled="form.processing"
-                    >
-                        Resend Verification Email
-                    </PrimaryButton>
+    <form v-scroll-reveal @submit.prevent="submit" class="space-y-4">
+        <div class="flex items-center justify-between pt-2">
+            <PrimaryButton :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
+                Отправить письмо снова
+            </PrimaryButton>
 
-                    <Link
-                        :href="route('logout')"
-                        method="post"
-                        as="button"
-                        class="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                        >Log Out</Link
-                    >
-                </div>
-            </form>
-        </AppContainer>
-    </GuestLayout>
+            <Link
+                :href="route('logout')"
+                method="post"
+                as="button"
+                class="rounded-md text-sm text-slate-500 underline hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+            >
+                Выйти
+            </Link>
+        </div>
+    </form>
 </template>

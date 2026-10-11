@@ -116,7 +116,10 @@
 <template>
     <AppContainer>
         <div class="py-10">
-            <header class="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-end">
+            <header
+                v-scroll-reveal
+                class="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-end"
+            >
                 <div>
                     <h1 class="text-4xl font-black text-[#1c3f34]">Наши продукты</h1>
                     <p class="mt-2 text-sm text-[#597d5b]">Свежее к вашему столу</p>
@@ -133,7 +136,7 @@
 
             <div>
                 <div class="mb-8 border-b border-slate-100 pb-6">
-                    <div class="flex flex-col items-start gap-4 pb-6">
+                    <div v-scroll-reveal class="flex flex-col items-start gap-4 pb-6">
                         <div class="flex flex-wrap items-center gap-4">
                             <BaseSelect
                                 label="Категория:"
@@ -156,6 +159,7 @@
                     </div>
 
                     <button
+                        v-scroll-reveal
                         v-if="hasActiveFilters"
                         @click="resetFilters"
                         class="self-center text-xs font-bold text-orange-600 hover:underline"
@@ -175,7 +179,7 @@
                         @action="resetFilters"
                     />
 
-                    <div v-else>
+                    <div v-scroll-reveal v-else>
                         <TransitionGroup
                             key="grid"
                             mode="out-in"
@@ -194,6 +198,7 @@
                 </Transition>
             </div>
         </div>
-        <MainPagination :links="products.meta.links" theme="light" />
+
+        <MainPagination v-scroll-reveal :links="products.meta.links" theme="light" />
     </AppContainer>
 </template>

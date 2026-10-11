@@ -7,6 +7,8 @@
     import TextInput from '@/Components/TextInput.vue';
     import GuestLayout from '@/Layouts/GuestLayout.vue';
 
+    defineOptions({ layout: GuestLayout });
+
     const form = useForm({
         password: '',
     });
@@ -21,40 +23,36 @@
 </script>
 
 <template>
-    <GuestLayout>
-        <AppContainer>
-            <Head title="Confirm Password" />
+    <Head title="Подтверждение пароля" />
 
-            <div class="mb-4 text-sm text-gray-600">
-                This is a secure area of the application. Please confirm your password before
-                continuing.
-            </div>
+    <header v-scroll-reveal class="mb-6">
+        <h1 class="text-2xl font-semibold tracking-tight text-slate-900">Подтверждение пароля</h1>
+        <p class="mt-2 text-sm text-slate-500">
+            Это защищённая зона приложения. Введите пароль, чтобы продолжить.
+        </p>
+    </header>
 
-            <form @submit.prevent="submit">
-                <div>
-                    <InputLabel for="password" value="Password" />
-                    <TextInput
-                        id="password"
-                        type="password"
-                        class="mt-1 block w-full"
-                        v-model="form.password"
-                        required
-                        autocomplete="current-password"
-                        autofocus
-                    />
-                    <InputError class="mt-2" :message="form.errors.password" />
-                </div>
+    <form v-scroll-reveal @submit.prevent="submit" class="space-y-4">
+        <div>
+            <InputLabel for="password" value="Пароль" />
 
-                <div class="mt-4 flex justify-end">
-                    <PrimaryButton
-                        class="ms-4"
-                        :class="{ 'opacity-25': form.processing }"
-                        :disabled="form.processing"
-                    >
-                        Confirm
-                    </PrimaryButton>
-                </div>
-            </form>
-        </AppContainer>
-    </GuestLayout>
+            <TextInput
+                id="password"
+                type="password"
+                class="mt-1 block w-full"
+                v-model="form.password"
+                required
+                autocomplete="current-password"
+                autofocus
+            />
+
+            <InputError class="mt-2" :message="form.errors.password" />
+        </div>
+
+        <div class="flex justify-end pt-2">
+            <PrimaryButton :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
+                Подтвердить
+            </PrimaryButton>
+        </div>
+    </form>
 </template>

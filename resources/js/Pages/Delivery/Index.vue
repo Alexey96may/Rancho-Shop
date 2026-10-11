@@ -241,7 +241,6 @@
 
             if (!res.ok) {
                 const text = await res.text();
-                alert('API ERROR RESPONSE');
                 throw new Error('HTTP ' + res.status);
             }
 
@@ -252,7 +251,6 @@
             distance.value = data.distance_to_farm;
             price.value = data.delivery_price;
         } catch (e) {
-            alert('Delivery API failed');
             console.error(e);
             isDeliveryAllowed.value = false;
         }
@@ -267,19 +265,19 @@
 <template>
     <AppContainer class="min-h-screen bg-[#FCFAF5] text-[#1C3F34]">
         <!-- HEADER -->
-        <header class="mx-auto max-w-3xl pt-10">
+        <header v-scroll-reveal class="mx-auto max-w-3xl pt-10">
             <h1 class="text-3xl font-bold">
                 {{ page.data.title }}
             </h1>
         </header>
 
         <!-- CONTENT -->
-        <section v-if="page.data.content" class="prose mx-auto mt-6 max-w-3xl">
+        <section v-scroll-reveal v-if="page.data.content" class="prose mx-auto mt-6 max-w-3xl">
             <div v-html="page.data.content" />
         </section>
 
         <!-- MAIN -->
-        <section class="mx-auto mt-10 grid max-w-5xl gap-6 md:grid-cols-2">
+        <section v-scroll-reveal class="mx-auto mt-10 grid max-w-5xl gap-6 md:grid-cols-2">
             <!-- LEFT -->
             <div class="space-y-4 rounded-xl border bg-white p-6">
                 <div>
@@ -365,7 +363,7 @@
         </section>
 
         <!-- COMMENTS -->
-        <div class="mx-auto mt-12 max-w-4xl pb-16">
+        <div v-if="page.data.is_commentable" v-scroll-reveal>
             <CommentsSection
                 :comments="comments"
                 title="Отзывы о доставке"
