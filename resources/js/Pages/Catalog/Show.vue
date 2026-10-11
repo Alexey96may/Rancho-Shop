@@ -107,7 +107,7 @@
 </script>
 
 <template>
-    <div class="py-8 md:py-16">
+    <div>
         <AppContainer>
             <div class="grid gap-12 py-20 lg:grid-cols-2">
                 <!-- IMAGES -->

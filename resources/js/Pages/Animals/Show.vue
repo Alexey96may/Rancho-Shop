@@ -103,7 +103,7 @@
         :aria-label="`Страница животного
         ${animal.name}`"
     >
-        <div class="mx-auto max-w-6xl px-6 py-20">
+        <div class="py-20">
             <div class="grid gap-10 lg:grid-cols-2">
                 <!-- GALLERY -->
                 <!-- IMAGES -->

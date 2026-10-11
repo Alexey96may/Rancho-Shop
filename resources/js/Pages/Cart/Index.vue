@@ -39,8 +39,8 @@
 </script>
 
 <template>
-    <AppContainer class="mx-auto max-w-4xl p-6">
-        <h1 class="text-md mb-8 font-black uppercase tracking-tight text-slate-900 md:text-2xl">
+    <AppContainer class="mx-auto">
+        <h1 class="text-md my-10 font-black uppercase tracking-tight text-slate-900 md:text-xl">
             Ваша корзина
         </h1>
 
