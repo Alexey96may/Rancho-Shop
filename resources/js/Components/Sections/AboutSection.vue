@@ -29,7 +29,7 @@
                 <div
                     class="shadow-xl absolute -left-6 -top-10 hidden rounded-2xl bg-rancho-forest p-6 text-white md:block"
                 >
-                    <span class="block text-3xl font-black italic">100%</span>
+                    <span class="block text-lg font-black italic md:text-2xl">100%</span>
                     <span class="text-xs uppercase tracking-widest opacity-80"
                         >Натуральный цикл</span
                     >
@@ -46,11 +46,11 @@
 
                 <h2
                     id="philosophy-heading"
-                    class="mb-8 text-4xl font-bold leading-tight text-rancho-forest lg:text-5xl"
+                    class="mb-8 text-xl font-bold leading-tight text-rancho-forest lg:text-3xl"
                     v-html="about?.title"
                 ></h2>
 
-                <div class="space-y-6 text-lg leading-relaxed text-rancho-olive/80">
+                <div class="space-y-6 text-sm leading-relaxed text-rancho-olive/80 lg:text-lg">
                     <p
                         v-for="(paragraph, index) in about?.content"
                         :key="index"

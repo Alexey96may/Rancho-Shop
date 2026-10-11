@@ -5,6 +5,7 @@
 
     import { EnvelopeIcon, MapPinIcon, PhoneIcon } from '@heroicons/vue/24/outline';
 
+    import CowIcon from '@/Components/Icons/CowIcon.vue';
     import { SharedData } from '@/types';
 
     interface Props {
@@ -53,16 +54,10 @@
                 <!-- BRAND -->
                 <div class="flex flex-col gap-6">
                     <div class="flex items-center gap-3">
-                        <div
-                            class="flex h-10 w-10 items-center justify-center rounded-full transition-colors"
-                            :class="
-                                isDark
-                                    ? 'bg-orange-500 text-slate-950'
-                                    : 'bg-rancho-buttercup text-rancho-forest'
-                            "
-                        >
-                            <span class="font-header text-xl">МД</span>
-                        </div>
+                        <CowIcon
+                            class="h-7 w-7 shrink-0 rounded-full bg-amber-500 transition-colors sm:h-12 sm:w-12"
+                            :class="isDark ? 'text-orange-400' : 'text-orange-600'"
+                        />
                         <span
                             class="font-header text-2xl tracking-wide transition-colors"
                             :class="isDark ? 'text-slate-100' : 'text-rancho-paper'"
@@ -217,7 +212,6 @@
                 </div>
             </div>
 
-            <!-- BOTTOM -->
             <!-- BOTTOM -->
             <div
                 class="flex flex-col items-center justify-between gap-4 border-t pt-8 transition-colors md:flex-row"

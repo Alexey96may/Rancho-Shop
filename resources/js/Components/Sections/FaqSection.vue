@@ -1,5 +1,5 @@
 <script setup lang="ts">
-    import { computed } from 'vue';
+    import { computed, ref } from 'vue';
 
     import { ArrowRight, ChevronDown, HelpCircle } from 'lucide-vue-next';
 
@@ -8,12 +8,32 @@
     const props = defineProps<{
         faqs: Faq[];
         limit?: number;
+        /** Разрешить несколько открытых одновременно */
+        multiple?: boolean;
     }>();
 
-    // Берем только нужные для главной страницы
     const displayFaqs = computed(() =>
         props.limit ? props.faqs.slice(0, props.limit) : props.faqs,
     );
+
+    const openIds = ref<Set<number>>(new Set());
+
+    function toggle(id: number) {
+        const next = new Set(openIds.value);
+
+        if (next.has(id)) {
+            next.delete(id);
+        } else {
+            if (!props.multiple) next.clear();
+            next.add(id);
+        }
+
+        openIds.value = next;
+    }
+
+    function isOpen(id: number): boolean {
+        return openIds.value.has(id);
+    }
 </script>
 
 <template>
@@ -32,35 +52,52 @@
             </header>
 
             <div class="space-y-4">
-                <details
+                <div
                     v-for="faq in displayFaqs"
                     :key="faq.id"
-                    class="bg-white group rounded-2xl border border-rancho-paper p-2 transition-all focus-within:ring-2 focus-within:ring-rancho-buttercup/40 hover:border-rancho-buttercup/50"
+                    class="group rounded-2xl border border-rancho-paper bg-white p-2 transition-colors hover:border-rancho-buttercup/50"
+                    :class="{ 'border-rancho-buttercup/50': isOpen(faq.id) }"
                 >
-                    <summary
-                        class="flex cursor-pointer list-none items-center justify-between p-4 focus:outline-none"
-                        role="button"
-                        aria-expanded="false"
+                    <!-- Кнопка-заголовок -->
+                    <button
+                        type="button"
+                        class="flex w-full cursor-pointer items-center justify-between p-4 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-rancho-buttercup/40"
+                        :aria-expanded="isOpen(faq.id)"
+                        :aria-controls="`faq-panel-${faq.id}`"
+                        @click="toggle(faq.id)"
                     >
                         <span
-                            class="text-lg font-bold text-rancho-forest transition-colors group-open:text-rancho-buttercup"
+                            class="text-lg font-bold text-rancho-forest transition-colors"
+                            :class="{ 'text-rancho-buttercup': isOpen(faq.id) }"
                         >
                             {{ faq.question }}
                         </span>
+
                         <div
-                            class="flex h-8 w-8 items-center justify-center rounded-full bg-rancho-paper transition-transform group-open:rotate-180"
+                            class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-rancho-paper transition-transform duration-300"
+                            :class="{ 'rotate-180': isOpen(faq.id) }"
                             aria-hidden="true"
                         >
                             <ChevronDown :size="18" />
                         </div>
-                    </summary>
+                    </button>
+
+                    <!-- Плавно раскрывающийся контент -->
                     <div
-                        class="mt-2 border-t border-rancho-paper/30 px-4 pb-4 pt-2 leading-relaxed text-rancho-olive/80"
+                        :id="`faq-panel-${faq.id}`"
+                        class="grid transition-[grid-template-rows] duration-300 ease-out"
+                        :style="{ gridTemplateRows: isOpen(faq.id) ? '1fr' : '0fr' }"
                         role="region"
                     >
-                        <p>{{ faq.answer }}</p>
+                        <div class="overflow-hidden">
+                            <div
+                                class="mt-2 border-t border-rancho-paper/30 px-4 pb-4 pt-2 leading-relaxed text-rancho-olive/80"
+                            >
+                                <p>{{ faq.answer }}</p>
+                            </div>
+                        </div>
                     </div>
-                </details>
+                </div>
             </div>
 
             <div v-if="limit && faqs.length > limit" class="mt-12 text-center">
