@@ -1,5 +1,7 @@
 # Rancho — E-commerce for a Dairy Farm
 
+**🌐 English** · [Русский](README.ru.md)
+
 Pet project of an online store for a small dairy farm: products tied to specific cows, delivery zones with PostGIS, and a multi-role admin panel.
 Built with Laravel 13 + Vue 3 + Inertia.js.
 
@@ -217,3 +219,8 @@ composer dev
 | `paymaster` | PayMaster                                                 | `PAYMASTER_MERCHANT_ID`, `PAYMASTER_SECRET_KEY`                 |
 
 For local development use `fake` — no real keys needed.
+
+## Author
+
+**Alex** — Fullstack-developer
+Laravel · Vue.js · TypeScript · PostgreSQL
