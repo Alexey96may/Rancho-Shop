@@ -1,4 +1,4 @@
-# 🐄 Rancho — E-commerce for a Dairy Farm
+# Rancho — E-commerce for a Dairy Farm
 
 Pet project of an online store for a small dairy farm: products tied to specific cows, delivery zones with PostGIS, and a multi-role admin panel.
 Built with Laravel 13 + Vue 3 + Inertia.js.
@@ -7,15 +7,15 @@ Built with Laravel 13 + Vue 3 + Inertia.js.
 
 ## 📸 Demo
 
-> Скриншоты и GIF добавим после записи. Пока — раздел-заглушка.
-
-<!--
 ![Demo](docs/screenshots/farmshop-demo.gif)
 
-| Home | Shop | Product |
-|------|------|---------|
-| ![home](docs/screenshots/home.jpg) | ![shop](docs/screenshots/shop.jpg) | ![product](docs/screenshots/product.jpg) |
--->
+| Home                                      | Shop                                          | Product                                         |
+| ----------------------------------------- | --------------------------------------------- | ----------------------------------------------- |
+| ![home](docs/screenshots/Rancho_main.jpg) | ![shop](docs/screenshots/Rancho_products.jpg) | ![animals](docs/screenshots/Rancho_animals.jpg) |
+
+| Admin                                       | User Profile                              |
+| ------------------------------------------- | ----------------------------------------- |
+| ![admin](docs/screenshots/Rancho_admin.jpg) | ![user](docs/screenshots/Rancho_user.jpg) |
 
 > No live demo yet — the project runs locally in a few minutes (see [Installation](#-installation)).
 
@@ -69,9 +69,7 @@ Built with Laravel 13 + Vue 3 + Inertia.js.
 
 ## ✨ Features
 
-A condensed list — full breakdown in [docs/FEATURES.md](docs/FEATURES.md).
-
-**Storefront**
+### Storefront
 
 - Landing with configurable blocks (hero, banners, FAQ, featured products)
 - Product catalog with filters and pagination
@@ -83,30 +81,61 @@ A condensed list — full breakdown in [docs/FEATURES.md](docs/FEATURES.md).
 - Static pages managed from the DB (About, Contacts, Terms, 404)
 - Contact page with a Mapbox map
 
-**Delivery**
+### Delivery
 
 - Delivery zones stored as PostGIS polygons
 - Outside a zone → no delivery; near a zone → surcharge
 - Address picking with Mapbox + Turf.js distance checks
+- **Smart route-based delivery**: admin defines a delivery route, user picks a point within the corridor radius
 
-**Admin panel**
+### Admin panel
 
 - Products, cows, categories, orders, reviews, pages, settings
 - Multi-role access: `admin`, `moderator`, `worker`
 - TipTap rich-text editor for content
 - ApexCharts dashboard
 - Image galleries with drag & drop upload (Spatie Media Library)
+- **Units with `low_stock_threshold`** — visual alert in admin when a product is running low
 
-**Integrations**
+### SEO
+
+- Morph SEO table with manual input per model
+- Auto-generated OG / Twitter meta
+- `robots.txt` editable from admin
+- `sitemap.xml` generated with per-URL priorities and `is_noindex` filtering
+- Canonical URLs
+- Full ARIA coverage (roles, `aria-label`, `aria-live`, `aria-busy`, …)
+
+### Integrations
 
 - Laravel Socialite (VK / Google) — in progress
 - API for an Android client (Sanctum) — partially implemented
+- **Payments:** tested with YooKassa; also supports Direct / Tinkoff / PayMaster / Fake drivers via `PaymentGatewayInterface`
 
-**SEO**
+---
 
-- Meta tags per controller (Open Graph + Twitter)
-- Full ARIA coverage (roles, `aria-label`, `aria-live`, `aria-busy`, …)
-- Sitemap, robots.txt, canonical URLs — planned
+## ✅ Implemented
+
+- [x] Clean architecture: Controllers, Services, Actions, DTO, Enums, Exceptions, Helpers, Observers, Policies, Providers, Resources
+- [x] Roles: `admin`, `customer`, `moderator`, `worker`
+- [x] Cart in UI with server-side validation via API
+- [x] Smart delivery system: admin defines the route, user picks a point within the corridor radius
+- [x] Units with `low_stock_threshold` — admin alert when a product is running low
+- [x] Smart SEO: morph SEO table, manual input, `robots.txt` from admin, `sitemap.xml`
+- [x] Soft deletes across cows, products, reviews, pages
+- [x] Role-based access control
+- [x] Settings with caching (24h TTL, invalidated on save)
+- [x] Discounts & promo codes (DB + admin only)
+- [x] Payments: YooKassa (tested), Direct, Tinkoff, Fake drivers via unified `PaymentGatewayInterface`
+
+## 🔮 Roadmap
+
+- [ ] Tie "Buy" / "Pre-order" buttons to the delivery schedule
+- [ ] SSR (Inertia server-side rendering)
+- [ ] Promo codes in payment flow and public UI
+- [ ] Skeleton loaders for cards
+
+Full list → [docs/ROADMAP.md](docs/ROADMAP.md)
 
 ---
 
@@ -118,35 +147,46 @@ A condensed list — full breakdown in [docs/FEATURES.md](docs/FEATURES.md).
 - Node.js 20+, npm
 - PostgreSQL 16+ **with PostGIS extension**
 - (Optional) Mapbox access token — for the delivery-zone map
+- (Optional) Yandex Geocoder key — for address suggestions
 - (Optional) VK / Google OAuth credentials
 - (Optional) Mailtrap or `MAIL_MAILER=log` for local email
+
+### 1. Clone and install
 
 ### Steps
 
 ```bash
-# 1. Clone
-git clone https://github.com/your-username/farm-shop.git
-cd farm-shop
+https://github.com/Alexey96may/Rancho-Shop.git
+cd fRancho-Shop
+
+composer install
+npm install
+
+cp .env.example .env
+php artisan key:generate
 
 # 2. One-command setup
 # Installs PHP + JS deps, copies .env, generates key, migrates, builds assets
 composer setup
 
+
 # 3. Edit .env:
+#   APP_URL=http://localhost:8000
+
 #   DB_CONNECTION=pgsql
 #   DB_HOST=127.0.0.1
 #   DB_PORT=5432
-#   DB_DATABASE=farm_shop
+#   DB_DATABASE=rancho_db
 #   DB_USERNAME=postgres
 #   DB_PASSWORD=your_password
-#
-#   MAPBOX_TOKEN=              (delivery zones)
-#   VK_CLIENT_ID= / VK_CLIENT_SECRET=
-#   GOOGLE_CLIENT_ID= / GOOGLE_CLIENT_SECRET=
-#   MAIL_* (Mailtrap, or MAIL_MAILER=log)
+
+#   VITE_MAPBOX_TOKEN=             # delivery zone map
+#   VITE_YANDEX_GEOCODER_KEY=      # address suggestions
+
+#   PAYMENT_DRIVER=fake            # "fake" | "direct" | "tinkoff" | "yookassa" | "paymaster"
 
 # 4. Enable PostGIS in the database
-psql -U postgres -d farm_shop -c "CREATE EXTENSION IF NOT EXISTS postgis;"
+psql -U postgres -d rancho_db -c "CREATE EXTENSION IF NOT EXISTS postgis;"
 
 # 5. Migrate and seed
 php artisan migrate --seed
@@ -155,78 +195,25 @@ php artisan migrate --seed
 composer dev
 ```
 
-`composer dev` starts: `php artisan serve` + `queue:listen` + `pail` (logs) + `vite` — all in one terminal.
-
-App: http://localhost:8000
-Admin: http://localhost:8000/admin
-
 ### Demo credentials
 
-Created by seeders:
+| Role          | Email                  | Password    |
+| ------------- | ---------------------- | ----------- |
+| **Admin**     | `admin@rancho.com`     | `admin`     |
+| **Moderator** | `moderator@rancho.com` | `moderator` |
+| **Worker**    | `worker@rancho.com`    | `worker`    |
+| **Customer**  | `customer@rancho.com`  | `customer`  |
 
-- **Admin:** `admin@example.com` / `password`
-- **Moderator:** `moderator@example.com` / `password`
-- **Worker:** `worker@example.com` / `password`
-- **Customer:** `user@example.com` / `password`
+### Payment drivers
 
-### Optional: Postgres + PostGIS via Docker
+`PAYMENT_DRIVER` accepts:
 
-```yaml
-services:
-    db:
-        image: postgis/postgis:16-3.4-alpine
-        restart: unless-stopped
-        ports:
-            - '5432:5432'
-        environment:
-            POSTGRES_DB: farm_shop
-            POSTGRES_USER: postgres
-            POSTGRES_PASSWORD: secret
-        volumes:
-            - pgdata:/var/lib/postgresql/data
+| Value       | Description                                               | Required env vars                                               |
+| ----------- | --------------------------------------------------------- | --------------------------------------------------------------- |
+| `fake`      | Instant simulated payment (recommended for local dev)     | —                                                               |
+| `direct`    | Manual SBP / card transfer — requisites shown to the user | `PAYMENT_DIRECT_*`                                              |
+| `tinkoff`   | Tinkoff E-Acquiring                                       | `TINKOFF_TERMINAL_KEY`, `TINKOFF_SECRET_KEY`, `TINKOFF_API_URL` |
+| `yookassa`  | YooKassa                                                  | `YOOKASSA_SHOP_ID`, `YOOKASSA_SECRET_KEY`, `YOOKASSA_API_URL`   |
+| `paymaster` | PayMaster                                                 | `PAYMASTER_MERCHANT_ID`, `PAYMASTER_SECRET_KEY`                 |
 
-volumes:
-    pgdata:
-```
-
-```bash
-docker compose up -d db
-# then in .env: DB_HOST=127.0.0.1, DB_PORT=5432, DB_PASSWORD=secret
-```
-
----
-
-## 🧪 Tests
-
-```bash
-composer test      # PHPUnit (Unit + Feature)
-npm test           # Vitest
-```
-
----
-
-## 🗺 Roadmap
-
-Short-term:
-
-- [ ] "Payment on delivery" (cash to courier)
-- [ ] Social login via VK / Google
-- [ ] Email verification
-- [ ] SSR + sitemap + robots.txt + canonical URLs
-- [ ] Full delivery-zone map in admin orders
-- [ ] GitHub Actions CI (tests + Pint)
-
-Full list → [docs/ROADMAP.md](docs/ROADMAP.md)
-
----
-
-## 📄 License
-
-MIT
-
----
-
-## 👤 Author
-
-**Aleksey** — Fullstack Developer
-Laravel · Vue.js · TypeScript · PostgreSQL
+For local development use `fake` — no real keys needed.

@@ -50,7 +50,7 @@
 
 <template>
     <div class="space-y-6">
-        <section v-scroll-reveal class="space-y-6">
+        <section class="space-y-6">
             <h3 class="text-sm font-black uppercase tracking-wider text-slate-500">
                 История ваших отзывов
             </h3>
