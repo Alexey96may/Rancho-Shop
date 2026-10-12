@@ -57,8 +57,8 @@ class CommentController extends Controller
             : CommentStatus::PENDING;
 
         Comment::create([
-            'commentable_id' => $data['commentable_id'],
-            'commentable_type' => $data['commentable_type'],
+            'commentable_id' => $data['commentable_id'] ?? null,
+            'commentable_type' => $data['commentable_type'] ?? null,
             'content' => $data['content'],
             'rating' => $data['rating'] ?? null,
             'user_id' => $user?->id,
