@@ -71,6 +71,7 @@
     const store = useAppearanceStore();
 
     const onScroll = (): void => {
+        if (typeof window === 'undefined') return;
         const totalScrollable = document.documentElement.scrollHeight - window.innerHeight;
 
         if (totalScrollable <= 0) return;
@@ -80,11 +81,13 @@
     };
 
     onMounted(() => {
+        if (typeof window === 'undefined') return;
         window.addEventListener('scroll', onScroll, { passive: true });
         onScroll();
     });
 
     onUnmounted(() => {
+        if (typeof window === 'undefined') return;
         window.removeEventListener('scroll', onScroll);
     });
 </script>

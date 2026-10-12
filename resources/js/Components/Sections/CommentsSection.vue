@@ -80,6 +80,7 @@
     };
 
     const loadMore = () => {
+        if (typeof window !== 'object') return;
         if (loading.value || page.value >= lastPage.value) return;
 
         loading.value = true;

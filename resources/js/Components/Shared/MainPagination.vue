@@ -25,14 +25,17 @@
     const viewportWidth = ref(typeof window !== 'undefined' ? window.innerWidth : 1280);
 
     function handleResize() {
+        if (typeof window !== 'object') return;
         viewportWidth.value = window.innerWidth;
     }
 
     onMounted(() => {
+        if (typeof window !== 'object') return;
         window.addEventListener('resize', handleResize, { passive: true });
     });
 
     onUnmounted(() => {
+        if (typeof window !== 'object') return;
         window.removeEventListener('resize', handleResize);
     });
 

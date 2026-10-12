@@ -80,10 +80,13 @@
 
     const startHold = (action: () => void) => {
         if (props.disabled) return;
+
         action();
         timer.value = setTimeout(() => {
             timer.value = setInterval(action, 80);
         }, 300) as any;
+
+        if (typeof window !== 'object') return;
         window.addEventListener('mouseup', stopHold, { once: true });
     };
 

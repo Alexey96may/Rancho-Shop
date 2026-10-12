@@ -7,7 +7,7 @@
     import MainPagination from '@/Components/Shared/MainPagination.vue';
     import ProfileLayout from '@/Layouts/ProfileLayout.vue';
     import { useAdminCrud } from '@/composables/crud/useAdminCrud';
-    import { Comment, Paginated } from '@/types';
+    import type { Comment, Paginated } from '@/types';
 
     defineOptions({ layout: ProfileLayout });
 

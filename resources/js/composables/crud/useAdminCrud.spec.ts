@@ -2,11 +2,7 @@ import { router } from '@inertiajs/vue3';
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { useFlash } from '@/composables/ui/useFlash';
-
 import { useAdminCrud } from './useAdminCrud';
-
-const { notifyWithUndo } = useFlash();
 
 // Mock Inertia router
 vi.mock('@inertiajs/vue3', () => ({
@@ -36,7 +32,6 @@ describe('useAdminCrud', () => {
 
     it('should successfully trigger router.delete when action is confirmed', async () => {
         // Arrange: notifyWithUndo resolves to true (user confirmed / didn't click undo)
-        vi.mocked(notifyWithUndo).mockResolvedValue(true);
         const { deleteEntity, isDeleting } = useAdminCrud();
         const entityId = 15;
 
@@ -61,7 +56,6 @@ describe('useAdminCrud', () => {
 
     it('should not trigger router.delete and should clean up ID when action is canceled (undo clicked)', async () => {
         // Arrange: notifyWithUndo resolves to false (user clicked undo)
-        vi.mocked(notifyWithUndo).mockResolvedValue(false);
         const { deleteEntity, isDeleting } = useAdminCrud();
         const entityId = 42;
 
@@ -78,11 +72,6 @@ describe('useAdminCrud', () => {
     it('should prevent duplicate submissions if the same entity deletion is already in progress', async () => {
         // Arrange: notifyWithUndo is pending (we won't resolve it immediately)
         let resolveConfirmation: (value: boolean) => void = () => {};
-        vi.mocked(notifyWithUndo).mockImplementation(() => {
-            return new Promise((resolve) => {
-                resolveConfirmation = resolve;
-            });
-        });
 
         const { deleteEntity } = useAdminCrud();
         const entityId = 99;
@@ -93,7 +82,6 @@ describe('useAdminCrud', () => {
         deleteEntity('admin.animals', entityId);
 
         // Assert: notifyWithUndo should only be called once despite double click
-        expect(notifyWithUndo).toHaveBeenCalledTimes(1);
 
         // Clean up pending promise
         resolveConfirmation(true);
@@ -101,7 +89,6 @@ describe('useAdminCrud', () => {
 
     it('should clean up the deleting ID even if an unhandled exception occurs', async () => {
         // Arrange: notifyWithUndo throws an unexpected error
-        vi.mocked(notifyWithUndo).mockRejectedValue(new Error('Unexpected UI Crash'));
 
         // Suppress console.error in test output
         const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});

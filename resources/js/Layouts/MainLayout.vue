@@ -13,10 +13,12 @@
     const showScrollTop = ref(false);
 
     const handleScroll = () => {
+        if (typeof window === 'undefined') return;
         showScrollTop.value = window.scrollY > 500;
     };
 
     const scrollToTop = () => {
+        if (typeof window === 'undefined') return;
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
@@ -31,6 +33,7 @@
     let isListenerAttached = false;
 
     onMounted(() => {
+        if (typeof window === 'undefined') return;
         // window.addEventListener('scroll', handleScroll);
         if (!isListenerAttached) {
             document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -39,6 +42,7 @@
     });
 
     onUnmounted(() => {
+        if (typeof window === 'undefined') return;
         // window.removeEventListener('scroll', handleScroll);
 
         document.removeEventListener('visibilitychange', handleVisibilityChange);

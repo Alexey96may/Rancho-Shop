@@ -41,6 +41,7 @@
     onMounted(() => {
         // 1. Простой редирект (ЮKassa, Тинькофф): confirmation_url / PaymentURL
         if (props.payment.type === 'redirect' && props.payment.url) {
+            if (typeof window === 'undefined') return;
             window.location.href = props.payment.url;
             return;
         }

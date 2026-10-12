@@ -59,11 +59,18 @@
     const viewportWidth = ref(typeof window !== 'undefined' ? window.innerWidth : 1280);
 
     function handleResize() {
+        if (typeof window === 'undefined') return;
         viewportWidth.value = window.innerWidth;
     }
 
-    onMounted(() => window.addEventListener('resize', handleResize, { passive: true }));
-    onUnmounted(() => window.removeEventListener('resize', handleResize));
+    onMounted(() => {
+        if (typeof window === 'undefined') return;
+        window.addEventListener('resize', handleResize, { passive: true });
+    });
+    onUnmounted(() => {
+        if (typeof window === 'undefined') return;
+        window.removeEventListener('resize', handleResize);
+    });
 
     const isMobile = computed(() => viewportWidth.value < 640);
     const isTablet = computed(() => viewportWidth.value >= 640 && viewportWidth.value < 1024);

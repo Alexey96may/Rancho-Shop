@@ -152,10 +152,12 @@
             let path = url.split('?')[0].split('#')[0];
 
             // Убираем домен, если он есть
-            try {
-                path = new URL(path, window.location.origin).pathname;
-            } catch {
-                // уже path
+            if (typeof window === 'object') {
+                try {
+                    path = new URL(path, window.location.origin).pathname;
+                } catch {
+                    // уже path
+                }
             }
 
             // Убираем trailing slash

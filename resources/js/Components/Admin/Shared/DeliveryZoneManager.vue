@@ -8,7 +8,7 @@
     import type { DeliveryZone } from '@/types';
 
     const props = defineProps<{
-        modelValue: DeliveryZone[]; // Это массив зон из настроек
+        modelValue: DeliveryZone[];
     }>();
 
     const emit = defineEmits(['update:modelValue']);

@@ -5,9 +5,9 @@
 
     import { Heart, Home, Moon, Trees, Volume2, VolumeX } from 'lucide-vue-next';
 
-    import type { FarmAnimal } from '@/types/Animal';
+    import type { Animal } from '@/types/Animal';
 
-    const props = defineProps<{ animal: FarmAnimal }>();
+    const props = defineProps<{ animal: Animal }>();
 
     const isPlaying = ref(false);
     const audioRef = ref<HTMLAudioElement | null>(null);
@@ -42,7 +42,7 @@
     >
         <div class="relative aspect-[4/5] overflow-hidden bg-rancho-paper/20">
             <AppImage
-                :src="props.animal?.media?.[0] || ''"
+                :src="props.animal?.avatars[0] || ''"
                 :alt="`Фотография нашего жителя по имени ${animal.name}`"
                 :context="'animal'"
                 :className="'h-full w-full object-cover transition-transform duration-700 group-hover:scale-105'"
