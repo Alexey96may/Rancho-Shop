@@ -1,4 +1,5 @@
 export function createShopMarkerEl() {
+    if (typeof document === 'undefined') return;
     const el = document.createElement('div');
 
     el.innerHTML = `
@@ -10,7 +11,7 @@ export function createShopMarkerEl() {
     <!-- barn -->
     <g transform="translate(18,18)">
         <rect x="4" y="10" width="20" height="16" rx="2" fill="#F5F5F5"/>
-        
+
         <!-- roof -->
         <path d="M4 10 L14 2 L24 10 Z" fill="#1C3F34"/>
 
@@ -28,6 +29,7 @@ export function createShopMarkerEl() {
 }
 
 export function createUserMarkerEl() {
+    if (typeof document === 'undefined') return;
     const el = document.createElement('div');
 
     el.innerHTML = `

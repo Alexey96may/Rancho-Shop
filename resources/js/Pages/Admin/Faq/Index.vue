@@ -3,7 +3,7 @@
 
     import { router, useForm } from '@inertiajs/vue3';
 
-    import debounce from 'lodash/debounce';
+    import { debounce } from 'lodash-es';
     import draggable from 'vuedraggable';
 
     import FaqItem from '@/Components/Admin/Cards/AdminFaqCard.vue';

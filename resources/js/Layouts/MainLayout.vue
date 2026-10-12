@@ -25,6 +25,7 @@
     const cartStore = useCartStore();
 
     const handleVisibilityChange = () => {
+        if (typeof document === 'undefined') return;
         if (document.visibilityState === 'visible') {
             cartStore.validate();
         }
@@ -33,7 +34,7 @@
     let isListenerAttached = false;
 
     onMounted(() => {
-        if (typeof window === 'undefined') return;
+        if (typeof document === 'undefined') return;
         // window.addEventListener('scroll', handleScroll);
         if (!isListenerAttached) {
             document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -42,7 +43,7 @@
     });
 
     onUnmounted(() => {
-        if (typeof window === 'undefined') return;
+        if (typeof document === 'undefined') return;
         // window.removeEventListener('scroll', handleScroll);
 
         document.removeEventListener('visibilitychange', handleVisibilityChange);

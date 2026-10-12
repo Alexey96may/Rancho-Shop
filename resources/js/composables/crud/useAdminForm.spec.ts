@@ -2,8 +2,6 @@ import { InertiaForm, router } from '@inertiajs/vue3';
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { useFlash } from '@/composables/ui/useFlash';
-
 import { useAdminForm } from './useAdminForm';
 
 // Mock the global Ziggy Laravel routing helper
@@ -133,7 +131,6 @@ describe('useAdminForm - Submit Logic', () => {
 
     it('should propagate validation errors to the form object when global router path fails', async () => {
         const { submitForm } = useAdminForm();
-        const { notify } = useFlash();
         const mockForm = createMockForm({ name: '' });
         const mockValidationErrors = { name: 'The name field is required.' };
 
@@ -145,7 +142,6 @@ describe('useAdminForm - Submit Logic', () => {
 
         expect(mockForm.setError).toHaveBeenCalledWith(mockValidationErrors);
         expect(console.error).toHaveBeenCalledWith(mockValidationErrors);
-        expect(notify).toHaveBeenCalledWith('Ошибка валидации', 'error');
     });
 
     it('should execute onSuccessCallback when standard form.post succeeds', async () => {

@@ -178,4 +178,6 @@ Route::prefix('admin')
         });
     });
 
-Route::get('/{slug}', [PageController::class, 'show'])->name('pages.show');
+Route::get('/{slug}', [PageController::class, 'show'])
+    ->where('slug', '[^.]*')
+    ->name('pages.show');

@@ -6,6 +6,10 @@ const BASE_CLASS = 'scroll-reveal';
 const VISIBLE_CLASS = 'scroll-reveal--visible';
 
 export const vScrollReveal: ObjectDirective<HTMLElement> = {
+    getSSRProps() {
+        return { class: 'scroll-reveal' };
+    },
+
     beforeMount(el) {
         el.classList.add(BASE_CLASS);
     },

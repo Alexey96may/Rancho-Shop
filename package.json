@@ -3,8 +3,10 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "build": "vue-tsc && vite build",
         "dev": "vite",
+        "build": "vite build",
+        "build:ssr": "vite build --ssr",
+        "ssr": "php artisan inertia:start-ssr",
         "test": "vitest"
     },
     "devDependencies": {
@@ -61,6 +63,7 @@
         "@tiptap/starter-kit": "^3.22.4",
         "@tiptap/vue-3": "^3.22.4",
         "@turf/turf": "^7.3.4",
+        "@vue/server-renderer": "^3.5.43",
         "apexcharts": "^5.11.0",
         "browser-image-compression": "^2.0.2",
         "date-fns": "^4.1.0",

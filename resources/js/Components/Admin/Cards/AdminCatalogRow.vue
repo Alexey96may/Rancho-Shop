@@ -1,7 +1,7 @@
 <script setup lang="ts">
     import { onBeforeUnmount } from 'vue';
 
-    import { debounce } from 'lodash';
+    import { debounce } from 'lodash-es';
     import { PackageIcon } from 'lucide-vue-next';
 
     import AdminDeleteButton from '@/Components/Admin/UI/AdminDeleteButton.vue';

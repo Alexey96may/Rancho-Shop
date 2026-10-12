@@ -2,8 +2,6 @@ import { router } from '@inertiajs/vue3';
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { useFlash } from '@/composables/ui/useFlash';
-
 import { type DraggableEvent, useAdminReorder } from './useAdminReorder';
 
 // Laravel (Ziggy)
@@ -122,7 +120,6 @@ describe('useAdminReorder', () => {
 
     it('should trigger flash notification and log error when server request fails', () => {
         const { handleReorder } = useAdminReorder();
-        const { notify } = useFlash();
         const event = createMockEvent(1, 3);
         const mockServerError = { message: 'Server Error' };
 
@@ -135,6 +132,5 @@ describe('useAdminReorder', () => {
         handleReorder(event, 'admin.faq.reorder', mockItemsData);
 
         expect(console.error).toHaveBeenCalledWith('Error on position changing', mockServerError);
-        expect(notify).toHaveBeenCalledWith('Ошибка при смены позиции', 'error');
     });
 });

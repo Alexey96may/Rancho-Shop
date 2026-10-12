@@ -10,7 +10,9 @@
     } from '@headlessui/vue';
     import { CheckIcon, ChevronUpDownIcon } from '@heroicons/vue/20/solid';
 
-    const model = defineModel<any>();
+    type ModelValue = string | number | boolean | null | undefined;
+
+    const model = defineModel<ModelValue>();
     const error = defineModel<string | undefined>('error');
 
     const props = defineProps<{
@@ -31,6 +33,13 @@
 
     const vKey = computed(() => props.valueKey || 'id');
     const lKey = computed(() => props.labelKey || 'name');
+
+    const selected = computed<any>({
+        get: () => model.value,
+        set: (value) => {
+            model.value = value;
+        },
+    });
 
     watch(model, () => {
         if (error.value) {
@@ -97,7 +106,8 @@
             { 'pointer-events-none opacity-50': disabled },
         ]"
     >
-        <Listbox v-model="model" :disabled="disabled">
+        <!-- 👇 v-model="selected" вместо v-model="model" -->
+        <Listbox v-model="selected" :disabled="disabled">
             <div class="relative">
                 <ListboxLabel v-if="label" :id="labelId" :class="styles.label">
                     {{ label }}
@@ -110,7 +120,7 @@
                     :class="styles.button"
                 >
                     <span class="block truncate font-medium">
-                        {{ options.find((o) => o[vKey] === model)?.[lKey] || placeholder }}
+                        {{ options.find((o) => o[vKey] === selected)?.[lKey] || placeholder }}
                     </span>
                     <span
                         class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2"

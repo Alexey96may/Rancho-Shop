@@ -8,7 +8,7 @@
     import { onUnmounted, ref, watch } from 'vue';
 
     import { MagnifyingGlassIcon } from '@heroicons/vue/24/outline';
-    import { debounce } from 'lodash';
+    import { debounce } from 'lodash-es';
 
     const props = defineProps<{
         modelValue: string;

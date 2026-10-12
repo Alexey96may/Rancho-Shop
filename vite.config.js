@@ -25,9 +25,19 @@ export default defineConfig(({ isSsrBuild }) => ({
                 },
             },
         }),
-        legacy({
-            targets: ['defaults', 'not IE 11'],
-        }),
+
+        // legacy и visualizer — только для клиента
+        !isSsrBuild &&
+            legacy({
+                targets: ['defaults', 'not IE 11'],
+            }),
+        !isSsrBuild &&
+            visualizer({
+                filename: 'stats.html',
+                gzipSize: true,
+                brotliSize: true,
+            }),
+
         viteCompression({
             algorithm: 'brotliCompress',
             ext: '.br',
@@ -44,11 +54,6 @@ export default defineConfig(({ isSsrBuild }) => ({
             png: { quality: 80 },
             jpeg: { quality: 80 },
         }),
-        visualizer({
-            filename: 'stats.html',
-            gzipSize: true,
-            brotliSize: true,
-        }),
         imagetools({
             defaultDirectives: (url) => {
                 if (url.searchParams.has('smart')) {
@@ -57,25 +62,29 @@ export default defineConfig(({ isSsrBuild }) => ({
                 return new URLSearchParams();
             },
         }),
-    ],
-    ssr: {
-        noExternal: ['@inertiajs/server'],
-    },
+    ].filter(Boolean),
+
     build: {
         minify: 'terser',
         cssMinify: true,
         rollupOptions: {
-            output: {
-                inlineDynamicImports: isSsrBuild,
-                manualChunks(id) {
-                    if (id.includes('node_modules')) {
-                        return id.toString().split('node_modules/')[1].split('/')[0].toString();
-                    }
-                },
-            },
+            output: isSsrBuild
+                ? {
+                      // SSR — all the code in a single file, no changes
+                      codeSplitting: false,
+                  }
+                : {
+                      // Client — standard breakdown
+                      manualChunks(id) {
+                          if (id.includes('node_modules')) {
+                              return id.split('node_modules/')[1].split('/')[0];
+                          }
+                      },
+                  },
         },
         chunkSizeWarningLimit: 1000,
     },
+
     test: {
         globals: true,
         environment: 'jsdom',
@@ -84,6 +93,7 @@ export default defineConfig(({ isSsrBuild }) => ({
             reporter: ['text', 'json', 'html'],
         },
     },
+
     resolve: {
         alias: {
             '@': path.resolve(__dirname, './resources/js'),

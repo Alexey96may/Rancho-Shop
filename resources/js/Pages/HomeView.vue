@@ -71,7 +71,7 @@
     const store = useAppearanceStore();
 
     const onScroll = (): void => {
-        if (typeof window === 'undefined') return;
+        if (typeof document === 'undefined') return;
         const totalScrollable = document.documentElement.scrollHeight - window.innerHeight;
 
         if (totalScrollable <= 0) return;

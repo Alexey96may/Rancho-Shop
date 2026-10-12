@@ -85,8 +85,12 @@
         if (e.key === 'Escape') closeMenu();
     }
 
-    onMounted(() => window.addEventListener('keydown', onKeydown));
+    onMounted(() => {
+        if (typeof window === 'undefined') return;
+        window.addEventListener('keydown', onKeydown);
+    });
     onUnmounted(() => {
+        if (typeof window === 'undefined') return;
         window.removeEventListener('keydown', onKeydown);
         document.body.style.overflow = '';
     });

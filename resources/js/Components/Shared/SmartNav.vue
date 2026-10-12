@@ -140,8 +140,14 @@
         }
     }
 
-    onMounted(() => document.addEventListener('click', onClickOutside));
-    onUnmounted(() => document.removeEventListener('click', onClickOutside));
+    onMounted(() => {
+        if (typeof document === 'undefined') return;
+        document.addEventListener('click', onClickOutside);
+    });
+    onUnmounted(() => {
+        if (typeof document === 'undefined') return;
+        document.removeEventListener('click', onClickOutside);
+    });
 
     // Закрытие при навигации
     watch(() => page.url, closeDropdown);

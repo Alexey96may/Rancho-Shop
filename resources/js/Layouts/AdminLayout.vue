@@ -52,6 +52,7 @@
     watch(() => page.url, closeSidebar);
 
     watch(isSidebarOpen, (open) => {
+        if (typeof document === 'undefined') return;
         document.body.style.overflow = open ? 'hidden' : '';
     });
 

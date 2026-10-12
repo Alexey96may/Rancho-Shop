@@ -76,6 +76,7 @@
         if (typeof props.src === 'string') return props.src;
 
         if (isFileObject.value) {
+            if (typeof window === 'undefined') return '';
             return URL.createObjectURL(props.src as File);
         }
 

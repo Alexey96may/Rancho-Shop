@@ -3,7 +3,7 @@
 
     import { router } from '@inertiajs/vue3';
 
-    import debounce from 'lodash/debounce';
+    import { debounce } from 'lodash-es';
 
     import AnimalCard from '@/Components/Cards/AnimalCard.vue';
     import MainPagination from '@/Components/Shared/MainPagination.vue';

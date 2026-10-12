@@ -3,7 +3,7 @@
 
     import { useForm, usePage } from '@inertiajs/vue3';
 
-    import { debounce } from 'lodash';
+    import { debounce } from 'lodash-es';
 
     import MapboxPicker from '@/Components/Map/MapboxPicker.vue';
     import CommentsSection from '@/Components/Sections/CommentsSection.vue';

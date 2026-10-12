@@ -12,7 +12,7 @@
     import { Underline } from '@tiptap/extension-underline';
     import StarterKit from '@tiptap/starter-kit';
     import { EditorContent, useEditor } from '@tiptap/vue-3';
-    import debounce from 'lodash/debounce';
+    import { debounce } from 'lodash-es';
     // Lucide Icons
     import {
         Bold,
