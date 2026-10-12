@@ -112,7 +112,7 @@
                 : 'border-rancho-olive/10 bg-rancho-paper/80'
         "
     >
-        <AppContainer class="sm:h-18 flex h-16 items-center justify-between gap-3 md:h-20 md:gap-6">
+        <AppContainer class="flex items-center justify-between gap-3 py-2 md:gap-6">
             <!-- LOGO -->
             <Link
                 :href="route('home')"
@@ -123,12 +123,16 @@
                     :class="isDark ? 'text-orange-400' : 'text-orange-600'"
                 />
                 <div class="flex min-w-0 flex-col">
-                    <span
-                        class="truncate font-header text-lg leading-none transition-colors sm:text-xl md:text-2xl"
-                        :class="isDark ? 'text-slate-100' : 'text-rancho-forest'"
+                    <div
+                        class="flex flex-col truncate font-header text-lg leading-none transition-colors sm:flex-row sm:gap-2 sm:text-xl md:text-2xl"
                     >
-                        Молочная Долина
-                    </span>
+                        <span :class="isDark ? 'text-slate-100' : 'text-rancho-forest'">
+                            Молочная
+                        </span>
+                        <span :class="isDark ? 'text-slate-100' : 'text-rancho-forest'">
+                            Долина
+                        </span>
+                    </div>
                     <span
                         class="hidden font-sans text-[10px] uppercase tracking-[0.2em] opacity-70 transition-colors sm:block"
                         :class="isDark ? 'text-slate-400' : 'text-rancho-olive'"

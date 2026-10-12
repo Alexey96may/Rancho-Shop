@@ -10,13 +10,13 @@
 </script>
 
 <template>
-    <AppContainer tag="section" class="py-20" aria-labelledby="products-title">
+    <AppContainer tag="section" class="py-12 sm:py-20" aria-labelledby="products-title">
         <div class="mb-12 flex items-end justify-between">
-            <div>
-                <h2 id="products-title" class="text-4xl font-bold text-rancho-forest">
+            <div class="flex flex-col gap-4">
+                <h2 id="products-title" class="text-xl font-bold text-rancho-forest sm:text-4xl">
                     Наши свежие продукты
                 </h2>
-                <p class="mt-4 text-rancho-olive/70">
+                <p class="mx-auto max-w-2xl text-sm text-rancho-olive/70 sm:text-lg">
                     Собрано сегодня утром, чтобы быть на вашем столе к вечеру.
                 </p>
             </div>

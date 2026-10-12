@@ -37,16 +37,20 @@
 </script>
 
 <template>
-    <AppContainer tag="section" class="bg-rancho-paper/5 py-24" aria-labelledby="faq-title">
+    <AppContainer
+        tag="section"
+        class="bg-rancho-paper/5 py-12 sm:py-20"
+        aria-labelledby="faq-title"
+    >
         <div class="mx-auto max-w-3xl">
             <header class="mb-16 text-center">
                 <div
-                    class="mb-4 inline-flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-rancho-buttercup"
+                    class="mb-4 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-rancho-buttercup sm:text-sm"
                     aria-hidden="true"
                 >
-                    <HelpCircle :size="16" /> Полезно знать
+                    <HelpCircle :size="14" /> Полезно знать
                 </div>
-                <h2 id="faq-title" class="text-4xl font-bold text-rancho-forest">
+                <h2 id="faq-title" class="text-xl font-bold text-rancho-forest sm:text-4xl">
                     Вопросы и ответы
                 </h2>
             </header>
@@ -58,16 +62,15 @@
                     class="group rounded-2xl border border-rancho-paper bg-white p-2 transition-colors hover:border-rancho-buttercup/50"
                     :class="{ 'border-rancho-buttercup/50': isOpen(faq.id) }"
                 >
-                    <!-- Кнопка-заголовок -->
                     <button
                         type="button"
-                        class="flex w-full cursor-pointer items-center justify-between p-4 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-rancho-buttercup/40"
+                        class="flex w-full cursor-pointer items-center justify-between px-4 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-rancho-buttercup/40"
                         :aria-expanded="isOpen(faq.id)"
                         :aria-controls="`faq-panel-${faq.id}`"
                         @click="toggle(faq.id)"
                     >
                         <span
-                            class="text-lg font-bold text-rancho-forest transition-colors"
+                            class="text-sm font-bold text-rancho-forest transition-colors sm:text-lg"
                             :class="{ 'text-rancho-buttercup': isOpen(faq.id) }"
                         >
                             {{ faq.question }}
@@ -78,11 +81,10 @@
                             :class="{ 'rotate-180': isOpen(faq.id) }"
                             aria-hidden="true"
                         >
-                            <ChevronDown :size="18" />
+                            <ChevronDown :size="16" />
                         </div>
                     </button>
 
-                    <!-- Плавно раскрывающийся контент -->
                     <div
                         :id="`faq-panel-${faq.id}`"
                         class="grid transition-[grid-template-rows] duration-300 ease-out"
@@ -91,7 +93,7 @@
                     >
                         <div class="overflow-hidden">
                             <div
-                                class="mt-2 border-t border-rancho-paper/30 px-4 pb-4 pt-2 leading-relaxed text-rancho-olive/80"
+                                class="mt-2 border-t border-rancho-paper/30 px-4 pb-4 pt-2 text-xs leading-relaxed text-rancho-olive/80 sm:text-sm"
                             >
                                 <p>{{ faq.answer }}</p>
                             </div>

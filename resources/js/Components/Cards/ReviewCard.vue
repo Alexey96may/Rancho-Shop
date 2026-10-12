@@ -27,7 +27,7 @@
 
         <figcaption class="flex items-center gap-3 border-t border-rancho-paper">
             <div
-                class="flex h-10 w-10 items-center justify-center rounded-full text-sm font-black text-gray-300"
+                class="flex h-10 w-10 items-center justify-center rounded-full text-xs font-black text-gray-300 sm:text-sm"
                 :class="[getAvatarColor(comment.id)]"
                 aria-hidden="true"
             >
@@ -35,14 +35,14 @@
             </div>
 
             <div class="flex flex-col">
-                <cite class="font-bold not-italic text-rancho-forest">
+                <cite class="text-xs font-bold not-italic text-rancho-forest sm:text-sm">
                     {{ comment.author_name || 'Гость' }}
                 </cite>
             </div>
         </figcaption>
 
         <blockquote class="flex-1">
-            <p class="text-base leading-relaxed text-rancho-forest lg:text-lg">
+            <p class="text-base text-xs leading-relaxed text-rancho-forest sm:text-lg">
                 «{{ comment.content }}»
             </p>
         </blockquote>

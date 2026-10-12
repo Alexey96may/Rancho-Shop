@@ -133,7 +133,7 @@
     <section class="mt-24 border-t border-slate-100 pt-16" aria-labelledby="comments-title">
         <!-- HEADER -->
         <header class="mb-10 flex items-center justify-between">
-            <h2 id="comments-title" class="text-lg font-black text-rancho-forest lg:text-xl">
+            <h2 id="comments-title" class="text-xl font-bold text-rancho-forest sm:text-4xl">
                 {{ title || 'Отзывы' }}
             </h2>
 

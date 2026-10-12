@@ -43,7 +43,7 @@
         <!-- Ссылка на товар / Фото -->
         <Link
             :href="route('catalog.show', product.slug)"
-            class="relative aspect-square overflow-hidden bg-slate-100"
+            class="relative aspect-square max-h-48 overflow-hidden bg-slate-100 sm:max-h-64"
         >
             <AppImage
                 :alt="product.name"
@@ -86,7 +86,7 @@
                 </div>
 
                 <h3
-                    class="text-lg font-bold leading-tight text-slate-900 transition-colors hover:text-orange-600"
+                    class="text-lg font-bold leading-tight text-slate-900 transition-colors hover:text-orange-600 sm:text-xl"
                 >
                     <Link :href="route('catalog.show', product.slug)">
                         {{ product.name }}
@@ -96,7 +96,7 @@
 
             <!-- Блок с ценой (если вариант есть) -->
             <div v-if="isAvailable" class="mb-4 flex items-center gap-3">
-                <span class="text-2xl font-black text-slate-900">
+                <span class="text-xl font-black text-slate-900">
                     {{ formatMoney(product.default_variant?.price) }}
                 </span>
 
@@ -114,7 +114,9 @@
 
             <!-- Заглушка цены (если варианта нет) -->
             <div v-else class="mb-4 flex min-h-[36px] items-center justify-between">
-                <span class="text-sm font-semibold text-slate-400"> Товар недоступен </span>
+                <span class="w-full text-center text-sm font-semibold text-slate-400">
+                    Товар недоступен
+                </span>
             </div>
 
             <!-- Кнопка действия -->

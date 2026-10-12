@@ -79,14 +79,14 @@
                 v-for="n in stars.full"
                 :key="'full-' + n"
                 :stroke-width="1"
-                class="h-4 w-4 fill-orange-500/60 text-orange-500"
+                class="h-3 w-3 fill-orange-500/60 text-orange-500 sm:h-4 sm:w-4"
                 aria-hidden="true"
             />
 
             <StarHalf
                 v-if="stars.half"
                 :stroke-width="1"
-                class="h-4 w-4 fill-orange-500/60 text-orange-500"
+                class="h-3 w-3 fill-orange-500/60 text-orange-500 sm:h-4 sm:w-4"
                 aria-hidden="true"
             />
 
@@ -94,7 +94,7 @@
                 v-for="n in stars.empty"
                 :key="'empty-' + n"
                 :stroke-width="1"
-                class="h-4 w-4 text-orange-500/30"
+                class="h-3 w-3 text-orange-500/30 sm:h-4 sm:w-4"
                 aria-hidden="true"
             />
         </template>

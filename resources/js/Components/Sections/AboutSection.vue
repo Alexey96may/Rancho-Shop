@@ -11,8 +11,8 @@
 </script>
 
 <template>
-    <AppContainer tag="section" aria-labelledby="philosophy-heading">
-        <div class="grid grid-cols-1 items-center gap-16 lg:grid-cols-2">
+    <AppContainer tag="section" class="py-12 sm:py-20" aria-labelledby="philosophy-heading">
+        <div class="grid grid-cols-1 items-center gap-10 px-2 sm:gap-16 lg:grid-cols-2">
             <div class="relative order-2 lg:order-1" aria-hidden="true">
                 <div
                     class="absolute -bottom-6 -right-6 -z-10 h-64 w-64 animate-pulse rounded-3xl bg-rancho-buttercup/20"
@@ -36,17 +36,17 @@
                 </div>
             </div>
 
-            <div class="order-1 lg:order-2">
+            <div class="order-1 flex flex-col lg:order-2">
                 <div
-                    class="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-rancho-paper text-rancho-olive"
+                    class="mb-3 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-rancho-paper text-rancho-olive sm:mb-6"
                     aria-hidden="true"
                 >
-                    <Quote :size="24" fill="currentColor" />
+                    <Quote :size="22" fill="currentColor" />
                 </div>
 
                 <h2
                     id="philosophy-heading"
-                    class="mb-8 text-xl font-bold leading-tight text-rancho-forest lg:text-3xl"
+                    class="mb-6 text-xl font-bold text-rancho-forest sm:text-4xl"
                     v-html="about?.title"
                 ></h2>
 
@@ -58,10 +58,10 @@
                     ></p>
                 </div>
 
-                <div class="mt-10">
+                <div class="mt-8 self-center sm:mt-10 sm:self-auto">
                     <Link
                         :href="route('about')"
-                        class="rounded-full bg-rancho-forest px-8 py-4 font-bold text-white transition-all hover:bg-rancho-buttercup hover:text-rancho-forest focus:outline-none focus:ring-4 focus:ring-rancho-buttercup/40"
+                        class="rounded-full bg-rancho-forest px-6 py-3 text-xs font-bold text-white transition-all hover:bg-rancho-buttercup hover:text-rancho-forest focus:outline-none focus:ring-4 focus:ring-rancho-buttercup/40 sm:px-8 sm:py-4 sm:text-sm"
                         aria-label="Узнать подробную историю создания нашего хозяйства"
                     >
                         Наша история

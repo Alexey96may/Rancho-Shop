@@ -42,7 +42,7 @@
 
 <template>
     <footer
-        class="rounded-t-[1rem] pb-8 pt-16 transition-colors md:rounded-t-[2rem]"
+        class="pb-8 pt-14 transition-colors sm:pt-16 md:rounded-t-[2rem]"
         :class="
             isDark
                 ? 'border-t border-sky-600 bg-slate-950 text-slate-200'
@@ -50,16 +50,16 @@
         "
     >
         <AppContainer>
-            <div class="mb-16 grid grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-4">
+            <div class="mb-16 grid grid-cols-1 gap-14 sm:grid-cols-2 lg:grid-cols-4">
                 <!-- BRAND -->
-                <div class="flex flex-col gap-6">
+                <div class="flex flex-col items-center gap-4">
                     <div class="flex items-center gap-3">
                         <CowIcon
-                            class="h-7 w-7 shrink-0 rounded-full bg-amber-500 transition-colors sm:h-12 sm:w-12"
+                            class="h-7 w-7 shrink-0 rounded-full bg-rancho-buttercup transition-colors sm:h-12 sm:w-12"
                             :class="isDark ? 'text-orange-400' : 'text-orange-600'"
                         />
                         <span
-                            class="font-header text-2xl tracking-wide transition-colors"
+                            class="font-header text-lg tracking-wide transition-colors sm:text-2xl"
                             :class="isDark ? 'text-slate-100' : 'text-rancho-paper'"
                         >
                             {{ footer.site_name || 'Молочная Долина' }}
@@ -68,7 +68,7 @@
 
                     <p
                         v-if="footer.site_description"
-                        class="max-w-xs font-sans text-sm leading-relaxed opacity-80 transition-colors"
+                        class="max-w-xs text-center font-sans text-xs leading-relaxed opacity-80 transition-colors sm:text-sm"
                         :class="isDark ? 'text-slate-400' : 'text-rancho-paper'"
                     >
                         {{ footer.site_description }}
@@ -118,9 +118,9 @@
                 </div>
 
                 <!-- SECTIONS -->
-                <div>
+                <div class="flex flex-col items-center">
                     <h4
-                        class="mb-6 font-header text-xl transition-colors"
+                        class="mb-6 font-header text-lg transition-colors sm:text-xl"
                         :class="isDark ? 'text-orange-400' : 'text-rancho-buttercup'"
                     >
                         Разделы
@@ -138,9 +138,9 @@
                 </div>
 
                 <!-- PRODUCTION -->
-                <div>
+                <div class="flex flex-col items-center">
                     <h4
-                        class="mb-6 font-header text-xl transition-colors"
+                        class="mb-6 font-header text-lg transition-colors sm:text-xl"
                         :class="isDark ? 'text-orange-400' : 'text-rancho-buttercup'"
                     >
                         Продукция
@@ -161,9 +161,9 @@
                 </div>
 
                 <!-- CONTACTS -->
-                <div>
+                <div class="flex flex-col items-center">
                     <h4
-                        class="mb-6 font-header text-xl transition-colors"
+                        class="mb-6 font-header text-lg transition-colors sm:text-xl"
                         :class="isDark ? 'text-orange-400' : 'text-rancho-buttercup'"
                     >
                         Связаться
@@ -214,7 +214,7 @@
 
             <!-- BOTTOM -->
             <div
-                class="flex flex-col items-center justify-between gap-4 border-t pt-8 transition-colors md:flex-row"
+                class="flex flex-col justify-between gap-6 border-t pt-8 transition-colors sm:gap-4 md:flex-row md:items-center"
                 :class="isDark ? 'border-slate-800' : 'border-rancho-paper/10'"
             >
                 <p
@@ -226,7 +226,7 @@
                 </p>
 
                 <div
-                    class="flex gap-6 font-sans text-xs opacity-60 transition-colors"
+                    class="flex gap-6 font-sans text-xs opacity-80 transition-colors"
                     :class="isDark ? 'text-slate-500' : 'text-rancho-paper'"
                 >
                     <Link

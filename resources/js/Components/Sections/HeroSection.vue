@@ -36,9 +36,9 @@
 </script>
 
 <template>
-    <AppContainer class="relative py-4 lg:pb-8">
+    <AppContainer class="relative mt-4 py-4 sm:mt-0 lg:pb-8">
         <section
-            class="pointer-events-none relative w-full overflow-hidden md:aspect-[213/117]"
+            class="relative w-full overflow-hidden md:aspect-[213/117]"
             aria-label="Популярные разделы сайта"
         >
             <swiper
@@ -47,10 +47,7 @@
                 :effect="'fade'"
                 :speed="1500"
                 :loop="true"
-                :pagination="{
-                    el: '.custom-pagination',
-                    clickable: true,
-                }"
+                :pagination="{ el: '.custom-pagination', clickable: true }"
                 role="region"
                 :autoplay="{ delay: 5000, disableOnInteraction: false, pauseOnMouseEnter: true }"
                 class="h-full w-full"
@@ -64,7 +61,7 @@
                 >
                     <div class="relative h-full w-full">
                         <div
-                            class="mb-4 aspect-[213/117] w-full bg-contain bg-center bg-no-repeat transition-transform duration-700 md:absolute md:inset-0"
+                            class="mb-6 aspect-[213/117] w-full bg-cover bg-center bg-no-repeat sm:mb-0 md:absolute md:inset-0"
                             :style="{ backgroundImage: `url(${slide.image})` }"
                             aria-hidden="true"
                         ></div>
@@ -79,8 +76,6 @@
                     </div>
                 </swiper-slide>
             </swiper>
-
-            <div class="absolute bottom-10 right-10 z-20 hidden gap-4 lg:flex"></div>
         </section>
 
         <div class="custom-pagination z-10 rounded-full py-2 lg:gap-4"></div>
@@ -101,7 +96,7 @@
     .custom-pagination :deep(.swiper-pagination-bullet) {
         width: 10px;
         height: 10px;
-        margin: 0; /* gap уже даёт отступ */
+        margin: 0;
         background-color: #393939;
         opacity: 0.5;
         border-radius: 9999px;
@@ -112,24 +107,29 @@
         cursor: pointer;
     }
 
+    @media (max-width: 640px) {
+        .custom-pagination :deep(.swiper-pagination-bullet) {
+            width: 6px;
+            height: 6px;
+        }
+    }
+
     .custom-pagination :deep(.swiper-pagination-bullet-active) {
         background-color: #d4a373;
         opacity: 1;
         transform: scale(1.3);
     }
 
-    .hero-slider :deep(.swiper-pagination-bullets-dynamic) {
-        bottom: 40px !important;
-        transform: translateX(-50%) scale(1.4);
+    /* Слайды в fade-режиме: накладываются друг на друга */
+    :deep(.swiper-fade .swiper-slide) {
+        opacity: 0 !important;
+        transition: opacity 0.8s ease;
+        pointer-events: none;
     }
 
-    .hero-slider :deep(.swiper-pagination) {
-        bottom: 40px !important;
-    }
-
-    .swiper-slide-active .animate-in {
+    :deep(.swiper-fade .swiper-slide-active) {
         opacity: 1 !important;
-        transform: translateY(0) !important;
+        pointer-events: auto;
     }
 
     .swiper-wrapper {

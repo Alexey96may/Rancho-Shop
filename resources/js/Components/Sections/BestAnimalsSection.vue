@@ -10,13 +10,16 @@
 </script>
 
 <template>
-    <AppContainer tag="section" class="py-20" aria-labelledby="animals-section-title">
-        <div class="mb-12 flex items-end justify-between">
-            <div>
-                <h2 id="animals-section-title" class="text-4xl font-bold text-rancho-forest">
+    <AppContainer tag="section" class="py-12 sm:py-20" aria-labelledby="animals-section-title">
+        <div class="mb-12 flex items-end justify-between gap-4">
+            <div class="flex flex-col gap-4">
+                <h2
+                    id="animals-section-title"
+                    class="text-xl font-bold text-rancho-forest sm:text-4xl"
+                >
                     Наши любимцы
                 </h2>
-                <p class="mx-auto mt-4 max-w-2xl text-rancho-olive/70">
+                <p class="mx-auto max-w-2xl text-sm text-rancho-olive/70 sm:text-lg">
                     Познакомьтесь с обитателями нашей фермы. У каждого свой характер и роль в нашей
                     большой семье.
                 </p>

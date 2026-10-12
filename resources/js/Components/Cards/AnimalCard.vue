@@ -40,7 +40,7 @@
         :aria-labelledby="`animal-name-${animal.id}`"
         style="border-color: #e3b44b33"
     >
-        <div class="relative aspect-[4/5] overflow-hidden bg-rancho-paper/20">
+        <div class="relative aspect-[4/5] max-h-48 overflow-hidden bg-rancho-paper/20 sm:max-h-64">
             <AppImage
                 :src="props.animal?.avatars[0] || ''"
                 :alt="`Фотография нашего жителя по имени ${animal.name}`"
@@ -57,7 +57,7 @@
                     role="status"
                 >
                     <component :is="statusConfig.icon" :size="14" aria-hidden="true" />
-                    {{ statusConfig.label }}
+                    <span class="text:[10px]">{{ statusConfig.label }}</span>
                 </span>
             </div>
 
@@ -86,8 +86,11 @@
             </button>
         </div>
 
-        <div class="flex flex-1 flex-col p-6">
-            <h3 :id="`animal-name-${animal.id}`" class="text-2xl font-bold text-rancho-forest">
+        <div class="flex flex-1 flex-col p-4 sm:p-6">
+            <h3
+                :id="`animal-name-${animal.id}`"
+                class="text-lg font-bold text-rancho-forest sm:text-xl"
+            >
                 <Link :href="route('animals.show', animal.slug)" class="focus:outline-none">
                     <span class="absolute inset-0" aria-hidden="true"></span>
                     {{ animal.name }}
@@ -96,19 +99,19 @@
 
             <p
                 v-if="animal.bio"
-                class="mt-3 line-clamp-3 text-sm leading-relaxed text-rancho-olive/80"
+                class="mt-3 line-clamp-3 text-xs leading-relaxed text-rancho-olive/80 sm:text-sm"
             >
                 {{ animal.bio }}
             </p>
 
             <dl
                 v-if="animal.features"
-                class="mt-auto flex flex-wrap gap-2 border-t border-rancho-paper/50 pt-4"
+                class="mt-auto flex flex-col border-t border-rancho-paper/50 pt-4"
             >
                 <div
                     v-for="(value, key) in animal.features"
                     :key="key"
-                    class="flex items-center gap-1 rounded-lg bg-rancho-paper/40 px-2 py-1 text-[10px] font-semibold uppercase tracking-tighter text-rancho-olive"
+                    class="line-clamp-1 flex items-center gap-1 rounded-lg bg-rancho-paper/40 py-1 text-[10px] font-semibold uppercase tracking-tighter text-rancho-olive"
                 >
                     <dt>{{ key }}:</dt>
                     <dd>{{ value }}</dd>
