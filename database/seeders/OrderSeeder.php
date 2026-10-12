@@ -6,8 +6,9 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\ProductVariant;
 use App\Models\PromoCode;
-use Carbon\Carbon;
+use App\Services\Admin\AnalyticsService;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 
 class OrderSeeder extends Seeder
@@ -17,24 +18,29 @@ class OrderSeeder extends Seeder
      */
     public function run(): void
     {
+        if (app()->isProduction()) {
+            return;
+        }
+
         $variants = ProductVariant::with(['product', 'unit'])->get();
         $promo = PromoCode::where('code', 'START2026')->first();
 
         if ($variants->isEmpty()) {
             $this->command->error('First, fill out the product options table!');
+
             return;
         }
 
         for ($i = 0; $i < 30; $i++) {
             // Generate a random date in the past
             $date = Carbon::now()->subDays(rand(0, 90))->subHours(rand(0, 23));
-            
+
             // Select 1–3 random products for this order
             $orderVariants = $variants->random(rand(1, 3));
-            
+
             $deliveryPrice = 20000;
             $discount = (rand(0, 10) > 7) ? 30000 : 0; // 30% chance for a discount
-            
+
             $itemsTotal = 0;
             $itemsCount = 0;
 
@@ -57,7 +63,7 @@ class OrderSeeder extends Seeder
             foreach ($orderVariants as $variant) {
                 $qty = rand(1, 5);
                 $subTotal = $variant->price * $qty;
-                
+
                 OrderItem::create([
                     'order_id' => $order->id,
                     'product_id' => $variant->product_id,
@@ -75,10 +81,10 @@ class OrderSeeder extends Seeder
 
             // 3. Update the final order total
             $order->update([
-                'total_price' => $itemsTotal + $deliveryPrice - $discount
+                'total_price' => $itemsTotal + $deliveryPrice - $discount,
             ]);
 
-            $analytics = app(\App\Services\Admin\AnalyticsService::class);
+            $analytics = app(AnalyticsService::class);
             $analytics->updateStats($order);
         }
     }

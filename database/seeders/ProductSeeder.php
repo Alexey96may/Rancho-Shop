@@ -3,8 +3,8 @@
 namespace Database\Seeders;
 
 use App\Models\Animal;
-use App\Models\Product;
 use App\Models\Category;
+use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\Unit;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -20,6 +20,10 @@ class ProductSeeder extends Seeder
      */
     public function run(): void
     {
+        if (app()->isProduction()) {
+            return;
+        }
+
         $this->seedManualProducts();
 
         Product::factory()->count(50)->create()->each(function ($product) {

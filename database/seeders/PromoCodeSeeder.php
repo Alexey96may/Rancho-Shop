@@ -15,6 +15,10 @@ class PromoCodeSeeder extends Seeder
      */
     public function run(): void
     {
+        if (app()->isProduction()) {
+            return;
+        }
+
         $codes = [
             [
                 'code' => 'ZORKA2026',

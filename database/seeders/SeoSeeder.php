@@ -7,8 +7,8 @@ use App\Models\Category;
 use App\Models\Page;
 use App\Models\Product;
 use App\Models\Seo;
-use Illuminate\Database\Seeder;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use Illuminate\Database\Seeder;
 
 class SeoSeeder extends Seeder
 {
@@ -19,6 +19,10 @@ class SeoSeeder extends Seeder
      */
     public function run(): void
     {
+        if (app()->isProduction()) {
+            return;
+        }
+
         $this->seedManualSeo();
 
         Product::all()->each(function ($product) {

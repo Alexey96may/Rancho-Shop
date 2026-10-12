@@ -4,8 +4,8 @@ namespace Database\Seeders;
 
 use App\Models\Animal;
 use App\Models\Comment;
-use App\Models\Product;
 use App\Models\Page;
+use App\Models\Product;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -19,6 +19,10 @@ class CommentSeeder extends Seeder
      */
     public function run(): void
     {
+        if (app()->isProduction()) {
+            return;
+        }
+
         $this->seedSpecificReviews();
 
         Comment::factory()

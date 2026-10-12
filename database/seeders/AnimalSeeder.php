@@ -3,9 +3,9 @@
 namespace Database\Seeders;
 
 use App\Models\Animal;
+use App\Models\Category;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use App\Models\Category;
 use Illuminate\Support\Facades\File;
 
 class AnimalSeeder extends Seeder
@@ -14,8 +14,12 @@ class AnimalSeeder extends Seeder
 
     public function run(): void
     {
+        if (app()->isProduction()) {
+            return;
+        }
+
         $cowCat = Category::where('slug', 'korovy')->first();
-        
+
         $zorka = Animal::create([
             'category_id' => $cowCat?->id,
             'name' => 'Зорька',
