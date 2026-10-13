@@ -1,7 +1,7 @@
 <script setup lang="ts">
     import { type PropType, computed } from 'vue';
 
-    import { Head, Link, usePage } from '@inertiajs/vue3';
+    import { Link, usePage } from '@inertiajs/vue3';
 
     import CommentsSection from '@/Components/Sections/CommentsSection.vue';
     import MainLayout from '@/Layouts/MainLayout.vue';
@@ -13,8 +13,14 @@
         page: {
             type: Object as PropType<ResourceSingle<Page>>,
             required: true,
-            validator: (value: Page) => {
-                return Boolean(value && typeof value.id !== 'undefined' && value.title);
+            validator: (value: ResourceSingle<Page>) => {
+                return Boolean(
+                    value &&
+                    typeof value === 'object' &&
+                    value.data &&
+                    typeof value.data.id !== 'undefined' &&
+                    value.data.title,
+                );
             },
         },
         comments: {
@@ -30,50 +36,45 @@
 </script>
 
 <template>
-    <AppContainer class="relative pb-14 lg:pb-8">
-        <div class="bg-rancho-paper text-rancho-forest" aria-labelledby="page-title">
-            <div class="py-10 md:py-16">
-                <!-- HERO -->
-                <header v-scroll-reveal class="mb-12 border-b border-rancho-forest/10 pb-8">
-                    <h1
-                        id="page-title"
-                        class="text-4xl font-black leading-tight tracking-tight md:text-5xl"
-                    >
-                        {{ pageData.title }}
-                    </h1>
-
-                    <p
-                        v-if="pageData.seo?.description"
-                        class="mt-4 max-w-3xl text-lg leading-relaxed text-rancho-olive"
-                    >
-                        {{ pageData.seo.description }}
-                    </p>
-                </header>
-                <!-- CONTENT -->
-                <section
-                    v-scroll-reveal
-                    v-if="pageData.content"
-                    class="prose prose-slate max-w-none prose-headings:font-bold prose-headings:text-rancho-forest prose-p:leading-relaxed prose-p:text-rancho-forest/90 prose-a:text-rancho-pine hover:prose-a:underline"
-                    aria-label="Содержимое страницы"
+    <AppContainer class="min-h-screen bg-rancho-paper">
+        <div class="mx-auto max-w-4xl py-10 sm:py-14 md:py-20">
+            <!-- HERO -->
+            <header v-scroll-reveal class="border-rancho-ink-200 mb-10 border-b pb-8 sm:mb-12">
+                <h1
+                    class="text-3xl font-black leading-tight tracking-tight text-rancho-forest sm:text-4xl md:text-5xl"
                 >
-                    <div v-html="pageData.content" />
-                </section>
+                    {{ pageData.title }}
+                </h1>
 
-                <!-- FALLBACK IF NO CONTENT -->
-                <section
-                    v-scroll-reveal
-                    v-else
-                    class="rounded-3xl border border-rancho-forest/10 bg-white/60 p-8 text-center text-rancho-olive"
+                <p
+                    v-if="pageData.seo?.description"
+                    class="text-rancho-ink-600 mt-4 max-w-3xl text-base leading-relaxed sm:text-lg"
                 >
-                    <p>Информация скоро появится.</p>
-                </section>
+                    {{ pageData.seo.description }}
+                </p>
+            </header>
 
-                {{ String(pageData.is_commentable) }}
+            <!-- CONTENT -->
+            <section
+                v-if="pageData.content"
+                v-scroll-reveal
+                class="prose-p:text-rancho-ink-700 prose-blockquote:bg-rancho-ink-50 prose-blockquote:text-rancho-ink-700 prose-code:bg-rancho-ink-100 prose-li:text-rancho-ink-700 prose prose-stone max-w-none prose-headings:font-black prose-headings:text-rancho-forest prose-p:leading-relaxed prose-a:text-rancho-pine prose-a:no-underline hover:prose-a:underline prose-blockquote:border-l-4 prose-blockquote:border-rancho-buttercup prose-blockquote:py-1 prose-blockquote:pl-4 prose-blockquote:not-italic prose-strong:text-rancho-forest prose-code:rounded prose-code:px-1.5 prose-code:py-0.5 prose-code:text-rancho-forest prose-code:before:content-none prose-code:after:content-none"
+                aria-label="Содержимое страницы"
+                v-html="pageData.content"
+            />
 
-                <!-- COMMENTS -->
-                <div v-if="pageData.is_commentable" v-scroll-reveal>
-                    <CommentsSection :comments="comments" :only-show="true" />
-                </div>
+            <!-- FALLBACK IF NO CONTENT -->
+            <section
+                v-else
+                v-scroll-reveal
+                class="border-rancho-ink-300 bg-rancho-ink-50/50 rounded-2xl border border-dashed p-8 text-center"
+            >
+                <p class="text-rancho-ink-600 text-sm italic">Информация скоро появится.</p>
+            </section>
+
+            <!-- COMMENTS -->
+            <div v-if="pageData.is_commentable" v-scroll-reveal>
+                <CommentsSection :comments="comments" :only-show="true" />
             </div>
         </div>
     </AppContainer>

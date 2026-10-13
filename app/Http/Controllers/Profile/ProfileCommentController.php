@@ -16,7 +16,6 @@ class ProfileCommentController extends Controller
     public function index(Request $request): Response
     {
         $comments = $request->user()->comments()
-            ->with('commentable')
             ->latest()
             ->paginate(setting('reviews_per_page', 12))
             ->withQueryString();

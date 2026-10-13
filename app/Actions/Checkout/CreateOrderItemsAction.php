@@ -2,9 +2,9 @@
 
 namespace App\Actions\Checkout;
 
-use Illuminate\Support\Collection;
-use App\Models\Order;
 use App\DTO\CheckoutDTO;
+use App\Models\Order;
+use Illuminate\Support\Collection;
 
 class CreateOrderItemsAction
 {
@@ -25,13 +25,15 @@ class CreateOrderItemsAction
             $product = $products->get($variant->product_id);
 
             $order->items()->create([
+                'product_id' => $variant->product_id,
                 'product_variant_id' => $variant->id,
-                'product_name'       => $product?->name ?? 'Товар',
-                'unit_price'         => $variant->price,
-                'old_unit_price'     => $variant->old_price,
-                'quantity'           => $item->quantity,
-                'unit_name'          => $variant->unit?->name,
-                'unit_code'          => $variant->unit?->code,
+                'product_name' => $product?->name ?? 'Товар',
+                'unit_price' => $variant->price,
+                'old_unit_price' => $variant->old_price,
+                'quantity' => $item->quantity,
+                'unit_name' => $variant->unit?->name,
+                'unit_short' => $variant->unit?->short,
+                'unit_code' => $variant->unit?->code,
             ]);
         }
     }

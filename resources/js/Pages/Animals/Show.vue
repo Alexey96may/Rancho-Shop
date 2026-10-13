@@ -1,7 +1,9 @@
-<script setup lang="ts" id="s1a9x2">
+<script setup lang="ts">
     import { type PropType, computed, onMounted, ref } from 'vue';
 
     import { Link, usePage } from '@inertiajs/vue3';
+
+    import { Volume2, VolumeX } from 'lucide-vue-next';
 
     import CommentsSection from '@/Components/Sections/CommentsSection.vue';
     import MediaGallery from '@/Components/Shared/MediaGallery.vue';
@@ -99,16 +101,16 @@
 
 <template>
     <AppContainer
-        class="min-h-screen"
-        :aria-label="`Страница животного
-        ${animal.name}`"
+        class="min-h-screen bg-rancho-paper"
+        :aria-label="`Страница животного ${animal.name}`"
     >
-        <div class="py-20">
+        <div class="py-12 sm:py-20">
             <div class="grid gap-10 lg:grid-cols-2">
                 <!-- GALLERY -->
-                <!-- IMAGES -->
                 <div v-scroll-reveal class="space-y-4">
-                    <div class="aspect-square overflow-hidden rounded-3xl border bg-slate-100">
+                    <div
+                        class="border-rancho-ink-200 bg-rancho-ink-50 aspect-square overflow-hidden rounded-3xl border"
+                    >
                         <AppImage
                             :src="animal.avatars?.[0] || ''"
                             :alt="animal.name"
@@ -121,26 +123,30 @@
                         v-model="animal.gallery"
                         @preview="openImage"
                         :is-view-mode="true"
-                    ></MediaGallery>
+                    />
                 </div>
+
                 <!-- INFO -->
                 <section v-scroll-reveal class="flex flex-col">
                     <!-- status -->
                     <span
-                        class="mb-3 inline-flex w-fit items-center rounded-full px-3 py-1 text-xs font-bold"
-                        style="background: #3b755820; color: #1c3f34"
+                        v-if="animal.status"
+                        class="mb-3 inline-flex w-fit items-center rounded-full bg-rancho-pine/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-rancho-forest ring-1 ring-inset ring-rancho-pine/20"
                         role="status"
                     >
                         {{ animal.status }}
                     </span>
 
                     <!-- title -->
-                    <h1 class="text-4xl font-black" style="color: #1c3f34">
+                    <h1 class="text-3xl font-black text-rancho-forest sm:text-4xl">
                         {{ animal.name }}
                     </h1>
 
                     <!-- bio -->
-                    <p v-if="animal.bio" class="mt-4 leading-relaxed" style="color: #597d5b">
+                    <p
+                        v-if="animal.bio"
+                        class="text-rancho-ink-600 mt-4 text-sm leading-relaxed sm:text-base"
+                    >
                         {{ animal.bio }}
                     </p>
 
@@ -149,13 +155,10 @@
                         <div
                             v-for="(value, key) in animal.features"
                             :key="key"
-                            class="rounded-xl bg-white p-3 text-sm"
-                            style="border: 1px solid #e3b44b33"
+                            class="border-rancho-ink-200 rounded-xl border bg-white p-3 text-sm"
                         >
-                            <dt class="text-xs" style="color: #597d5b">{{ key }}</dt>
-                            <dd class="font-bold" style="color: #1c3f34">
-                                {{ value }}
-                            </dd>
+                            <dt class="text-rancho-ink-500 text-xs font-medium">{{ key }}</dt>
+                            <dd class="font-bold text-rancho-forest">{{ value }}</dd>
                         </div>
                     </dl>
 
@@ -163,11 +166,16 @@
                     <div v-if="animal.voice_url" class="mt-6">
                         <button
                             @click="toggleVoice"
-                            class="rounded-full px-6 py-3 font-bold text-white transition hover:scale-105"
-                            style="background: #3b7558"
+                            type="button"
                             :aria-pressed="isPlaying"
                             :aria-label="isPlaying ? 'Остановить звук' : 'Воспроизвести звук'"
+                            class="shadow-md hover:shadow-lg inline-flex items-center gap-2 rounded-full bg-rancho-pine px-6 py-3 font-bold text-white transition-all hover:bg-rancho-forest focus:outline-none focus-visible:ring-4 focus-visible:ring-rancho-pine/30 active:scale-95"
                         >
+                            <component
+                                :is="isPlaying ? VolumeX : Volume2"
+                                :size="18"
+                                aria-hidden="true"
+                            />
                             {{ isPlaying ? 'Стоп звук' : 'Слушать голос' }}
                         </button>
 
@@ -176,11 +184,10 @@
 
                     <!-- parent -->
                     <div v-if="animal.family?.parent" class="mt-8 text-sm">
-                        <span style="color: #597d5b">Родитель:</span>
+                        <span class="text-rancho-ink-500">Родитель:</span>
                         <Link
                             :href="route('animals.show', animal.family.parent.slug)"
-                            class="ml-2 font-bold hover:underline"
-                            style="color: #1c3f34"
+                            class="ml-2 font-bold text-rancho-forest hover:text-rancho-pine hover:underline"
                         >
                             {{ animal.family.parent.name }}
                         </Link>
@@ -188,15 +195,14 @@
 
                     <!-- children -->
                     <div v-if="animal.family?.children?.length" class="mt-4 text-sm">
-                        <span style="color: #597d5b">Дети:</span>
+                        <span class="text-rancho-ink-500">Дети:</span>
 
                         <div class="mt-2 flex flex-wrap gap-2">
                             <Link
                                 v-for="child in animal.family.children"
                                 :key="child.slug"
                                 :href="route('animals.show', child.slug)"
-                                class="rounded-full px-3 py-1 text-xs font-bold"
-                                style="background: #a8c4cb30; color: #1c3f34"
+                                class="rounded-full bg-rancho-sky/20 px-3 py-1 text-xs font-bold text-rancho-forest ring-1 ring-inset ring-rancho-sky/40 transition-colors hover:bg-rancho-sky/30"
                             >
                                 {{ child.name }}
                             </Link>
@@ -204,25 +210,22 @@
                     </div>
 
                     <!-- SEO NOTE -->
-                    <div
-                        v-if="animal.seo?.description"
-                        class="mt-10 text-xs"
-                        style="color: #597d5b"
-                    >
+                    <p v-if="animal.seo?.description" class="text-rancho-ink-500 mt-10 text-xs">
                         {{ animal.seo.description }}
-                    </div>
+                    </p>
                 </section>
             </div>
 
-            <div v-scroll-reveal>
+            <div v-scroll-reveal class="mt-16">
                 <CommentsSection
                     :comments="comments"
                     @submit="submitComment"
                     :is-authenticated="isAuthenticated"
                 />
             </div>
-            <BaseModal :show="isModalOpen" variant="lightbox" @close="selectedImage = null"
-                ><AppImage
+
+            <BaseModal :show="isModalOpen" variant="lightbox" @close="selectedImage = null">
+                <AppImage
                     v-if="selectedImage"
                     :src="selectedImage"
                     alt="Полноэкранный просмотр изображения"

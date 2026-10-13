@@ -55,23 +55,25 @@
     const wrapperClasses = computed(() => [
         'flex flex-col items-center justify-center rounded-2xl border border-dashed p-6 text-center sm:p-8 md:p-12',
         isDark.value
-            ? 'border-slate-800 bg-slate-900/30'
-            : 'border-rancho-olive/30 bg-rancho-paper',
+            ? 'border-rancho-ink-800 bg-rancho-ink-900/30'
+            : 'border-rancho-ink-300 bg-rancho-ink-50/50',
     ]);
 
     const iconWrapperClasses = computed(() => [
         'mb-4 flex h-14 w-14 items-center justify-center rounded-2xl sm:h-16 sm:w-16',
-        isDark.value ? 'bg-slate-800/60 text-slate-500' : 'bg-rancho-olive/10 text-rancho-olive',
+        isDark.value
+            ? 'bg-rancho-ink-800/60 text-rancho-ink-500'
+            : 'bg-rancho-ink-100 text-rancho-ink-500',
     ]);
 
     const titleClasses = computed(() => [
         'text-base font-black tracking-tight sm:text-lg',
-        isDark.value ? 'text-slate-100' : 'text-rancho-forest',
+        isDark.value ? 'text-rancho-ink-100' : 'text-rancho-forest',
     ]);
 
     const descriptionClasses = computed(() => [
         'mt-2 max-w-sm text-xs leading-relaxed sm:text-sm',
-        isDark.value ? 'text-slate-400' : 'text-rancho-olive',
+        isDark.value ? 'text-rancho-ink-400' : 'text-rancho-ink-600',
     ]);
 
     const actionClasses = computed(() => [
@@ -79,7 +81,7 @@
         'inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-[10px] font-black uppercase tracking-widest shadow-md transition-all duration-200 active:scale-95 sm:rounded-2xl sm:px-6 sm:py-3 sm:text-xs',
         // Тема
         isDark.value
-            ? 'bg-orange-600 text-white hover:bg-orange-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950'
+            ? 'bg-rancho-buttercup text-rancho-ink-950 hover:bg-rancho-buttercup/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-rancho-buttercup focus-visible:ring-offset-2 focus-visible:ring-offset-rancho-ink-950'
             : 'bg-rancho-pine text-white hover:bg-rancho-forest focus:outline-none focus-visible:ring-2 focus-visible:ring-rancho-pine focus-visible:ring-offset-2 focus-visible:ring-offset-rancho-paper',
     ]);
 </script>

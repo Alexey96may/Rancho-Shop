@@ -1,14 +1,14 @@
 <script setup lang="ts">
-    import { computed, onMounted } from 'vue';
+    import { computed, onMounted, ref, watch } from 'vue';
 
-    import { Link } from '@inertiajs/vue3';
+    import { router } from '@inertiajs/vue3';
 
     import { ShoppingCartIcon } from '@heroicons/vue/24/outline';
 
     import CartItemCard from '@/Components/Cards/CartItemCard.vue';
+    import BaseSubmitButton from '@/Components/UI/BaseSubmitButton.vue';
     import MainLayout from '@/Layouts/MainLayout.vue';
     import { useCartStore } from '@/stores/cart';
-    import type { CartItemReason } from '@/types';
     import { formatMoney } from '@/utils/format';
 
     defineOptions({ layout: MainLayout });
@@ -17,106 +17,157 @@
 
     const computedTotalPrice = computed(() => formatMoney(cart.totalPrice));
 
-    // Проверка на наличие невалидных товаров для блокировки оформления
+    /** Идёт проверка корзины */
+    const isValidating = ref(false);
+
+    /** Есть невалидные товары */
     const hasInvalidItems = computed(() => cart.items.some((item) => item.valid === false));
 
-    // Вспомогательная функция для понятных текстов ошибок
-    const getErrorMessage = (reason: CartItemReason | string | null | undefined) => {
-        switch (reason) {
-            case 'not_available':
-            case 'not_found':
-                return 'Товар временно недоступен или снят с продажи';
-            case 'out_of_stock':
-                return 'Товар закончился на складе';
-            default:
-                return 'Товар недоступен для заказа';
-        }
-    };
+    /** Корзина пуста */
+    const isCartEmpty = computed(() => cart.items.length === 0);
 
-    onMounted(() => {
-        cart.validate(true);
+    /** Кнопка заблокирована */
+    const isCheckoutBlocked = computed(
+        () => isValidating.value || isCartEmpty.value || hasInvalidItems.value,
+    );
+
+    /** Причина блокировки */
+    const blockReason = computed<string | null>(() => {
+        if (isValidating.value) return 'Проверяем наличие товаров...';
+        if (isCartEmpty.value) return 'Корзина пуста';
+        if (hasInvalidItems.value) return 'Удалите недоступные товары';
+        return null;
     });
+
+    async function validateCart() {
+        if (cart.items.length === 0) return;
+
+        isValidating.value = true;
+        try {
+            await cart.validate(true);
+        } catch (e) {
+            console.error('Cart validation failed', e);
+        } finally {
+            isValidating.value = false;
+        }
+    }
+
+    onMounted(validateCart);
+
+    /** Перепроверка при изменении состава корзины */
+    watch(
+        () => cart.items.map((i) => i.variant_id).join('|'),
+        () => {
+            if (cart.items.length > 0) {
+                validateCart();
+            }
+        },
+    );
+
+    /** Переход к оформлению */
+    function goToCheckout() {
+        if (isCheckoutBlocked.value) return;
+        router.visit(route('checkout.index'));
+    }
 </script>
 
 <template>
-    <AppContainer class="mx-auto">
-        <h1 class="text-md my-10 font-black uppercase tracking-tight text-slate-900 md:text-xl">
+    <AppContainer class="min-h-screen bg-rancho-paper">
+        <h1
+            class="my-10 text-lg font-black uppercase tracking-tight text-rancho-forest sm:text-2xl"
+        >
             Ваша корзина
         </h1>
 
         <Transition name="fade-up" appear>
             <div v-if="cart.items.length > 0" class="grid gap-8 lg:grid-cols-3">
+                <!-- ЛЕВАЯ КОЛОНКА: товары -->
                 <div v-scroll-reveal class="space-y-4 lg:col-span-2">
                     <TransitionGroup name="cart-item" tag="div" class="space-y-4">
                         <CartItemCard
                             v-for="item in cart.items"
                             :key="item.variant_id"
                             :item="item"
-                    /></TransitionGroup>
+                        />
+                    </TransitionGroup>
                 </div>
 
-                <!-- Правая колонка с итогом -->
-                <div
+                <!-- ПРАВАЯ КОЛОНКА: итог -->
+                <aside
                     v-scroll-reveal
-                    class="shadow-xl h-fit space-y-8 rounded-xl bg-slate-900 p-6 pb-10 text-white"
+                    class="shadow-xl h-fit space-y-6 rounded-2xl bg-rancho-forest p-6 text-white sm:space-y-8 sm:pb-10"
+                    aria-label="Итог заказа"
                 >
-                    <h2 class="text-xl font-bold">Итог заказа</h2>
+                    <h2 class="text-lg font-black uppercase tracking-wider sm:text-xl">
+                        Итог заказа
+                    </h2>
 
-                    <!-- Оповещение в блоке заказа, если есть невалидные товары -->
+                    <!-- Оповещение о невалидных товарах -->
                     <div
                         v-if="hasInvalidItems"
-                        class="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-xs text-red-300"
+                        class="rounded-xl border border-rose-400/30 bg-rose-500/15 p-3 text-xs font-medium text-rose-200"
+                        role="alert"
                     >
                         Удалите недоступные товары из корзины, чтобы продолжить оформление.
                     </div>
 
-                    <div class="space-y-2 border-b border-slate-700 pb-4 text-sm opacity-80">
+                    <dl class="space-y-2 border-b border-white/10 pb-4 text-sm text-white/70">
                         <div class="flex justify-between">
-                            <span>Позиций:</span>
-                            <span>{{ cart.totalCleanItems }}</span>
+                            <dt>Позиций:</dt>
+                            <dd>{{ cart.totalCleanItems }}</dd>
                         </div>
                         <div class="flex justify-between">
-                            <span>Доставка:</span>
-                            <span
-                                class="text-[10px] font-bold uppercase tracking-widest text-emerald-400"
+                            <dt>Доставка:</dt>
+                            <dd
+                                class="text-[10px] font-black uppercase tracking-widest text-rancho-buttercup"
                             >
                                 Бесплатно
-                            </span>
+                            </dd>
                         </div>
+                    </dl>
+
+                    <div class="flex items-baseline justify-between py-2">
+                        <span class="text-sm font-bold text-white/80">Всего:</span>
+                        <span class="text-xl font-black text-white sm:text-2xl">
+                            {{ computedTotalPrice }}
+                        </span>
                     </div>
 
-                    <div
-                        v-scroll-reveal
-                        class="text-md flex justify-between py-2 font-black md:text-xl"
-                    >
-                        <span>Всего:</span>
-                        <span>{{ computedTotalPrice }}</span>
-                    </div>
-
-                    <div v-scroll-reveal>
-                        <Link
-                            :href="route('checkout.index')"
-                            :disabled="hasInvalidItems"
-                            class="shadow-lg w-full rounded-xl bg-orange-700 p-4 text-sm font-bold uppercase tracking-widest shadow-orange-900/20 transition-all hover:bg-orange-500 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100"
-                        >
-                            Оформить заказ
-                        </Link>
-                    </div>
-                </div>
+                    <!-- КНОПКА ОФОРМЛЕНИЯ -->
+                    <BaseSubmitButton
+                        type="button"
+                        :processing="isValidating"
+                        :disabled="isCartEmpty || hasInvalidItems"
+                        :label="'Оформить заказ'"
+                        :with-icon="false"
+                        class="!text-rancho-ink-950 disabled:!bg-rancho-ink-200 disabled:!text-rancho-ink-500 w-full !bg-rancho-buttercup hover:!bg-rancho-buttercup/90"
+                        @click="goToCheckout"
+                    />
+                </aside>
             </div>
 
+            <!-- ПУСТАЯ КОРЗИНА -->
             <div
-                v-scroll-reveal
                 v-else
+                v-scroll-reveal
                 class="flex flex-col items-center justify-center py-20 text-center"
+                role="status"
             >
-                <div class="mb-6 rounded-full bg-slate-100 p-8 text-slate-300">
-                    <ShoppingCartIcon class="h-16 w-16" />
+                <div class="bg-rancho-ink-100 text-rancho-ink-400 mb-6 rounded-full p-6 sm:p-8">
+                    <ShoppingCartIcon class="h-12 w-12 sm:h-16 sm:w-16" aria-hidden="true" />
                 </div>
-                <h2 class="mb-2 text-2xl font-bold text-slate-900">В корзине пока пусто</h2>
+
+                <h2 class="mb-2 text-xl font-black text-rancho-forest sm:text-2xl">
+                    В корзине пока пусто
+                </h2>
+
+                <p class="text-rancho-ink-600 mb-6 max-w-sm text-sm">
+                    Загляните в каталог — там свежие продукты с нашей фермы.
+                </p>
+
                 <Link
                     :href="route('catalog.index')"
-                    class="rounded-xl bg-slate-900 px-8 py-3 font-bold text-white hover:bg-orange-600"
+                    class="shadow-md hover:shadow-lg inline-flex items-center gap-2 rounded-xl bg-rancho-pine px-8 py-3 text-sm font-bold text-white transition-all hover:bg-rancho-forest focus:outline-none focus-visible:ring-4 focus-visible:ring-rancho-pine/30 active:scale-95"
                 >
                     Перейти в каталог
                 </Link>
@@ -124,66 +175,3 @@
         </Transition>
     </AppContainer>
 </template>
-
-<style scoped>
-    /* 1. Появление заголовка */
-    .page-title {
-        animation: fade-up 0.4s ease both;
-    }
-
-    /* 2. Универсальный fade-up для крупных блоков */
-    .fade-up-enter-active {
-        transition:
-            opacity 0.4s ease,
-            transform 0.4s ease;
-    }
-    .fade-up-leave-active {
-        transition:
-            opacity 0.2s ease,
-            transform 0.2s ease;
-    }
-    .fade-up-enter-from {
-        opacity: 0;
-        transform: translateY(12px);
-    }
-    .fade-up-leave-to {
-        opacity: 0;
-        transform: translateY(-12px);
-    }
-
-    /* 3. Анимация карточек корзины (добавление/удаление) */
-    .cart-item-enter-active {
-        transition:
-            opacity 0.3s ease,
-            transform 0.3s ease;
-    }
-    .cart-item-leave-active {
-        transition:
-            opacity 0.2s ease,
-            transform 0.2s ease;
-        position: absolute; /* чтобы остальные карточки не прыгали */
-        width: 100%;
-    }
-    .cart-item-enter-from {
-        opacity: 0;
-        transform: translateX(-20px) scale(0.98);
-    }
-    .cart-item-leave-to {
-        opacity: 0;
-        transform: translateX(20px) scale(0.98);
-    }
-    .cart-item-move {
-        transition: transform 0.3s ease;
-    }
-
-    @keyframes fade-up {
-        from {
-            opacity: 0;
-            transform: translateY(12px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-</style>

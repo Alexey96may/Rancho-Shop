@@ -11,18 +11,19 @@
     import type { Comment, Paginated } from '@/types';
     import { getInitials } from '@/utils/user';
 
-    const { deleteEntity, isDeleting } = useAdminCrud();
+    const { deleteEntity } = useAdminCrud();
 
     const props = withDefaults(
         defineProps<{
             comments: Paginated<Comment>;
             title?: string;
             isAuthenticated?: boolean;
-            onlyShow?: boolean; // Если true — форма создания скрыта
+            onlyShow?: boolean;
         }>(),
         {
-            onlyShow: false,
+            title: 'Отзывы',
             isAuthenticated: false,
+            onlyShow: false,
         },
     );
 
@@ -51,8 +52,6 @@
     const content = ref('');
     const guestName = ref('');
     const rating = ref(5);
-    const textareaId = `comment-form-${Math.random().toString(36).slice(2)}`;
-    const guestNameId = `guest-name-${Math.random().toString(36).slice(2)}`;
 
     // Валидация: если не авторизован — имя гостя обязательно
     const canSubmit = computed(() => {
@@ -130,15 +129,18 @@
 </script>
 
 <template>
-    <section class="mt-24 border-t border-slate-100 pt-16" aria-labelledby="comments-title">
+    <section
+        class="border-rancho-ink-200 mt-16 border-t pt-12 sm:mt-24 sm:pt-16"
+        aria-labelledby="comments-title"
+    >
         <!-- HEADER -->
-        <header class="mb-10 flex items-center justify-between">
-            <h2 id="comments-title" class="text-xl font-bold text-rancho-forest sm:text-4xl">
-                {{ title || 'Отзывы' }}
+        <header class="mb-10 flex items-center justify-between gap-4">
+            <h2 id="comments-title" class="text-2xl font-black text-rancho-forest sm:text-4xl">
+                {{ title }}
             </h2>
 
             <span
-                class="rounded-lg bg-rancho-paper px-3 py-1 font-bold text-rancho-olive"
+                class="bg-rancho-ink-100 text-rancho-ink-700 ring-rancho-ink-200 rounded-full px-3 py-1 text-xs font-black ring-1 ring-inset"
                 role="status"
                 aria-live="polite"
             >
@@ -146,11 +148,11 @@
             </span>
         </header>
 
-        <!-- FORM FOR ALL USERS (AUTH & GUEST) — Показывается, если onlyShow === false -->
+        <!-- FORM FOR ALL USERS (AUTH & GUEST) -->
         <form
             v-if="!onlyShow"
             @submit.prevent="submit"
-            class="mb-10 space-y-6 rounded-xl bg-emerald-800/20 p-6"
+            class="border-rancho-ink-200 shadow-sm mb-10 space-y-6 rounded-2xl border bg-white p-6"
             aria-label="Форма добавления комментария"
         >
             <!-- GUEST NAME FIELD -->
@@ -165,14 +167,16 @@
             />
 
             <div class="flex flex-wrap items-center gap-2">
-                <span class="text-xs md:text-lg">Ваша оценка:</span>
+                <span class="text-rancho-ink-600 text-xs font-medium md:text-sm">
+                    Ваша оценка:
+                </span>
                 <AppRating v-model:rating="rating" :readonly="false" :max="5" />
             </div>
 
             <!-- COMMENT CONTENT FIELD -->
             <BaseTextarea
                 v-model="content"
-                label="Редактировать текст"
+                label="Комментарий"
                 placeholder="Ваш комментарий"
                 :disabled="false"
                 :rows="7"
@@ -181,14 +185,16 @@
                 :max-height="150"
             />
 
-            <div class="flex items-center justify-between">
-                <p id="comment-help" class="text-xs text-slate-500">
+            <div
+                class="flex flex-col-reverse items-stretch gap-4 sm:flex-row sm:items-center sm:justify-between"
+            >
+                <p class="text-rancho-ink-500 text-xs">
                     Нажмите Enter в форме или кнопку отправки для публикации
                 </p>
 
                 <button
                     type="submit"
-                    class="rounded-xl bg-rancho-pine px-6 py-3 font-bold text-white transition hover:bg-rancho-forest focus:outline-none focus-visible:ring-4 focus-visible:ring-rancho-buttercup/40 disabled:cursor-not-allowed disabled:opacity-50"
+                    class="shadow-md hover:shadow-lg disabled:hover:shadow-md rounded-xl bg-rancho-pine px-6 py-3 text-sm font-bold text-white transition-all hover:bg-rancho-forest focus:outline-none focus-visible:ring-4 focus-visible:ring-rancho-pine/30 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-rancho-pine"
                     :disabled="!canSubmit"
                     :aria-disabled="!canSubmit"
                 >
@@ -200,11 +206,11 @@
         <!-- EMPTY STATE -->
         <div
             v-if="isEmpty"
-            class="rounded-3xl bg-rancho-paper py-12 text-center"
+            class="border-rancho-ink-300 bg-rancho-ink-50/50 rounded-2xl border border-dashed py-12 text-center"
             role="status"
             aria-live="polite"
         >
-            <p class="italic text-rancho-olive">Пока нет отзывов — станьте первым!</p>
+            <p class="text-rancho-ink-600 text-sm italic">Пока нет отзывов — станьте первым!</p>
         </div>
 
         <!-- LIST -->
@@ -217,37 +223,44 @@
             <article
                 v-for="comment in items"
                 :key="comment.id"
-                class="shadow-sm rounded-2xl border border-slate-100 bg-white p-6"
+                class="border-rancho-ink-200 shadow-sm hover:border-rancho-ink-300 hover:shadow-md group rounded-2xl border bg-white p-6 transition-all"
                 role="listitem"
                 :aria-label="`Комментарий от ${comment.author_name}`"
             >
-                <header class="mb-3 flex items-center gap-3">
+                <header class="mb-4 flex items-start gap-3">
                     <div
-                        class="h-12 w-12 shrink-0 overflow-hidden rounded-2xl bg-slate-800 ring-2 transition-transform group-hover:scale-110"
+                        class="ring-rancho-ink-100 h-12 w-12 shrink-0 overflow-hidden rounded-2xl ring-2"
                         aria-hidden="true"
                     >
-                        <AppImage v-if="comment.avatar" :src="comment.avatar" alt="Аватар" />
+                        <AppImage
+                            v-if="comment.avatar"
+                            :src="comment.avatar"
+                            alt="Аватар"
+                            class-name="h-full w-full object-cover"
+                        />
 
                         <div
                             v-else
-                            class="flex h-full w-full items-center justify-center bg-gradient-to-br from-slate-700 to-slate-800 text-lg font-black uppercase text-slate-500"
+                            class="to-rancho-ink-800 flex h-full w-full items-center justify-center bg-gradient-to-br from-rancho-forest text-lg font-black uppercase text-rancho-paper"
                         >
                             {{ getInitials(comment.author_name) }}
                         </div>
                     </div>
 
-                    <div>
-                        <p class="font-bold text-rancho-forest">
-                            {{ comment.author_name }}
-                        </p>
+                    <div class="flex min-w-0 flex-col gap-2">
+                        <div class="flex min-w-0 flex-col gap-0.5">
+                            <p class="truncate font-bold text-rancho-forest">
+                                {{ comment.author_name }}
+                            </p>
 
-                        <AppRating :rating="comment.rating" />
+                            <AppRating :rating="comment.rating" />
+                        </div>
 
                         <BaseSmartTime :date="comment.created_at" />
                     </div>
                 </header>
 
-                <p class="text-sm leading-relaxed text-rancho-olive">
+                <p class="text-rancho-ink-700 text-sm leading-relaxed">
                     {{ comment.content }}
                 </p>
             </article>
@@ -260,7 +273,7 @@
             class="mt-6 flex h-10 items-center justify-center"
             aria-hidden="true"
         >
-            <span v-if="loading" class="text-sm text-rancho-olive">Загрузка...</span>
+            <span v-if="loading" class="text-rancho-ink-500 text-sm">Загрузка...</span>
         </div>
     </section>
 </template>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-    import { type PropType, onUnmounted, ref, watch } from 'vue';
+    import { type PropType, computed, onUnmounted, ref, watch } from 'vue';
 
     import { router } from '@inertiajs/vue3';
 
@@ -76,6 +76,7 @@
             },
             {
                 preserveState: true,
+                preserveScroll: true,
                 replace: true,
             },
         );
@@ -103,20 +104,26 @@
         status.value = '';
         applyFilters();
     };
+
+    const hasActiveFilters = computed(() => {
+        return Boolean(search.value.trim() || categoryId.value || status.value);
+    });
 </script>
 
 <template>
-    <AppContainer class="min-h-screen bg-[#fcfaf5]">
-        <div class="py-10">
+    <AppContainer class="min-h-screen bg-rancho-paper">
+        <div class="py-12">
             <!-- HEADER & SEARCH -->
             <header
                 v-scroll-reveal
-                class="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-end"
+                class="mb-8 flex flex-col justify-between gap-6 sm:mb-20 md:flex-row md:items-end"
             >
                 <div>
-                    <h1 class="text-4xl font-black text-[#1c3f34]">Наши жители фермы</h1>
-                    <p class="mt-2 text-sm text-[#597d5b]">
-                        Познакомьтесь с животными, которые живут на нашей ферме
+                    <h1 class="text-2xl font-black text-rancho-forest sm:text-4xl">
+                        Наши жители фермы
+                    </h1>
+                    <p class="mt-2 text-xs text-rancho-olive sm:text-sm">
+                        Найдено: {{ animals.meta.total }}
                     </p>
                 </div>
 
@@ -129,71 +136,70 @@
                 />
             </header>
 
-            <!-- FILTERS BAR -->
-            <section
-                v-scroll-reveal
-                class="mb-8 border-b border-slate-200/60 pb-6"
-                aria-label="Фильтры"
-            >
-                <div class="flex flex-wrap items-center gap-4">
-                    <BaseSelect
-                        label="Категория:"
-                        placeholder="Все категории"
-                        v-model="categoryId"
-                        :options="categories.data"
-                        width-class="w-64"
-                    />
+            <div class="grid grid-cols-1 gap-8 lg:grid-cols-[260px_1fr]">
+                <!-- ФИЛЬТРЫ -->
+                <aside class="lg:sticky lg:top-24 lg:self-start">
+                    <div v-scroll-reveal class="rounded-2xl bg-white px-4 py-6 shadow-rancho-sm">
+                        <div class="mb-8 flex items-center justify-between gap-2">
+                            <h2 class="text-sm font-bold text-rancho-forest">Фильтры</h2>
+                            <button
+                                v-if="hasActiveFilters"
+                                @click="resetFilters"
+                                class="text-rancho-ember text-xs font-bold hover:underline"
+                            >
+                                Сбросить
+                            </button>
+                        </div>
 
-                    <BaseSelect
-                        label="Статус:"
-                        placeholder="Все статусы"
-                        v-model="status"
-                        :options="statuses"
-                        width-class="w-64"
-                    />
+                        <div class="flex flex-col gap-4">
+                            <BaseSelect
+                                label="Категория:"
+                                placeholder="Все категории"
+                                v-model="categoryId"
+                                :options="categories.data"
+                                width-class="w-full"
+                            />
 
-                    <!-- Кнопка сброса с плавной анимацией появления -->
-                    <Transition name="fade">
-                        <button
-                            v-if="search || categoryId || status"
-                            @click="resetFilters"
-                            class="self-end pb-2 text-xs font-bold text-orange-600 transition-colors hover:underline"
+                            <BaseSelect
+                                label="Статус:"
+                                placeholder="Все статусы"
+                                v-model="status"
+                                :options="statuses"
+                                width-class="w-full"
+                            />
+                        </div>
+                    </div>
+                </aside>
+
+                <!-- ЖИВОТНЫЕ -->
+                <div>
+                    <Transition name="fade-slide" mode="out-in">
+                        <EmptyState
+                            v-if="!animals.data.length"
+                            key="empty"
+                            title="Животные не найдены"
+                            description="Попробуйте изменить параметры поиска или сбросить фильтры."
+                            action-label="Сбросить фильтры"
+                            @action="resetFilters"
+                        />
+
+                        <TransitionGroup
+                            v-else
+                            key="grid"
+                            tag="section"
+                            name="card-list"
+                            aria-label="Карточки животных"
+                            class="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3"
                         >
-                            Сбросить всё
-                        </button>
+                            <AnimalCard
+                                v-for="animal in animals.data"
+                                :key="animal.id"
+                                :animal="animal"
+                            />
+                        </TransitionGroup>
                     </Transition>
                 </div>
-            </section>
-
-            <Transition name="fade-slide" mode="out-in">
-                <!-- EMPTY STATE -->
-                <EmptyState
-                    v-if="!animals.data.length"
-                    key="empty"
-                    title="Животные не найдены"
-                    description="Попробуйте изменить параметры поиска или сбросить фильтры."
-                    action-label="Сбросить фильтры"
-                    @action="resetFilters"
-                />
-
-                <!-- GRID -->
-                <div v-scroll-reveal v-else>
-                    <TransitionGroup
-                        key="grid"
-                        mode="out-in"
-                        tag="section"
-                        name="card-list"
-                        aria-label="Карточки животных"
-                        class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-                    >
-                        <AnimalCard
-                            v-for="animal in animals.data"
-                            :key="animal.id"
-                            :animal="animal"
-                        />
-                    </TransitionGroup>
-                </div>
-            </Transition>
+            </div>
         </div>
 
         <MainPagination v-scroll-reveal :links="animals.meta.links" theme="light" />

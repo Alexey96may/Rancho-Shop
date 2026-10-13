@@ -16,7 +16,7 @@
     import SeoMeta from '@/Components/Shared/SeoMeta.vue';
     import Toaster from '@/Components/Shared/Toaster.vue';
     import { useFlashToasts } from '@/composables/useFlashToasts';
-    import { SharedData } from '@/types';
+    import type { SharedData } from '@/types';
 
     useFlashToasts();
 
@@ -26,90 +26,132 @@
     const user = computed(() => page.props.auth?.user?.data);
 
     const isStuff = computed(() => user.value?.is_stuff);
+
+    /** Классы для пункта навигации */
+    function navLinkClasses(isActive: boolean): string {
+        return [
+            'flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-rancho-buttercup/40',
+            isActive
+                ? 'bg-rancho-ink-800 text-white ring-1 ring-rancho-ink-700'
+                : 'text-rancho-ink-400 hover:bg-rancho-ink-900 hover:text-white',
+        ].join(' ');
+    }
 </script>
 
 <template>
-    <div class="bg-slate-950 text-white">
+    <div class="bg-rancho-ink-950 min-h-screen text-white">
         <SeoMeta :force-robots="'nofollow, noindex'" />
         <Toaster />
 
         <TheHeader theme="dark" />
 
-        <div class="mx-auto min-h-screen max-w-6xl px-4 pb-28 pt-20">
-            <h1 class="mb-8 text-3xl font-black">Личный кабинет</h1>
+        <div class="py-12 sm:py-20">
+            <AppContainer>
+                <h1 class="mb-8 text-xl font-black sm:text-2xl">Личный кабинет</h1>
 
-            <div class="grid grid-cols-1 gap-8 md:grid-cols-4">
-                <aside class="flex flex-col gap-2">
-                    <template v-if="isStuff">
-                        <Link
-                            :href="route('admin.dashboard')"
-                            class="flex items-center gap-3 rounded-2xl border border-orange-500/20 bg-orange-500/10 px-4 py-3 text-sm font-bold text-orange-400 transition-all hover:bg-orange-500 hover:text-black"
+                <div class="grid grid-cols-1 gap-8 md:grid-cols-4">
+                    <!-- SIDEBAR / MOBILE TABS -->
+                    <aside class="md:flex md:flex-col md:gap-2">
+                        <!-- ADMIN LINK (только desktop) -->
+                        <template v-if="isStuff">
+                            <Link
+                                :href="route('admin.dashboard')"
+                                class="hover:text-rancho-ink-950 mb-3 hidden items-center gap-3 rounded-2xl border border-rancho-buttercup/30 bg-rancho-buttercup/10 px-4 py-3 text-sm font-black text-rancho-buttercup transition-all hover:bg-rancho-buttercup focus:outline-none focus-visible:ring-2 focus-visible:ring-rancho-buttercup/40 md:flex"
+                            >
+                                <CpuChipIcon class="h-5 w-5 animate-pulse" aria-hidden="true" />
+                                Панель управления
+                            </Link>
+
+                            <hr class="border-rancho-ink-800 my-1 hidden md:block" />
+
+                            <!-- ADMIN LINK (mobile compact) -->
+                            <Link
+                                :href="route('admin.dashboard')"
+                                class="hover:text-rancho-ink-950 mb-2 flex w-full items-center justify-center gap-2 rounded-2xl border border-rancho-buttercup/30 bg-rancho-buttercup/10 px-4 py-2.5 text-xs font-black text-rancho-buttercup transition-all hover:bg-rancho-buttercup focus:outline-none focus-visible:ring-2 focus-visible:ring-rancho-buttercup/40 md:hidden"
+                            >
+                                <CpuChipIcon class="h-4 w-4 animate-pulse" aria-hidden="true" />
+                                Админка
+                            </Link>
+                        </template>
+
+                        <!-- MOBILE: horizontal scroll tabs -->
+                        <nav
+                            class="-mx-4 flex gap-2 overflow-x-auto p-4 md:mx-0 md:flex-col md:overflow-visible md:px-0 md:pb-0"
+                            aria-label="Навигация профиля"
                         >
-                            <CpuChipIcon class="h-5 w-5 animate-pulse" />
-                            Панель управления
+                            <Link
+                                :href="route('profile.edit')"
+                                :class="[
+                                    navLinkClasses(route().current('profile.edit')),
+                                    'shrink-0 whitespace-nowrap',
+                                ]"
+                            >
+                                <UserIcon class="h-4 w-4 md:h-5 md:w-5" aria-hidden="true" />
+                                Профиль
+                            </Link>
+
+                            <Link
+                                :href="route('profile.comments.index')"
+                                :class="[
+                                    navLinkClasses(route().current('profile.comments.*')),
+                                    'shrink-0 whitespace-nowrap',
+                                ]"
+                            >
+                                <ChatBubbleLeftRightIcon
+                                    class="h-4 w-4 md:h-5 md:w-5"
+                                    aria-hidden="true"
+                                />
+                                Мои отзывы
+                            </Link>
+
+                            <Link
+                                :href="route('profile.orders.index')"
+                                :class="[
+                                    navLinkClasses(route().current('profile.orders.*')),
+                                    'shrink-0 whitespace-nowrap',
+                                ]"
+                            >
+                                <ShoppingBagIcon class="h-4 w-4 md:h-5 md:w-5" aria-hidden="true" />
+                                История заказов
+                            </Link>
+
+                            <!-- LOGOUT: mobile — в табах; desktop — отдельно снизу -->
+                            <Link
+                                :href="route('logout')"
+                                method="post"
+                                as="button"
+                                class="text-rancho-ink-500 flex shrink-0 items-center gap-2 whitespace-nowrap rounded-2xl px-4 py-3 text-sm font-bold transition-all hover:bg-rose-500/10 hover:text-rose-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/40 md:hidden"
+                            >
+                                <ArrowRightStartOnRectangleIcon
+                                    class="h-4 w-4"
+                                    aria-hidden="true"
+                                />
+                                Выйти
+                            </Link>
+                        </nav>
+
+                        <hr class="border-rancho-ink-800 my-2 hidden md:block" />
+
+                        <!-- LOGOUT: desktop -->
+                        <Link
+                            :href="route('logout')"
+                            method="post"
+                            as="button"
+                            class="text-rancho-ink-500 hidden w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-bold transition-all hover:bg-rose-500/10 hover:text-rose-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/40 md:flex"
+                        >
+                            <ArrowRightStartOnRectangleIcon class="h-5 w-5" aria-hidden="true" />
+                            Выйти из профиля
                         </Link>
-                        <hr class="my-1 border-slate-900" />
-                    </template>
+                    </aside>
 
-                    <Link
-                        :href="route('profile.edit')"
-                        class="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold transition-all"
-                        :class="
-                            route().current('profile.edit')
-                                ? 'bg-slate-800 text-white ring-1 ring-slate-700'
-                                : 'text-slate-400 hover:bg-slate-900 hover:text-white'
-                        "
+                    <!-- MAIN -->
+                    <main
+                        class="sm:border-rancho-ink-800 sm:bg-rancho-ink-900/50 rounded-2xl backdrop-blur-sm sm:border sm:p-6 md:col-span-3"
                     >
-                        <UserIcon class="h-5 w-5" />
-                        Профиль
-                    </Link>
-
-                    <Link
-                        :href="route('profile.comments.index')"
-                        class="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold transition-all"
-                        :class="
-                            route().current('profile.comments.*')
-                                ? 'bg-slate-800 text-white ring-1 ring-slate-700'
-                                : 'text-slate-400 hover:bg-slate-900 hover:text-white'
-                        "
-                    >
-                        <ChatBubbleLeftRightIcon class="h-5 w-5" />
-                        Мои отзывы
-                    </Link>
-
-                    <Link
-                        :href="route('profile.orders.index')"
-                        class="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold transition-all"
-                        :class="
-                            route().current('profile.orders.*')
-                                ? 'bg-slate-800 text-white ring-1 ring-slate-700'
-                                : 'text-slate-400 hover:bg-slate-900 hover:text-white'
-                        "
-                    >
-                        <ShoppingBagIcon class="h-5 w-5" />
-                        История заказов
-                    </Link>
-
-                    <hr class="my-2 border-slate-900" />
-
-                    <Link
-                        :href="route('logout')"
-                        method="post"
-                        as="button"
-                        class="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-bold text-slate-500 transition-all hover:bg-red-500/10 hover:text-red-400"
-                    >
-                        <ArrowRightStartOnRectangleIcon class="h-5 w-5" />
-                        Выйти из профиля
-                    </Link>
-                </aside>
-
-                <main
-                    class="rounded-3xl border border-slate-800 bg-slate-900/50 p-6 backdrop-blur-sm md:col-span-3"
-                >
-                    <h2 class="mb-6 text-xl font-black">{{ title }}</h2>
-                    <slot />
-                </main>
-            </div>
+                        <h2 class="mb-6 text-xl font-black text-white">{{ title }}</h2>
+                        <slot />
+                    </main></div
+            ></AppContainer>
         </div>
 
         <TheFooter theme="dark" />

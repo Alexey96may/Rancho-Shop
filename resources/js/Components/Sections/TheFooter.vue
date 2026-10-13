@@ -6,7 +6,7 @@
     import { EnvelopeIcon, MapPinIcon, PhoneIcon } from '@heroicons/vue/24/outline';
 
     import CowIcon from '@/Components/Icons/CowIcon.vue';
-    import { SharedData } from '@/types';
+    import type { SharedData } from '@/types';
 
     interface Props {
         theme?: 'light' | 'dark';
@@ -42,11 +42,11 @@
 
 <template>
     <footer
-        class="pb-8 pt-14 transition-colors sm:pt-16 md:rounded-t-[2rem]"
+        class="rounded-t-2xl pb-8 pt-14 transition-colors sm:pt-16 md:rounded-t-[2rem]"
         :class="
             isDark
-                ? 'border-t border-sky-600 bg-slate-950 text-slate-200'
-                : 'border-t border-emerald-800 bg-rancho-forest text-rancho-paper'
+                ? 'border-rancho-ink-800 bg-rancho-ink-900 text-rancho-ink-200 border-t'
+                : 'border-t border-rancho-forest/20 bg-rancho-forest text-rancho-paper'
         "
     >
         <AppContainer>
@@ -55,12 +55,11 @@
                 <div class="flex flex-col items-center gap-4">
                     <div class="flex items-center gap-3">
                         <CowIcon
-                            class="h-7 w-7 shrink-0 rounded-full bg-rancho-buttercup transition-colors sm:h-12 sm:w-12"
-                            :class="isDark ? 'text-orange-400' : 'text-orange-600'"
+                            class="text-rancho-ink-950 h-8 w-8 shrink-0 rounded-full bg-rancho-buttercup p-1 sm:h-12 sm:w-12"
                         />
                         <span
-                            class="font-header text-lg tracking-wide transition-colors sm:text-2xl"
-                            :class="isDark ? 'text-slate-100' : 'text-rancho-paper'"
+                            class="font-header text-xl tracking-wide sm:text-2xl"
+                            :class="isDark ? 'text-rancho-paper' : 'text-rancho-paper'"
                         >
                             {{ footer.site_name || 'Молочная Долина' }}
                         </span>
@@ -68,8 +67,7 @@
 
                     <p
                         v-if="footer.site_description"
-                        class="max-w-xs text-center font-sans text-xs leading-relaxed opacity-80 transition-colors sm:text-sm"
-                        :class="isDark ? 'text-slate-400' : 'text-rancho-paper'"
+                        class="max-w-xs text-center font-sans text-xs leading-relaxed opacity-80 sm:text-sm"
                     >
                         {{ footer.site_description }}
                     </p>
@@ -83,7 +81,7 @@
                             class="transition-colors"
                             :class="
                                 isDark
-                                    ? 'text-slate-400 hover:text-orange-400'
+                                    ? 'text-rancho-ink-200 hover:text-rancho-buttercup'
                                     : 'text-rancho-paper hover:text-rancho-buttercup'
                             "
                             aria-label="Telegram"
@@ -103,7 +101,7 @@
                             class="transition-colors"
                             :class="
                                 isDark
-                                    ? 'text-slate-400 hover:text-orange-400'
+                                    ? 'text-rancho-ink-200 hover:text-rancho-buttercup'
                                     : 'text-rancho-paper hover:text-rancho-buttercup'
                             "
                             aria-label="VK"
@@ -120,8 +118,8 @@
                 <!-- SECTIONS -->
                 <div class="flex flex-col items-center">
                     <h4
-                        class="mb-6 font-header text-lg transition-colors sm:text-xl"
-                        :class="isDark ? 'text-orange-400' : 'text-rancho-buttercup'"
+                        class="mb-6 font-header text-lg sm:text-xl"
+                        :class="isDark ? 'text-rancho-buttercup' : 'text-rancho-buttercup'"
                     >
                         Разделы
                     </h4>
@@ -129,7 +127,7 @@
                         <li v-for="section in sectionsItems" :key="section.pathName">
                             <Link
                                 :href="route(section.pathName)"
-                                class="inline-block transition-transform hover:translate-x-2"
+                                class="inline-block transition-transform hover:translate-x-2 hover:text-rancho-buttercup"
                             >
                                 {{ section.name }}
                             </Link>
@@ -140,8 +138,8 @@
                 <!-- PRODUCTION -->
                 <div class="flex flex-col items-center">
                     <h4
-                        class="mb-6 font-header text-lg transition-colors sm:text-xl"
-                        :class="isDark ? 'text-orange-400' : 'text-rancho-buttercup'"
+                        class="mb-6 font-header text-lg sm:text-xl"
+                        :class="isDark ? 'text-rancho-buttercup' : 'text-rancho-buttercup'"
                     >
                         Продукция
                     </h4>
@@ -149,10 +147,7 @@
                         <li v-for="production in productionItems" :key="production.params">
                             <Link
                                 :href="route(production.pathName, { category: production.params })"
-                                class="transition-colors"
-                                :class="
-                                    isDark ? 'hover:text-orange-400' : 'hover:text-rancho-buttercup'
-                                "
+                                class="transition-colors hover:text-rancho-buttercup"
                             >
                                 {{ production.name }}
                             </Link>
@@ -163,31 +158,28 @@
                 <!-- CONTACTS -->
                 <div class="flex flex-col items-center">
                     <h4
-                        class="mb-6 font-header text-lg transition-colors sm:text-xl"
-                        :class="isDark ? 'text-orange-400' : 'text-rancho-buttercup'"
+                        class="mb-6 font-header text-lg sm:text-xl"
+                        :class="isDark ? 'text-rancho-buttercup' : 'text-rancho-buttercup'"
                     >
-                        Связаться
+                        Связаться с нами
                     </h4>
                     <ul class="space-y-4 font-sans text-sm opacity-90">
                         <li v-if="footer.address_farm" class="flex items-start gap-3">
                             <MapPinIcon
-                                class="h-5 w-5 shrink-0 transition-colors"
-                                :class="isDark ? 'text-orange-400' : 'text-rancho-buttercup'"
+                                class="h-5 w-5 shrink-0 text-rancho-buttercup"
+                                aria-hidden="true"
                             />
                             <span>{{ footer.address_farm }}</span>
                         </li>
 
                         <li v-if="footer.contact_phone" class="flex items-center gap-3">
                             <PhoneIcon
-                                class="h-5 w-5 shrink-0 transition-colors"
-                                :class="isDark ? 'text-orange-400' : 'text-rancho-buttercup'"
+                                class="h-5 w-5 shrink-0 text-rancho-buttercup"
+                                aria-hidden="true"
                             />
                             <a
                                 :href="telHref(footer.contact_phone)"
-                                class="transition-colors"
-                                :class="
-                                    isDark ? 'hover:text-orange-400' : 'hover:text-rancho-buttercup'
-                                "
+                                class="transition-colors hover:text-rancho-buttercup"
                             >
                                 {{ footer.contact_phone }}
                             </a>
@@ -195,15 +187,12 @@
 
                         <li v-if="footer.contact_email" class="flex items-center gap-3">
                             <EnvelopeIcon
-                                class="h-5 w-5 shrink-0 transition-colors"
-                                :class="isDark ? 'text-orange-400' : 'text-rancho-buttercup'"
+                                class="h-5 w-5 shrink-0 text-rancho-buttercup"
+                                aria-hidden="true"
                             />
                             <a
                                 :href="`mailto:${footer.contact_email}`"
-                                class="transition-colors"
-                                :class="
-                                    isDark ? 'hover:text-orange-400' : 'hover:text-rancho-buttercup'
-                                "
+                                class="transition-colors hover:text-rancho-buttercup"
                             >
                                 {{ footer.contact_email }}
                             </a>
@@ -214,33 +203,25 @@
 
             <!-- BOTTOM -->
             <div
-                class="flex flex-col justify-between gap-6 border-t pt-8 transition-colors sm:gap-4 md:flex-row md:items-center"
-                :class="isDark ? 'border-slate-800' : 'border-rancho-paper/10'"
+                class="flex flex-col justify-between gap-6 border-t pt-8 sm:gap-4 md:flex-row md:items-center"
+                :class="isDark ? 'border-rancho-ink-800' : 'border-rancho-paper/10'"
             >
-                <p
-                    class="font-sans text-xs opacity-60 transition-colors"
-                    :class="isDark ? 'text-slate-500' : 'text-rancho-paper'"
-                >
+                <p class="font-sans text-xs opacity-60">
                     © {{ new Date().getFullYear() }} {{ footer.site_name || 'Молочная Долина' }}.
                     Сделано с любовью к природе.
                 </p>
 
-                <div
-                    class="flex gap-6 font-sans text-xs opacity-80 transition-colors"
-                    :class="isDark ? 'text-slate-500' : 'text-rancho-paper'"
-                >
+                <div class="flex flex-wrap gap-x-6 gap-y-2 font-sans text-xs opacity-80">
                     <Link
                         :href="route('pages.show', 'privacy')"
-                        class="transition-colors hover:opacity-100"
-                        :class="isDark ? 'hover:text-orange-400' : 'hover:text-rancho-buttercup'"
+                        class="transition-colors hover:text-rancho-buttercup hover:opacity-100"
                     >
                         Политика конфиденциальности
                     </Link>
 
                     <Link
                         :href="route('pages.show', 'offer')"
-                        class="transition-colors hover:opacity-100"
-                        :class="isDark ? 'hover:text-orange-400' : 'hover:text-rancho-buttercup'"
+                        class="transition-colors hover:text-rancho-buttercup hover:opacity-100"
                     >
                         Публичная оферта
                     </Link>

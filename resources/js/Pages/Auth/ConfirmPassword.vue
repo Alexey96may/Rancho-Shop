@@ -1,10 +1,8 @@
 <script setup lang="ts">
     import { Head, useForm } from '@inertiajs/vue3';
 
-    import InputError from '@/Components/InputError.vue';
-    import InputLabel from '@/Components/InputLabel.vue';
-    import PrimaryButton from '@/Components/PrimaryButton.vue';
-    import TextInput from '@/Components/TextInput.vue';
+    import BaseInput from '@/Components/UI/BaseInput.vue';
+    import BaseSubmitButton from '@/Components/UI/BaseSubmitButton.vue';
     import GuestLayout from '@/Layouts/GuestLayout.vue';
 
     defineOptions({ layout: GuestLayout });
@@ -26,33 +24,32 @@
     <Head title="Подтверждение пароля" />
 
     <header v-scroll-reveal class="mb-6">
-        <h1 class="text-2xl font-semibold tracking-tight text-slate-900">Подтверждение пароля</h1>
-        <p class="mt-2 text-sm text-slate-500">
+        <h1 class="text-2xl font-black text-rancho-forest sm:text-3xl">Подтверждение пароля</h1>
+        <p class="text-rancho-ink-600 mt-2 text-sm leading-relaxed">
             Это защищённая зона приложения. Введите пароль, чтобы продолжить.
         </p>
     </header>
 
-    <form v-scroll-reveal @submit.prevent="submit" class="space-y-4">
-        <div>
-            <InputLabel for="password" value="Пароль" />
-
-            <TextInput
-                id="password"
-                type="password"
-                class="mt-1 block w-full"
-                v-model="form.password"
-                required
-                autocomplete="current-password"
-                autofocus
-            />
-
-            <InputError class="mt-2" :message="form.errors.password" />
-        </div>
+    <form v-scroll-reveal @submit.prevent="submit" class="space-y-5">
+        <BaseInput
+            id="password"
+            type="password"
+            label="Пароль"
+            placeholder="Введите пароль"
+            v-model="form.password"
+            :error="form.errors.password"
+            required
+            autocomplete="current-password"
+            autofocus
+            theme="light"
+        />
 
         <div class="flex justify-end pt-2">
-            <PrimaryButton :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
-                Подтвердить
-            </PrimaryButton>
+            <BaseSubmitButton
+                :processing="form.processing"
+                label="Подтвердить"
+                :with-icon="false"
+            />
         </div>
     </form>
 </template>

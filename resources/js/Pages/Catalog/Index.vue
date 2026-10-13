@@ -114,15 +114,19 @@
 </script>
 
 <template>
-    <AppContainer>
-        <div class="py-10">
+    <div class="py-12">
+        <AppContainer>
             <header
                 v-scroll-reveal
-                class="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-end"
+                class="mb-8 flex flex-col justify-between gap-6 sm:mb-20 md:flex-row md:items-end"
             >
                 <div>
-                    <h1 class="text-4xl font-black text-[#1c3f34]">Наши продукты</h1>
-                    <p class="mt-2 text-sm text-[#597d5b]">Свежее к вашему столу</p>
+                    <h1 class="text-2xl font-black text-rancho-forest sm:text-4xl">
+                        Наши продукты
+                    </h1>
+                    <p class="mt-2 text-xs text-rancho-olive sm:text-sm">
+                        Найдено: {{ products.meta.total }}
+                    </p>
                 </div>
 
                 <BaseInput
@@ -134,16 +138,28 @@
                 />
             </header>
 
-            <div>
-                <div class="mb-8 border-b border-slate-100 pb-6">
-                    <div v-scroll-reveal class="flex flex-col items-start gap-4 pb-6">
-                        <div class="flex flex-wrap items-center gap-4">
+            <div class="grid grid-cols-1 gap-8 lg:grid-cols-[260px_1fr]">
+                <!-- ФИЛЬТРЫ -->
+                <aside class="lg:sticky lg:top-24 lg:self-start">
+                    <div v-scroll-reveal class="rounded-2xl bg-white px-4 py-6 shadow-rancho-sm">
+                        <div class="mb-8 flex items-center justify-between gap-2">
+                            <h2 class="text-sm font-bold text-rancho-forest">Фильтры</h2>
+                            <button
+                                v-if="hasActiveFilters"
+                                @click="resetFilters"
+                                class="text-rancho-ember text-xs font-bold hover:underline"
+                            >
+                                Сбросить
+                            </button>
+                        </div>
+
+                        <div class="flex flex-col gap-4">
                             <BaseSelect
                                 label="Категория:"
                                 placeholder="Все продукты"
                                 v-model="category"
                                 :options="categories.data"
-                                :width-class="'w-64'"
+                                width-class="w-full"
                             />
 
                             <BaseSelect
@@ -151,42 +167,38 @@
                                 placeholder="По умолчанию"
                                 v-model="sort"
                                 :options="sortArray"
-                                :width-class="'w-64'"
+                                width-class="w-full"
+                            />
+
+                            <BaseSwitch
+                                v-model="inStock"
+                                label="Только в наличии"
+                                active-text=""
+                                inactive-text=""
+                                theme="light"
                             />
                         </div>
-
-                        <BaseSwitch v-model="inStock" label="Только в наличии" theme="light" />
                     </div>
+                </aside>
 
-                    <button
-                        v-scroll-reveal
-                        v-if="hasActiveFilters"
-                        @click="resetFilters"
-                        class="self-center text-xs font-bold text-orange-600 hover:underline"
-                    >
-                        Сбросить всё
-                    </button>
-                </div>
+                <!-- ТОВАРЫ -->
+                <div>
+                    <Transition name="fade-slide" mode="out-in">
+                        <EmptyState
+                            v-if="!products.data.length"
+                            key="empty"
+                            title="Товары не найдены"
+                            description="Попробуйте изменить параметры поиска или сбросить фильтры."
+                            action-label="Сбросить фильтры"
+                            @action="resetFilters"
+                        />
 
-                <Transition name="fade-slide" mode="out-in">
-                    <!-- EMPTY STATE -->
-                    <EmptyState
-                        v-if="!products.data.length"
-                        key="empty"
-                        title="Товары не найдены"
-                        description="Попробуйте изменить параметры поиска или сбросить фильтры."
-                        action-label="Сбросить фильтры"
-                        @action="resetFilters"
-                    />
-
-                    <div v-scroll-reveal v-else>
                         <TransitionGroup
+                            v-else
                             key="grid"
-                            mode="out-in"
                             tag="section"
                             name="card-list"
-                            aria-label="Карточки животных"
-                            class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+                            class="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3"
                         >
                             <ProductCard
                                 v-for="product in products.data"
@@ -194,11 +206,10 @@
                                 :product="product"
                             />
                         </TransitionGroup>
-                    </div>
-                </Transition>
+                    </Transition>
+                </div>
             </div>
-        </div>
-
+        </AppContainer>
         <MainPagination v-scroll-reveal :links="products.meta.links" theme="light" />
-    </AppContainer>
+    </div>
 </template>

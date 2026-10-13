@@ -7,6 +7,7 @@
 
     const model = defineModel<string | null | undefined>({ default: '' });
     const error = defineModel<string | undefined>('error');
+
     const emit = defineEmits<{
         (e: 'blur'): void;
     }>();
@@ -22,7 +23,11 @@
     }
 
     const props = withDefaults(defineProps<Props>(), {
+        label: undefined,
+        placeholder: undefined,
+        disabled: false,
         rows: 3,
+        maxHeight: undefined,
         required: false,
         theme: 'dark',
     });
@@ -69,21 +74,22 @@
         emit('blur');
     }, 300);
 
-    // Общие классы поля
+    /** Классы поля */
     const fieldClasses = computed(() => [
-        'custom-scrollbar w-full border-none bg-transparent px-4 py-3 text-sm font-medium leading-relaxed transition-all focus:ring-0 disabled:cursor-not-allowed',
+        'w-full resize-none border-none bg-transparent px-4 py-3 text-sm font-medium leading-relaxed transition-all focus:outline-none focus:ring-0 disabled:cursor-not-allowed',
         isDark.value
-            ? 'text-white placeholder:text-slate-600'
-            : 'text-rancho-forest placeholder:text-slate-400',
+            ? 'text-white placeholder:text-rancho-ink-600'
+            : 'text-rancho-forest placeholder:text-rancho-ink-500',
     ]);
 
+    /** Классы обёртки */
     const wrapperClasses = computed(() => [
         'group relative flex w-full overflow-hidden rounded-2xl border transition-all duration-200',
         error.value
             ? 'border-rose-500/50 focus-within:border-rose-500'
             : isDark.value
-              ? 'border-slate-800 bg-slate-950 focus-within:border-orange-500'
-              : 'border-slate-300 bg-white focus-within:border-rancho-pine',
+              ? 'border-rancho-ink-800 bg-rancho-ink-950 focus-within:border-rancho-buttercup'
+              : 'border-rancho-ink-300 bg-white focus-within:border-rancho-pine',
     ]);
 </script>
 
@@ -93,7 +99,9 @@
             v-if="label"
             :for="inputId"
             class="mb-1.5 block px-1 text-[10px] font-black uppercase tracking-widest transition-colors"
-            :class="error ? 'text-rose-500' : isDark ? 'text-slate-500' : 'text-rancho-olive'"
+            :class="
+                error ? 'text-rose-500' : isDark ? 'text-rancho-ink-500' : 'text-rancho-ink-600'
+            "
         >
             {{ label }}{{ required ? ' *' : '' }}
         </label>
@@ -134,22 +142,3 @@
         </Transition>
     </div>
 </template>
-
-<style scoped>
-    .custom-scrollbar::-webkit-scrollbar {
-        width: 6px;
-    }
-    .custom-scrollbar::-webkit-scrollbar-track {
-        background: transparent;
-    }
-    .custom-scrollbar::-webkit-scrollbar-thumb {
-        background: #1e293b;
-        border-radius: 10px;
-    }
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-        background: #334155;
-    }
-    textarea {
-        resize: none;
-    }
-</style>

@@ -16,7 +16,8 @@ class ProfileOrderController extends Controller
     public function index(Request $request): Response
     {
         $orders = $request->user()->orders()
-            ->with(['items.product.media'])
+            ->with(['items.product.media',
+                'items.variant.product.media', ])
             ->latest()
             ->paginate(setting('orders_per_page', 12))
             ->withQueryString();

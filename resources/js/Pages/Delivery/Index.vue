@@ -4,12 +4,14 @@
     import { useForm, usePage } from '@inertiajs/vue3';
 
     import { debounce } from 'lodash-es';
+    import { Check, MapPin, MapPinned } from 'lucide-vue-next';
 
     import MapboxPicker from '@/Components/Map/MapboxPicker.vue';
     import CommentsSection from '@/Components/Sections/CommentsSection.vue';
     import MainLayout from '@/Layouts/MainLayout.vue';
     import { useComments } from '@/composables/crud/useComments';
     import { useYandexGeocoder } from '@/composables/features/useYandexGeocoder';
+    import { useNotificationsStore } from '@/stores/notifications';
     import type {
         Comment,
         DeliveryDraft,
@@ -22,6 +24,8 @@
     import { formatDistance, formatMoney } from '@/utils/format';
 
     defineOptions({ layout: MainLayout });
+
+    const notify = useNotificationsStore();
 
     interface Props {
         page: ResourceSingle<Page>;
@@ -170,6 +174,7 @@
             });
         } catch (e) {
             console.error(e);
+            notify.error('Откройте доступ к вашей геолокации');
         } finally {
             isLocating.value = false;
         }
@@ -228,7 +233,6 @@
         if (!selectedPoint.value) return;
 
         try {
-            console.log(selectedPoint.value.lat, selectedPoint.value.lng, address.value);
             const res = await fetch('/api/delivery/calculate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
@@ -240,7 +244,6 @@
             });
 
             if (!res.ok) {
-                const text = await res.text();
                 throw new Error('HTTP ' + res.status);
             }
 
@@ -252,6 +255,7 @@
             price.value = data.delivery_price;
         } catch (e) {
             console.error(e);
+            notify.error('Ошибка выбора адресса.');
             isDeliveryAllowed.value = false;
         }
     }
@@ -263,92 +267,141 @@
 </script>
 
 <template>
-    <AppContainer class="min-h-screen bg-[#FCFAF5] text-[#1C3F34]">
+    <AppContainer class="min-h-screen bg-rancho-paper">
         <!-- HEADER -->
-        <header v-scroll-reveal class="mx-auto max-w-3xl pt-10">
-            <h1 class="text-3xl font-bold">
+        <header v-scroll-reveal class="mx-auto max-w-3xl pt-10 sm:pt-14">
+            <h1 class="text-2xl font-black text-rancho-forest sm:text-4xl">
                 {{ page.data.title }}
             </h1>
         </header>
 
         <!-- CONTENT -->
-        <section v-scroll-reveal v-if="page.data.content" class="prose mx-auto mt-6 max-w-3xl">
-            <div v-html="page.data.content" />
-        </section>
+        <section
+            v-if="page.data.content"
+            v-scroll-reveal
+            class="prose-p:text-rancho-ink-700 prose prose-stone mx-auto mt-6 max-w-3xl prose-headings:font-black prose-headings:text-rancho-forest prose-a:text-rancho-pine"
+            v-html="page.data.content"
+        />
 
         <!-- MAIN -->
         <section v-scroll-reveal class="mx-auto mt-10 grid max-w-5xl gap-6 md:grid-cols-2">
             <!-- LEFT -->
-            <div class="space-y-4 rounded-xl border bg-white p-6">
+            <div
+                class="border-rancho-ink-200 shadow-sm space-y-5 rounded-2xl border bg-white p-5 sm:p-6"
+            >
+                <!-- ADDRESS INPUT -->
                 <div>
-                    <label class="block text-sm font-medium"> Адрес доставки </label>
+                    <label
+                        class="text-rancho-ink-600 block text-xs font-black uppercase tracking-widest"
+                    >
+                        Адрес доставки
+                    </label>
 
-                    <input
-                        v-model="address"
-                        @input="onAddressInput"
-                        class="mt-2 w-full rounded-lg border px-3 py-2"
-                        placeholder="Введите адрес..."
-                    />
+                    <div class="relative mt-2">
+                        <MapPin
+                            class="text-rancho-ink-500 pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2"
+                            aria-hidden="true"
+                        />
 
-                    <ul v-if="suggestions.length" class="mt-1 rounded border bg-white">
+                        <input
+                            v-model="address"
+                            @input="onAddressInput"
+                            class="border-rancho-ink-300 placeholder:text-rancho-ink-500 w-full rounded-xl border bg-white py-2.5 pl-9 pr-3 text-sm font-medium text-rancho-forest transition-all focus:border-rancho-pine focus:outline-none focus:ring-4 focus:ring-rancho-pine/10"
+                            placeholder="Введите адрес..."
+                        />
+                    </div>
+
+                    <!-- SUGGESTIONS -->
+                    <ul
+                        v-if="suggestions.length"
+                        class="border-rancho-ink-200 shadow-lg mt-2 overflow-hidden rounded-xl border bg-white"
+                    >
                         <li
                             v-for="(item, i) in suggestions"
                             :key="i"
                             @click="select(item)"
-                            class="cursor-pointer p-2 hover:bg-gray-100"
+                            class="border-rancho-ink-100 text-rancho-ink-700 hover:bg-rancho-ink-50 cursor-pointer border-b px-4 py-2.5 text-sm transition-colors last:border-b-0 hover:text-rancho-forest"
                         >
                             {{ item.name }}
                         </li>
                     </ul>
                 </div>
 
+                <!-- LOCATE ME -->
                 <button
+                    type="button"
                     @click="useMyLocation"
                     :disabled="isLocating"
-                    class="w-full rounded border p-2"
+                    class="border-rancho-ink-300 hover:bg-rancho-ink-50 flex w-full items-center justify-center gap-2 rounded-xl border-2 bg-white px-4 py-2.5 text-xs font-black uppercase tracking-widest text-rancho-forest transition-all hover:border-rancho-forest focus:outline-none focus-visible:ring-4 focus-visible:ring-rancho-pine/30 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                    📍 Моё местоположение
+                    <MapPinned class="h-4 w-4" aria-hidden="true" />
+                    {{ isLocating ? 'Определяем...' : 'Моё местоположение' }}
                 </button>
 
+                <!-- CONFIRM -->
                 <button
+                    type="button"
                     @click="confirmDeliveryPoint"
                     :disabled="!selectedPoint || isConfirmed || !isDeliveryAllowed"
-                    class="w-full rounded bg-green-700 p-3 text-white"
-                    :class="{ 'opacity-50': isConfirmed || !isDeliveryAllowed }"
+                    class="shadow-md hover:shadow-lg disabled:bg-rancho-ink-200 disabled:text-rancho-ink-500 disabled:shadow-none disabled:hover:bg-rancho-ink-200 flex w-full items-center justify-center gap-2 rounded-xl bg-rancho-pine px-4 py-3 text-sm font-bold text-white transition-all hover:bg-rancho-forest focus:outline-none focus-visible:ring-4 focus-visible:ring-rancho-pine/30 active:scale-95 disabled:cursor-not-allowed"
                 >
-                    {{ isConfirmed ? '✔ Сохранено' : 'Подтвердить' }}
+                    <Check v-if="isConfirmed" class="h-4 w-4" aria-hidden="true" />
+                    {{ isConfirmed ? 'Сохранено' : 'Подтвердить' }}
                 </button>
 
                 <!-- DELIVERY INFO -->
-                <section class="mx-auto mt-6 max-w-3xl space-y-2 text-sm text-[#597D5B]">
-                    <p>{{ delivery.delivery_info }}</p>
-                    <p>🕒 {{ delivery.delivery_schedule }}</p>
-                </section>
+                <div
+                    class="border-rancho-ink-100 text-rancho-ink-600 space-y-2 border-t pt-4 text-sm"
+                >
+                    <p v-if="delivery.delivery_info">{{ delivery.delivery_info }}</p>
+                    <p v-if="delivery.delivery_schedule">🕒 {{ delivery.delivery_schedule }}</p>
+                </div>
 
-                <div v-if="!isDeliveryAllowed" class="text-sm text-red-600">
+                <!-- STATUS MESSAGES -->
+                <div
+                    v-if="!isDeliveryAllowed"
+                    class="rounded-xl bg-rose-500/10 px-4 py-3 text-sm font-medium text-rose-600 ring-1 ring-inset ring-rose-500/20"
+                    role="alert"
+                >
                     Вы вне зоны доставки
                 </div>
 
-                <div v-if="delivery?.address_farm">
-                    Самовывоз:
-                    <span class="text-sm text-emerald-800">{{ delivery?.address_farm }}</span>
-                </div>
-                <div v-if="serverDraft?.address">
-                    Вы выбрали:
-                    <span class="text-sm text-emerald-800">{{ serverDraft?.address }}</span>
-                </div>
-                <div v-if="price">
-                    Цена доставки:
-                    <span class="text-sm text-emerald-800">{{ formatMoney(price) }}</span>
-                </div>
-                <div v-if="distance">
-                    Расстояние до нас:
-                    <span class="text-sm text-emerald-800">~{{ formatDistance(distance) }}</span>
-                </div>
+                <!-- SUMMARY -->
+                <dl class="space-y-2 text-sm">
+                    <div v-if="delivery?.address_farm" class="flex justify-between gap-3">
+                        <dt class="text-rancho-ink-500">Самовывоз:</dt>
+                        <dd class="text-right font-bold text-rancho-forest">
+                            {{ delivery.address_farm }}
+                        </dd>
+                    </div>
+
+                    <div v-if="serverDraft?.address" class="flex justify-between gap-3">
+                        <dt class="text-rancho-ink-500">Вы выбрали:</dt>
+                        <dd class="text-right font-bold text-rancho-forest">
+                            {{ serverDraft.address }}
+                        </dd>
+                    </div>
+
+                    <div v-if="price" class="flex justify-between gap-3">
+                        <dt class="text-rancho-ink-500">Цена доставки:</dt>
+                        <dd class="text-right font-black text-rancho-forest">
+                            {{ formatMoney(price) }}
+                        </dd>
+                    </div>
+
+                    <div v-if="distance" class="flex justify-between gap-3">
+                        <dt class="text-rancho-ink-500">Расстояние до нас:</dt>
+                        <dd class="text-right font-bold text-rancho-forest">
+                            ~{{ formatDistance(distance) }}
+                        </dd>
+                    </div>
+                </dl>
             </div>
 
             <!-- MAP -->
-            <div class="h-[400px] overflow-hidden rounded-xl border">
+            <div
+                class="border-rancho-ink-200 shadow-sm h-[400px] overflow-hidden rounded-2xl border"
+            >
                 <MapboxPicker
                     v-model="selectedPoint"
                     :farm-coords="delivery.farm_coords"
@@ -363,7 +416,7 @@
         </section>
 
         <!-- COMMENTS -->
-        <div v-if="page.data.is_commentable" v-scroll-reveal>
+        <div v-if="page.data.is_commentable" v-scroll-reveal class="mx-auto max-w-5xl">
             <CommentsSection
                 :comments="comments"
                 title="Отзывы о доставке"

@@ -74,12 +74,12 @@
                 key="button"
                 @click.stop="handleClick"
                 :disabled="isDisabled"
-                class="flex w-full items-center justify-center rounded-xl p-2 text-lg font-bold transition-all duration-300 active:scale-95"
+                class="text:xs flex w-full items-center justify-center rounded-xl p-2 font-bold transition-all duration-300 active:scale-95 sm:text-lg"
                 :class="[
                     !isDisabled
-                        ? 'shadow-lg bg-slate-900 text-white hover:bg-orange-600'
-                        : 'cursor-not-allowed bg-slate-200 text-slate-400',
-                    'focus:outline-none focus-visible:ring-4 focus-visible:ring-orange-500/20',
+                        ? 'shadow-lg bg-rancho-pine text-white hover:bg-rancho-forest'
+                        : 'bg-rancho-ink-200 text-rancho-ink-500 cursor-not-allowed',
+                    'focus:outline-none focus-visible:ring-4 focus-visible:ring-rancho-pine/30',
                     classes,
                 ]"
             >

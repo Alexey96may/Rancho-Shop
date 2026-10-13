@@ -2,9 +2,14 @@
 
 namespace App\Exceptions\Checkout;
 
-use Exception;
+use Illuminate\Validation\ValidationException;
 
-abstract class CheckoutException extends Exception
+abstract class CheckoutException extends ValidationException
 {
     abstract public function code(): string;
+
+    protected function errorKey(): string
+    {
+        return 'checkout';
+    }
 }

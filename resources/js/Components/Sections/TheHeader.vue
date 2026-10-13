@@ -8,7 +8,7 @@
     import CowIcon from '@/Components/Icons/CowIcon.vue';
     import SmartNav from '@/Components/Shared/SmartNav.vue';
     import { useCartStore } from '@/stores/cart';
-    import { SharedData } from '@/types';
+    import type { SharedData } from '@/types';
 
     interface NavItem {
         name: string;
@@ -31,42 +31,32 @@
     const page = usePage<SharedData>();
     const user = computed(() => page.props.auth?.user?.data);
 
-    /* ===== Навигация с сервера ===== */
     const navigation = computed<NavItem[]>(() => (page.props as any).navigation ?? []);
 
-    /* ===== Активность пункта (для мобильного drawer) ===== */
+    /* ===== Активность пункта ===== */
     function isActive(item: NavItem): boolean {
         const normalize = (url: string): string => {
-            // Убираем query и hash
             let path = url.split('?')[0].split('#')[0];
 
-            // Убираем домен, если он есть
             try {
                 path = new URL(path, window.location.origin).pathname;
             } catch {
                 // уже path
             }
 
-            // Убираем trailing slash
             return path.replace(/\/+$/, '') || '/';
         };
 
         const currentUrl = normalize(page.url);
         const targetUrl = normalize(item.href);
 
-        // 1. Точное совпадение
         if (currentUrl === targetUrl) return true;
-
-        // 2. Вложенный путь: /catalog/milk подсветит «Каталог»
-        //    НО исключаем корень, чтобы '/' не подсвечивал всё
-        if (targetUrl !== '/' && currentUrl.startsWith(targetUrl + '/')) {
-            return true;
-        }
+        if (targetUrl !== '/' && currentUrl.startsWith(targetUrl + '/')) return true;
 
         return false;
     }
 
-    /* ===== Burger menu state ===== */
+    /* ===== Burger menu ===== */
     const isMenuOpen = ref(false);
 
     function closeMenu() {
@@ -89,6 +79,7 @@
         if (typeof window === 'undefined') return;
         window.addEventListener('keydown', onKeydown);
     });
+
     onUnmounted(() => {
         if (typeof window === 'undefined') return;
         window.removeEventListener('keydown', onKeydown);
@@ -108,11 +99,11 @@
         class="sticky top-0 z-50 border-b backdrop-blur-md transition-colors"
         :class="
             isDark
-                ? 'border-slate-800 bg-slate-950/80'
-                : 'border-rancho-olive/10 bg-rancho-paper/80'
+                ? 'border-rancho-ink-800 bg-rancho-ink-950/80'
+                : 'border-rancho-ink-200 bg-rancho-paper/80'
         "
     >
-        <AppContainer class="flex items-center justify-between gap-3 py-2 md:gap-6">
+        <AppContainer class="flex items-center justify-between gap-3 py-3 sm:py-4 md:gap-6">
             <!-- LOGO -->
             <Link
                 :href="route('home')"
@@ -120,22 +111,19 @@
             >
                 <CowIcon
                     class="h-7 w-7 shrink-0 transition-colors sm:h-8 sm:w-8"
-                    :class="isDark ? 'text-orange-400' : 'text-orange-600'"
+                    :class="isDark ? 'text-rancho-buttercup' : 'text-rancho-pine'"
                 />
                 <div class="flex min-w-0 flex-col">
                     <div
                         class="flex flex-col truncate font-header text-lg leading-none transition-colors sm:flex-row sm:gap-2 sm:text-xl md:text-2xl"
+                        :class="isDark ? 'text-rancho-paper' : 'text-rancho-forest'"
                     >
-                        <span :class="isDark ? 'text-slate-100' : 'text-rancho-forest'">
-                            Молочная
-                        </span>
-                        <span :class="isDark ? 'text-slate-100' : 'text-rancho-forest'">
-                            Долина
-                        </span>
+                        <span>Молочная</span>
+                        <span>Долина</span>
                     </div>
                     <span
                         class="hidden font-sans text-[10px] uppercase tracking-[0.2em] opacity-70 transition-colors sm:block"
-                        :class="isDark ? 'text-slate-400' : 'text-rancho-olive'"
+                        :class="isDark ? 'text-rancho-ink-400' : 'text-rancho-ink-500'"
                     >
                         Семейное Ранчо
                     </span>
@@ -153,20 +141,21 @@
                 <Link
                     v-if="user"
                     :href="route('profile.edit')"
-                    class="group hidden items-center gap-2 rounded-xl border px-3 py-2 transition-all md:flex"
+                    class="group hidden items-center gap-2 rounded-xl border px-3 py-2 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-rancho-buttercup/40 md:flex"
                     :class="
                         isDark
-                            ? 'border-slate-800 bg-slate-900/60 text-slate-200 hover:border-slate-700 hover:bg-slate-800 hover:text-orange-400'
-                            : 'border-rancho-olive/10 bg-rancho-olive/5 text-rancho-forest hover:bg-rancho-olive/10 hover:text-rancho-pine'
+                            ? 'border-rancho-ink-800 bg-rancho-ink-900/60 text-rancho-ink-200 hover:border-rancho-ink-700 hover:bg-rancho-ink-800 hover:text-rancho-buttercup'
+                            : 'border-rancho-ink-200 bg-rancho-ink-50 hover:border-rancho-ink-300 hover:bg-rancho-ink-100 text-rancho-forest hover:text-rancho-pine'
                     "
                 >
                     <UserIcon
                         class="h-5 w-5 transition-colors"
                         :class="
                             isDark
-                                ? 'text-slate-400 group-hover:text-orange-400'
-                                : 'text-rancho-olive group-hover:text-rancho-pine'
+                                ? 'text-rancho-ink-400 group-hover:text-rancho-buttercup'
+                                : 'text-rancho-ink-500 group-hover:text-rancho-pine'
                         "
+                        aria-hidden="true"
                     />
                     <span class="font-sans text-xs font-bold">
                         {{ firstName }}
@@ -177,44 +166,48 @@
                 <Link
                     v-else
                     :href="route('login')"
-                    class="hidden items-center gap-1.5 p-2 font-sans text-xs font-bold uppercase tracking-wider transition-colors md:flex"
+                    class="hidden items-center gap-1.5 rounded-lg p-2 font-sans text-xs font-bold uppercase tracking-wider transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-rancho-buttercup/40 md:flex"
                     :class="
                         isDark
-                            ? 'text-slate-400 hover:text-orange-400'
-                            : 'text-rancho-olive hover:text-rancho-pine'
+                            ? 'text-rancho-ink-400 hover:text-rancho-buttercup'
+                            : 'text-rancho-ink-500 hover:text-rancho-pine'
                     "
                 >
-                    <UserIcon class="h-5 w-5" />
+                    <UserIcon class="h-5 w-5" aria-hidden="true" />
                     <span>Войти</span>
                 </Link>
 
                 <!-- DIVIDER (md+) -->
                 <div
                     class="hidden h-6 w-px transition-colors md:block"
-                    :class="isDark ? 'bg-slate-800' : 'bg-rancho-olive/10'"
+                    :class="isDark ? 'bg-rancho-ink-800' : 'bg-rancho-ink-200'"
+                    aria-hidden="true"
                 ></div>
 
                 <!-- CART -->
                 <Link
                     :href="route('cart.index')"
-                    class="shadow-md relative flex items-center gap-2 rounded-xl px-3 py-2 text-white transition-all active:scale-95 sm:px-4"
+                    class="shadow-md relative flex items-center gap-2 rounded-xl px-3 py-2 text-white transition-all focus:outline-none focus-visible:ring-4 focus-visible:ring-rancho-pine/30 active:scale-95 sm:px-4"
                     :class="
                         isDark
-                            ? 'bg-orange-600 hover:bg-orange-500'
+                            ? 'text-rancho-ink-950 bg-rancho-buttercup hover:bg-rancho-buttercup/90 focus-visible:ring-rancho-buttercup/40'
                             : 'bg-rancho-pine hover:bg-rancho-forest'
                     "
                     aria-label="Корзина"
                 >
-                    <ShoppingBagIcon class="h-5 w-5 shrink-0" />
-                    <span class="hidden font-sans text-sm font-bold sm:inline">Лукошко</span>
+                    <ShoppingBagIcon
+                        class="h-5 w-5 shrink-0 stroke-2"
+                        :class="isDark ? 'text-rancho-ink-950' : 'text-white'"
+                        aria-hidden="true"
+                    />
 
                     <span
                         v-if="cartStore.totalCleanItems > 0"
                         class="animate-bounce-short absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full border-2 px-1 text-[10px] font-black sm:-right-2 sm:-top-2"
                         :class="
                             isDark
-                                ? 'border-slate-950 bg-orange-400 text-slate-950'
-                                : 'border-rancho-paper bg-rancho-buttercup text-rancho-forest'
+                                ? 'border-rancho-ink-950 bg-rancho-ink-950 text-rancho-buttercup'
+                                : 'bg-rancho-ember border-rancho-paper text-white'
                         "
                     >
                         {{ cartStore.totalCleanItems }}
@@ -224,18 +217,18 @@
                 <!-- BURGER (до md) -->
                 <button
                     type="button"
-                    class="ml-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border transition-colors md:hidden"
+                    class="ml-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-rancho-buttercup/40 md:hidden"
                     :class="
                         isDark
-                            ? 'border-slate-800 bg-slate-900/60 text-slate-200 hover:bg-slate-800 hover:text-orange-400'
-                            : 'border-rancho-olive/10 bg-rancho-olive/5 text-rancho-forest hover:bg-rancho-olive/10'
+                            ? 'border-rancho-ink-800 bg-rancho-ink-900/60 text-rancho-ink-200 hover:bg-rancho-ink-800 hover:text-rancho-buttercup'
+                            : 'border-rancho-ink-200 bg-rancho-ink-50 hover:bg-rancho-ink-100 text-rancho-forest'
                     "
                     @click="isMenuOpen = true"
                     aria-label="Открыть меню"
                     :aria-expanded="isMenuOpen"
                     aria-controls="mobile-menu"
                 >
-                    <Bars3Icon class="h-5 w-5" />
+                    <Bars3Icon class="h-5 w-5" aria-hidden="true" />
                 </button>
             </div>
         </AppContainer>
@@ -259,8 +252,8 @@
                 class="shadow-2xl fixed inset-y-0 right-0 z-[70] flex w-full max-w-sm flex-col overflow-y-auto border-l transition-colors md:hidden"
                 :class="
                     isDark
-                        ? 'border-slate-800 bg-slate-950 text-slate-100'
-                        : 'border-rancho-olive/10 bg-rancho-paper text-rancho-forest'
+                        ? 'border-rancho-ink-800 bg-rancho-ink-950 text-rancho-paper'
+                        : 'border-rancho-ink-200 bg-rancho-paper text-rancho-forest'
                 "
                 role="dialog"
                 aria-modal="true"
@@ -269,28 +262,28 @@
                 <!-- Drawer header -->
                 <div
                     class="flex h-16 shrink-0 items-center justify-between border-b px-4 sm:px-6"
-                    :class="isDark ? 'border-slate-800' : 'border-rancho-olive/10'"
+                    :class="isDark ? 'border-rancho-ink-800' : 'border-rancho-ink-200'"
                 >
                     <div class="flex items-center gap-2">
                         <CowIcon
                             class="h-6 w-6"
-                            :class="isDark ? 'text-orange-400' : 'text-orange-600'"
+                            :class="isDark ? 'text-rancho-buttercup' : 'text-rancho-pine'"
                         />
                         <span class="font-header text-lg leading-none">Меню</span>
                     </div>
 
                     <button
                         type="button"
-                        class="flex h-10 w-10 items-center justify-center rounded-xl transition-colors"
+                        class="flex h-10 w-10 items-center justify-center rounded-xl transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-rancho-buttercup/40"
                         :class="
                             isDark
-                                ? 'text-slate-400 hover:bg-slate-900 hover:text-white'
-                                : 'text-rancho-olive hover:bg-rancho-olive/10 hover:text-rancho-forest'
+                                ? 'text-rancho-ink-400 hover:bg-rancho-ink-900 hover:text-white'
+                                : 'text-rancho-ink-500 hover:bg-rancho-ink-100 hover:text-rancho-forest'
                         "
                         @click="closeMenu"
                         aria-label="Закрыть меню"
                     >
-                        <XMarkIcon class="h-6 w-6" />
+                        <XMarkIcon class="h-6 w-6" aria-hidden="true" />
                     </button>
                 </div>
 
@@ -298,18 +291,18 @@
                 <div
                     v-if="user"
                     class="border-b px-4 py-4 sm:px-6"
-                    :class="isDark ? 'border-slate-800' : 'border-rancho-olive/10'"
+                    :class="isDark ? 'border-rancho-ink-800' : 'border-rancho-ink-200'"
                 >
                     <Link
                         :href="route('profile.edit')"
                         class="flex items-center gap-3 rounded-2xl p-3 transition-colors"
-                        :class="isDark ? 'hover:bg-slate-900' : 'hover:bg-rancho-olive/5'"
+                        :class="isDark ? 'hover:bg-rancho-ink-900' : 'hover:bg-rancho-ink-50'"
                     >
                         <div
                             class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-base font-black"
                             :class="
                                 isDark
-                                    ? 'bg-orange-500 text-slate-950'
+                                    ? 'text-rancho-ink-950 bg-rancho-buttercup'
                                     : 'bg-rancho-pine text-white'
                             "
                         >
@@ -319,7 +312,7 @@
                             <span class="truncate text-sm font-bold">{{ user.name }}</span>
                             <span
                                 class="truncate text-xs"
-                                :class="isDark ? 'text-slate-500' : 'text-rancho-olive'"
+                                :class="isDark ? 'text-rancho-ink-500' : 'text-rancho-ink-500'"
                             >
                                 Мой профиль
                             </span>
@@ -327,7 +320,7 @@
                     </Link>
                 </div>
 
-                <!-- Nav links (из серверных данных) -->
+                <!-- Nav links -->
                 <nav class="flex flex-1 flex-col px-2 py-4 sm:px-4">
                     <Link
                         v-for="item in navigation"
@@ -337,18 +330,19 @@
                         :class="
                             isActive(item)
                                 ? isDark
-                                    ? 'bg-orange-600/10 text-orange-400'
+                                    ? 'bg-rancho-buttercup/10 text-rancho-buttercup'
                                     : 'bg-rancho-pine/10 text-rancho-pine'
                                 : isDark
-                                  ? 'text-slate-200 hover:bg-slate-900'
-                                  : 'text-rancho-forest hover:bg-rancho-olive/5'
+                                  ? 'text-rancho-ink-200 hover:bg-rancho-ink-900'
+                                  : 'hover:bg-rancho-ink-50 text-rancho-forest'
                         "
                     >
                         <span>{{ item.name }}</span>
                         <span
                             v-if="isActive(item)"
                             class="h-1.5 w-1.5 rounded-full"
-                            :class="isDark ? 'bg-orange-400' : 'bg-rancho-pine'"
+                            :class="isDark ? 'bg-rancho-buttercup' : 'bg-rancho-pine'"
+                            aria-hidden="true"
                         />
                     </Link>
                 </nav>
@@ -356,19 +350,19 @@
                 <!-- Footer (login) -->
                 <div
                     class="shrink-0 border-t p-4 sm:p-6"
-                    :class="isDark ? 'border-slate-800' : 'border-rancho-olive/10'"
+                    :class="isDark ? 'border-rancho-ink-800' : 'border-rancho-ink-200'"
                 >
                     <Link
                         v-if="!user"
                         :href="route('login')"
-                        class="flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-bold uppercase tracking-wider transition-colors"
+                        class="flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-bold uppercase tracking-wider transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-rancho-buttercup/40"
                         :class="
                             isDark
-                                ? 'bg-orange-600 text-white hover:bg-orange-500'
+                                ? 'text-rancho-ink-950 bg-rancho-buttercup hover:bg-rancho-buttercup/90'
                                 : 'bg-rancho-pine text-white hover:bg-rancho-forest'
                         "
                     >
-                        <UserIcon class="h-5 w-5" />
+                        <UserIcon class="h-5 w-5" aria-hidden="true" />
                         Войти
                     </Link>
                 </div>
@@ -408,5 +402,16 @@
     .drawer-enter-from,
     .drawer-leave-to {
         transform: translateX(100%);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .animate-bounce-short,
+        .backdrop-enter-active,
+        .backdrop-leave-active,
+        .drawer-enter-active,
+        .drawer-leave-active {
+            animation: none;
+            transition: none;
+        }
     }
 </style>

@@ -3,12 +3,15 @@
 
     import { formatDateTime, formatRelativeTime } from '@/utils/format';
 
-    const props = defineProps({
-        date: {
-            type: String as () => string | null | undefined,
-            required: true,
-            default: null,
-        },
+    type Theme = 'light' | 'dark';
+
+    interface Props {
+        date: string | null | undefined;
+        theme?: Theme;
+    }
+
+    const props = withDefaults(defineProps<Props>(), {
+        theme: 'light',
     });
 
     const showExactDate = ref(false);
@@ -17,8 +20,16 @@
         showExactDate.value = !showExactDate.value;
     };
 
-    const computedDateTime = computed(() => formatDateTime(props.date));
-    const computedRelativeTime = computed(() => formatRelativeTime(props.date));
+    const isDark = computed(() => props.theme === 'dark');
+
+    const computedDateTime = computed(() => formatDateTime(props.date ?? null));
+    const computedRelativeTime = computed(() => formatRelativeTime(props.date ?? null));
+
+    const colorClasses = computed(() =>
+        isDark.value
+            ? 'text-rancho-ink-300 hover:text-rancho-buttercup'
+            : 'text-rancho-ink-500 hover:text-rancho-forest',
+    );
 </script>
 
 <template>
@@ -33,7 +44,8 @@
                     : 'Нажмите, чтобы увидеть точную дату'
             "
             @click="toggleDate"
-            class="cursor-pointer select-none text-[10px] font-medium text-slate-500 transition-colors hover:text-slate-300"
+            class="cursor-pointer select-none text-[11px] font-medium underline-offset-2 transition-colors hover:underline"
+            :class="colorClasses"
         >
             {{ showExactDate ? computedDateTime : computedRelativeTime }}
         </time>
@@ -56,5 +68,12 @@
     .fade-date-leave-to {
         opacity: 0;
         transform: translateY(-2px);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .fade-date-enter-active,
+        .fade-date-leave-active {
+            transition: none;
+        }
     }
 </style>

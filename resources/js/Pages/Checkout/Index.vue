@@ -9,6 +9,7 @@
     import BaseTextarea from '@/Components/UI/BaseTextarea.vue';
     import MainLayout from '@/Layouts/MainLayout.vue';
     import { useCartStore } from '@/stores/cart';
+    import { useNotificationsStore } from '@/stores/notifications';
     import { DeliveryDraft, SharedData } from '@/types';
     import { formatMoney } from '@/utils/format';
 
@@ -27,18 +28,13 @@
 
     interface DeliveryResult {
         is_valid: boolean;
-        // при успехе:
         delivery_price?: number;
         zone?: DeliveryZone;
         distance_to_route?: number;
         distance_to_farm?: number;
-        // при ошибке:
         error?: string;
     }
 
-    /**
-     * PROPS & INERTIA SHARED DATA
-     */
     interface Props {
         delivery_draft: DeliveryDraft | null;
         delivery_result: DeliveryResult | null;
@@ -47,6 +43,7 @@
     const props = defineProps<Props>();
 
     const cart = useCartStore();
+    const notify = useNotificationsStore();
     const page = usePage<SharedData>();
 
     const user = computed(() => page.props.auth.user);
@@ -54,26 +51,18 @@
     const delivery = computed(() => props.delivery_draft ?? page.props.delivery_draft ?? null);
     const deliveryResult = computed(() => props.delivery_result ?? null);
 
-    /**
-     * REFS FOR FOCUS ON ERROR
-     */
     const nameRef = ref<InstanceType<typeof BaseInput> | HTMLInputElement | null>(null);
     const phoneRef = ref<InstanceType<typeof BaseInput> | HTMLInputElement | null>(null);
     const commentRef = ref<InstanceType<typeof BaseTextarea> | HTMLTextAreaElement | null>(null);
 
-    /**
-     * FORM
-     */
     type CheckoutForm = {
         customer_name: string;
         customer_phone: string;
         delivery_address: string | null;
         customer_comment: string;
-
         is_pickup: boolean;
         lat: number | null;
         lng: number | null;
-
         create_account: boolean;
     };
 
@@ -83,15 +72,11 @@
         delivery_address: delivery.value?.address ?? null,
         customer_comment: '',
         create_account: false,
-
         is_pickup: !delivery.value?.address,
         lat: delivery.value?.lat ?? null,
         lng: delivery.value?.lng ?? null,
     });
 
-    /**
-     * DELIVERY STATE
-     */
     const isPickup = computed(() => form.is_pickup);
 
     const isDeliveryValid = computed(() => {
@@ -108,7 +93,6 @@
         return null;
     });
 
-    /** Стоимость доставки с учётом бесплатной доставки от free_from */
     const deliveryPrice = computed<number | null>(() => {
         if (isPickup.value) return 0;
 
@@ -124,7 +108,6 @@
         return price;
     });
 
-    /** До бесплатной доставки осталось */
     const amountUntilFreeDelivery = computed<number | null>(() => {
         if (isPickup.value) return null;
 
@@ -141,9 +124,7 @@
     const computedTotalPrice = computed(() =>
         formatMoney(cart.totalPrice + (deliveryPrice.value ?? 0)),
     );
-    /**
-     * UI ACTIONS
-     */
+
     function togglePickup() {
         form.is_pickup = !form.is_pickup;
 
@@ -163,9 +144,6 @@
         window.location.href = '/delivery';
     }
 
-    /**
-     * ERRORS
-     */
     const errors = computed(() => form.errors);
 
     function hasError(field: keyof CheckoutForm) {
@@ -176,9 +154,6 @@
         return errors.value[field];
     }
 
-    /**
-     * SUBMIT ORDER
-     */
     function focusElement(el: any) {
         if (!el) return;
         const target = el.$el ?? el;
@@ -194,41 +169,45 @@
             items: cart.items,
         })).post(route('checkout.store'), {
             preserveScroll: true,
-            onSuccess: (responseData) => {
-                console.log('Ура!', responseData);
+            onSuccess: () => {
                 cart.clear();
             },
             onError: async (errs) => {
                 await nextTick();
-                console.log('submit error', errs);
 
-                const firstErrorField = Object.keys(errs)[0] as keyof CheckoutForm;
-
-                switch (firstErrorField) {
-                    case 'customer_name':
-                        focusElement(nameRef.value);
-                        break;
-                    case 'customer_phone':
-                        focusElement(phoneRef.value);
-                        break;
-                    case 'customer_comment':
-                        focusElement(commentRef.value);
-                        break;
+                // 1. Глобальное сообщение
+                const globalMsg = errs.checkout ?? errs.cart ?? errs.delivery;
+                if (globalMsg) {
+                    notify.error(globalMsg);
                 }
+
+                // 2. Фокус на поле формы
+                const fieldOrder: (keyof CheckoutForm)[] = [
+                    'customer_name',
+                    'customer_phone',
+                    'customer_comment',
+                ];
+                const firstField = fieldOrder.find((f) => errs[f]);
+
+                if (firstField === 'customer_name') focusElement(nameRef.value);
+                if (firstField === 'customer_phone') focusElement(phoneRef.value);
+                if (firstField === 'customer_comment') focusElement(commentRef.value);
             },
         });
     }
 </script>
 
 <template>
-    <AppContainer class="min-h-screen bg-rancho-paper font-sans">
+    <AppContainer class="min-h-screen bg-rancho-paper">
         <Head title="Оформление заказа" />
 
-        <div class="py-10">
+        <div class="py-10 sm:py-12">
             <!-- HEADER -->
-            <header class="mb-10">
-                <h1 class="text-xl font-bold text-rancho-forest md:text-2xl">Оформление заказа</h1>
-                <p class="mt-2 text-sm text-rancho-olive md:text-lg">Доставка или самовывоз</p>
+            <header class="mb-8 sm:mb-10">
+                <h1 class="text-2xl font-black text-rancho-forest sm:text-4xl">
+                    Оформление заказа
+                </h1>
+                <p class="text-rancho-ink-600 mt-2 text-xs sm:text-sm">Доставка или самовывоз</p>
             </header>
 
             <div class="relative grid grid-cols-1 items-start gap-8 lg:grid-cols-3">
@@ -266,18 +245,21 @@
                     />
 
                     <!-- DELIVERY BLOCK -->
-                    <div class="space-y-3 rounded-xl border bg-white p-4">
-                        <!-- CASE: PICKUP ↔ DELIVERY -->
+                    <div
+                        class="border-rancho-ink-200 shadow-sm space-y-3 rounded-2xl border bg-white p-4 sm:p-5"
+                    >
                         <Transition name="slide-fade" mode="out-in">
                             <!-- CASE: PICKUP -->
                             <div v-if="isPickup" key="pickup">
-                                <div class="text-sm font-medium text-gray-700">📦 Самовывоз</div>
-                                <p class="mt-1 text-sm text-gray-500">Адрес доставки не выбран</p>
+                                <div class="text-sm font-bold text-rancho-forest">📦 Самовывоз</div>
+                                <p class="text-rancho-ink-600 mt-1 text-sm">
+                                    Адрес доставки не выбран
+                                </p>
 
                                 <button
                                     type="button"
                                     @click="goToDeliveryPage"
-                                    class="mt-3 w-full rounded-lg bg-green-700 px-3 py-2 text-white transition-colors hover:bg-green-800"
+                                    class="shadow-md hover:shadow-lg mt-3 w-full rounded-xl bg-rancho-pine px-4 py-3 text-sm font-bold text-white transition-all hover:bg-rancho-forest focus:outline-none focus-visible:ring-4 focus-visible:ring-rancho-pine/30 active:scale-95"
                                 >
                                     Выбрать адрес доставки
                                 </button>
@@ -285,30 +267,34 @@
 
                             <!-- CASE: DELIVERY -->
                             <div v-else key="delivery">
-                                <div class="text-sm font-medium text-green-700">
+                                <div class="text-sm font-bold text-rancho-pine">
                                     🚚 Доставка выбрана
                                 </div>
 
-                                <p class="mt-1 text-sm">{{ form.delivery_address }}</p>
+                                <p class="text-rancho-ink-700 mt-1 text-sm">
+                                    {{ form.delivery_address }}
+                                </p>
 
                                 <!-- РЕЗУЛЬТАТ РАСЧЁТА -->
                                 <Transition name="fade-scale" appear>
                                     <div
                                         v-if="deliveryResult"
-                                        class="mt-3 rounded-lg border p-3 text-sm"
+                                        class="mt-3 rounded-xl border p-3 text-sm"
                                         :class="
                                             deliveryResult.is_valid
-                                                ? 'border-green-200 bg-green-50 text-green-900'
-                                                : 'border-red-200 bg-red-50 text-red-700'
+                                                ? 'border-rancho-pine/30 bg-rancho-pine/5 text-rancho-forest'
+                                                : 'border-rose-300 bg-rose-50 text-rose-700'
                                         "
                                     >
                                         <template v-if="deliveryResult.is_valid">
-                                            <div class="flex justify-between">
-                                                <span>Стоимость доставки</span>
-                                                <span class="font-medium">
-                                                    <template v-if="deliveryPrice === 0"
-                                                        >бесплатно</template
-                                                    >
+                                            <div class="flex justify-between gap-3">
+                                                <span class="text-rancho-ink-600">
+                                                    Стоимость доставки
+                                                </span>
+                                                <span class="font-bold text-rancho-forest">
+                                                    <template v-if="deliveryPrice === 0">
+                                                        бесплатно
+                                                    </template>
                                                     <template v-else>
                                                         {{
                                                             deliveryPrice !== null
@@ -321,7 +307,7 @@
 
                                             <div
                                                 v-if="deliveryResult.zone?.name"
-                                                class="mt-1 flex justify-between text-gray-600"
+                                                class="text-rancho-ink-500 mt-1 flex justify-between gap-3"
                                             >
                                                 <span>Зона</span>
                                                 <span>{{ deliveryResult.zone.name }}</span>
@@ -329,38 +315,38 @@
 
                                             <div
                                                 v-if="deliveryResult.distance_to_route != null"
-                                                class="mt-1 flex justify-between text-gray-600"
+                                                class="text-rancho-ink-500 mt-1 flex justify-between gap-3"
                                             >
                                                 <span>До маршрута</span>
-                                                <span
-                                                    >{{
+                                                <span>
+                                                    {{
                                                         Math.round(deliveryResult.distance_to_route)
                                                     }}
-                                                    м</span
-                                                >
+                                                    м
+                                                </span>
                                             </div>
 
                                             <div
                                                 v-if="deliveryResult.distance_to_farm != null"
-                                                class="mt-1 flex justify-between text-gray-600"
+                                                class="text-rancho-ink-500 mt-1 flex justify-between gap-3"
                                             >
                                                 <span>От фермы</span>
-                                                <span
-                                                    >{{
+                                                <span>
+                                                    {{
                                                         Math.round(deliveryResult.distance_to_farm)
                                                     }}
-                                                    м</span
-                                                >
+                                                    м
+                                                </span>
                                             </div>
 
                                             <div
                                                 v-if="amountUntilFreeDelivery !== null"
-                                                class="mt-2 rounded bg-amber-50 p-2 text-xs text-amber-800"
+                                                class="text-rancho-ink-800 mt-2 rounded-lg bg-rancho-buttercup/15 p-2 text-xs font-medium ring-1 ring-inset ring-rancho-buttercup/30"
                                             >
                                                 До бесплатной доставки осталось
-                                                <strong>{{
-                                                    formatMoney(amountUntilFreeDelivery)
-                                                }}</strong>
+                                                <strong class="font-black">
+                                                    {{ formatMoney(amountUntilFreeDelivery) }}
+                                                </strong>
                                             </div>
                                         </template>
 
@@ -375,7 +361,7 @@
                                     <button
                                         type="button"
                                         @click="goToDeliveryPage"
-                                        class="flex-1 rounded-lg border px-3 py-2 text-xs hover:bg-gray-50 md:text-lg"
+                                        class="border-rancho-ink-300 hover:bg-rancho-ink-50 flex-1 rounded-xl border-2 bg-white px-4 py-2.5 text-xs font-black uppercase tracking-widest text-rancho-forest transition-all hover:border-rancho-forest focus:outline-none focus-visible:ring-4 focus-visible:ring-rancho-pine/30 active:scale-95"
                                     >
                                         Изменить
                                     </button>
@@ -383,7 +369,7 @@
                                     <button
                                         type="button"
                                         @click="togglePickup"
-                                        class="flex-1 rounded-lg border border-red-300 px-3 py-2 text-xs text-red-700 transition-colors hover:bg-red-50 md:text-lg"
+                                        class="flex-1 rounded-xl border-2 border-rose-300 bg-white px-4 py-2.5 text-xs font-black uppercase tracking-widest text-rose-600 transition-all hover:border-rose-400 hover:bg-rose-50 focus:outline-none focus-visible:ring-4 focus-visible:ring-rose-500/30 active:scale-95"
                                     >
                                         Самовывоз
                                     </button>
@@ -391,21 +377,12 @@
                             </div>
                         </Transition>
 
-                        <!-- CART ERROR -->
-                        <Transition name="fade-up">
-                            <div
-                                v-if="$page.props.errors.cart"
-                                class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"
-                            >
-                                ⚠️ {{ $page.props.errors.cart }}
-                            </div>
-                        </Transition>
-
                         <!-- DELIVERY ERROR -->
                         <Transition name="fade-up">
                             <div
                                 v-if="$page.props.errors.delivery"
-                                class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"
+                                class="rounded-xl border border-rose-300 bg-rose-50 p-3 text-sm font-medium text-rose-700"
+                                role="alert"
                             >
                                 ⚠️ {{ $page.props.errors.delivery }}
                             </div>
@@ -413,7 +390,10 @@
 
                         <!-- DELIVERY VALIDATION -->
                         <Transition name="fade-up">
-                            <p v-if="deliveryError" class="mt-1 text-sm text-amber-700">
+                            <p
+                                v-if="deliveryError"
+                                class="text-rancho-ink-800 rounded-xl bg-rancho-buttercup/15 px-3 py-2 text-sm font-medium ring-1 ring-inset ring-rancho-buttercup/30"
+                            >
                                 {{ deliveryError }}
                             </p>
                         </Transition>
@@ -422,7 +402,7 @@
                         <Transition name="fade-up">
                             <p
                                 v-if="hasError('delivery_address')"
-                                class="mt-1 text-sm text-red-600"
+                                class="text-sm font-medium text-rose-600"
                             >
                                 {{ getError('delivery_address') }}
                             </p>
@@ -444,9 +424,14 @@
                 <!-- RIGHT -->
                 <aside
                     v-scroll-reveal
-                    class="shadow-sm sticky right-0 top-0 rounded-2xl bg-white p-6"
+                    class="border-rancho-ink-200 shadow-sm sticky right-0 top-0 rounded-2xl border bg-white p-6"
+                    aria-label="Ваш заказ"
                 >
-                    <h2 class="mb-4 font-bold text-gray-900">Ваш заказ</h2>
+                    <h2
+                        class="mb-4 text-base font-black uppercase tracking-wider text-rancho-forest"
+                    >
+                        Ваш заказ
+                    </h2>
 
                     <div class="mb-4 space-y-2">
                         <div
@@ -454,10 +439,12 @@
                             :key="item.variant_id"
                             class="flex justify-between gap-2 text-sm"
                         >
-                            <span>{{ item.name }} × {{ item.quantity }}</span>
-                            <span class="font-medium">{{
-                                formatMoney(item.price * item.quantity)
-                            }}</span>
+                            <span class="text-rancho-ink-700">
+                                {{ item.name }} × {{ item.quantity }}
+                            </span>
+                            <span class="font-bold text-rancho-forest">
+                                {{ formatMoney(item.price * item.quantity) }}
+                            </span>
                         </div>
                     </div>
 
@@ -466,19 +453,19 @@
                         <div
                             v-if="isPickup"
                             key="pickup-row"
-                            class="mt-2 flex justify-between gap-2 border-t pt-2 text-sm text-gray-700"
+                            class="border-rancho-ink-100 text-rancho-ink-700 mt-2 flex justify-between gap-3 border-t pt-3 text-sm"
                         >
                             <span>Самовывоз</span>
-                            <span>бесплатно</span>
+                            <span class="font-bold text-rancho-pine">бесплатно</span>
                         </div>
 
                         <div
                             v-else-if="deliveryPrice !== null"
                             key="delivery-row"
-                            class="mt-2 flex justify-between border-t pt-2 text-sm text-gray-700"
+                            class="border-rancho-ink-100 text-rancho-ink-700 mt-2 flex justify-between gap-3 border-t pt-3 text-sm"
                         >
                             <span>Доставка</span>
-                            <span>
+                            <span class="font-bold text-rancho-forest">
                                 <template v-if="deliveryPrice === 0">бесплатно</template>
                                 <template v-else>{{ formatMoney(deliveryPrice) }}</template>
                             </span>
@@ -486,14 +473,21 @@
                     </Transition>
 
                     <Transition name="fade-up">
-                        <div v-if="cart.items.length === 0" class="text-sm text-gray-400">
+                        <div
+                            v-if="cart.items.length === 0"
+                            class="text-rancho-ink-500 py-3 text-center text-sm"
+                        >
                             Корзина пуста
                         </div>
                     </Transition>
 
-                    <div class="flex justify-between gap-2 border-t pt-4 font-bold text-gray-900">
-                        <span>Итого</span>
-                        <span>{{ computedTotalPrice }}</span>
+                    <div
+                        class="border-rancho-ink-200 mt-2 flex items-baseline justify-between gap-2 border-t pt-4"
+                    >
+                        <span class="text-rancho-ink-600 text-sm font-bold">Итого</span>
+                        <span class="text-xl font-black text-rancho-forest sm:text-2xl">
+                            {{ computedTotalPrice }}
+                        </span>
                     </div>
 
                     <BaseSubmitButton
@@ -503,6 +497,17 @@
                         :label="form.processing ? 'Оформление...' : 'Оформить заказ'"
                         class="mt-6 w-full"
                     />
+
+                    <!-- CART ERROR -->
+                    <Transition name="fade-up">
+                        <div
+                            v-if="$page.props.errors.cart"
+                            class="mt-4 rounded-xl border border-rose-300 bg-rose-50 p-3 text-sm font-medium text-rose-700"
+                            role="alert"
+                        >
+                            {{ $page.props.errors.cart }}
+                        </div>
+                    </Transition>
                 </aside>
             </div>
         </div>
@@ -510,7 +515,6 @@
 </template>
 
 <style scoped>
-    /* Slide + fade для переключения pickup/delivery */
     .slide-fade-enter-active {
         transition:
             opacity 0.25s ease,
@@ -530,7 +534,6 @@
         transform: translateY(-8px);
     }
 
-    /* Fade + лёгкий scale для блока расчёта */
     .fade-scale-enter-active {
         transition:
             opacity 0.3s ease,
@@ -550,7 +553,6 @@
         transform: scale(0.98);
     }
 
-    /* Fade-up для подсказок и ошибок */
     .fade-up-enter-active {
         transition:
             opacity 0.25s ease,
@@ -565,5 +567,16 @@
     .fade-up-leave-to {
         opacity: 0;
         transform: translateY(6px);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .slide-fade-enter-active,
+        .slide-fade-leave-active,
+        .fade-scale-enter-active,
+        .fade-scale-leave-active,
+        .fade-up-enter-active,
+        .fade-up-leave-active {
+            transition: none;
+        }
     }
 </style>

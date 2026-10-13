@@ -1,11 +1,10 @@
 <script setup lang="ts">
     import { Head, Link, useForm } from '@inertiajs/vue3';
 
-    import Checkbox from '@/Components/Checkbox.vue';
-    import InputError from '@/Components/InputError.vue';
-    import InputLabel from '@/Components/InputLabel.vue';
-    import PrimaryButton from '@/Components/PrimaryButton.vue';
-    import TextInput from '@/Components/TextInput.vue';
+    import { CheckCircleIcon } from '@heroicons/vue/24/outline';
+
+    import BaseInput from '@/Components/UI/BaseInput.vue';
+    import BaseSubmitButton from '@/Components/UI/BaseSubmitButton.vue';
     import GuestLayout from '@/Layouts/GuestLayout.vue';
 
     defineOptions({ layout: GuestLayout });
@@ -34,82 +33,86 @@
     <Head title="Вход" />
 
     <header v-scroll-reveal class="mb-6">
-        <h1 class="text-2xl font-semibold tracking-tight text-slate-900">Вход</h1>
-        <p class="mt-2 text-sm text-slate-500">Введите email и пароль, чтобы продолжить.</p>
+        <h1 class="text-2xl font-black text-rancho-forest sm:text-3xl">Вход</h1>
+        <p class="text-rancho-ink-600 mt-2 text-sm leading-relaxed">
+            Введите email и пароль, чтобы продолжить.
+        </p>
     </header>
 
-    <div
-        v-scroll-reveal
-        v-if="status"
-        class="mb-4 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm font-medium text-green-700"
-    >
-        {{ status }}
-    </div>
-
-    <form v-scroll-reveal @submit.prevent="submit" class="space-y-4">
-        <div>
-            <InputLabel for="email" value="Email" />
-
-            <TextInput
-                id="email"
-                type="email"
-                class="mt-1 block w-full"
-                v-model="form.email"
-                required
-                autofocus
-                autocomplete="username"
-            />
-
-            <InputError class="mt-2" :message="form.errors.email" />
+    <!-- Статус -->
+    <Transition name="fade-up">
+        <div
+            v-if="status"
+            v-scroll-reveal
+            class="mb-5 flex items-start gap-3 rounded-xl border border-rancho-pine/30 bg-rancho-pine/10 px-4 py-3"
+            role="status"
+            aria-live="polite"
+        >
+            <CheckCircleIcon class="mt-0.5 h-4 w-4 shrink-0 text-rancho-pine" aria-hidden="true" />
+            <p class="text-sm font-medium text-rancho-forest">
+                {{ status }}
+            </p>
         </div>
+    </Transition>
 
-        <div>
-            <InputLabel for="password" value="Пароль" />
+    <form v-scroll-reveal @submit.prevent="submit" class="space-y-5">
+        <BaseInput
+            id="email"
+            type="email"
+            label="Email"
+            placeholder="you@example.com"
+            v-model="form.email"
+            :error="form.errors.email"
+            required
+            autofocus
+            autocomplete="username"
+            theme="light"
+        />
 
-            <TextInput
-                id="password"
-                type="password"
-                class="mt-1 block w-full"
-                v-model="form.password"
-                required
-                autocomplete="current-password"
+        <BaseInput
+            id="password"
+            type="password"
+            label="Пароль"
+            placeholder="Введите пароль"
+            v-model="form.password"
+            :error="form.errors.password"
+            required
+            autocomplete="current-password"
+            theme="light"
+        />
+
+        <!-- Remember me -->
+        <label class="flex cursor-pointer select-none items-center gap-2.5">
+            <input
+                type="checkbox"
+                v-model="form.remember"
+                class="border-rancho-ink-300 h-4 w-4 cursor-pointer rounded text-rancho-pine transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-rancho-pine/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
             />
-
-            <InputError class="mt-2" :message="form.errors.password" />
-        </div>
-
-        <label class="flex items-center">
-            <Checkbox name="remember" v-model:checked="form.remember" />
-            <span class="ms-2 text-sm text-slate-600">Запомнить меня</span>
+            <span class="text-rancho-ink-700 text-sm">Запомнить меня</span>
         </label>
 
-        <div class="flex items-center justify-between pt-2">
-            <Link
-                v-if="canResetPassword"
-                :href="route('password.request')"
-                class="rounded-md text-sm text-slate-500 underline hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-            >
-                Забыли пароль?
-            </Link>
-
-            <PrimaryButton
-                class="ms-4"
-                :class="{ 'opacity-25': form.processing }"
-                :disabled="form.processing"
-            >
-                Войти
-            </PrimaryButton>
+        <!-- Actions -->
+        <div
+            class="flex flex-col-reverse items-stretch gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between"
+        >
+            <BaseSubmitButton
+                :processing="form.processing"
+                label="Войти"
+                :with-icon="false"
+                class="sm:w-auto"
+            />
         </div>
     </form>
 
+    <!-- Регистрация -->
     <div
         v-scroll-reveal
-        class="mt-6 border-t border-slate-200 pt-6 text-center text-sm text-slate-500"
+        class="border-rancho-ink-200 text-rancho-ink-600 mt-6 border-t pt-6 text-center text-sm"
     >
         Нет аккаунта?
         <Link
             :href="route('register')"
-            class="ml-1 font-semibold text-indigo-600 underline-offset-2 hover:text-indigo-500 hover:underline focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+            class="ml-1 font-bold text-rancho-pine underline-offset-2 transition-colors hover:text-rancho-forest hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-rancho-pine/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
         >
             Зарегистрироваться
         </Link>

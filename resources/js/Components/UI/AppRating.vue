@@ -38,15 +38,20 @@
 
     const stars = computed(() => getStarStats(activeRating.value, props.max));
 
-    // Динамические классы цвета для закрашенной звезды/половинки
+    /**
+     * Классы для активной звезды (полностью или половины):
+     * - при ховере — buttercup (жёлтый, тёплый)
+     * - фиксированный рейтинг — ember (тёплый кирпичный)
+     */
     const activeStarColorClass = computed(() => {
         if (isHovering.value) {
-            // Цвет при наведении (Янтарный/Желтый)
-            return 'fill-amber-400 text-amber-400';
+            return 'fill-rancho-buttercup text-rancho-buttercup';
         }
-        // Цвет зафиксированного рейтинга (Оранжевый)
-        return 'fill-orange-500 text-orange-500';
+        return 'fill-rancho-ember text-rancho-ember';
     });
+
+    /** Классы для пустой звезды */
+    const emptyStarColorClass = computed(() => 'text-rancho-ink-300');
 
     const setHover = (value: number) => {
         if (props.readonly || props.disabled) return;
@@ -70,7 +75,7 @@
         class="rating-display flex items-center gap-1"
         :class="{ 'cursor-not-allowed opacity-60': disabled }"
         :role="readonly ? 'img' : 'radiogroup'"
-        :aria-label="`Rating: ${rating || 0} out of ${max}`"
+        :aria-label="`Рейтинг: ${rating || 0} из ${max}`"
         @mouseleave="clearHover"
     >
         <!-- РЕЖИМ ТОЛЬКО ДЛЯ ЧТЕНИЯ -->
@@ -79,14 +84,14 @@
                 v-for="n in stars.full"
                 :key="'full-' + n"
                 :stroke-width="1"
-                class="h-3 w-3 fill-orange-500/60 text-orange-500 sm:h-4 sm:w-4"
+                class="fill-rancho-ember/70 text-rancho-ember h-3 w-3 sm:h-4 sm:w-4"
                 aria-hidden="true"
             />
 
             <StarHalf
                 v-if="stars.half"
                 :stroke-width="1"
-                class="h-3 w-3 fill-orange-500/60 text-orange-500 sm:h-4 sm:w-4"
+                class="fill-rancho-ember/70 text-rancho-ember h-3 w-3 sm:h-4 sm:w-4"
                 aria-hidden="true"
             />
 
@@ -94,7 +99,7 @@
                 v-for="n in stars.empty"
                 :key="'empty-' + n"
                 :stroke-width="1"
-                class="h-3 w-3 text-orange-500/30 sm:h-4 sm:w-4"
+                class="text-rancho-ink-300 h-3 w-3 sm:h-4 sm:w-4"
                 aria-hidden="true"
             />
         </template>
@@ -104,7 +109,7 @@
             <div
                 v-for="index in max"
                 :key="index"
-                class="relative h-6 w-6 cursor-pointer transition-transform duration-150 active:scale-95"
+                class="relative h-5 w-5 cursor-pointer transition-transform duration-150 active:scale-95"
             >
                 <!-- Отображаемая иконка звезды -->
                 <div class="pointer-events-none absolute inset-0 flex items-center justify-center">
@@ -123,16 +128,16 @@
                     <Star
                         v-else
                         :stroke-width="1"
-                        class="h-5 w-5 text-orange-500/30 transition-colors duration-150"
+                        class="h-5 w-5 transition-colors duration-150"
+                        :class="emptyStarColorClass"
                     />
                 </div>
 
-                <!-- Левая половина (выбор n - 0.5) -->
                 <button
                     type="button"
                     :disabled="disabled"
                     :aria-label="`Оценить на ${index - 0.5}`"
-                    class="absolute left-0 top-0 h-full w-1/2 focus:outline-none"
+                    class="absolute left-0 top-0 h-full w-1/2 focus:outline-none focus-visible:ring-2 focus-visible:ring-rancho-pine"
                     @mouseenter="setHover(index - 0.5)"
                     @click="selectRating(index - 0.5)"
                 />
@@ -142,7 +147,7 @@
                     type="button"
                     :disabled="disabled"
                     :aria-label="`Оценить на ${index}`"
-                    class="absolute right-0 top-0 h-full w-1/2 focus:outline-none"
+                    class="absolute right-0 top-0 h-full w-1/2 focus:outline-none focus-visible:ring-2 focus-visible:ring-rancho-pine"
                     @mouseenter="setHover(index)"
                     @click="selectRating(index)"
                 />

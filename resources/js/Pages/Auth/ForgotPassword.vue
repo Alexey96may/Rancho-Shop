@@ -1,10 +1,10 @@
 <script setup lang="ts">
     import { Head, useForm } from '@inertiajs/vue3';
 
-    import InputError from '@/Components/InputError.vue';
-    import InputLabel from '@/Components/InputLabel.vue';
-    import PrimaryButton from '@/Components/PrimaryButton.vue';
-    import TextInput from '@/Components/TextInput.vue';
+    import { CheckCircleIcon } from '@heroicons/vue/24/outline';
+
+    import BaseInput from '@/Components/UI/BaseInput.vue';
+    import BaseSubmitButton from '@/Components/UI/BaseSubmitButton.vue';
     import GuestLayout from '@/Layouts/GuestLayout.vue';
 
     defineOptions({ layout: GuestLayout });
@@ -26,41 +26,48 @@
     <Head title="Восстановление пароля" />
 
     <header v-scroll-reveal class="mb-6">
-        <h1 class="text-2xl font-semibold tracking-tight text-slate-900">Восстановление пароля</h1>
-        <p class="mt-2 text-sm text-slate-500">
+        <h1 class="text-2xl font-black text-rancho-forest sm:text-3xl">Восстановление пароля</h1>
+        <p class="text-rancho-ink-600 mt-2 text-sm leading-relaxed">
             Забыли пароль? Ничего страшного. Укажите email — мы отправим ссылку для сброса пароля.
         </p>
     </header>
 
-    <div
-        v-scroll-reveal
-        v-if="status"
-        class="mb-4 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm font-medium text-green-700"
-    >
-        {{ status }}
-    </div>
-
-    <form v-scroll-reveal @submit.prevent="submit" class="space-y-4">
-        <div>
-            <InputLabel for="email" value="Email" />
-
-            <TextInput
-                id="email"
-                type="email"
-                class="mt-1 block w-full"
-                v-model="form.email"
-                required
-                autofocus
-                autocomplete="username"
-            />
-
-            <InputError class="mt-2" :message="form.errors.email" />
+    <!-- Статус -->
+    <Transition name="fade-up">
+        <div
+            v-if="status"
+            v-scroll-reveal
+            class="mb-5 flex items-start gap-3 rounded-xl border border-rancho-pine/30 bg-rancho-pine/10 px-4 py-3"
+            role="status"
+            aria-live="polite"
+        >
+            <CheckCircleIcon class="mt-0.5 h-4 w-4 shrink-0 text-rancho-pine" aria-hidden="true" />
+            <p class="text-sm font-medium text-rancho-forest">
+                {{ status }}
+            </p>
         </div>
+    </Transition>
+
+    <form v-scroll-reveal @submit.prevent="submit" class="space-y-5">
+        <BaseInput
+            id="email"
+            type="email"
+            label="Email"
+            placeholder="you@example.com"
+            v-model="form.email"
+            :error="form.errors.email"
+            required
+            autofocus
+            autocomplete="username"
+            theme="light"
+        />
 
         <div class="flex items-center justify-end pt-2">
-            <PrimaryButton :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
-                Отправить ссылку
-            </PrimaryButton>
+            <BaseSubmitButton
+                :processing="form.processing"
+                label="Отправить ссылку"
+                :with-icon="false"
+            />
         </div>
     </form>
 </template>

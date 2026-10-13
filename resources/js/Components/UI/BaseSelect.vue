@@ -1,3 +1,11 @@
+<script lang="ts">
+    /** Значения, которые принимает HeadlessUI Listbox в `value` */
+    export type ListboxValue = string | number | boolean | object | null | undefined;
+
+    /** Опция — любой объект. Конкретная форма задаётся через valueKey / labelKey */
+    export type SelectOption = object;
+</script>
+
 <script setup lang="ts">
     import { computed, useId, watch } from 'vue';
 
@@ -10,35 +18,97 @@
     } from '@headlessui/vue';
     import { CheckIcon, ChevronUpDownIcon } from '@heroicons/vue/20/solid';
 
-    type ModelValue = string | number | boolean | null | undefined;
-
-    const model = defineModel<ModelValue>();
+    const model = defineModel<ListboxValue>();
     const error = defineModel<string | undefined>('error');
 
-    const props = defineProps<{
-        options: Array<any>;
-        label?: string;
-        placeholder?: string;
-        description?: string;
-        widthClass?: string;
-        variant?: 'admin' | 'classic';
-        valueKey?: string;
-        labelKey?: string;
-        disabled?: boolean;
-    }>();
+    const props = withDefaults(
+        defineProps<{
+            options: SelectOption[];
+            label?: string;
+            placeholder?: string;
+            description?: string;
+            widthClass?: string;
+            variant?: 'admin' | 'classic';
+            /** Ключ, под которым в опции лежит значение */
+            valueKey?: string;
+            /** Ключ, под которым в опции лежит отображаемый текст */
+            labelKey?: string;
+            disabled?: boolean;
+        }>(),
+        {
+            label: undefined,
+            placeholder: undefined,
+            description: undefined,
+            widthClass: undefined,
+            variant: 'classic',
+            valueKey: 'id',
+            labelKey: 'name',
+            disabled: false,
+        },
+    );
 
     const labelId = useId();
     const descriptionId = useId();
     const errorId = useId();
 
-    const vKey = computed(() => props.valueKey || 'id');
-    const lKey = computed(() => props.labelKey || 'name');
+    const vKey = computed(() => props.valueKey);
+    const lKey = computed(() => props.labelKey);
 
-    const selected = computed<any>({
+    /** Типизированное чтение произвольного поля из объекта */
+    function readField<R = unknown>(obj: object, key: string): R | undefined {
+        return (obj as Record<string, R>)[key];
+    }
+
+    /** Приводим значение опции к тому, что принимает Listbox */
+    function optionValue(opt: SelectOption): ListboxValue {
+        const raw = readField<unknown>(opt, vKey.value);
+
+        if (
+            raw === null ||
+            raw === undefined ||
+            typeof raw === 'string' ||
+            typeof raw === 'number' ||
+            typeof raw === 'boolean'
+        ) {
+            return raw;
+        }
+
+        if (typeof raw === 'object') return raw;
+
+        return undefined;
+    }
+
+    /** Приводим label опции к строке */
+    function optionLabel(opt: SelectOption): string {
+        const raw = readField<unknown>(opt, lKey.value);
+
+        if (typeof raw === 'string' || typeof raw === 'number') {
+            return String(raw);
+        }
+
+        return '';
+    }
+
+    /** Значение выбранной опции */
+    const selected = computed<ListboxValue>({
         get: () => model.value,
         set: (value) => {
             model.value = value;
         },
+    });
+
+    /** Находим выбранную опцию для отображения её label */
+    const selectedOption = computed<SelectOption | undefined>(() =>
+        props.options.find((o) => optionValue(o) === selected.value),
+    );
+
+    /** Текст, который показываем в кнопке */
+    const displayLabel = computed<string>(() => {
+        const opt = selectedOption.value;
+        if (!opt) return props.placeholder ?? '';
+
+        const label = optionLabel(opt);
+        return label || (props.placeholder ?? '');
     });
 
     watch(model, () => {
@@ -56,41 +126,46 @@
                 isDark
                     ? 'mb-1.5 ml-2 block text-[10px] font-black uppercase tracking-[0.15em]'
                     : 'mb-1.5 ml-1 block text-xs font-bold uppercase tracking-wider',
-                hasError ? 'text-red-500' : 'text-slate-500',
+                hasError ? 'text-rose-500' : isDark ? 'text-rancho-ink-500' : 'text-rancho-ink-600',
             ],
 
             button: [
-                'relative w-full cursor-pointer transition-all focus:outline-none',
+                'relative w-full cursor-pointer text-xs sm:text-sm transition-all focus:outline-none',
                 isDark
-                    ? 'rounded-2xl border bg-slate-950 py-3 pl-4 pr-10 text-left text-slate-300'
-                    : 'rounded-xl border bg-white py-2.5 pl-4 pr-10 text-left sm:text-sm',
+                    ? 'rounded-2xl border bg-rancho-ink-950 py-3 pl-4 pr-10 text-left text-rancho-ink-300'
+                    : 'rounded-xl border bg-white py-2.5 pl-4 pr-10 text-left text-rancho-ink-800',
 
                 hasError
                     ? isDark
-                        ? 'border-red-500/50 hover:border-red-500'
-                        : 'border-red-300 hover:border-red-500'
+                        ? 'border-rose-500/50 hover:border-rose-500'
+                        : 'border-rose-300 hover:border-rose-500'
                     : isDark
-                      ? 'border-slate-800 hover:border-orange-500/50'
-                      : 'border-slate-200 hover:border-orange-300',
+                      ? 'border-rancho-ink-800 hover:border-rancho-buttercup/60'
+                      : 'border-rancho-ink-300 hover:border-rancho-ink-400',
 
                 isDark
-                    ? 'focus-visible:ring-2 focus-visible:ring-orange-500/20'
-                    : 'focus-visible:border-orange-500 focus-visible:ring-4 focus-visible:ring-orange-500/10',
+                    ? 'focus-visible:ring-2 focus-visible:ring-rancho-buttercup/20'
+                    : 'focus-visible:border-rancho-pine focus-visible:ring-4 focus-visible:ring-rancho-pine/10',
             ],
 
-            options: isDark
-                ? 'absolute z-50 mt-2 max-h-60 w-full overflow-auto rounded-2xl border border-slate-800 bg-slate-900 py-1 text-base shadow-2xl ring-1 ring-white/5 focus:outline-none sm:text-sm'
-                : 'absolute z-50 mt-2 max-h-60 w-full overflow-auto rounded-2xl bg-white py-1 text-base shadow-xl ring-1 ring-black/5 focus:outline-none sm:text-sm',
+            options: [
+                'text-xs sm:text-sm',
+                isDark
+                    ? 'absolute z-50 mt-2 max-h-60 w-full overflow-auto rounded-2xl border border-rancho-ink-800 bg-rancho-ink-900 py-1 text-rancho-ink-300 shadow-2xl ring-1 ring-white/5 focus:outline-none sm:text-sm'
+                    : 'absolute z-50 mt-2 max-h-60 w-full overflow-auto rounded-2xl bg-white py-1 text-rancho-ink-800 shadow-xl ring-1 ring-rancho-ink-900/10 focus:outline-none sm:text-sm',
+            ],
 
-            option: (active: boolean, selected: boolean) => {
+            option: (active: boolean) => {
                 if (isDark) {
                     return [
-                        active ? 'bg-orange-500/10 text-orange-400' : 'text-slate-400',
+                        active
+                            ? 'bg-rancho-buttercup/10 text-rancho-buttercup'
+                            : 'text-rancho-ink-400',
                         'relative cursor-pointer select-none py-3 pl-10 pr-4 transition-colors',
                     ];
                 }
                 return [
-                    active ? 'bg-orange-50 text-orange-900' : 'text-slate-900',
+                    active ? 'bg-rancho-buttercup/15 text-rancho-forest' : 'text-rancho-ink-800',
                     'relative cursor-pointer select-none py-2.5 pl-10 pr-4 transition-colors',
                 ];
             },
@@ -106,7 +181,6 @@
             { 'pointer-events-none opacity-50': disabled },
         ]"
     >
-        <!-- 👇 v-model="selected" вместо v-model="model" -->
         <Listbox v-model="selected" :disabled="disabled">
             <div class="relative">
                 <ListboxLabel v-if="label" :id="labelId" :class="styles.label">
@@ -120,13 +194,13 @@
                     :class="styles.button"
                 >
                     <span class="block truncate font-medium">
-                        {{ options.find((o) => o[vKey] === selected)?.[lKey] || placeholder }}
+                        {{ displayLabel }}
                     </span>
                     <span
                         class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2"
                         aria-hidden="true"
                     >
-                        <ChevronUpDownIcon class="h-5 w-5 text-slate-500" />
+                        <ChevronUpDownIcon class="text-rancho-ink-500 h-5 w-5" />
                     </span>
                 </ListboxButton>
 
@@ -134,7 +208,7 @@
                     {{ description }}
                 </span>
 
-                <transition
+                <Transition
                     leave-active-class="transition duration-100 ease-in"
                     leave-from-class="opacity-100"
                     leave-to-class="opacity-0"
@@ -142,22 +216,24 @@
                     <ListboxOptions :class="styles.options">
                         <ListboxOption
                             v-if="placeholder"
-                            v-slot="{ active, selected }"
+                            v-slot="{ active, selected: isSelected }"
                             :value="null"
                             as="template"
                         >
-                            <li :class="styles.option(active, selected)">
+                            <li :class="styles.option(active)">
                                 <span
                                     :class="[
-                                        selected ? 'font-bold text-orange-500' : 'font-normal',
+                                        isSelected
+                                            ? 'font-bold text-rancho-buttercup'
+                                            : 'font-normal',
                                         'block truncate',
                                     ]"
                                 >
                                     {{ placeholder }}
                                 </span>
                                 <span
-                                    v-if="selected"
-                                    class="absolute inset-y-0 left-0 flex items-center pl-3 text-orange-500"
+                                    v-if="isSelected"
+                                    class="text-rancho-ink-600 absolute inset-y-0 left-0 flex items-center pl-3"
                                 >
                                     <CheckIcon class="h-5 w-5" />
                                 </span>
@@ -166,34 +242,36 @@
 
                         <ListboxOption
                             v-for="opt in options"
-                            :key="opt[vKey]"
-                            :value="opt[vKey]"
-                            v-slot="{ active, selected }"
+                            :key="String(optionValue(opt))"
+                            :value="optionValue(opt)"
+                            v-slot="{ active, selected: isSelected }"
                             as="template"
                         >
-                            <li :class="styles.option(active, selected)">
+                            <li :class="styles.option(active)">
                                 <span
                                     :class="[
-                                        selected ? 'font-bold text-orange-500' : 'font-normal',
+                                        isSelected
+                                            ? 'text-rancho-ink-600 font-bold'
+                                            : 'font-normal',
                                         'block truncate',
                                     ]"
                                 >
-                                    {{ opt[lKey] }}
+                                    {{ optionLabel(opt) }}
                                 </span>
                                 <span
-                                    v-if="selected"
-                                    class="absolute inset-y-0 left-0 flex items-center pl-3 text-orange-500"
+                                    v-if="isSelected"
+                                    class="text-rancho-ink-600 absolute inset-y-0 left-0 flex items-center pl-3"
                                 >
                                     <CheckIcon class="h-5 w-5" />
                                 </span>
                             </li>
                         </ListboxOption>
                     </ListboxOptions>
-                </transition>
+                </Transition>
             </div>
         </Listbox>
 
-        <transition
+        <Transition
             enter-active-class="transition duration-200 ease-out"
             enter-from-class="transform -translate-y-1 opacity-0"
             enter-to-class="transform translate-y-0 opacity-100"
@@ -201,10 +279,10 @@
             <p
                 v-if="error"
                 :id="errorId"
-                class="ml-2 mt-1.5 text-[10px] font-bold uppercase italic text-red-500"
+                class="text-rancho-ember ml-2 mt-1.5 text-[10px] font-bold uppercase italic"
             >
                 {{ error }}
             </p>
-        </transition>
+        </Transition>
     </div>
 </template>

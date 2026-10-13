@@ -60,9 +60,13 @@
 
 <template>
     <div
-        class="flex w-full items-center justify-between rounded-xl bg-slate-900 p-2 text-lg text-white"
+        class="flex w-full items-center justify-between rounded-xl bg-rancho-forest p-2 text-lg text-white"
     >
-        <button @click.stop="decrease" class="px-2 text-lg transition-transform active:scale-90">
+        <button
+            @click.stop="decrease"
+            class="text-rancho-ink-100 rounded-md px-2 text-lg transition-all hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-rancho-buttercup active:scale-90"
+            aria-label="Уменьшить количество"
+        >
             −
         </button>
 
@@ -73,7 +77,11 @@
             {{ quantity }} {{ item.unit?.short }}
         </span>
 
-        <button @click.stop="increase" class="px-2 text-lg transition-transform active:scale-90">
+        <button
+            @click.stop="increase"
+            class="text-rancho-ink-100 rounded-md px-2 text-lg transition-all hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-rancho-buttercup active:scale-90"
+            aria-label="Увеличить количество"
+        >
             +
         </button>
     </div>

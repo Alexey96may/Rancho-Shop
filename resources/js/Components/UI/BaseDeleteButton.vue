@@ -36,7 +36,7 @@
             'flex items-center gap-2 p-2 text-[10px] font-black uppercase transition-all',
             disabled
                 ? 'cursor-not-allowed text-slate-600 opacity-30'
-                : 'text-orange-700 hover:text-orange-500',
+                : 'text-rancho-ember hover:text-rancho-ember/70',
         ]"
     >
         <slot>Удалить</slot>

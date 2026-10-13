@@ -55,11 +55,11 @@
                 </h2>
             </header>
 
-            <div class="space-y-4">
+            <div class="space-y-3 sm:space-y-5">
                 <div
                     v-for="faq in displayFaqs"
                     :key="faq.id"
-                    class="group rounded-2xl border border-rancho-paper bg-white p-2 transition-colors hover:border-rancho-buttercup/50"
+                    class="group rounded-xl border border-rancho-olive/20 bg-white px-2 py-4 transition-colors hover:border-rancho-buttercup/50 sm:rounded-2xl"
                     :class="{ 'border-rancho-buttercup/50': isOpen(faq.id) }"
                 >
                     <button
@@ -93,7 +93,7 @@
                     >
                         <div class="overflow-hidden">
                             <div
-                                class="mt-2 border-t border-rancho-paper/30 px-4 pb-4 pt-2 text-xs leading-relaxed text-rancho-olive/80 sm:text-sm"
+                                class="mt-2 border-t border-rancho-paper/30 px-4 pb-4 pt-2 text-xs leading-relaxed text-rancho-olive sm:text-sm"
                             >
                                 <p>{{ faq.answer }}</p>
                             </div>

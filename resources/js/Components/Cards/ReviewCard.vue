@@ -17,7 +17,7 @@
 
 <template>
     <figure
-        class="shadow-sm hover:shadow-md flex flex-col gap-6 rounded-3xl border border-rancho-paper bg-white p-6 transition-all lg:p-8"
+        class="shadow-sm hover:shadow-md flex flex-col gap-6 rounded-3xl border border-rancho-olive/20 bg-white p-6 transition-all lg:p-8"
         role="listitem"
     >
         <div class="flex items-center justify-between">

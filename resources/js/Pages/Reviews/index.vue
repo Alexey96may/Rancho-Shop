@@ -88,23 +88,30 @@
 </script>
 
 <template>
-    <AppContainer class="min-h-screen bg-[#fcfaf5]">
-        <div class="py-10">
+    <AppContainer class="min-h-screen bg-rancho-paper">
+        <div class="py-12">
             <!-- HEADER -->
             <header
                 v-scroll-reveal
-                class="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-center"
+                class="mb-8 flex flex-col justify-between gap-4 sm:mb-12 md:flex-row md:items-end"
             >
                 <div>
-                    <h1 class="text-4xl font-black text-[#1c3f34]">Отзывы о сайте</h1>
-                    <p class="mt-2 text-sm text-[#597d5b]">
+                    <h1 class="text-2xl font-black text-rancho-forest sm:text-4xl">
+                        Отзывы о сайте
+                    </h1>
+                    <p class="text-rancho-ink-600 mt-2 text-xs sm:text-sm">
                         Впечатления и оценки наших посетителей
                     </p>
                 </div>
 
                 <button
                     type="button"
-                    class="inline-flex items-center justify-center rounded-xl bg-[#1c3f34] px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-[#285949] focus:outline-none focus:ring-2 focus:ring-[#1c3f34]"
+                    class="inline-flex items-center justify-center rounded-xl px-5 py-3 text-xs font-black uppercase tracking-widest transition-all focus:outline-none focus-visible:ring-4 focus-visible:ring-rancho-pine/30 active:scale-95"
+                    :class="
+                        isFormVisible
+                            ? 'border-rancho-ink-300 hover:bg-rancho-ink-50 border-2 bg-white text-rancho-forest hover:border-rancho-forest'
+                            : 'shadow-md hover:shadow-lg bg-rancho-pine text-white hover:bg-rancho-forest'
+                    "
                     @click="isFormVisible = !isFormVisible"
                 >
                     {{ isFormVisible ? 'Скрыть форму' : 'Оставить отзыв' }}
@@ -116,37 +123,42 @@
                 <section
                     v-scroll-reveal
                     v-if="isFormVisible"
-                    class="shadow-sm mb-12 rounded-2xl border border-slate-200/80 bg-white p-6"
+                    class="border-rancho-ink-200 shadow-sm mb-12 rounded-2xl border bg-white p-6"
                 >
-                    <h2 class="mb-4 text-xl font-bold text-[#1c3f34]">Ваш отзыв</h2>
+                    <h2 class="mb-6 text-lg font-black text-rancho-forest">Ваш отзыв</h2>
 
-                    <form class="space-y-4" @submit.prevent="submitReview">
-                        <div v-if="!isAuthenticated">
-                            <BaseInput
-                                v-model="form.guest_name"
-                                label="Ваше имя"
-                                placeholder="Как к вам обращаться?"
-                                required
-                                theme="light"
-                                :error="form.errors.guest_name"
-                            />
+                    <form class="space-y-5" @submit.prevent="submitReview">
+                        <BaseInput
+                            v-if="!isAuthenticated"
+                            v-model="form.guest_name"
+                            label="Ваше имя"
+                            placeholder="Как к вам обращаться?"
+                            required
+                            theme="light"
+                            :error="form.errors.guest_name"
+                        />
+
+                        <div class="flex flex-wrap items-center gap-3">
+                            <span class="text-rancho-ink-600 text-xs font-medium md:text-sm">
+                                Ваша оценка:
+                            </span>
+                            <AppRating v-model:rating="form.rating" :readonly="false" :max="5" />
                         </div>
-
-                        <AppRating v-model:rating="form.rating" :readonly="false" :max="5" />
 
                         <BaseTextarea
                             v-model="form.content"
+                            label="Комментарий"
                             :required="true"
                             theme="light"
                             :error="form.errors.content"
                             placeholder="Расскажите о вашем опыте работы с сайтом..."
                         />
 
-                        <div class="flex justify-end">
+                        <div class="flex justify-end pt-2">
                             <button
                                 type="submit"
                                 :disabled="form.processing"
-                                class="rounded-xl bg-[#1c3f34] px-6 py-2.5 text-sm font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+                                class="shadow-md hover:shadow-lg disabled:hover:shadow-md rounded-xl bg-rancho-pine px-6 py-3 text-sm font-bold text-white transition-all hover:bg-rancho-forest focus:outline-none focus-visible:ring-4 focus-visible:ring-rancho-pine/30 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-rancho-pine"
                             >
                                 {{ form.processing ? 'Отправка...' : 'Опубликовать' }}
                             </button>
@@ -158,10 +170,13 @@
             <!-- SORTING BAR -->
             <div
                 v-scroll-reveal
-                class="mb-6 flex flex-col justify-between border-b border-slate-200/60 pb-4 sm:flex-row sm:items-center"
+                class="border-rancho-ink-200 mb-6 flex flex-col justify-between gap-4 border-b pb-6 sm:flex-row sm:items-end"
             >
-                <span class="text-sm font-medium text-slate-500">
-                    Всего отзывов: {{ comments.meta?.total ?? comments.data.length }}
+                <span class="text-rancho-ink-600 text-sm font-medium">
+                    Всего отзывов:
+                    <span class="font-black text-rancho-forest">
+                        {{ comments.meta?.total ?? comments.data.length }}
+                    </span>
                 </span>
 
                 <BaseSelect
@@ -170,7 +185,7 @@
                     :options="sortOptions"
                     label-key="label"
                     value-key="value"
-                    width-class="w-64"
+                    width-class="w-full sm:w-64"
                 />
             </div>
 
@@ -184,7 +199,7 @@
                 @action="isFormVisible = true"
             />
 
-            <section v-scroll-reveal v-else aria-label="Список отзывов" class="space-y-4">
+            <section v-else v-scroll-reveal aria-label="Список отзывов" class="space-y-4">
                 <CommentCard
                     v-for="comment in comments.data"
                     :key="comment.id"
@@ -194,7 +209,7 @@
 
             <!-- PAGINATION -->
             <div v-scroll-reveal class="mt-8">
-                <MainPagination :links="comments.meta.links" />
+                <MainPagination :links="comments.meta.links" theme="light" />
             </div>
         </div>
     </AppContainer>

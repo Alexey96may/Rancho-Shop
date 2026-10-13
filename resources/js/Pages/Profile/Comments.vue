@@ -24,6 +24,7 @@
     const { deleteEntity, isDeleting } = useAdminCrud();
 
     const editingCommentId = ref<number | null>(null);
+
     const editForm = useForm({
         content: '',
         rating: 5,
@@ -51,17 +52,20 @@
 <template>
     <div class="space-y-6">
         <section class="space-y-6">
-            <h3 class="text-sm font-black uppercase tracking-wider text-slate-500">
+            <h3 class="text-rancho-ink-300 text-sm font-black uppercase tracking-wider">
                 История ваших отзывов
             </h3>
 
+            <!-- EMPTY -->
             <div
                 v-if="comments.data.length === 0"
-                class="rounded-2xl border border-dashed border-slate-800 bg-slate-950/20 py-12 text-center text-sm text-slate-500"
+                class="border-rancho-ink-700 bg-rancho-ink-900/20 rounded-2xl border border-dashed py-12 text-center"
+                role="status"
             >
-                Вы еще не оставляли отзывов на сайте.
+                <p class="text-rancho-ink-300 text-sm">Вы ещё не оставляли отзывов на сайте.</p>
             </div>
 
+            <!-- LIST -->
             <div v-else class="grid grid-cols-1 gap-4">
                 <UserCommentCard
                     v-for="comment in comments.data"
@@ -69,13 +73,14 @@
                     :comment="comment"
                     :is-deleting="isDeleting(comment.id)"
                     :is-saving="editForm.processing"
+                    theme="dark"
                     @update="submitUpdateComment(comment.id)"
                     @delete="handleDelete(comment)"
                 />
             </div>
         </section>
 
-        <MainPagination v-scroll-reveal :links="comments?.meta?.links" />
+        <MainPagination v-scroll-reveal :links="comments?.meta?.links" theme="dark" />
     </div>
 </template>
 
@@ -103,5 +108,13 @@
 
     .stagger-move {
         transition: transform 0.4s ease;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .stagger-enter-active,
+        .stagger-leave-active,
+        .stagger-move {
+            transition: none;
+        }
     }
 </style>

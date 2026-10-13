@@ -33,17 +33,17 @@
 
 <template>
     <div
-        class="shadow-sm hover:shadow-xl group flex h-full flex-col overflow-hidden rounded-2xl border transition-all duration-300"
+        class="group flex h-full flex-col overflow-hidden rounded-2xl border transition-all duration-300"
         :class="[
             isAvailable
-                ? 'border-slate-100 bg-white'
-                : 'hover:shadow-sm border-slate-200 bg-slate-50/60 opacity-80',
+                ? 'border-rancho-ink-200 hover:border-rancho-ink-300 hover:shadow-xl bg-white hover:-translate-y-0.5'
+                : 'border-rancho-ink-200 bg-rancho-ink-50 hover:shadow-sm opacity-80',
         ]"
     >
         <!-- Ссылка на товар / Фото -->
         <Link
             :href="route('catalog.show', product.slug)"
-            class="relative aspect-square max-h-48 overflow-hidden bg-slate-100 sm:max-h-64"
+            class="bg-rancho-ink-50 relative aspect-square max-h-48 overflow-hidden sm:max-h-64"
         >
             <AppImage
                 :alt="product.name"
@@ -61,8 +61,8 @@
                     :class="[
                         'shadow-sm rounded-lg px-2 py-1 text-[10px] font-black uppercase tracking-wider',
                         product.availability?.value === 'daily'
-                            ? 'bg-green-500 text-white'
-                            : 'bg-slate-900 text-white',
+                            ? 'bg-rancho-pine text-white'
+                            : 'bg-rancho-forest text-white',
                     ]"
                 >
                     {{ product.availability?.label }}
@@ -71,7 +71,7 @@
                 <!-- Плашка при отсутствии варианта -->
                 <span
                     v-else
-                    class="shadow-sm rounded-lg bg-slate-800 px-2 py-1 text-[10px] font-black uppercase tracking-wider text-slate-200"
+                    class="bg-rancho-ink-800 text-rancho-ink-100 shadow-sm rounded-lg px-2 py-1 text-[10px] font-black uppercase tracking-wider"
                 >
                     Нет в наличии
                 </span>
@@ -79,14 +79,14 @@
         </Link>
 
         <!-- Контент карточки -->
-        <div class="flex flex-grow flex-col p-5">
-            <div class="mb-3">
-                <div class="mb-1 text-[10px] font-bold uppercase tracking-widest text-orange-600">
+        <div class="flex flex-grow flex-col gap-6 p-5">
+            <div class="">
+                <div class="text-rancho-ember mb-1 text-[10px] font-bold uppercase tracking-widest">
                     {{ product.category?.name }}
                 </div>
 
                 <h3
-                    class="text-lg font-bold leading-tight text-slate-900 transition-colors hover:text-orange-600 sm:text-xl"
+                    class="text-lg font-bold leading-tight text-rancho-forest transition-colors group-hover:text-rancho-pine sm:text-xl"
                 >
                     <Link :href="route('catalog.show', product.slug)">
                         {{ product.name }}
@@ -95,26 +95,28 @@
             </div>
 
             <!-- Блок с ценой (если вариант есть) -->
-            <div v-if="isAvailable" class="mb-4 flex items-center gap-3">
-                <span class="text-xl font-black text-slate-900">
+            <div v-if="isAvailable" class="flex items-center gap-3">
+                <span class="text-xl font-black text-rancho-forest">
                     {{ formatMoney(product.default_variant?.price) }}
                 </span>
 
                 <div v-if="discountBadge" class="flex flex-col">
-                    <span class="text-xs leading-none text-slate-400 line-through">
+                    <span class="text-rancho-ink-400 text-xs leading-none line-through">
                         {{ formatMoney(product.default_variant?.old_price) }}
                     </span>
-                    <span class="text-[10px] font-bold text-red-500">-{{ discountBadge }}%</span>
+                    <span class="text-rancho-ember text-[10px] font-bold">
+                        -{{ discountBadge }}%
+                    </span>
                 </div>
 
-                <span class="ml-auto text-sm text-slate-400">
+                <span class="text-rancho-ink-500 ml-auto text-sm">
                     / {{ product.default_variant?.unit?.short ?? 'шт' }}
                 </span>
             </div>
 
             <!-- Заглушка цены (если варианта нет) -->
-            <div v-else class="mb-4 flex min-h-[36px] items-center justify-between">
-                <span class="w-full text-center text-sm font-semibold text-slate-400">
+            <div v-else class="flex min-h-[36px] items-center justify-between">
+                <span class="text-rancho-ink-500 w-full text-center text-sm font-semibold">
                     Товар недоступен
                 </span>
             </div>
@@ -126,7 +128,7 @@
                 <button
                     v-else
                     disabled
-                    class="w-full cursor-not-allowed rounded-xl bg-slate-200 py-3 text-center text-xs font-bold text-slate-400 transition-colors"
+                    class="bg-rancho-ink-200 text-rancho-ink-500 w-full cursor-not-allowed rounded-xl py-3 text-center text-xs font-bold transition-colors"
                 >
                     Нельзя заказать
                 </button>

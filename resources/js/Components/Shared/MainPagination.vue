@@ -124,9 +124,11 @@
             class="mt-8 flex justify-center sm:mt-12"
         >
             <div
-                class="flex max-w-full items-center gap-1 overflow-x-auto rounded-2xl border px-4 py-2 backdrop-blur-sm sm:gap-1 sm:p-1.5"
+                class="flex max-w-full items-center gap-1 overflow-x-auto rounded-2xl border px-4 py-2 backdrop-blur-sm sm:p-1.5"
                 :class="
-                    isDark ? 'border-slate-800 bg-slate-900/80' : 'border-slate-200 bg-white/80'
+                    isDark
+                        ? 'border-rancho-ink-800 bg-rancho-ink-900/80'
+                        : 'border-rancho-ink-200 bg-white/80'
                 "
             >
                 <template v-for="(link, k) in visibleLinks" :key="k">
@@ -134,7 +136,7 @@
                     <span
                         v-if="isEllipsis(link)"
                         class="flex h-8 min-w-[28px] select-none items-center justify-center px-1 text-sm font-black sm:h-10 sm:min-w-[40px] sm:px-2"
-                        :class="isDark ? 'text-slate-600' : 'text-slate-400'"
+                        :class="isDark ? 'text-rancho-ink-600' : 'text-rancho-ink-400'"
                         aria-hidden="true"
                     >
                         …
@@ -144,7 +146,7 @@
                     <div
                         v-else-if="link.url === null"
                         class="flex h-8 min-w-[28px] select-none items-center justify-center gap-4 text-nowrap px-2 text-[10px] font-black uppercase tracking-widest opacity-50 sm:h-10 sm:min-w-[40px] sm:px-3"
-                        :class="isDark ? 'text-slate-600' : 'text-slate-400'"
+                        :class="isDark ? 'text-rancho-ink-600' : 'text-rancho-ink-400'"
                         v-html="link.label"
                         aria-hidden="true"
                     />
@@ -153,13 +155,15 @@
                     <Link
                         v-else
                         :href="link.url"
-                        class="flex h-8 min-w-[28px] items-center justify-center text-nowrap rounded-xl px-2 text-[10px] font-black uppercase tracking-widest transition-all focus:outline-none focus:ring-2 focus:ring-orange-500 sm:h-10 sm:min-w-[40px] sm:px-4"
+                        class="flex h-8 min-w-[28px] items-center justify-center text-nowrap rounded-xl px-2 text-[10px] font-black uppercase tracking-widest transition-all focus:outline-none focus-visible:ring-2 sm:h-10 sm:min-w-[40px] sm:px-4"
                         :class="[
                             link.active
-                                ? 'bg-orange-600 text-white shadow-[0_0_20px_rgba(234,88,12,0.4)]'
+                                ? isDark
+                                    ? 'text-rancho-ink-950 bg-rancho-buttercup shadow-[0_0_20px_rgba(227,180,75,0.35)] focus-visible:ring-rancho-buttercup'
+                                    : 'bg-rancho-pine text-white shadow-[0_0_20px_rgba(59,117,88,0.35)] focus-visible:ring-rancho-pine'
                                 : isDark
-                                  ? 'text-slate-400 hover:bg-slate-800 hover:text-white'
-                                  : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900',
+                                  ? 'text-rancho-ink-400 hover:bg-rancho-ink-800 hover:text-white focus-visible:ring-rancho-buttercup'
+                                  : 'text-rancho-ink-600 hover:bg-rancho-ink-100 hover:text-rancho-forest focus-visible:ring-rancho-pine',
                         ]"
                         :aria-current="link.active ? 'page' : undefined"
                         :aria-label="`Перейти на страницу ${link.label}`"

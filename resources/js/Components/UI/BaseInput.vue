@@ -54,7 +54,6 @@
 
     const wrapperClasses = computed(() => [
         'relative w-full',
-        // Скругление: для поиска — таблетка
         isSearch.value ? 'rounded-full' : 'rounded-2xl',
     ]);
 
@@ -66,25 +65,25 @@
         isSearch.value
             ? ['py-2.5 pr-4', hasValue.value && props.clearable ? 'pl-10 pr-10' : 'pl-10']
             : 'px-4 py-3',
-        // Фон
-        isDark.value ? 'bg-slate-950' : 'bg-white',
+        // Фон — на paper белое поле читается как отдельный слой
+        isDark.value ? 'bg-rancho-ink-950' : 'bg-white',
         // Границы
         error.value
-            ? 'border-rose-500/50 focus:border-rose-500'
+            ? 'border-rose-500/60 focus:border-rose-500'
             : isDark.value
-              ? 'border-slate-800 focus:border-orange-500'
-              : 'border-slate-300 focus:border-rancho-pine',
+              ? 'border-rancho-ink-800 focus:border-rancho-buttercup'
+              : 'border-rancho-ink-300 focus:border-rancho-pine',
         // Текст и placeholder
         isDark.value
-            ? 'text-white placeholder:text-slate-600'
-            : 'text-rancho-forest placeholder:text-slate-400',
+            ? 'text-white placeholder:text-rancho-ink-600'
+            : 'text-rancho-forest placeholder:text-rancho-ink-500',
         props.uppercase ? 'uppercase' : '',
     ]);
 
     const iconClasses = computed(() => [
         'pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 transition-colors',
         isSearch.value ? 'h-4 w-4' : 'h-5 w-5',
-        isDark.value ? 'text-slate-500' : 'text-rancho-olive',
+        isDark.value ? 'text-rancho-ink-500' : 'text-rancho-olive',
     ]);
 </script>
 
@@ -94,7 +93,9 @@
             v-if="label"
             :for="inputId"
             class="mb-1.5 block px-1 text-[10px] font-black uppercase tracking-widest transition-colors"
-            :class="error ? 'text-rose-500' : isDark ? 'text-slate-500' : 'text-rancho-olive'"
+            :class="
+                error ? 'text-rose-500' : isDark ? 'text-rancho-ink-500' : 'text-rancho-ink-600'
+            "
         >
             {{ label }}{{ required ? ' *' : '' }}
         </label>
@@ -123,8 +124,8 @@
                 class="absolute right-2.5 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full transition-colors"
                 :class="
                     isDark
-                        ? 'text-slate-500 hover:bg-slate-800 hover:text-white'
-                        : 'text-slate-400 hover:bg-slate-100 hover:text-rancho-forest'
+                        ? 'text-rancho-ink-500 hover:bg-rancho-ink-800 hover:text-white'
+                        : 'text-rancho-ink-500 hover:bg-rancho-ink-100 hover:text-rancho-forest'
                 "
                 @click="clear"
                 aria-label="Очистить"

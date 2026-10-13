@@ -14,10 +14,12 @@ class OrderItemResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $product = $this->product ?? $this->variant?->product;
+
         return [
             'id' => $this->id,
             'order_id' => $this->order_id,
-            'product_id' => $this->product_id,
+            'product_id' => $this->product_id ?? $product?->id,
             'product_variant_id' => $this->product_variant_id,
             'product_name' => $this->product_name,
 
@@ -26,8 +28,8 @@ class OrderItemResource extends JsonResource
 
             'quantity' => $this->quantity,
 
-            'product_slug' => $this->product?->slug,
-            'images' => $this->whenLoaded('product', function() {
+            'product_slug' => $product?->slug,
+            'images' => $this->whenLoaded('product', function () {
                 return $this->product->relationLoaded('media') && $this->product->media->isNotEmpty()
                     ? MediaResource::collection($this->product->media)
                     : [MediaResource::fallback($this->product)];

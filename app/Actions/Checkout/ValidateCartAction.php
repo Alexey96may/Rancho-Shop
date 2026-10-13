@@ -2,16 +2,17 @@
 
 namespace App\Actions\Checkout;
 
-use Illuminate\Support\Collection;
 use App\DTO\CheckoutDTO;
-use App\Exceptions\Checkout\ProductNotAvailableException;
 use App\Exceptions\Checkout\InsufficientStockException;
+use App\Exceptions\Checkout\ProductNotAvailableException;
+use App\Models\ProductVariant;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 
 class ValidateCartAction
 {
     /**
-     * @param Collection<int, \App\Models\ProductVariant> $variants Индексированная коллекция вариаций по id
+     * @param  Collection<int, ProductVariant>  $variants  Индексированная коллекция вариаций по id
      */
     public function handle(CheckoutDTO $dto, Collection $variants): void
     {
@@ -31,8 +32,8 @@ class ValidateCartAction
             if (!$variant->isInStock($item->quantity)) {
                 Log::warning('Insufficient stock', [
                     'variant_id' => $variant->id,
-                    'requested'  => $item->quantity,
-                    'available'  => $variant->stock,
+                    'requested' => $item->quantity,
+                    'available' => $variant->stock,
                 ]);
 
                 throw new InsufficientStockException($variant->id, $product->name ?? null);
