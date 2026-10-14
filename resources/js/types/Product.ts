@@ -30,6 +30,7 @@ export interface Product {
     name: string;
     slug: string;
     description: string | null;
+    is_commentable: boolean;
 
     availability: Availability;
     next_delivery_date: string | null; // "2024-05-20"

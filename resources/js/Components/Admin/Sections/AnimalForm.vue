@@ -38,6 +38,7 @@
         parent_id: props.animal?.parent_id ?? null,
         status: props.animal?.status ?? '',
         is_active: props.animal?.is_active ?? false,
+        is_commentable: props.animal?.is_commentable ?? true,
         bio: props.animal?.bio ?? '',
         features: props.animal?.features ?? {},
         avatar: props.animal?.avatars ? [...props.animal.avatars] : ([] as Array<Media | File>),
@@ -76,7 +77,7 @@
         <form @submit.prevent="submit" class="space-y-4 sm:space-y-6 lg:space-y-8" novalidate>
             <!-- TABS -->
             <nav
-                class="border-rancho-ink-800 bg-rancho-ink-950 flex gap-1 overflow-x-auto rounded-2xl border p-1.5 sm:gap-2 sm:rounded-3xl sm:p-2"
+                class="flex gap-1 overflow-x-auto rounded-2xl border border-rancho-ink-800 bg-rancho-ink-950 p-1.5 sm:gap-2 sm:rounded-3xl sm:p-2"
                 role="tablist"
                 aria-label="Разделы формы"
             >
@@ -90,9 +91,9 @@
                     @click="activeTab = tab.id"
                     :class="[
                         activeTab === tab.id
-                            ? 'bg-rancho-mint text-rancho-ink-950 shadow-lg shadow-rancho-mint/20'
+                            ? 'shadow-lg bg-rancho-mint text-rancho-ink-950 shadow-rancho-mint/20'
                             : 'text-rancho-ink-400 hover:bg-rancho-ink-900 hover:text-rancho-ink-100',
-                        'focus-visible:ring-rancho-mint/40 flex shrink-0 items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all focus:outline-none focus-visible:ring-2 sm:flex-1 sm:gap-3 sm:rounded-2xl sm:px-4 sm:py-3.5',
+                        'flex shrink-0 items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-rancho-mint/40 sm:flex-1 sm:gap-3 sm:rounded-2xl sm:px-4 sm:py-3.5',
                     ]"
                 >
                     <component
@@ -106,7 +107,7 @@
 
             <!-- PANEL -->
             <div
-                class="border-rancho-ink-800 bg-rancho-ink-900/30 rounded-2xl border px-3 py-4 backdrop-blur-sm sm:rounded-3xl sm:p-6 md:p-8 lg:p-10"
+                class="rounded-2xl border border-rancho-ink-800 bg-rancho-ink-900/30 px-3 py-4 backdrop-blur-sm sm:rounded-3xl sm:p-6 md:p-8 lg:p-10"
                 role="tabpanel"
                 aria-live="polite"
             >
@@ -156,14 +157,25 @@
                                     />
                                 </div>
 
-                                <BaseSwitch
-                                    v-model="form.is_active"
-                                    label="Публикация"
-                                    active-text="Опубликовать"
-                                    inactive-text="В черновик"
-                                    :disabled="form.processing"
-                                    theme="dark"
-                                />
+                                <div class="space-y-4">
+                                    <BaseSwitch
+                                        v-model="form.is_active"
+                                        label="Публикация"
+                                        active-text="Опубликовать"
+                                        inactive-text="В черновик"
+                                        :disabled="form.processing"
+                                        theme="dark"
+                                    />
+
+                                    <BaseSwitch
+                                        v-model="form.is_commentable"
+                                        label="Комментарии"
+                                        active-text="Вкючены"
+                                        inactive-text="Отключены"
+                                        :disabled="form.processing"
+                                        theme="dark"
+                                    />
+                                </div>
                             </div>
                         </div>
 
@@ -201,7 +213,7 @@
 
             <!-- ACTIONS -->
             <div
-                class="border-rancho-ink-800 flex items-stretch justify-between gap-3 border-t pt-4 sm:flex-row sm:items-center sm:justify-end sm:gap-4 sm:pt-6"
+                class="flex items-stretch justify-between gap-3 border-t border-rancho-ink-800 pt-4 sm:flex-row sm:items-center sm:justify-end sm:gap-4 sm:pt-6"
             >
                 <BaseCancelButton :href="backUrl" label="Отменить" />
 

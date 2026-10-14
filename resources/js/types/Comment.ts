@@ -8,6 +8,7 @@ export interface Commentable {
     type: string;
     slug: string | null;
     url: string | null;
+    is_commentable: boolean;
 }
 
 export interface Comment {

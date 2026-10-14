@@ -2,12 +2,14 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\DTO\ProductDataDTO;
+use App\Enums\AvailabilityType;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
-use App\Enums\AvailabilityType;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules\Enum;
 use Illuminate\Validation\Rules\File;
-use App\DTO\ProductDataDTO;
 
 class StoreProductRequest extends FormRequest
 {
@@ -32,6 +34,7 @@ class StoreProductRequest extends FormRequest
             'category_id' => 'required|exists:categories,id',
             'availability_type' => ['required', new Enum(AvailabilityType::class)],
             'is_active' => 'boolean',
+            'is_commentable' => 'boolean',
             'description' => 'nullable|string',
             'attributes' => 'nullable|array',
             'schedule' => 'nullable|array',
@@ -39,46 +42,46 @@ class StoreProductRequest extends FormRequest
             'main_photo' => [
                 'nullable',
                 function ($attribute, $value, $fail) {
-                    if ($value instanceof \Illuminate\Http\UploadedFile) {
-                        $validator = \Illuminate\Support\Facades\Validator::make(
+                    if ($value instanceof UploadedFile) {
+                        $validator = Validator::make(
                             [$attribute => $value],
-                            [$attribute => \Illuminate\Validation\Rules\File::image()->max(5 * 1024)]
+                            [$attribute => File::image()->max(5 * 1024)]
                         );
 
                         if ($validator->fails()) {
                             $fail($validator->errors()->first($attribute));
                         }
                     }
-                }
+                },
             ],
             'gallery' => 'nullable|array',
             'gallery.*' => [
                 'nullable',
                 function ($attribute, $value, $fail) {
-                    if ($value instanceof \Illuminate\Http\UploadedFile) {
-                        $validator = \Illuminate\Support\Facades\Validator::make(
+                    if ($value instanceof UploadedFile) {
+                        $validator = Validator::make(
                             [$attribute => $value],
-                            [$attribute => \Illuminate\Validation\Rules\File::image()->max(5 * 1024)]
+                            [$attribute => File::image()->max(5 * 1024)]
                         );
 
                         if ($validator->fails()) {
                             $fail($validator->errors()->first($attribute));
                         }
                     }
-                }
+                },
             ],
             'remove_media' => 'nullable|array',
-            'seo.title'       => 'nullable|string|max:255',
+            'seo.title' => 'nullable|string|max:255',
             'seo.description' => 'nullable|string',
-            'seo.keywords'    => 'nullable|string',
-            'seo.canonical'   => 'nullable|string|url',
-            'seo.is_noindex'  => 'boolean',
+            'seo.keywords' => 'nullable|string',
+            'seo.canonical' => 'nullable|string|url',
+            'seo.is_noindex' => 'boolean',
         ];
     }
 
     /**
-    * Get a strongly typed DTO from the request
-    */
+     * Get a strongly typed DTO from the request
+     */
     public function toDto(): ProductDataDTO
     {
         return ProductDataDTO::fromRequest($this->validated());

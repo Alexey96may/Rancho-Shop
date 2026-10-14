@@ -21,6 +21,7 @@ class AnimalResource extends JsonResource
             'status' => $this->status,
             'bio' => $this->bio,
             'features' => $this->features,
+            'is_commentable' => (bool) $this->is_commentable,
 
             'voice_url' => $this->voice_url,
 
@@ -30,18 +31,17 @@ class AnimalResource extends JsonResource
 
             'gallery' => MediaResource::collection($this->getMedia('gallery')),
 
-            'category' => $this->whenLoaded('category', fn() => [
+            'category' => $this->whenLoaded('category', fn () => [
                 'name' => $this->category->name,
                 'slug' => $this->category->slug,
             ]),
 
             'family' => [
-                'parent' => $this->whenLoaded('parent', fn() => [
+                'parent' => $this->whenLoaded('parent', fn () => [
                     'name' => $this->parent->name,
                     'slug' => $this->parent->slug,
                 ]),
-                'children' => $this->whenLoaded('children', fn() => 
-                    $this->children->map(fn($c) => ['name' => $c->name, 'slug' => $c->slug])
+                'children' => $this->whenLoaded('children', fn () => $this->children->map(fn ($c) => ['name' => $c->name, 'slug' => $c->slug])
                 ),
             ],
 

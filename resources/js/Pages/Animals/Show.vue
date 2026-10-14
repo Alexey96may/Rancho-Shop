@@ -109,7 +109,7 @@
                 <!-- GALLERY -->
                 <div v-scroll-reveal class="space-y-4">
                     <div
-                        class="border-rancho-ink-200 bg-rancho-ink-50 aspect-square overflow-hidden rounded-3xl border"
+                        class="aspect-square overflow-hidden rounded-3xl border border-rancho-ink-200 bg-rancho-ink-50"
                     >
                         <AppImage
                             :src="animal.avatars?.[0] || ''"
@@ -145,7 +145,7 @@
                     <!-- bio -->
                     <p
                         v-if="animal.bio"
-                        class="text-rancho-ink-600 mt-4 text-sm leading-relaxed sm:text-base"
+                        class="mt-4 text-sm leading-relaxed text-rancho-ink-600 sm:text-base"
                     >
                         {{ animal.bio }}
                     </p>
@@ -155,9 +155,9 @@
                         <div
                             v-for="(value, key) in animal.features"
                             :key="key"
-                            class="border-rancho-ink-200 rounded-xl border bg-white p-3 text-sm"
+                            class="rounded-xl border border-rancho-ink-200 bg-white p-3 text-sm"
                         >
-                            <dt class="text-rancho-ink-500 text-xs font-medium">{{ key }}</dt>
+                            <dt class="text-xs font-medium text-rancho-ink-500">{{ key }}</dt>
                             <dd class="font-bold text-rancho-forest">{{ value }}</dd>
                         </div>
                     </dl>
@@ -210,13 +210,13 @@
                     </div>
 
                     <!-- SEO NOTE -->
-                    <p v-if="animal.seo?.description" class="text-rancho-ink-500 mt-10 text-xs">
+                    <p v-if="animal.seo?.description" class="mt-10 text-xs text-rancho-ink-500">
                         {{ animal.seo.description }}
                     </p>
                 </section>
             </div>
 
-            <div v-scroll-reveal class="mt-16">
+            <div v-if="animal.is_commentable" v-scroll-reveal class="mt-16">
                 <CommentsSection
                     :comments="comments"
                     @submit="submitComment"

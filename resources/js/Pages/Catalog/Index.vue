@@ -7,6 +7,7 @@
 
     import ProductCard from '@/Components/Cards/ProductCard.vue';
     import MainPagination from '@/Components/Shared/MainPagination.vue';
+    import ProductCardSkeleton from '@/Components/Skeletons/ProductCardSkeleton.vue';
     import BaseInput from '@/Components/UI/BaseInput.vue';
     import BaseSelect from '@/Components/UI/BaseSelect.vue';
     import BaseSwitch from '@/Components/UI/BaseSwitch.vue';
@@ -55,7 +56,20 @@
     const sort = ref(props.filters.sort || '');
     const inStock = ref(Boolean(props.filters.in_stock) || false);
 
+    const isFiltering = ref(false);
+
+    const showSkeleton = debounce(() => {
+        isFiltering.value = true;
+    }, 200);
+
+    const hideSkeleton = debounce(() => {
+        isFiltering.value = false;
+    }, 150);
+
     const applyFilters = () => {
+        hideSkeleton.cancel();
+        showSkeleton();
+
         router.get(
             route('catalog.index'),
             {
@@ -67,6 +81,10 @@
             {
                 preserveState: true,
                 replace: true,
+                onFinish: () => {
+                    showSkeleton.cancel();
+                    hideSkeleton();
+                },
             },
         );
     };
@@ -85,6 +103,8 @@
 
     onUnmounted(() => {
         debouncedSearch.cancel();
+        showSkeleton.cancel();
+        hideSkeleton.cancel();
     });
 
     const sortArray = [
@@ -184,8 +204,20 @@
                 <!-- ТОВАРЫ -->
                 <div>
                     <Transition name="fade-slide" mode="out-in">
+                        <!-- СКЕЛЕТОНЫ -->
+                        <div
+                            v-if="isFiltering"
+                            key="skeletons"
+                            class="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3"
+                            aria-busy="true"
+                            aria-label="Загрузка товаров"
+                        >
+                            <ProductCardSkeleton v-for="n in 6" :key="`skeleton-${n}`" />
+                        </div>
+
+                        <!-- ПУСТОЕ СОСТОЯНИЕ -->
                         <EmptyState
-                            v-if="!products.data.length"
+                            v-else-if="!products.data.length"
                             key="empty"
                             title="Товары не найдены"
                             description="Попробуйте изменить параметры поиска или сбросить фильтры."
@@ -193,6 +225,7 @@
                             @action="resetFilters"
                         />
 
+                        <!-- РЕАЛЬНЫЕ КАРТОЧКИ -->
                         <TransitionGroup
                             v-else
                             key="grid"

@@ -17,7 +17,7 @@ class ProductResource extends JsonResource
         $mainVariant = $this->relationLoaded('variants') ? $this->mainVariant() : null;
 
         $default = $this->whenLoaded('defaultVariant',
-            fn() => $this->defaultVariant ?? $this->variants->first()
+            fn () => $this->defaultVariant ?? $this->variants->first()
         );
 
         return [
@@ -27,6 +27,7 @@ class ProductResource extends JsonResource
             'name' => $this->name,
             'slug' => $this->slug,
             'description' => $this->description,
+            'is_commentable' => (bool) $this->is_commentable,
 
             'availability' => $this->availability_type
                 ? [

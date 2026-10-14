@@ -17,6 +17,7 @@ class AnimalDataDTO
         public string $status,
         public ?string $bio,
         public array $features,
+        public bool $is_commentable,
         public bool $is_active,
         public array $seoData
     ) {}
@@ -31,6 +32,7 @@ class AnimalDataDTO
             status: $validated['status'],
             bio: $validated['bio'] ?? null,
             features: $validated['features'] ?? [],
+            is_commentable: (bool) ($validated['is_commentable'] ?? true),
             is_active: (bool) ($validated['is_active'] ?? false),
             seoData: $validated['seo'] ?? []
         );
@@ -44,6 +46,7 @@ class AnimalDataDTO
             'category_id' => $this->category_id,
             'parent_id' => $this->parent_id,
             'status' => $this->status,
+            'is_commentable' => $this->is_commentable,
             'bio' => $this->bio,
             'features' => $this->features,
             'is_active' => $this->is_active,

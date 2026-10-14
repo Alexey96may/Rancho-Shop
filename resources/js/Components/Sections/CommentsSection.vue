@@ -3,15 +3,14 @@
 
     import { router } from '@inertiajs/vue3';
 
+    import { VueClientRecaptcha } from 'vue-client-recaptcha';
+
     import AppRating from '@/Components/UI/AppRating.vue';
     import BaseInput from '@/Components/UI/BaseInput.vue';
     import BaseSmartTime from '@/Components/UI/BaseSmartTime.vue';
     import BaseTextarea from '@/Components/UI/BaseTextarea.vue';
-    import { useAdminCrud } from '@/composables/crud/useAdminCrud';
     import type { Comment, Paginated } from '@/types';
     import { getInitials } from '@/utils/user';
-
-    const { deleteEntity } = useAdminCrud();
 
     const props = withDefaults(
         defineProps<{
@@ -52,14 +51,22 @@
     const content = ref('');
     const guestName = ref('');
     const rating = ref(5);
+    // Капча (только для гостей)
+    const captchaInput = ref('');
+    const isCaptchaValid = ref(false);
+    const captchaKey = ref(0);
 
-    // Валидация: если не авторизован — имя гостя обязательно
+    // Валидация: капча нужна только гостям
     const canSubmit = computed(() => {
         const hasContent = content.value.trim().length > 0;
+        if (!hasContent) return false;
+
         if (props.isAuthenticated) {
-            return hasContent;
+            return true;
         }
-        return hasContent && guestName.value.trim().length > 0;
+
+        const hasName = guestName.value.trim().length > 0;
+        return hasName && isCaptchaValid.value;
     });
 
     const isEmpty = computed(() => items.value.length === 0);
@@ -73,9 +80,15 @@
             rating: rating.value,
         });
 
+        // Сброс формы
         content.value = '';
         guestName.value = '';
         rating.value = 5;
+
+        // Сброс капчи
+        captchaInput.value = '';
+        isCaptchaValid.value = false;
+        captchaKey.value++; // новый код при следующей отправке
     };
 
     const loadMore = () => {
@@ -120,17 +133,11 @@
     onBeforeUnmount(() => {
         observer?.disconnect();
     });
-
-    const handleDelete = (comment: Comment) => {
-        const orderDate = new Date(comment.created_at).toLocaleString();
-        const message = 'Удалить отзыв от ' + orderDate + '?';
-        deleteEntity('profile.comments', comment.id, message);
-    };
 </script>
 
 <template>
     <section
-        class="border-rancho-ink-200 mt-16 border-t pt-12 sm:mt-24 sm:pt-16"
+        class="mt-16 border-t border-rancho-ink-200 pt-12 sm:mt-24 sm:pt-16"
         aria-labelledby="comments-title"
     >
         <!-- HEADER -->
@@ -140,7 +147,7 @@
             </h2>
 
             <span
-                class="bg-rancho-ink-100 text-rancho-ink-700 ring-rancho-ink-200 rounded-full px-3 py-1 text-xs font-black ring-1 ring-inset"
+                class="rounded-full bg-rancho-ink-100 px-3 py-1 text-xs font-black text-rancho-ink-700 ring-1 ring-inset ring-rancho-ink-200"
                 role="status"
                 aria-live="polite"
             >
@@ -152,7 +159,7 @@
         <form
             v-if="!onlyShow"
             @submit.prevent="submit"
-            class="border-rancho-ink-200 shadow-sm mb-10 space-y-6 rounded-2xl border bg-white p-6"
+            class="shadow-sm mb-10 space-y-8 rounded-2xl border border-rancho-ink-200 bg-white p-6"
             aria-label="Форма добавления комментария"
         >
             <!-- GUEST NAME FIELD -->
@@ -167,7 +174,7 @@
             />
 
             <div class="flex flex-wrap items-center gap-2">
-                <span class="text-rancho-ink-600 text-xs font-medium md:text-sm">
+                <span class="text-xs font-medium text-rancho-ink-600 md:text-sm">
                     Ваша оценка:
                 </span>
                 <AppRating v-model:rating="rating" :readonly="false" :max="5" />
@@ -186,9 +193,33 @@
             />
 
             <div
+                v-if="!isAuthenticated"
+                class="flex flex-col items-center justify-center gap-4 sm:flex-row"
+            >
+                <VueClientRecaptcha
+                    :key="captchaKey"
+                    v-model="captchaInput"
+                    v-model:valid="isCaptchaValid"
+                    :count="5"
+                    chars-preset="alphanumeric"
+                    distortion="lines"
+                    theme="light"
+                />
+
+                <BaseInput
+                    v-model="guestName"
+                    placeholder="Введите капчу"
+                    type="text"
+                    class="max-w-60"
+                    theme="light"
+                    required
+                />
+            </div>
+
+            <div
                 class="flex flex-col-reverse items-stretch gap-4 sm:flex-row sm:items-center sm:justify-between"
             >
-                <p class="text-rancho-ink-500 text-xs">
+                <p class="text-xs text-rancho-ink-500">
                     Нажмите Enter в форме или кнопку отправки для публикации
                 </p>
 
@@ -206,11 +237,11 @@
         <!-- EMPTY STATE -->
         <div
             v-if="isEmpty"
-            class="border-rancho-ink-300 bg-rancho-ink-50/50 rounded-2xl border border-dashed py-12 text-center"
+            class="rounded-2xl border border-dashed border-rancho-ink-300 bg-rancho-ink-50/50 py-12 text-center"
             role="status"
             aria-live="polite"
         >
-            <p class="text-rancho-ink-600 text-sm italic">Пока нет отзывов — станьте первым!</p>
+            <p class="text-sm italic text-rancho-ink-600">Пока нет отзывов — станьте первым!</p>
         </div>
 
         <!-- LIST -->
@@ -223,13 +254,13 @@
             <article
                 v-for="comment in items"
                 :key="comment.id"
-                class="border-rancho-ink-200 shadow-sm hover:border-rancho-ink-300 hover:shadow-md group rounded-2xl border bg-white p-6 transition-all"
+                class="shadow-sm hover:shadow-md group rounded-2xl border border-rancho-ink-200 bg-white p-6 transition-all hover:border-rancho-ink-300"
                 role="listitem"
                 :aria-label="`Комментарий от ${comment.author_name}`"
             >
                 <header class="mb-4 flex items-start gap-3">
                     <div
-                        class="ring-rancho-ink-100 h-12 w-12 shrink-0 overflow-hidden rounded-2xl ring-2"
+                        class="h-12 w-12 shrink-0 overflow-hidden rounded-2xl ring-2 ring-rancho-ink-100"
                         aria-hidden="true"
                     >
                         <AppImage
@@ -241,7 +272,7 @@
 
                         <div
                             v-else
-                            class="to-rancho-ink-800 flex h-full w-full items-center justify-center bg-gradient-to-br from-rancho-forest text-lg font-black uppercase text-rancho-paper"
+                            class="flex h-full w-full items-center justify-center bg-gradient-to-br from-rancho-forest to-rancho-ink-800 text-lg font-black uppercase text-rancho-paper"
                         >
                             {{ getInitials(comment.author_name) }}
                         </div>
@@ -260,7 +291,7 @@
                     </div>
                 </header>
 
-                <p class="text-rancho-ink-700 text-sm leading-relaxed">
+                <p class="text-sm leading-relaxed text-rancho-ink-700">
                     {{ comment.content }}
                 </p>
             </article>
@@ -273,7 +304,7 @@
             class="mt-6 flex h-10 items-center justify-center"
             aria-hidden="true"
         >
-            <span v-if="loading" class="text-rancho-ink-500 text-sm">Загрузка...</span>
+            <span v-if="loading" class="text-sm text-rancho-ink-500">Загрузка...</span>
         </div>
     </section>
 </template>

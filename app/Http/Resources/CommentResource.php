@@ -38,6 +38,7 @@ class CommentResource extends JsonResource
                 'type' => class_basename($this->commentable),
                 'slug' => $this->commentable->slug ?? null,
                 'url' => $this->commentableUrl($this->commentable),
+                'is_commentable' => (bool) ($this->commentable->is_commentable ?? true),
             ] : null,
 
             'created_at' => $this->created_at->toIso8601String(),

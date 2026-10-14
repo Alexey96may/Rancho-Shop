@@ -7,6 +7,7 @@
 
     import AnimalCard from '@/Components/Cards/AnimalCard.vue';
     import MainPagination from '@/Components/Shared/MainPagination.vue';
+    import AnimalCardSkeleton from '@/Components/Skeletons/AnimalCardSkeleton.vue';
     import BaseInput from '@/Components/UI/BaseInput.vue';
     import BaseSelect from '@/Components/UI/BaseSelect.vue';
     import EmptyState from '@/Components/UI/EmptyState.vue';
@@ -67,6 +68,10 @@
     const status = ref(props.filters.status || '');
 
     const applyFilters = () => {
+        hideSkeleton.cancel();
+
+        showSkeleton();
+
         router.get(
             route('animals.index'),
             {
@@ -78,6 +83,10 @@
                 preserveState: true,
                 preserveScroll: true,
                 replace: true,
+                onFinish: () => {
+                    showSkeleton.cancel();
+                    hideSkeleton();
+                },
             },
         );
     };
@@ -96,6 +105,8 @@
 
     onUnmounted(() => {
         debouncedSearch.cancel();
+        showSkeleton.cancel();
+        hideSkeleton.cancel();
     });
 
     const resetFilters = () => {
@@ -108,6 +119,16 @@
     const hasActiveFilters = computed(() => {
         return Boolean(search.value.trim() || categoryId.value || status.value);
     });
+
+    const isFiltering = ref(false);
+
+    const showSkeleton = debounce(() => {
+        isFiltering.value = true;
+    }, 200);
+
+    const hideSkeleton = debounce(() => {
+        isFiltering.value = false;
+    }, 150);
 </script>
 
 <template>
@@ -145,7 +166,7 @@
                             <button
                                 v-if="hasActiveFilters"
                                 @click="resetFilters"
-                                class="text-rancho-ember text-xs font-bold hover:underline"
+                                class="text-xs font-bold text-rancho-ember hover:underline"
                             >
                                 Сбросить
                             </button>
@@ -174,8 +195,20 @@
                 <!-- ЖИВОТНЫЕ -->
                 <div>
                     <Transition name="fade-slide" mode="out-in">
+                        <!-- СКЕЛЕТОНЫ -->
+                        <div
+                            v-if="isFiltering"
+                            key="skeletons"
+                            class="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3"
+                            aria-busy="true"
+                            aria-label="Загрузка животных"
+                        >
+                            <AnimalCardSkeleton v-for="n in 6" :key="`skeleton-${n}`" />
+                        </div>
+
+                        <!-- ПУСТОЕ СОСТОЯНИЕ -->
                         <EmptyState
-                            v-if="!animals.data.length"
+                            v-else-if="!animals.data.length"
                             key="empty"
                             title="Животные не найдены"
                             description="Попробуйте изменить параметры поиска или сбросить фильтры."
@@ -183,6 +216,7 @@
                             @action="resetFilters"
                         />
 
+                        <!-- РЕАЛЬНЫЕ КАРТОЧКИ -->
                         <TransitionGroup
                             v-else
                             key="grid"

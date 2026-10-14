@@ -84,6 +84,7 @@ class Animal extends Model implements HasMedia
         'category_id',
         'slug',
         'is_active',
+        'is_commentable',
         'status',
         'bio',
         'features',
@@ -95,6 +96,7 @@ class Animal extends Model implements HasMedia
      */
     protected $casts = [
         'features' => 'array',
+        'is_commentable' => 'boolean',
         'is_active' => 'boolean',
     ];
 

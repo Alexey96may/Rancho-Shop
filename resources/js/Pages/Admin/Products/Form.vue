@@ -86,6 +86,7 @@
         category_id: props.product?.data?.category_id ?? null,
         availability_type: props.product?.data?.availability.value ?? 'stock',
         is_active: props.product?.data?.is_active ?? true,
+        is_commentable: props.product?.data?.is_commentable ?? true,
         attributes: props.product?.data?.attributes ?? {},
         animal_ids: props.product?.data?.animals?.map((a) => a.id) ?? [],
         main_photo: props.product?.data?.main_photo
@@ -347,13 +348,25 @@
                     <div
                         class="rounded-2xl border border-rancho-ink-800 bg-rancho-ink-900/50 p-4 sm:rounded-3xl sm:p-6"
                     >
-                        <BaseSwitch
-                            v-model="form.is_active"
-                            label="Статус публикации"
-                            active-text="Опубликован"
-                            inactive-text="Черновик"
-                            theme="dark"
-                        />
+                        <div class="space-y-4">
+                            <BaseSwitch
+                                v-model="form.is_active"
+                                label="Публикация"
+                                active-text="Опубликовать"
+                                inactive-text="В черновик"
+                                :disabled="form.processing"
+                                theme="dark"
+                            />
+
+                            <BaseSwitch
+                                v-model="form.is_commentable"
+                                label="Комментарии"
+                                active-text="Вкючены"
+                                inactive-text="Отключены"
+                                :disabled="form.processing"
+                                theme="dark"
+                            />
+                        </div>
 
                         <hr class="my-6 border-rancho-ink-800" />
 

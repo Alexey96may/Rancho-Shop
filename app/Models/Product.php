@@ -80,13 +80,15 @@ class Product extends Model implements HasMedia
 
     protected $fillable = [
         'category_id', 'name', 'slug', 'description',
-        'availability_type', 'schedule', 'attributes', 'is_active',
+        'availability_type', 'schedule', 'attributes',
+        'is_commentable', 'is_active',
     ];
 
     protected $casts = [
         'schedule' => 'array',
         'attributes' => 'array',
         'is_active' => 'boolean',
+        'is_commentable' => 'boolean',
         'availability_type' => AvailabilityType::class,
     ];
 

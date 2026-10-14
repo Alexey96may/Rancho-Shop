@@ -18,6 +18,7 @@ export interface Animal {
     voice_url: string | null;
     avatars: Media[];
     gallery: Media[] | null;
+    is_commentable: boolean;
     category?: {
         name: string;
         slug: string;

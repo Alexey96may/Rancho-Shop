@@ -57,7 +57,7 @@ Route::get('/animals', [AnimalController::class, 'index'])->name('animals.index'
 Route::get('/animals/{animal:slug}', [AnimalController::class, 'show'])->name('animals.show');
 
 Route::get('/comments', [CommentController::class, 'index'])->name('reviews.index');
-Route::post('/comments', [CommentController::class, 'store'])->middleware('auth')->name('comments.store');
+Route::post('/comments', [CommentController::class, 'store'])->middleware('throttle:5,1')->name('comments.store');
 
 Route::post('/delivery/draft', [DeliveryController::class, 'store'])->name('delivery.draft.store');
 

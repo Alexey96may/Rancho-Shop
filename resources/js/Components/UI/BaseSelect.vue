@@ -181,7 +181,11 @@
             { 'pointer-events-none opacity-50': disabled },
         ]"
     >
-        <Listbox v-model="selected" :disabled="disabled">
+        <Listbox
+            :model-value="model ?? null"
+            @update:model-value="(v) => (model = v)"
+            :disabled="disabled"
+        >
             <div class="relative">
                 <ListboxLabel v-if="label" :id="labelId" :class="styles.label">
                     {{ label }}
@@ -200,7 +204,7 @@
                         class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2"
                         aria-hidden="true"
                     >
-                        <ChevronUpDownIcon class="text-rancho-ink-500 h-5 w-5" />
+                        <ChevronUpDownIcon class="h-5 w-5 text-rancho-ink-500" />
                     </span>
                 </ListboxButton>
 
@@ -233,7 +237,7 @@
                                 </span>
                                 <span
                                     v-if="isSelected"
-                                    class="text-rancho-ink-600 absolute inset-y-0 left-0 flex items-center pl-3"
+                                    class="absolute inset-y-0 left-0 flex items-center pl-3 text-rancho-ink-600"
                                 >
                                     <CheckIcon class="h-5 w-5" />
                                 </span>
@@ -251,7 +255,7 @@
                                 <span
                                     :class="[
                                         isSelected
-                                            ? 'text-rancho-ink-600 font-bold'
+                                            ? 'font-bold text-rancho-ink-600'
                                             : 'font-normal',
                                         'block truncate',
                                     ]"
@@ -260,7 +264,7 @@
                                 </span>
                                 <span
                                     v-if="isSelected"
-                                    class="text-rancho-ink-600 absolute inset-y-0 left-0 flex items-center pl-3"
+                                    class="absolute inset-y-0 left-0 flex items-center pl-3 text-rancho-ink-600"
                                 >
                                     <CheckIcon class="h-5 w-5" />
                                 </span>
@@ -279,7 +283,7 @@
             <p
                 v-if="error"
                 :id="errorId"
-                class="text-rancho-ember ml-2 mt-1.5 text-[10px] font-bold uppercase italic"
+                class="ml-2 mt-1.5 text-[10px] font-bold uppercase italic text-rancho-ember"
             >
                 {{ error }}
             </p>

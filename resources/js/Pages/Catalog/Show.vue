@@ -148,7 +148,7 @@
             <!-- IMAGES -->
             <div v-scroll-reveal class="space-y-4">
                 <div
-                    class="border-rancho-ink-200 bg-rancho-ink-50 aspect-square overflow-hidden rounded-3xl border"
+                    class="aspect-square overflow-hidden rounded-3xl border border-rancho-ink-200 bg-rancho-ink-50"
                 >
                     <AppImage
                         :src="productData.main_photo?.[0] || ''"
@@ -169,7 +169,7 @@
                 <!-- Категория -->
                 <span
                     v-if="productData.category?.name"
-                    class="text-rancho-ember text-[10px] font-black uppercase tracking-widest"
+                    class="text-[10px] font-black uppercase tracking-widest text-rancho-ember"
                 >
                     {{ productData.category.name }}
                 </span>
@@ -187,25 +187,25 @@
 
                     <span
                         v-if="discount"
-                        class="text-rancho-ink-400 text-lg line-through sm:text-xl"
+                        class="text-lg text-rancho-ink-400 line-through sm:text-xl"
                     >
                         {{ oldPrice }}
                     </span>
 
                     <span
                         v-if="discount"
-                        class="bg-rancho-ember rounded-lg px-2 py-1 text-xs font-black uppercase tracking-wider text-white"
+                        class="rounded-lg bg-rancho-ember px-2 py-1 text-xs font-black uppercase tracking-wider text-white"
                     >
                         −{{ discount }}%
                     </span>
 
-                    <span class="text-rancho-ink-500 text-sm">
+                    <span class="text-sm text-rancho-ink-500">
                         / {{ productData.default_variant?.unit?.short ?? 'шт' }}
                     </span>
                 </div>
 
                 <!-- META -->
-                <div class="border-rancho-ink-200 mt-8 space-y-3 border-y py-6 text-sm">
+                <div class="mt-8 space-y-3 border-y border-rancho-ink-200 py-6 text-sm">
                     <div class="flex items-center justify-between">
                         <span class="text-rancho-ink-500">Статус</span>
                         <span class="font-bold text-rancho-forest">
@@ -234,7 +234,7 @@
                 </div>
 
                 <!-- DESCRIPTION -->
-                <p class="text-rancho-ink-600 mt-6 text-sm leading-relaxed sm:text-base">
+                <p class="mt-6 text-sm leading-relaxed text-rancho-ink-600 sm:text-base">
                     {{ productData.description || 'Описание пока отсутствует' }}
                 </p>
 
@@ -246,7 +246,7 @@
         </div>
 
         <!-- COMMENTS -->
-        <div v-scroll-reveal class="mt-16 pb-12 sm:pb-20">
+        <div v-if="productData.is_commentable" v-scroll-reveal class="mt-16 pb-12 sm:pb-20">
             <CommentsSection
                 :comments="comments"
                 @submit="submitComment"

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Comments\EnsureCommentableAction;
 use App\Enums\CommentableType;
 use App\Enums\CommentStatus;
 use App\Http\Resources\CommentResource;
@@ -40,7 +41,8 @@ class CommentController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(Request $request,
+        EnsureCommentableAction $ensureCommentable, )
     {
         $user = Auth::user();
 
@@ -51,6 +53,11 @@ class CommentController extends Controller
             'rating' => ['nullable', 'numeric', 'between:1,5'],
             'guest_name' => [Rule::requiredIf(!$user), 'nullable', 'string', 'max:50'],
         ]);
+
+        $ensureCommentable->handle(
+            $data['commentable_type'] ?? null,
+            $data['commentable_id'] ?? null,
+        );
 
         $status = $user->is_admin ?? false
             ? CommentStatus::APPROVED
