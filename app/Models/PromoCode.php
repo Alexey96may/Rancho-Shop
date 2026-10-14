@@ -168,4 +168,25 @@ class PromoCode extends Model
 
         return $query->orderByDesc('id');
     }
+
+    /**
+     * Скидка в копейках для указанной суммы.
+     */
+    public function calculateDiscount(int $subtotal): int
+    {
+        if ($subtotal < $this->min_order_amount) {
+            return 0;
+        }
+
+        $discount = match ($this->type) {
+            PromoCodeType::PERCENT => (int) round($subtotal * $this->value / 100),
+            PromoCodeType::FIXED => $this->value,
+        };
+
+        if ($this->max_discount !== null) {
+            $discount = min($discount, $this->max_discount);
+        }
+
+        return min($discount, $subtotal);
+    }
 }

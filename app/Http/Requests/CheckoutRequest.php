@@ -2,10 +2,10 @@
 
 namespace App\Http\Requests;
 
+use App\DTO\CartItemDTO;
+use App\DTO\CheckoutDTO;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
-use App\DTO\CheckoutDTO;
-use App\DTO\CartItemDTO;
 
 class CheckoutRequest extends FormRequest
 {
@@ -29,7 +29,13 @@ class CheckoutRequest extends FormRequest
             'customer_phone' => ['required', 'string', 'max:50'],
             'delivery_address' => ['nullable', 'string'],
             'customer_comment' => ['nullable', 'string'],
-            'create_account'   => ['sometimes', 'boolean'],
+            'create_account' => ['sometimes', 'boolean'],
+
+            'promo_code_id' => [
+                'nullable',
+                'integer',
+                'exists:promo_codes,id',
+            ],
 
             'items' => ['required', 'array', 'min:1'],
             'items.*.variant_id' => ['required', 'integer', 'exists:product_variants,id'],
@@ -47,7 +53,8 @@ class CheckoutRequest extends FormRequest
             deliveryAddress: $data['delivery_address'] ?? null,
             customerComment: $data['customer_comment'] ?? null,
             createAccount: (bool) ($data['create_account'] ?? false),
-            userId:        $this->user()?->id,
+            promoCodeId: $data['promo_code_id'] ?? session('promo_code_id'),
+            userId: $this->user()?->id,
             items: collect($data['items'])
                 ->map(fn ($item) => new CartItemDTO(
                     quantity: $item['quantity'],

@@ -1,7 +1,7 @@
 <script setup lang="ts">
     import { computed, nextTick, ref } from 'vue';
 
-    import { Head, useForm, usePage } from '@inertiajs/vue3';
+    import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 
     import BaseInput from '@/Components/UI/BaseInput.vue';
     import BaseSubmitButton from '@/Components/UI/BaseSubmitButton.vue';
@@ -47,6 +47,38 @@
     const page = usePage<SharedData>();
 
     const user = computed(() => page.props.auth.user);
+
+    const appliedPromo = computed(() => (page.props.promo as any) ?? null);
+
+    const promoCode = ref('');
+    const isChecking = ref(false);
+
+    const applyPromo = () => {
+        if (!promoCode.value.trim()) return;
+
+        isChecking.value = true;
+
+        router.post(
+            route('promo-code.check'),
+            {
+                code: promoCode.value.trim(),
+                subtotal: cart.totalPrice,
+            },
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    promoCode.value = '';
+                },
+                onFinish: () => {
+                    isChecking.value = false;
+                },
+            },
+        );
+    };
+
+    const removePromo = () => {
+        router.post(route('promo-code.remove'), {}, { preserveScroll: true });
+    };
 
     const delivery = computed(() => props.delivery_draft ?? page.props.delivery_draft ?? null);
     const deliveryResult = computed(() => props.delivery_result ?? null);
@@ -122,7 +154,9 @@
     });
 
     const computedTotalPrice = computed(() =>
-        formatMoney(cart.totalPrice + (deliveryPrice.value ?? 0)),
+        formatMoney(
+            cart.totalPrice - (appliedPromo.value?.discount ?? 0) + (deliveryPrice.value ?? 0),
+        ),
     );
 
     function togglePickup() {
@@ -207,7 +241,7 @@
                 <h1 class="text-2xl font-black text-rancho-forest sm:text-4xl">
                     Оформление заказа
                 </h1>
-                <p class="text-rancho-ink-600 mt-2 text-xs sm:text-sm">Доставка или самовывоз</p>
+                <p class="mt-2 text-xs text-rancho-ink-600 sm:text-sm">Доставка или самовывоз</p>
             </header>
 
             <div class="relative grid grid-cols-1 items-start gap-8 lg:grid-cols-3">
@@ -246,13 +280,13 @@
 
                     <!-- DELIVERY BLOCK -->
                     <div
-                        class="border-rancho-ink-200 shadow-sm space-y-3 rounded-2xl border bg-white p-4 sm:p-5"
+                        class="shadow-sm space-y-3 rounded-2xl border border-rancho-ink-200 bg-white p-4 sm:p-5"
                     >
                         <Transition name="slide-fade" mode="out-in">
                             <!-- CASE: PICKUP -->
                             <div v-if="isPickup" key="pickup">
                                 <div class="text-sm font-bold text-rancho-forest">📦 Самовывоз</div>
-                                <p class="text-rancho-ink-600 mt-1 text-sm">
+                                <p class="mt-1 text-sm text-rancho-ink-600">
                                     Адрес доставки не выбран
                                 </p>
 
@@ -271,7 +305,7 @@
                                     🚚 Доставка выбрана
                                 </div>
 
-                                <p class="text-rancho-ink-700 mt-1 text-sm">
+                                <p class="mt-1 text-sm text-rancho-ink-700">
                                     {{ form.delivery_address }}
                                 </p>
 
@@ -307,7 +341,7 @@
 
                                             <div
                                                 v-if="deliveryResult.zone?.name"
-                                                class="text-rancho-ink-500 mt-1 flex justify-between gap-3"
+                                                class="mt-1 flex justify-between gap-3 text-rancho-ink-500"
                                             >
                                                 <span>Зона</span>
                                                 <span>{{ deliveryResult.zone.name }}</span>
@@ -315,7 +349,7 @@
 
                                             <div
                                                 v-if="deliveryResult.distance_to_route != null"
-                                                class="text-rancho-ink-500 mt-1 flex justify-between gap-3"
+                                                class="mt-1 flex justify-between gap-3 text-rancho-ink-500"
                                             >
                                                 <span>До маршрута</span>
                                                 <span>
@@ -328,7 +362,7 @@
 
                                             <div
                                                 v-if="deliveryResult.distance_to_farm != null"
-                                                class="text-rancho-ink-500 mt-1 flex justify-between gap-3"
+                                                class="mt-1 flex justify-between gap-3 text-rancho-ink-500"
                                             >
                                                 <span>От фермы</span>
                                                 <span>
@@ -341,7 +375,7 @@
 
                                             <div
                                                 v-if="amountUntilFreeDelivery !== null"
-                                                class="text-rancho-ink-800 mt-2 rounded-lg bg-rancho-buttercup/15 p-2 text-xs font-medium ring-1 ring-inset ring-rancho-buttercup/30"
+                                                class="mt-2 rounded-lg bg-rancho-buttercup/15 p-2 text-xs font-medium text-rancho-ink-800 ring-1 ring-inset ring-rancho-buttercup/30"
                                             >
                                                 До бесплатной доставки осталось
                                                 <strong class="font-black">
@@ -361,7 +395,7 @@
                                     <button
                                         type="button"
                                         @click="goToDeliveryPage"
-                                        class="border-rancho-ink-300 hover:bg-rancho-ink-50 flex-1 rounded-xl border-2 bg-white px-4 py-2.5 text-xs font-black uppercase tracking-widest text-rancho-forest transition-all hover:border-rancho-forest focus:outline-none focus-visible:ring-4 focus-visible:ring-rancho-pine/30 active:scale-95"
+                                        class="flex-1 rounded-xl border-2 border-rancho-ink-300 bg-white px-4 py-2.5 text-xs font-black uppercase tracking-widest text-rancho-forest transition-all hover:border-rancho-forest hover:bg-rancho-ink-50 focus:outline-none focus-visible:ring-4 focus-visible:ring-rancho-pine/30 active:scale-95"
                                     >
                                         Изменить
                                     </button>
@@ -392,7 +426,7 @@
                         <Transition name="fade-up">
                             <p
                                 v-if="deliveryError"
-                                class="text-rancho-ink-800 rounded-xl bg-rancho-buttercup/15 px-3 py-2 text-sm font-medium ring-1 ring-inset ring-rancho-buttercup/30"
+                                class="rounded-xl bg-rancho-buttercup/15 px-3 py-2 text-sm font-medium text-rancho-ink-800 ring-1 ring-inset ring-rancho-buttercup/30"
                             >
                                 {{ deliveryError }}
                             </p>
@@ -424,7 +458,7 @@
                 <!-- RIGHT -->
                 <aside
                     v-scroll-reveal
-                    class="border-rancho-ink-200 shadow-sm sticky right-0 top-0 rounded-2xl border bg-white p-6"
+                    class="shadow-sm sticky right-0 top-0 rounded-2xl border border-rancho-ink-200 bg-white p-6"
                     aria-label="Ваш заказ"
                 >
                     <h2
@@ -453,7 +487,7 @@
                         <div
                             v-if="isPickup"
                             key="pickup-row"
-                            class="border-rancho-ink-100 text-rancho-ink-700 mt-2 flex justify-between gap-3 border-t pt-3 text-sm"
+                            class="mt-2 flex justify-between gap-3 border-t border-rancho-ink-100 pt-3 text-sm text-rancho-ink-700"
                         >
                             <span>Самовывоз</span>
                             <span class="font-bold text-rancho-pine">бесплатно</span>
@@ -462,7 +496,7 @@
                         <div
                             v-else-if="deliveryPrice !== null"
                             key="delivery-row"
-                            class="border-rancho-ink-100 text-rancho-ink-700 mt-2 flex justify-between gap-3 border-t pt-3 text-sm"
+                            class="mt-2 flex justify-between gap-3 border-t border-rancho-ink-100 pt-3 text-sm text-rancho-ink-700"
                         >
                             <span>Доставка</span>
                             <span class="font-bold text-rancho-forest">
@@ -472,19 +506,66 @@
                         </div>
                     </Transition>
 
+                    <!-- PROMO CODE -->
+                    <div class="mt-4 border-t border-rancho-ink-100 pt-4">
+                        <Transition name="slide-fade" mode="out-in">
+                            <div v-if="!appliedPromo">
+                                <BaseInput
+                                    v-model="promoCode"
+                                    label="Промокод"
+                                    placeholder="Введите код"
+                                    theme="light"
+                                    :error="page.props.errors.promo_code as string | undefined"
+                                    :disabled="isChecking"
+                                />
+
+                                <button
+                                    type="button"
+                                    @click="applyPromo"
+                                    :disabled="!promoCode.trim() || isChecking"
+                                    class="mt-2 w-full rounded-xl bg-rancho-pine py-2.5 text-xs font-bold uppercase tracking-wider text-white transition-colors hover:bg-rancho-forest disabled:cursor-not-allowed disabled:opacity-50"
+                                >
+                                    {{ isChecking ? 'Проверка...' : 'Применить' }}
+                                </button>
+                            </div>
+
+                            <div
+                                v-else
+                                class="flex items-center justify-between rounded-xl bg-rancho-pine/10 px-3 py-2.5"
+                            >
+                                <div class="min-w-0">
+                                    <p class="truncate text-sm font-bold text-rancho-forest">
+                                        {{ appliedPromo.code }}
+                                    </p>
+                                    <p class="text-xs text-rancho-ink-600">
+                                        −{{ formatMoney(appliedPromo.discount) }}
+                                    </p>
+                                </div>
+
+                                <button
+                                    type="button"
+                                    @click="removePromo"
+                                    class="text-xs font-bold text-rancho-ember hover:underline"
+                                >
+                                    Убрать
+                                </button>
+                            </div>
+                        </Transition>
+                    </div>
+
                     <Transition name="fade-up">
                         <div
                             v-if="cart.items.length === 0"
-                            class="text-rancho-ink-500 py-3 text-center text-sm"
+                            class="py-3 text-center text-sm text-rancho-ink-500"
                         >
                             Корзина пуста
                         </div>
                     </Transition>
 
                     <div
-                        class="border-rancho-ink-200 mt-2 flex items-baseline justify-between gap-2 border-t pt-4"
+                        class="mt-2 flex items-baseline justify-between gap-2 border-t border-rancho-ink-200 pt-4"
                     >
-                        <span class="text-rancho-ink-600 text-sm font-bold">Итого</span>
+                        <span class="text-sm font-bold text-rancho-ink-600">Итого</span>
                         <span class="text-xl font-black text-rancho-forest sm:text-2xl">
                             {{ computedTotalPrice }}
                         </span>

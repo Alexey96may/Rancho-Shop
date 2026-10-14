@@ -38,13 +38,11 @@ class CheckoutPageController extends Controller
 
         $deliveryResult = null;
 
-        // Выполняем расчёт только если выбрана доставка с координатами или самовывоз
         $hasCoords = !empty($deliveryDraft['lat']) && !empty($deliveryDraft['lng']);
         $isPickup = (bool) ($deliveryDraft['is_pickup'] ?? false);
 
         if ($hasCoords && !$isPickup) {
             try {
-                // Инициализация DTO в строгом соответствии с сигнатурой конструктора
                 $deliveryDto = new DeliveryDTO(
                     address: $deliveryDraft['address'] ?? null,
                     lat: isset($deliveryDraft['lat']) ? (float) $deliveryDraft['lat'] : null,
@@ -54,10 +52,8 @@ class CheckoutPageController extends Controller
                     meta: null
                 );
 
-                // Валидация и расчёт через Action
                 $deliveryResult = $validateDelivery->handle($deliveryDto);
             } catch (ValidationException $e) {
-                // Если адрес вне зоны доставки
                 $deliveryResult = [
                     'is_valid' => false,
                     'error' => $e->getMessage(),
@@ -82,12 +78,14 @@ class CheckoutPageController extends Controller
             $deliveryDto
         );
 
+        // Промокод применён к заказу — очищаем сессию
+        session()->forget('promo_code_id');
+
         return redirect()->route('payments.checkout', $order);
     }
 
     public function success(Order $order)
     {
-        // TODO проверить, принадлежит ли заказ текущему пользователю/сессии
         return Inertia::render('Checkout/Success', [
             'order' => $order->load('items.variant.product'),
         ]);

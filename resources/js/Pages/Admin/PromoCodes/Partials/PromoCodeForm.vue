@@ -100,13 +100,16 @@
                 v-model="form.value"
                 v-model:error="form.errors.value"
                 :min="0"
-                :label="'Значение (' + (form.type === 'percent' ? '%' : 'в копейках') + ')'"
+                :label="'Значение (' + (form.type === 'percent' ? '%' : 'в рублях') + ')'"
+                :is-money="form.type === 'fixed'"
                 :disabled="form.processing"
             />
 
             <AdminNumberInput
                 v-model="form.min_order_amount"
                 v-model:error="form.errors.min_order_amount"
+                :is-money="true"
+                zero-value="—"
                 :min="0"
                 label="Мин. сумма заказа (в копейках)"
             />
@@ -114,6 +117,8 @@
             <AdminNumberInput
                 v-model="form.max_discount"
                 v-model:error="form.errors.max_discount"
+                :is-money="true"
+                zero-value="—"
                 :min="0"
                 label="Макс. сумма скидки (в копейках)"
             />
@@ -130,6 +135,7 @@
                 v-model="form.usage_limit"
                 v-model:error="form.errors.usage_limit"
                 :min="0"
+                zero-value="—"
                 label="Лимит использований"
             />
 

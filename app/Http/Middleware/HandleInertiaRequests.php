@@ -110,6 +110,8 @@ class HandleInertiaRequests extends Middleware
                 'contact_vk',
                 'address_farm',
             ]),
+
+            'promo' => fn () => $request->session()->get('promo'),
         ];
     }
 

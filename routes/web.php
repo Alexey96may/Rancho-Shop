@@ -28,6 +28,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\Profile\ProfileCommentController;
 use App\Http\Controllers\Profile\ProfileController;
 use App\Http\Controllers\Profile\ProfileOrderController;
+use App\Http\Controllers\PromoCodeController as PublicPromoCodeController;
 use App\Http\Controllers\RobotsController;
 use App\Http\Controllers\SitemapController;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
@@ -60,6 +61,14 @@ Route::get('/comments', [CommentController::class, 'index'])->name('reviews.inde
 Route::post('/comments', [CommentController::class, 'store'])->middleware('throttle:5,1')->name('comments.store');
 
 Route::post('/delivery/draft', [DeliveryController::class, 'store'])->name('delivery.draft.store');
+
+Route::middleware('throttle:10,1')->group(function () {
+    Route::post('/promo-code/check', [PublicPromoCodeController::class, 'check'])
+        ->name('promo-code.check');
+});
+
+Route::post('/promo-code/remove', [PublicPromoCodeController::class, 'remove'])
+    ->name('promo-code.remove');
 
 // Публичные маршруты оплаты (доступны и для гостей, и для авторизованных)
 // Публичные роуты оплаты

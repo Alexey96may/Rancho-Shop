@@ -17,5 +17,6 @@ class CheckoutDTO
 
         public bool $createAccount,
         public ?int $userId,
+        public ?int $promoCodeId = null,
     ) {}
 }

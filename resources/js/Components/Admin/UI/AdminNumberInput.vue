@@ -2,6 +2,7 @@
     import { computed, onBeforeUnmount, ref, useId, watch } from 'vue';
 
     import { MinusIcon, PlusIcon } from '@heroicons/vue/24/outline';
+    import { toInteger } from 'lodash';
 
     const model = defineModel<number | null | undefined>({ default: 0 });
     const error = defineModel<string | undefined>('error');
@@ -13,6 +14,7 @@
         step?: number;
         disabled?: boolean;
         isMoney?: boolean;
+        zeroValue?: string;
     }>();
 
     const inputId = useId();
@@ -42,6 +44,8 @@
         });
 
         let res = formatter.format(localValue.value);
+
+        if (props.zeroValue && toInteger(model.value) === 0) return props.zeroValue;
         return props.isMoney ? res.replace(',00', '') : res;
     });
 
@@ -106,18 +110,18 @@
         <label
             v-if="label"
             :for="inputId"
-            class="text-rancho-ink-500 mb-1.5 block px-1 text-[10px] font-black uppercase tracking-widest"
+            class="mb-1.5 block px-1 text-[10px] font-black uppercase tracking-widest text-rancho-ink-500"
         >
             {{ label }}
         </label>
 
         <div
-            class="border-rancho-ink-800 bg-rancho-ink-950 focus-within:border-rancho-mint/50 group relative flex w-full overflow-hidden rounded-2xl border"
+            class="group relative flex w-full overflow-hidden rounded-2xl border border-rancho-ink-800 bg-rancho-ink-950 focus-within:border-rancho-mint/50"
         >
             <button
                 type="button"
                 @mousedown="startHold(decrement)"
-                class="border-rancho-ink-800 text-rancho-ink-400 hover:bg-rancho-ink-900 hover:text-rancho-mint flex w-12 items-center justify-center border-r"
+                class="flex w-12 items-center justify-center border-r border-rancho-ink-800 text-rancho-ink-400 hover:bg-rancho-ink-900 hover:text-rancho-mint"
             >
                 <MinusIcon class="h-4 w-4" />
             </button>
@@ -138,7 +142,7 @@
             <button
                 type="button"
                 @mousedown="startHold(increment)"
-                class="border-rancho-ink-800 text-rancho-ink-400 hover:bg-rancho-ink-900 hover:text-rancho-mint flex w-12 items-center justify-center border-l"
+                class="flex w-12 items-center justify-center border-l border-rancho-ink-800 text-rancho-ink-400 hover:bg-rancho-ink-900 hover:text-rancho-mint"
             >
                 <PlusIcon class="h-4 w-4" />
             </button>
