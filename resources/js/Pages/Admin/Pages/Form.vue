@@ -1,5 +1,5 @@
 <script setup lang="ts">
-    import { PropType, computed, ref } from 'vue';
+    import { type PropType, computed, ref } from 'vue';
 
     import { useForm } from '@inertiajs/vue3';
 
@@ -21,7 +21,7 @@
     import AdminLayout from '@/Layouts/AdminLayout.vue';
     import { useAdminCrud } from '@/composables/crud/useAdminCrud';
     import { useAdminForm } from '@/composables/crud/useAdminForm';
-    import { AdminPage, ResourceSingle } from '@/types';
+    import type { AdminPage, ResourceSingle } from '@/types';
     import { formatDateTime } from '@/utils/format';
 
     defineOptions({ layout: AdminLayout });
@@ -122,13 +122,16 @@
             />
         </Teleport>
 
-        <div class="mx-auto max-w-6xl space-y-6">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-4">
-                    <BaseCancelButton :href="backUrl" label="Назад" />
+        <div class="mx-auto space-y-10">
+            <!-- TOP BAR -->
+            <div class="flex flex-row flex-wrap justify-between gap-4 sm:items-center">
+                <div>
+                    <BaseCancelButton :href="backUrl" label="Назад" theme="dark" />
+                </div>
 
+                <div class="flex flex-col items-center gap-2">
                     <div class="space-y-1">
-                        <div v-if="isEdit" class="flex items-center gap-2">
+                        <div v-if="isEdit" class="flex flex-wrap items-baseline gap-2">
                             <span
                                 class="rounded-full px-2 py-0.5 text-[8px] font-bold uppercase"
                                 :style="{
@@ -138,9 +141,10 @@
                             >
                                 {{ page?.data.type_label }}
                             </span>
-                            <span class="text-[10px] font-medium text-slate-600"
-                                >ID: {{ page?.data.id }}</span
-                            >
+
+                            <span class="text-rancho-ink-500 text-[10px] font-medium">
+                                ID: {{ page?.data.id }}
+                            </span>
                         </div>
 
                         <span
@@ -150,36 +154,50 @@
                             Новая страница
                         </span>
                     </div>
-                </div>
 
-                <a
-                    v-if="isEdit"
-                    :href="page?.data.url"
-                    target="_blank"
-                    class="group flex items-center gap-2 text-[10px] font-black uppercase text-slate-500 transition-colors hover:text-orange-500"
-                >
-                    <EyeIcon class="h-4 w-4 transition-transform group-hover:scale-110" /> Просмотр
-                </a>
+                    <a
+                        v-if="isEdit"
+                        :href="page?.data.url"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="text-rancho-ink-500 hover:text-rancho-mint group flex items-center gap-2 text-[10px] font-black uppercase transition-colors sm:self-auto"
+                    >
+                        <EyeIcon
+                            class="h-4 w-4 transition-transform group-hover:scale-110"
+                            aria-hidden="true"
+                        />
+                        Просмотр
+                    </a>
+                </div>
             </div>
 
-            <div class="flex border-b border-slate-800/50" role="tablist">
+            <!-- TABS -->
+            <div
+                class="border-rancho-ink-800 flex overflow-x-auto border-b"
+                role="tablist"
+                aria-label="Разделы формы"
+            >
                 <button
                     v-for="tab in tabs"
                     :key="tab.id"
+                    type="button"
                     @click="activeTab = tab.id"
+                    :aria-selected="activeTab === tab.id"
                     :class="[
-                        'flex items-center gap-2 border-b-2 px-6 py-4 text-[10px] font-black uppercase tracking-widest transition-all',
+                        'focus-visible:ring-rancho-mint/40 flex shrink-0 items-center gap-2 border-b-2 px-4 py-3 text-[10px] font-black uppercase tracking-widest transition-all focus:outline-none focus-visible:ring-2 sm:px-6 sm:py-4',
                         activeTab === tab.id
-                            ? 'border-orange-500 text-orange-500'
-                            : 'border-transparent text-slate-500 hover:text-slate-300',
+                            ? 'border-rancho-mint text-rancho-mint'
+                            : 'text-rancho-ink-500 hover:text-rancho-ink-200 border-transparent',
                     ]"
                 >
-                    <component :is="tab.icon" class="h-4 w-4" />
+                    <component :is="tab.icon" class="h-4 w-4" aria-hidden="true" />
                     {{ tab.name }}
                 </button>
             </div>
 
-            <form @submit.prevent="submit" class="grid grid-cols-1 gap-8 lg:grid-cols-12">
+            <!-- FORM -->
+            <form @submit.prevent="submit" class="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:gap-8">
+                <!-- CONTENT AREA -->
                 <div class="space-y-6 lg:col-span-8">
                     <TransitionGroup
                         enter-active-class="transition duration-300 ease-out"
@@ -221,10 +239,12 @@
                     </TransitionGroup>
                 </div>
 
+                <!-- SIDEBAR -->
                 <div class="space-y-6 lg:col-span-4">
-                    <div class="sticky top-6 space-y-6">
+                    <div class="space-y-6 lg:sticky lg:top-6">
+                        <!-- ACTIONS -->
                         <div
-                            class="space-y-6 rounded-[2.5rem] border border-slate-800 bg-slate-900/30 p-8"
+                            class="border-rancho-ink-800 bg-rancho-ink-900/30 flex flex-col gap-4 space-y-6 rounded-2xl border p-4 sm:rounded-3xl sm:p-6 md:p-8"
                         >
                             <BaseSwitch
                                 v-model="form.is_active"
@@ -232,27 +252,33 @@
                                 :active-text="isEdit ? 'Опубликовано' : 'Опубликовать сразу'"
                                 :inactive-text="isEdit ? 'В архиве' : 'В черновик'"
                                 :disabled="form.processing"
+                                theme="dark"
                             />
 
                             <BaseSubmitButton
                                 :processing="form.processing"
                                 :is-edit="isEdit"
-                                :with-icon="false"
                                 :label="isEdit ? 'Применить изменения' : 'Создать страницу'"
                             />
                         </div>
 
+                        <!-- META + DELETE -->
                         <div
                             v-if="isEdit"
-                            class="space-y-4 rounded-[2.5rem] border border-slate-800 bg-slate-900/30 p-8"
+                            class="border-rancho-ink-800 bg-rancho-ink-900/30 space-y-4 rounded-2xl border p-4 sm:rounded-3xl sm:p-6 md:p-8"
                         >
                             <div class="flex justify-between text-[10px] font-black uppercase">
-                                <span class="text-slate-500">Отзывы</span>
-                                <span class="text-white">{{ page?.data.reviews_count || 0 }}</span>
+                                <span class="text-rancho-ink-500">Отзывы</span>
+                                <span class="text-white">
+                                    {{ page?.data.reviews_count || 0 }}
+                                </span>
                             </div>
+
                             <div class="flex justify-between text-[10px] font-black uppercase">
-                                <span class="text-slate-500">Обновлено</span>
-                                <span class="text-slate-400">{{ computedUpdatedData }}</span>
+                                <span class="text-rancho-ink-500">Обновлено</span>
+                                <span class="text-rancho-ink-300">
+                                    {{ computedUpdatedData }}
+                                </span>
                             </div>
 
                             <BaseDeleteButton
@@ -260,13 +286,18 @@
                                 :disabled="isDeleting(page?.data.id)"
                                 @confirm="deletePage"
                             >
-                                <span>{{
-                                    isDeleting(page?.data.id) ? 'Удаление...' : 'Удалить страницу'
-                                }}</span>
+                                <span>
+                                    {{
+                                        isDeleting(page?.data.id)
+                                            ? 'Удаление...'
+                                            : 'Удалить страницу'
+                                    }}
+                                </span>
                             </BaseDeleteButton>
+
                             <div
                                 v-else
-                                class="rounded-xl bg-orange-500/10 p-3 text-center text-[9px] font-bold uppercase text-orange-500"
+                                class="bg-rancho-ember/10 text-rancho-ember ring-rancho-ember/20 rounded-xl p-3 text-center text-[9px] font-bold uppercase ring-1 ring-inset"
                             >
                                 Системная страница: удаление запрещено
                             </div>

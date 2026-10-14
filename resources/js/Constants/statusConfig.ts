@@ -1,4 +1,4 @@
-import { OrderStatus } from '@/types';
+import type { OrderStatus } from '@/types';
 
 export interface StatusDetail {
     label: string;
@@ -8,22 +8,22 @@ export interface StatusDetail {
 export const ORDER_STATUSES: Record<OrderStatus, StatusDetail> = {
     new: {
         label: 'Новый',
-        class: 'bg-blue-500/10 text-blue-500 border-blue-500/20',
+        class: 'bg-rancho-sky/10 text-rancho-sky border-rancho-sky/30',
     },
     confirmed: {
         label: 'Подтвержден',
-        class: 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20',
+        class: 'bg-rancho-buttercup/10 text-rancho-buttercup border-rancho-buttercup/30',
     },
     delivering: {
         label: 'В доставке',
-        class: 'bg-orange-500/10 text-orange-500 border-orange-500/20',
+        class: 'bg-rancho-ember/10 text-rancho-ember border-rancho-ember/30',
     },
     completed: {
         label: 'Завершен',
-        class: 'bg-green-500/10 text-green-500 border-green-500/20',
+        class: 'bg-rancho-pine/15 text-rancho-mint border-rancho-pine/40',
     },
     cancelled: {
         label: 'Отменен',
-        class: 'bg-red-500/10 text-red-500 border-red-500/20',
+        class: 'bg-rose-500/10 text-rose-400 border-rose-500/30',
     },
 };

@@ -8,14 +8,15 @@
 </script>
 
 <template>
-    <div class="flex flex-wrap gap-2">
+    <div class="flex gap-2 overflow-auto py-2">
         <button
+            type="button"
             @click="$emit('change', null)"
-            class="rounded-xl px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all"
+            class="rounded-xl px-4 py-2 text-xs font-black transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-rancho-mint/40"
             :class="
                 !selectedRole
-                    ? 'shadow-lg bg-orange-600 text-white shadow-orange-600/20'
-                    : 'bg-slate-900 text-slate-500 hover:bg-slate-800'
+                    ? 'shadow-lg bg-rancho-mint text-rancho-ink-950 shadow-rancho-mint/20'
+                    : 'bg-rancho-ink-900 text-rancho-ink-500 hover:bg-rancho-ink-800 hover:text-rancho-ink-200'
             "
         >
             Все
@@ -24,12 +25,13 @@
         <button
             v-for="role in roles"
             :key="role.value"
+            type="button"
             @click="$emit('change', role.value)"
-            class="rounded-xl px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all"
+            class="rounded-xl px-4 py-2 text-xs font-black transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-rancho-mint/40"
             :class="
                 selectedRole === role.value
-                    ? 'shadow-lg bg-orange-600 text-white shadow-orange-600/20'
-                    : 'bg-slate-900 text-slate-500 hover:bg-slate-800'
+                    ? 'shadow-lg bg-rancho-mint text-rancho-ink-950 shadow-rancho-mint/20'
+                    : 'bg-rancho-ink-900 text-rancho-ink-500 hover:bg-rancho-ink-800 hover:text-rancho-ink-200'
             "
         >
             {{ role.label }}

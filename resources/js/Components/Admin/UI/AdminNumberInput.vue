@@ -106,17 +106,18 @@
         <label
             v-if="label"
             :for="inputId"
-            class="mb-1.5 block px-1 text-xs font-medium uppercase tracking-wider text-slate-500"
+            class="text-rancho-ink-500 mb-1.5 block px-1 text-[10px] font-black uppercase tracking-widest"
         >
             {{ label }}
         </label>
+
         <div
-            class="group relative flex w-full overflow-hidden rounded-2xl border border-slate-800 bg-slate-950 focus-within:border-orange-500/50"
+            class="border-rancho-ink-800 bg-rancho-ink-950 focus-within:border-rancho-mint/50 group relative flex w-full overflow-hidden rounded-2xl border"
         >
             <button
                 type="button"
                 @mousedown="startHold(decrement)"
-                class="flex w-12 items-center justify-center border-r border-slate-800 text-slate-400 hover:bg-slate-900"
+                class="border-rancho-ink-800 text-rancho-ink-400 hover:bg-rancho-ink-900 hover:text-rancho-mint flex w-12 items-center justify-center border-r"
             >
                 <MinusIcon class="h-4 w-4" />
             </button>
@@ -137,7 +138,7 @@
             <button
                 type="button"
                 @mousedown="startHold(increment)"
-                class="flex w-12 items-center justify-center border-l border-slate-800 text-slate-400 hover:bg-slate-900"
+                class="border-rancho-ink-800 text-rancho-ink-400 hover:bg-rancho-ink-900 hover:text-rancho-mint flex w-12 items-center justify-center border-l"
             >
                 <PlusIcon class="h-4 w-4" />
             </button>

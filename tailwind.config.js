@@ -56,6 +56,7 @@ export default {
                     },
 
                     ember: '#D97706', // тёплый оранжевый в тон buttercup
+                    mint: '#7AB89A', // светло-зелёный, читается на тёмном
                 },
             },
             fontFamily: {

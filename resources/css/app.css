@@ -79,14 +79,133 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================
+   V-CALENDAR — тема под палитру rancho
+   ============================================ */
+
+.vc-container {
+    /* === База === */
+    --vc-bg: #0f0d09; /* rancho-ink-950 */
+    --vc-color: #d2cbb9; /* rancho-ink-200 */
+    --vc-border: #2a261d; /* rancho-ink-800 */
+    --vc-focus-outline-color: #7ab89a; /* rancho-mint */
+
+    /* === Заголовок === */
+    --vc-header-color: #d2cbb9; /* rancho-ink-200 */
+    --vc-title-color: #ffffff;
+    --vc-title-color-hover: #7ab89a; /* rancho-mint */
+    --vc-title-color-disabled: #5a5342; /* rancho-ink-600 */
+    --vc-header-arrow-color: #948b74; /* rancho-ink-400 */
+    --vc-header-arrow-hover-color: #7ab89a;
+
+    /* === Дни недели === */
+    --vc-weekday-color: #756d57; /* rancho-ink-500 */
+    --vc-weekday-color-hover: #b5ac96; /* rancho-ink-300 */
+
+    /* === Даты === */
+    --vc-date-bg: transparent;
+    --vc-date-color: #b5ac96; /* rancho-ink-300 */
+    --vc-date-color-hover: #ffffff;
+    --vc-date-bg-hover: #2a261d; /* rancho-ink-800 */
+
+    /* Выбранная дата */
+    --vc-accent-100: rgba(122, 184, 154, 0.1);
+    --vc-accent-200: rgba(122, 184, 154, 0.2);
+    --vc-accent-300: rgba(122, 184, 154, 0.3);
+    --vc-accent-400: rgba(122, 184, 154, 0.4);
+    --vc-accent-500: #7ab89a; /* rancho-mint */
+    --vc-accent-600: #3b7558; /* rancho-pine */
+    --vc-accent-700: #1c3f34; /* rancho-forest */
+    --vc-accent-800: #1a1712; /* rancho-ink-900 */
+    --vc-accent-900: #0f0d09; /* rancho-ink-950 */
+
+    /* Отключённые даты */
+    --vc-date-disabled-color: #5a5342; /* rancho-ink-600 */
+    --vc-date-outside-color: #403a2d; /* rancho-ink-700 */
+}
+
+/* === Поля времени (is24hr) === */
+.vc-container .vc-time-picker {
+    --vc-time-picker-bg: #1a1712; /* rancho-ink-900 */
+    --vc-time-picker-border: #2a261d;
+    --vc-time-select-bg: #0f0d09; /* rancho-ink-950 */
+    --vc-time-select-color: #d2cbb9;
+    --vc-time-select-border: #2a261d;
+}
+
+/* === Скроллбар в popover === */
+.vc-container .vc-pane {
+    scrollbar-width: thin;
+    scrollbar-color: #756d57 transparent;
+}
+.vc-container .vc-pane::-webkit-scrollbar {
+    width: 6px;
+}
+.vc-container .vc-pane::-webkit-scrollbar-thumb {
+    background-color: #756d57; /* rancho-ink-500 */
+    border-radius: 9999px;
+}
+
+/* === Размеры календаря под UI rancho === */
+.vc-container {
+    /* Скругление — как у BaseSelect admin */
+    --vc-border-radius: 16px;
+
+    /* Ячейки дней — компактные, как в формах */
+    --vc-day-min-height: 32px;
+    --vc-day-content-width: 28px;
+    --vc-day-content-height: 28px;
+
+    /* Pane (внутренняя область) */
+    --vc-pane-min-width: 220px;
+    --vc-pane-padding: 12px;
+}
+
+/* Заголовок календаря — не крупнее, чем заголовки форм */
+.vc-container .vc-title {
+    font-size: 13px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.vc-container .vc-weekday {
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+.vc-container .vc-day-content {
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.vc-container .vc-arrow {
+    color: var(--vc-header-arrow-color);
+    transition: color 0.15s ease;
+}
+.vc-container .vc-arrow:hover {
+    color: var(--vc-header-arrow-hover-color);
+}
+
+/* === Кнопки навигации месяцев/годов === */
+.vc-container .vc-nav-item {
+    --vc-nav-bg: #1a1712;
+    --vc-nav-color: #d2cbb9;
+    --vc-nav-bg-hover: #2a261d;
+    --vc-nav-bg-active: #7ab89a;
+    --vc-nav-color-active: #0f0d09;
+}
+
 html {
     scrollbar-width: thin;
-    scrollbar-color: #334155 transparent; /* slate-700 */
+    scrollbar-color: #756d57 transparent; /* rancho-ink-500 */
 }
 
 ::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
+    width: 8px;
+    height: 8px;
 }
 
 ::-webkit-scrollbar-track {
@@ -94,14 +213,26 @@ html {
 }
 
 ::-webkit-scrollbar-thumb {
-    background-color: #334155;
+    background-color: #756d57; /* rancho-ink-500 */
     border-radius: 9999px;
     border: 2px solid transparent;
     background-clip: content-box;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background-color: #475569; /* slate-600 */
+    background-color: #5a5342; /* rancho-ink-600 */
+}
+
+@media (max-width: 767.98px) {
+    ::-webkit-scrollbar {
+        width: 0;
+        height: 0;
+        display: none;
+    }
+
+    html {
+        scrollbar-width: none;
+    }
 }
 
 @layer components {

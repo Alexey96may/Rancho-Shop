@@ -1,5 +1,5 @@
 <script setup lang="ts">
-    import { PropType, ref } from 'vue';
+    import { type PropType, ref } from 'vue';
 
     import { useForm } from '@inertiajs/vue3';
 
@@ -14,7 +14,7 @@
     import AdminLayout from '@/Layouts/AdminLayout.vue';
     import { useAdminForm } from '@/composables/crud/useAdminForm';
     import { useNotificationsStore } from '@/stores/notifications';
-    import { AdminLandingBlock, LandingContentItem, ResourceSingle } from '@/types';
+    import type { AdminLandingBlock, LandingContentItem, ResourceSingle } from '@/types';
 
     defineOptions({ layout: AdminLayout });
 
@@ -122,92 +122,112 @@
 
 <template>
     <Teleport to="#admin-header-content">
-        <AdminPageHeader title="Редактирование блока " :subtitle="block.data.label" />
+        <AdminPageHeader title="Редактирование блока" :subtitle="block.data.label" />
     </Teleport>
 
-    <div class="mb-4 flex items-center justify-between gap-8">
-        <BaseCancelButton :route-name="'admin.features.index'" label="Назад" />
+    <div class="space-y-10">
+        <!-- TOP BAR -->
+        <div class="flex flex-wrap items-center justify-between gap-4 sm:gap-8">
+            <BaseCancelButton :route-name="'admin.features.index'" label="Назад" theme="dark" />
 
-        <p class="text-[12px] text-slate-400">*Здесь можно использовать html разметку</p>
-    </div>
-
-    <form @submit.prevent="submit" class="max-w-5xl space-y-8 pb-20">
-        <section class="space-y-6 rounded-[2.5rem] border border-slate-800 bg-slate-900/40 p-8">
-            <div class="mb-4 flex items-center gap-2 text-orange-500">
-                <LayoutIcon class="h-5 w-5" />
-                <h2 class="text-xs font-black uppercase tracking-widest">Общие параметры</h2>
-            </div>
-
-            <div class="grid gap-6 md:grid-cols-2">
-                <BaseInput
-                    v-model="form.title"
-                    v-model:error="form.errors.title"
-                    label="Заголовок"
-                    placeholder="Напишите заголовок..."
-                    :disabled="form.processing"
-                />
-
-                <BaseInput
-                    v-model="form.subtitle"
-                    v-model:error="form.errors.subtitle"
-                    label="Подзаголовок"
-                    placeholder="Напишите подзаголовок, если он предусмотрен..."
-                    :disabled="form.processing"
-                />
-            </div>
-
-            <BaseSwitch
-                v-model="form.is_visible"
-                label="Отображать этот блок на сайте"
-                active-text="Будет виден на сайте"
-                inactive-text="В черновик"
-                :disabled="form.processing"
-            />
-        </section>
-
-        <section class="space-y-6">
-            <div class="flex items-center justify-between px-4">
-                <h2 class="text-xs font-black uppercase tracking-widest text-orange-500">
-                    Состав контента
-                </h2>
-                <button
-                    type="button"
-                    @click="addContentItem"
-                    class="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-emerald-500 transition-all hover:text-emerald-400"
-                >
-                    <PlusIcon class="h-4 w-4" /> Добавить элемент
-                </button>
-            </div>
-
-            <div class="grid gap-4" v-if="form.content.length" key="cards">
-                <TransitionGroup name="list">
-                    <ContentItemCard
-                        v-for="(item, index) in form.content"
-                        :key="item.id"
-                        :item="item"
-                        :index="Number(index)"
-                        :is-first="index === 0"
-                        :is-last="index === form.content.length - 1"
-                        :is-final="form.content.length <= 1"
-                        :disabled="deletingIds.has(Number(index))"
-                        :errors="form.errors.content"
-                        @move="moveItem"
-                        @remove="removeContentItem"
-                    />
-                </TransitionGroup>
-            </div>
-        </section>
-
-        <div class="sticky bottom-8 flex justify-end gap-4 rounded-[1rem] bg-slate-900/80">
-            <BaseCancelButton :route-name="'admin.features.index'" />
-
-            <BaseSubmitButton
-                :processing="form.processing"
-                label="Сохранить изменения"
-                :icon="SaveIcon"
-            />
+            <p class="text-rancho-ink-400 text-[11px] italic sm:text-xs">
+                *Здесь можно использовать HTML-разметку
+            </p>
         </div>
-    </form>
+
+        <!-- FORM -->
+        <form @submit.prevent="submit" class="max-w-5xl space-y-12 pb-20 sm:space-y-8">
+            <!-- ОБЩИЕ ПАРАМЕТРЫ -->
+            <section
+                class="border-rancho-ink-800 bg-rancho-ink-900/40 space-y-6 rounded-2xl border px-4 py-6 sm:rounded-3xl sm:p-6 md:p-8"
+            >
+                <div class="text-rancho-mint mb-4 flex items-center gap-2">
+                    <LayoutIcon class="h-5 w-5 sm:h-3 sm:w-3" aria-hidden="true" />
+                    <h2 class="text-xs font-black">Общие параметры</h2>
+                </div>
+
+                <div class="grid gap-4 sm:gap-6 md:grid-cols-2">
+                    <BaseInput
+                        v-model="form.title"
+                        v-model:error="form.errors.title"
+                        label="Заголовок"
+                        placeholder="Напишите заголовок..."
+                        :disabled="form.processing"
+                        theme="dark"
+                    />
+
+                    <BaseInput
+                        v-model="form.subtitle"
+                        v-model:error="form.errors.subtitle"
+                        label="Подзаголовок"
+                        placeholder="Напишите подзаголовок, если он предусмотрен..."
+                        :disabled="form.processing"
+                        theme="dark"
+                    />
+                </div>
+
+                <BaseSwitch
+                    v-model="form.is_visible"
+                    label="Отображать на сайте"
+                    active-text="Будет виден на сайте"
+                    inactive-text="В черновик"
+                    :disabled="form.processing"
+                    theme="dark"
+                />
+            </section>
+
+            <!-- СОСТАВ КОНТЕНТА -->
+            <section class="space-y-6">
+                <div
+                    class="flex flex-col items-center justify-between gap-4 px-2 sm:flex-row sm:items-center sm:px-4"
+                >
+                    <h2 class="text-rancho-mint text-xs font-black uppercase tracking-widest">
+                        Состав контента
+                    </h2>
+
+                    <button
+                        type="button"
+                        @click="addContentItem"
+                        class="border-rancho-ink-700 bg-rancho-ink-800 text-rancho-mint hover:border-rancho-mint/40 hover:bg-rancho-ink-700 focus-visible:ring-rancho-mint/40 inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-[10px] font-black transition-all focus:outline-none focus-visible:ring-2 active:scale-95 sm:px-4"
+                    >
+                        <PlusIcon class="h-4 w-4" aria-hidden="true" />
+                        Добавить элемент
+                    </button>
+                </div>
+
+                <div v-if="form.content.length" key="cards" class="grid gap-4">
+                    <TransitionGroup name="list">
+                        <ContentItemCard
+                            v-for="(item, index) in form.content"
+                            :key="item.id"
+                            :item="item"
+                            :index="Number(index)"
+                            :is-first="index === 0"
+                            :is-last="index === form.content.length - 1"
+                            :is-final="form.content.length <= 1"
+                            :disabled="deletingIds.has(Number(index))"
+                            :errors="form.errors.content"
+                            @move="moveItem"
+                            @remove="removeContentItem"
+                        />
+                    </TransitionGroup>
+                </div>
+            </section>
+
+            <!-- STICKY ACTIONS -->
+            <div
+                class="border-rancho-ink-800 bg-rancho-ink-900/95 sticky bottom-2 flex justify-end gap-3 rounded-2xl border p-3 backdrop-blur-md sm:bottom-4 sm:gap-4 sm:p-4"
+            >
+                <BaseCancelButton :route-name="'admin.features.index'" theme="dark" />
+
+                <BaseSubmitButton
+                    :processing="form.processing"
+                    label="Сохранить"
+                    :icon="SaveIcon"
+                />
+            </div>
+        </form>
+    </div>
 </template>
 
 <style scoped>
@@ -220,5 +240,13 @@
     .list-leave-to {
         opacity: 0;
         transform: translateY(20px);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .list-move,
+        .list-enter-active,
+        .list-leave-active {
+            transition: none;
+        }
     }
 </style>

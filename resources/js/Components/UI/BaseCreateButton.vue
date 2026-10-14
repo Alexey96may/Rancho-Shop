@@ -42,21 +42,18 @@
     });
 
     const colorClasses = computed(() => {
-        // OUTLINE — второстепенное действие
         if (props.variant === 'outline') {
             return isDark.value
                 ? 'border-2 border-rancho-ink-600 bg-transparent text-rancho-ink-200 hover:border-rancho-buttercup hover:text-rancho-buttercup focus-visible:ring-rancho-buttercup/40 disabled:border-rancho-ink-800 disabled:text-rancho-ink-600'
                 : 'border-2 border-rancho-ink-300 bg-transparent text-rancho-forest hover:border-rancho-pine hover:text-rancho-pine focus-visible:ring-rancho-pine/30 disabled:border-rancho-ink-200 disabled:text-rancho-ink-400';
         }
 
-        // GHOST — третичное, как ссылка
         if (props.variant === 'ghost') {
             return isDark.value
                 ? 'bg-transparent text-rancho-ink-300 hover:bg-rancho-ink-800 hover:text-rancho-buttercup focus-visible:ring-rancho-buttercup/40 disabled:text-rancho-ink-600'
                 : 'bg-transparent text-rancho-ink-500 hover:bg-rancho-ink-100 hover:text-rancho-pine focus-visible:ring-rancho-pine/30 disabled:text-rancho-ink-400';
         }
 
-        // SOLID — основное действие
         return isDark.value
             ? 'bg-rancho-buttercup text-rancho-ink-950 hover:bg-rancho-buttercup/90 focus-visible:ring-rancho-buttercup/40 disabled:bg-rancho-ink-200 disabled:text-rancho-ink-500'
             : 'bg-rancho-pine text-white hover:bg-rancho-forest focus-visible:ring-rancho-pine/40 disabled:bg-rancho-ink-200 disabled:text-rancho-ink-500';
@@ -71,11 +68,14 @@
     <component
         :is="componentType"
         v-bind="bindingProps"
-        class="group flex h-10 items-center justify-center gap-2 rounded-xl px-4 text-[10px] font-black uppercase tracking-[0.15em] transition-all focus:outline-none focus-visible:ring-4 active:scale-95 disabled:pointer-events-none sm:h-12 sm:gap-3 sm:rounded-2xl sm:px-6 sm:tracking-[0.2em] lg:h-[54px] lg:px-8"
+        class="group inline-flex items-center justify-center gap-2 rounded-2xl px-4 text-[10px] font-black uppercase tracking-[0.15em] transition-all focus:outline-none focus-visible:ring-4 active:scale-95 disabled:pointer-events-none sm:gap-3 sm:rounded-2xl sm:px-6 sm:tracking-[0.2em]"
         :class="[
             colorClasses,
             shadowClasses,
-            compactOnMobile ? 'w-10 px-0 sm:w-auto sm:px-6 lg:px-8' : '',
+            /* Высота — как у полей ввода и селекта */
+            'h-11 sm:h-12',
+            /* На мобилке — компактная, только иконка */
+            compactOnMobile ? 'w-11 px-0 sm:w-auto sm:px-6' : '',
         ]"
     >
         <component

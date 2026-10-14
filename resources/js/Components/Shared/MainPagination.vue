@@ -116,7 +116,7 @@
 </script>
 
 <template>
-    <Transition name="fade-slide" mode="out-in">
+    <Transition name="fade-slide">
         <nav
             v-if="visibleLinks.length > 3"
             role="navigation"
@@ -159,7 +159,7 @@
                         :class="[
                             link.active
                                 ? isDark
-                                    ? 'text-rancho-ink-950 bg-rancho-buttercup shadow-[0_0_20px_rgba(227,180,75,0.35)] focus-visible:ring-rancho-buttercup'
+                                    ? 'bg-rancho-buttercup text-rancho-ink-950 shadow-[0_0_20px_rgba(227,180,75,0.35)] focus-visible:ring-rancho-buttercup'
                                     : 'bg-rancho-pine text-white shadow-[0_0_20px_rgba(59,117,88,0.35)] focus-visible:ring-rancho-pine'
                                 : isDark
                                   ? 'text-rancho-ink-400 hover:bg-rancho-ink-800 hover:text-white focus-visible:ring-rancho-buttercup'
@@ -167,7 +167,6 @@
                         ]"
                         :aria-current="link.active ? 'page' : undefined"
                         :aria-label="`Перейти на страницу ${link.label}`"
-                        preserve-scroll
                         preserve-state
                         v-html="link.label"
                     />

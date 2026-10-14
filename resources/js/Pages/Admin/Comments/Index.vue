@@ -1,5 +1,5 @@
 <script setup lang="ts">
-    import { PropType, computed, ref, watch } from 'vue';
+    import { type PropType, computed, ref, watch } from 'vue';
 
     import { router, useForm } from '@inertiajs/vue3';
 
@@ -18,7 +18,7 @@
     import AdminLayout from '@/Layouts/AdminLayout.vue';
     import { useAdminCrud } from '@/composables/crud/useAdminCrud';
     import { useAdminFilters } from '@/composables/routing/useAdminFilters';
-    import { AdminComment, Paginated } from '@/types';
+    import type { AdminComment, Paginated } from '@/types';
 
     defineOptions({
         layout: AdminLayout,
@@ -165,65 +165,73 @@
             "
         />
     </Teleport>
+
     <div>
-        <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <!-- STATS -->
+        <div class="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
             <StatCard
                 label="Рейтинг сайта"
                 :value="`${stats.avg_rating} / 5`"
                 :icon="StarIcon"
-                labelColor="text-green-500"
+                label-color="text-rancho-mint"
             />
 
             <StatCard
                 label="Всего отзывов"
                 :value="stats.total_count"
                 :icon="ChatBubbleLeftRightIcon"
+                label-color="text-rancho-sky"
             />
 
             <StatCard
                 label="Ожидают проверки"
                 :value="stats.pending_count"
                 :icon="ShieldExclamationIcon"
-                :labelColor="stats.pending_count ? 'text-orange-700' : 'text-slate-500'"
+                :label-color="stats.pending_count ? 'text-rancho-buttercup' : 'text-rancho-ink-500'"
             />
         </div>
 
-        <div class="mb-8 flex flex-col gap-6">
+        <!-- FILTERS -->
+        <div class="mb-6 flex flex-col gap-4 sm:mb-8 sm:gap-6">
+            <!-- TYPE TABS -->
             <div class="flex flex-wrap gap-2">
                 <button
                     v-for="tab in typeTabs"
                     :key="tab.id"
+                    type="button"
                     @click="setType(tab.id)"
-                    class="rounded-xl px-4 py-2 text-[11px] font-black uppercase tracking-widest transition-all"
+                    class="focus-visible:ring-rancho-mint/40 rounded-xl px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all focus:outline-none focus-visible:ring-2"
                     :class="
                         filterForm.type === tab.id
-                            ? 'shadow-lg bg-orange-600 text-white shadow-orange-900/40'
-                            : 'bg-slate-800 text-slate-500 hover:bg-slate-700 hover:text-slate-300'
+                            ? 'bg-rancho-mint text-rancho-ink-950 shadow-lg shadow-rancho-mint/20'
+                            : 'bg-rancho-ink-800 text-rancho-ink-400 hover:bg-rancho-ink-700 hover:text-rancho-ink-200'
                     "
                 >
                     {{ tab.label }}
                 </button>
             </div>
 
-            <div class="flex flex-wrap gap-2 border-t border-slate-800/50 pt-4">
+            <!-- STATUS TABS -->
+            <div class="border-rancho-ink-800 flex flex-wrap gap-2 border-t pt-4">
                 <button
                     v-for="tab in statusTabs"
                     :key="tab.id"
+                    type="button"
                     @click="setStatus(tab.id)"
-                    class="flex items-center gap-2 rounded-lg border px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-all"
+                    class="focus-visible:ring-rancho-mint/40 flex items-center gap-2 rounded-lg border px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-all focus:outline-none focus-visible:ring-2"
                     :class="
                         filterForm.status === tab.id
-                            ? 'border-white/20 bg-white text-slate-900'
-                            : 'border-slate-800 bg-transparent text-slate-500 hover:border-slate-600'
+                            ? 'border-rancho-mint/50 bg-rancho-mint text-rancho-ink-950'
+                            : 'border-rancho-ink-800 text-rancho-ink-400 hover:border-rancho-ink-600 hover:text-rancho-ink-200 bg-transparent'
                     "
                 >
                     <div
-                        v-if="tab.id !== 'all'"
+                        v-if="tab.id !== ''"
                         class="h-1.5 w-1.5 rounded-full"
                         :class="{
-                            'bg-orange-500': tab.id === 'pending',
-                            'bg-green-500': tab.id === 'approved',
-                            'bg-slate-500': tab.id === 'hidden',
+                            'bg-rancho-buttercup': tab.id === 'pending',
+                            'bg-rancho-mint': tab.id === 'approved',
+                            'bg-rancho-ink-500': tab.id === 'hidden',
                         }"
                     ></div>
                     {{ tab.label }}
@@ -231,11 +239,12 @@
             </div>
         </div>
 
+        <!-- LIST -->
         <Transition name="fade-slide" mode="out-in">
             <div
                 v-if="comments.data.length"
                 key="comments-list"
-                class="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3"
+                class="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 xl:grid-cols-3"
             >
                 <TransitionGroup name="stagger">
                     <AdminCommentCard
@@ -269,8 +278,9 @@
             />
         </Transition>
 
+        <!-- PAGINATION -->
         <Transition name="fade-slide" mode="out-in">
-            <AdminPagination v-show="!isFiltering" :links="comments.meta.links" />
+            <AdminPagination v-show="!isFiltering" :links="comments.meta.links" theme="dark" />
         </Transition>
     </div>
 </template>
@@ -307,5 +317,14 @@
     .fade-slide-enter-from {
         opacity: 0;
         transform: translateY(-10px);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .stagger-enter-active,
+        .stagger-leave-active,
+        .stagger-move,
+        .fade-slide-enter-active {
+            transition: none;
+        }
     }
 </style>

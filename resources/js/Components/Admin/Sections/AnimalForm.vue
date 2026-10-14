@@ -3,6 +3,8 @@
 
     import { useForm } from '@inertiajs/vue3';
 
+    import { CheckIcon } from '@heroicons/vue/24/outline';
+
     import FeaturesSection from '@/Components/Admin/Sections/FeaturesSection.vue';
     import MediaSection from '@/Components/Admin/Sections/MediaSection.vue';
     import SEOSection from '@/Components/Admin/Sections/SEOSection.vue';
@@ -16,7 +18,7 @@
     import { useAdminTabs } from '@/composables/config/useAdminTabs';
     import { useAdminForm } from '@/composables/crud/useAdminForm';
     import { useSingleImagePreview } from '@/composables/features/useMediaUpload';
-    import { AdminAnimal, Category, Media } from '@/types';
+    import type { AdminAnimal, Category, Media } from '@/types';
 
     const props = defineProps<{
         animal: AdminAnimal | null;
@@ -67,11 +69,17 @@
 </script>
 
 <template>
-    <div class="mx-auto max-w-5xl">
+    <div class="mx-auto max-w-5xl space-y-4 sm:space-y-6">
+        <!-- НАЗАД (top) -->
         <BaseCancelButton :href="backUrl" label="Назад" />
 
-        <form @submit.prevent="submit" class="space-y-8" novalidate>
-            <nav class="shadow-inner flex gap-2 rounded-[2rem] bg-slate-950 p-2" role="tablist">
+        <form @submit.prevent="submit" class="space-y-4 sm:space-y-6 lg:space-y-8" novalidate>
+            <!-- TABS -->
+            <nav
+                class="border-rancho-ink-800 bg-rancho-ink-950 flex gap-1 overflow-x-auto rounded-2xl border p-1.5 sm:gap-2 sm:rounded-3xl sm:p-2"
+                role="tablist"
+                aria-label="Разделы формы"
+            >
                 <button
                     v-for="tab in tabs"
                     :key="tab.id"
@@ -82,49 +90,61 @@
                     @click="activeTab = tab.id"
                     :class="[
                         activeTab === tab.id
-                            ? 'shadow-lg bg-orange-500 text-white'
-                            : 'text-slate-500 hover:text-slate-300',
-                        'flex flex-1 items-center justify-center gap-3 rounded-[1.5rem] py-4 transition-all',
+                            ? 'bg-rancho-mint text-rancho-ink-950 shadow-lg shadow-rancho-mint/20'
+                            : 'text-rancho-ink-400 hover:bg-rancho-ink-900 hover:text-rancho-ink-100',
+                        'focus-visible:ring-rancho-mint/40 flex shrink-0 items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all focus:outline-none focus-visible:ring-2 sm:flex-1 sm:gap-3 sm:rounded-2xl sm:px-4 sm:py-3.5',
                     ]"
                 >
-                    <component :is="tab.icon" class="h-5 w-5" aria-hidden="true" />
-                    <span class="text-[10px] font-black uppercase tracking-widest">{{
-                        tab.name
-                    }}</span>
+                    <component
+                        :is="tab.icon"
+                        class="h-4 w-4 shrink-0 sm:h-5 sm:w-5"
+                        aria-hidden="true"
+                    />
+                    <span class="whitespace-nowrap">{{ tab.name }}</span>
                 </button>
             </nav>
 
+            <!-- PANEL -->
             <div
-                class="min-h-[400px] rounded-[3rem] border border-slate-800 bg-slate-900/30 p-10 backdrop-blur-sm"
+                class="border-rancho-ink-800 bg-rancho-ink-900/30 rounded-2xl border px-3 py-4 backdrop-blur-sm sm:rounded-3xl sm:p-6 md:p-8 lg:p-10"
                 role="tabpanel"
                 aria-live="polite"
             >
                 <TransitionGroup name="tab-fade" mode="out-in">
-                    <div v-if="activeTab === 'general'" class="space-y-10">
-                        <div class="grid grid-cols-1 gap-10 lg:grid-cols-2">
-                            <ImageUpload
-                                :model-value="currentFileForUpload"
-                                @update:model-value="handleMainPhotoUpdate"
-                                :existing-image="currentExistingImage"
-                                label="Аватар особи"
-                                :error="form.errors.avatar"
-                            />
+                    <!-- GENERAL -->
+                    <div
+                        v-if="activeTab === 'general'"
+                        class="space-y-6 sm:space-y-8 lg:space-y-10"
+                    >
+                        <div class="grid grid-cols-1 gap-8 sm:gap-8 lg:grid-cols-2 lg:gap-10">
+                            <div class="my-4">
+                                <ImageUpload
+                                    :model-value="currentFileForUpload"
+                                    @update:model-value="handleMainPhotoUpdate"
+                                    :existing-image="currentExistingImage"
+                                    label="Аватар особи"
+                                    class="mx-auto block"
+                                    :error="form.errors.avatar"
+                                />
+                            </div>
 
-                            <div class="space-y-6">
+                            <div class="space-y-4 sm:space-y-6">
                                 <BaseInput
                                     v-model="form.name"
                                     :error="form.errors.name"
                                     label="Имя / Кличка"
                                     placeholder="Напишите имя животного..."
+                                    theme="dark"
                                 />
 
-                                <div class="grid grid-cols-2 gap-4">
+                                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                     <BaseInput
                                         v-model="form.status"
                                         :error="form.errors.status"
                                         label="Статус"
-                                        placeholder="Создайте статус животному..."
+                                        placeholder="Создайте статус..."
                                         title="Статус корректируется программно"
+                                        theme="dark"
                                     />
 
                                     <BaseSelect
@@ -142,13 +162,14 @@
                                     active-text="Опубликовать"
                                     inactive-text="В черновик"
                                     :disabled="form.processing"
+                                    theme="dark"
                                 />
                             </div>
                         </div>
 
                         <AdminBaseTextarea
                             v-model="form.bio"
-                            id="seoDescr"
+                            id="bio"
                             label="Биография"
                             :error="form.errors.bio"
                             :disabled="form.processing"
@@ -156,17 +177,20 @@
                         />
                     </div>
 
+                    <!-- MEDIA -->
                     <MediaSection
                         v-if="activeTab === 'media'"
                         v-model="form"
                         :existing-voice-url="animal?.voice_url"
                     />
 
+                    <!-- FEATURES -->
                     <FeaturesSection
                         v-if="activeTab === 'features'"
                         v-model:features="form.features"
                     />
 
+                    <!-- SEO -->
                     <SEOSection
                         v-if="activeTab === 'seo'"
                         v-model="form.seo"
@@ -175,14 +199,18 @@
                 </TransitionGroup>
             </div>
 
-            <div class="flex items-center justify-end gap-4 border-t border-slate-800">
+            <!-- ACTIONS -->
+            <div
+                class="border-rancho-ink-800 flex items-stretch justify-between gap-3 border-t pt-4 sm:flex-row sm:items-center sm:justify-end sm:gap-4 sm:pt-6"
+            >
                 <BaseCancelButton :href="backUrl" label="Отменить" />
 
                 <BaseCreateButton
                     type="submit"
                     :label="form.id ? 'Обновить данные' : 'Внести в реестр'"
                     :disabled="form.processing"
-                    class="mt-8"
+                    :theme="'dark'"
+                    :icon="CheckIcon"
                 />
             </div>
         </form>
@@ -203,5 +231,20 @@
     .tab-fade-leave-to {
         opacity: 0;
         transform: translateY(-8px);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .tab-fade-enter-active,
+        .tab-fade-leave-active {
+            transition: none;
+        }
+    }
+
+    nav[role='tablist']::-webkit-scrollbar {
+        height: 0;
+        display: none;
+    }
+    nav[role='tablist'] {
+        scrollbar-width: none;
     }
 </style>

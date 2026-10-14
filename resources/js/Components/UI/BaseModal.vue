@@ -20,12 +20,10 @@
     watch(
         () => props.show,
         (isVisible) => {
-            if (isVisible) {
-                document.body.style.overflow = 'hidden';
-            } else {
-                document.body.style.overflow = '';
-            }
+            if (typeof document === 'undefined') return;
+            document.body.style.overflow = isVisible ? 'hidden' : '';
         },
+        { immediate: true },
     );
 
     const handleEsc = (e: KeyboardEvent) => {
@@ -51,7 +49,7 @@
         >
             <div
                 v-if="show"
-                class="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-slate-950/95 p-4 backdrop-blur-md"
+                class="bg-rancho-ink-950/95 fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto p-4 backdrop-blur-md"
                 role="dialog"
                 aria-modal="true"
                 :aria-labelledby="title"
@@ -61,7 +59,7 @@
                     :class="[
                         variant === 'lightbox'
                             ? 'relative max-h-[90vh] max-w-[90vw]'
-                            : 'shadow-2xl relative my-auto w-full max-w-md rounded-3xl border border-slate-800 bg-slate-900 p-6 sm:p-8',
+                            : 'border-rancho-ink-800 bg-rancho-ink-900 shadow-2xl relative my-auto w-full max-w-[90vw] rounded-2xl border px-3 py-6 sm:rounded-3xl sm:p-6 sm:p-8',
                     ]"
                     @click.stop
                 >
@@ -70,7 +68,7 @@
                         :class="[
                             variant === 'lightbox'
                                 ? 'absolute -top-12 right-0 text-white/50 transition-all hover:rotate-90 hover:text-white'
-                                : 'absolute right-4 top-4 z-10 text-slate-500 transition-colors hover:text-white sm:right-6 sm:top-6',
+                                : 'text-rancho-ink-500 absolute right-4 top-6 z-10 transition-colors hover:text-white sm:right-6 sm:top-6',
                         ]"
                         aria-label="Закрыть модальное окно"
                     >
@@ -80,7 +78,7 @@
                     <h3
                         v-if="title && variant !== 'lightbox'"
                         :id="title"
-                        class="mb-6 pr-8 text-xl font-black uppercase tracking-tight text-white"
+                        class="text:xs mb-6 pl-2 pr-8 font-black tracking-tight text-white sm:text-xl"
                     >
                         {{ title }}
                     </h3>
@@ -108,7 +106,10 @@
         background: transparent;
     }
     .custom-scrollbar::-webkit-scrollbar-thumb {
-        background: #1e293b;
+        background: #403a2d; /* rancho-ink-700 */
         border-radius: 10px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #756d57; /* rancho-ink-500 */
     }
 </style>

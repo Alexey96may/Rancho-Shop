@@ -1,5 +1,5 @@
 <script setup lang="ts">
-    import { PropType, watch } from 'vue';
+    import { type PropType, watch } from 'vue';
 
     import { router, useForm } from '@inertiajs/vue3';
 
@@ -10,7 +10,7 @@
     import AdminSearchInput from '@/Components/Admin/UI/AdminSearchInput.vue';
     import AdminLayout from '@/Layouts/AdminLayout.vue';
     import { useAdminFilters } from '@/composables/routing/useAdminFilters';
-    import { AdminLandingBlock, ResourceCollection } from '@/types';
+    import type { AdminLandingBlock, ResourceCollection } from '@/types';
 
     defineOptions({ layout: AdminLayout });
 
@@ -66,15 +66,17 @@
         <AdminPageHeader title="Блоки страниц" subtitle="Управление блоками на главной" />
     </Teleport>
 
-    <div class="animate-in fade-in slide-in-from-bottom-4 space-y-8 duration-700">
+    <div class="space-y-10">
+        <!-- SEARCH -->
         <AdminSearchInput v-model="filterForm.search" placeholder="Поиск по названию или тегу..." />
 
+        <!-- LIST -->
         <Transition name="fade-slide">
             <div v-if="blocks.data.length" key="blocks">
                 <TransitionGroup
                     name="list"
                     tag="div"
-                    class="grid grid-cols-1 gap-6 lg:grid-cols-2"
+                    class="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-2"
                 >
                     <FeatureCard
                         v-for="block in blocks.data"
@@ -116,21 +118,6 @@
         width: 100%;
     }
 
-    .animate-in {
-        animation: fadeInScale 0.7s ease;
-    }
-
-    @keyframes fadeInScale {
-        from {
-            opacity: 0;
-            transform: translateY(10px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
     .fade-slide-enter-active {
         transition: all 0.4s ease-out;
     }
@@ -138,5 +125,14 @@
     .fade-slide-enter-from {
         opacity: 0;
         transform: translateY(-10px);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .list-move,
+        .list-enter-active,
+        .list-leave-active,
+        .fade-slide-enter-active {
+            transition: none;
+        }
     }
 </style>

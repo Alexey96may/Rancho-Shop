@@ -1,5 +1,5 @@
 <script setup lang="ts">
-    import { PropType, watch } from 'vue';
+    import { type PropType, watch } from 'vue';
 
     import { useForm } from '@inertiajs/vue3';
 
@@ -19,7 +19,7 @@
     import { useAdminCrud } from '@/composables/crud/useAdminCrud';
     import { useAdminForm } from '@/composables/crud/useAdminForm';
     import { useAdminFilters } from '@/composables/routing/useAdminFilters';
-    import { AdminCategory, Paginated } from '@/types';
+    import type { AdminCategory, Paginated } from '@/types';
 
     const props = defineProps({
         categories: {
@@ -80,6 +80,9 @@
         () => {
             submitFilters(filterForm, 'admin.categories.index');
         },
+        {
+            immediate: true,
+        },
     );
 
     const submit = () => {
@@ -93,13 +96,14 @@
     <Teleport to="#admin-header-content">
         <AdminPageHeader title="Список Категорий" subtitle="Управление базой категорий" />
     </Teleport>
-
-    <main id="main-content">
-        <section
-            aria-label="Фильтры и поиск"
-            class="mb-10 flex flex-col gap-4 lg:flex-row lg:items-end"
-        >
-            <AdminSearchInput v-model="filterForm.search" placeholder="Найти категорию..." />
+    <div class="space-y-10">
+        <!-- FILTERS -->
+        <section class="flex flex-col gap-4 sm:flex-row sm:items-end" aria-label="Фильтрация">
+            <AdminSearchInput
+                v-model="filterForm.search"
+                placeholder="Найти категорию..."
+                class="order-2 w-full sm:-order-none lg:max-w-md"
+            />
 
             <AdminSelect
                 v-model="filterForm.type"
@@ -107,13 +111,18 @@
                 value-key="slug"
                 label-key="name"
                 variant="admin"
-                width-class="lg:w-64"
+                width-class="order-3 sm:-order-none w-full lg:w-64"
                 placeholder="Выберите тип"
             />
 
-            <BaseCreateButton label="Добавить" @click="openModal(form)" />
+            <BaseCreateButton
+                label="Добавить"
+                class="order-1 self-end sm:-order-none lg:self-auto"
+                @click="openModal(form)"
+            />
         </section>
 
+        <!-- LIST -->
         <div class="relative min-h-[400px]">
             <Transition name="fade-slide">
                 <div
@@ -153,21 +162,24 @@
             </Transition>
         </div>
 
+        <!-- PAGINATION -->
         <footer>
-            <AdminPagination :links="categories.meta.links" />
+            <AdminPagination :links="categories.meta.links" theme="dark" />
         </footer>
 
+        <!-- MODAL -->
         <AdminModal
             :show="isModalOpen"
             :title="editMode ? 'Редактирование' : 'Новая категория'"
             @close="closeModal"
         >
-            <form @submit.prevent="submit" class="space-y-6" aria-label="Форма категории">
+            <form @submit.prevent="submit" class="space-y-5 px-2" aria-label="Форма категории">
                 <BaseInput
                     v-model="form.name"
                     v-model:error="form.errors.name"
                     label="Название"
-                    placeholder=""
+                    placeholder="Например: Молочные продукты"
+                    theme="dark"
                 />
 
                 <BaseInput
@@ -175,6 +187,7 @@
                     v-model:error="form.errors.description"
                     label="Описание (необязательно)"
                     placeholder="Категория для..."
+                    theme="dark"
                 />
 
                 <BaseInput
@@ -182,28 +195,26 @@
                     v-model:error="form.errors.icon"
                     label="Иконка (lucide)"
                     placeholder="Egg"
+                    theme="dark"
                 />
 
-                <div class="grid grid-cols-2 gap-6">
-                    <div class="space-y-2">
-                        <AdminSelect
-                            label="Тип контента"
-                            v-model="form.type"
-                            value-key="slug"
-                            label-key="name"
-                            variant="admin"
-                            :options="modalTypeOptions"
-                        />
-                    </div>
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <AdminSelect
+                        label="Тип контента"
+                        v-model="form.type"
+                        value-key="slug"
+                        label-key="name"
+                        variant="admin"
+                        :options="modalTypeOptions"
+                        width-class="w-full"
+                    />
 
-                    <div class="space-y-2">
-                        <AdminNumberInput
-                            label="Сортировка"
-                            v-model="form.sort_order"
-                            :min="0"
-                            :max="999"
-                        />
-                    </div>
+                    <AdminNumberInput
+                        label="Сортировка"
+                        v-model="form.sort_order"
+                        :min="0"
+                        :max="999"
+                    />
                 </div>
 
                 <BaseStatusToggle
@@ -216,10 +227,11 @@
                     type="submit"
                     :label="editMode ? 'Обновить данные' : 'Создать категорию'"
                     :disabled="form.processing"
+                    class="w-full"
                 />
             </form>
         </AdminModal>
-    </main>
+    </div>
 </template>
 
 <style scoped>
@@ -239,5 +251,13 @@
     .fade-slide-enter-from {
         opacity: 0;
         transform: scale(0.95);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .category-list-enter-active,
+        .category-list-leave-active,
+        .fade-slide-enter-active {
+            transition: none;
+        }
     }
 </style>

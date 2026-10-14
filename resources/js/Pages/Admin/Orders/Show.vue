@@ -1,12 +1,12 @@
 <script setup lang="ts">
-    import { PropType, computed } from 'vue';
+    import { type PropType, computed } from 'vue';
 
     import { Link, useForm, usePage } from '@inertiajs/vue3';
 
     import {
         ChatBubbleLeftEllipsisIcon,
         ChatBubbleLeftRightIcon,
-        ExclamationTriangleIcon,
+        CubeIcon,
         MapPinIcon,
         PhoneIcon,
         ShoppingBagIcon,
@@ -14,7 +14,7 @@
     } from '@heroicons/vue/24/outline';
 
     import AdminPageHeader from '@/Components/Admin/Shared/AdminPageHeader.vue';
-    import AdminDeleteButton from '@/Components/Admin/UI/AdminDeleteButton.vue';
+    import DangerZone from '@/Components/Sections/DangerZone.vue';
     import AppImage from '@/Components/UI/AppImage.vue';
     import BaseCancelButton from '@/Components/UI/BaseCancelButton.vue';
     import BaseTextarea from '@/Components/UI/BaseTextarea.vue';
@@ -22,7 +22,7 @@
     import AdminLayout from '@/Layouts/AdminLayout.vue';
     import { useAdminCrud } from '@/composables/crud/useAdminCrud';
     import { useAdminForm } from '@/composables/crud/useAdminForm';
-    import { AdminOrder, ResourceSingle } from '@/types';
+    import type { AdminOrder, ResourceSingle } from '@/types';
     import { formatMoney } from '@/utils/format';
 
     defineOptions({ layout: AdminLayout });
@@ -97,34 +97,36 @@
         <AdminPageHeader :title="'Заказ #' + order.data.id" subtitle="Просмотр деталей заказа" />
     </Teleport>
 
-    <div class="p-4 sm:p-8">
-        <div class="mb-6">
-            <BaseCancelButton :href="backUrl" label="Назад" />
-        </div>
+    <div class="space-y-10">
+        <BaseCancelButton :href="backUrl" label="Назад" theme="dark" />
 
-        <div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
-            <div class="space-y-6 lg:col-span-2">
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-8">
+            <!-- LEFT COLUMN -->
+            <div class="flex flex-col gap-6 lg:col-span-2">
+                <!-- СОСТАВ ЗАКАЗА -->
                 <section
-                    class="overflow-hidden rounded-3xl border border-slate-800 bg-slate-900/50"
+                    class="overflow-hidden rounded-2xl border border-rancho-ink-800 bg-rancho-ink-900/50 sm:rounded-3xl"
                 >
-                    <div class="border-b border-slate-800 bg-slate-900/80 px-6 py-4">
+                    <div
+                        class="border-b border-rancho-ink-800 bg-rancho-ink-900/80 px-4 py-4 sm:px-6"
+                    >
                         <h3
                             class="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-white"
                         >
-                            <ShoppingBagIcon class="h-4 w-4 text-orange-500" />
+                            <ShoppingBagIcon class="h-4 w-4 text-rancho-mint" aria-hidden="true" />
                             Состав заказа #{{ order.data.id }}
                         </h3>
                     </div>
 
-                    <div class="divide-y divide-slate-800">
+                    <div class="divide-y divide-rancho-ink-800">
                         <div
                             v-for="item in order.data.items"
                             :key="item.id"
-                            class="flex items-center justify-between p-6 transition-colors hover:bg-slate-800/30"
+                            class="flex items-center justify-between gap-4 p-4 transition-colors hover:bg-rancho-ink-800/30 sm:p-6"
                         >
-                            <div class="flex items-center gap-4">
+                            <div class="flex min-w-0 items-center gap-4">
                                 <div
-                                    class="h-16 w-16 shrink-0 overflow-hidden rounded-2xl border border-slate-800 bg-slate-950"
+                                    class="h-8 w-8 shrink-0 overflow-hidden rounded-2xl border border-rancho-ink-800 bg-rancho-ink-950 sm:h-14 sm:h-16 sm:w-14 sm:w-16"
                                 >
                                     <AppImage
                                         v-if="item.images && item.images.length"
@@ -133,85 +135,102 @@
                                     />
                                     <div
                                         v-else
-                                        class="flex h-full items-center justify-center text-2xl"
+                                        class="flex h-full items-center justify-center text-rancho-ink-600"
                                     >
-                                        📦
+                                        <CubeIcon
+                                            class="h-4 w-4 sm:h-6 sm:w-6"
+                                            aria-hidden="true"
+                                        />
                                     </div>
                                 </div>
-                                <div>
-                                    <h4 class="text-sm font-bold text-white">
+
+                                <div class="min-w-0">
+                                    <h4 class="truncate text-sm font-bold text-white">
                                         <Link
-                                            :href="
-                                                route('catalog.show', {
-                                                    product: item.id,
-                                                })
-                                            "
+                                            v-if="item.product_slug"
+                                            :href="route('catalog.show', item.product_slug)"
+                                            class="transition-colors hover:text-rancho-mint hover:underline"
                                         >
                                             {{ item.product_name }}
                                         </Link>
+
+                                        <span v-else class="text-rancho-ink-300">
+                                            {{ item.product_name }}
+                                        </span>
                                     </h4>
-                                    {{ item.product_slug }}
-                                    <p class="text-xs text-slate-500">
+
+                                    <p class="text-xs text-rancho-ink-500">
                                         {{ item.quantity }}{{ item.unit.short }} ×
                                         {{ formatMoney(item.unit_price) }}
                                     </p>
                                 </div>
                             </div>
-                            <div class="text-right">
-                                <span class="text-sm font-black text-orange-500">{{
-                                    formatMoney(item.subtotal)
-                                }}</span>
+
+                            <div class="shrink-0 text-right">
+                                <span class="text-sm font-black text-rancho-mint">
+                                    {{ formatMoney(item.subtotal) }}
+                                </span>
                             </div>
                         </div>
                     </div>
 
-                    <div class="space-y-3 bg-slate-950/50 p-6">
+                    <!-- ИТОГИ -->
+                    <div class="space-y-3 bg-rancho-ink-950/50 px-4 py-6 sm:p-6">
                         <div
-                            class="flex justify-between text-xs font-bold uppercase text-slate-500"
+                            class="flex justify-between text-xs font-bold uppercase text-rancho-ink-500"
                         >
                             <span>Сумма товаров:</span>
                             <span class="text-white">{{ computedOrderPrice }}</span>
                         </div>
+
                         <div
                             v-if="order.data.delivery_price"
-                            class="flex justify-between text-xs font-bold uppercase text-slate-500"
+                            class="flex justify-between text-xs font-bold uppercase text-rancho-ink-500"
                         >
                             <span>Доставка:</span>
                             <span class="text-white">{{ computedDeliveryPrice }}</span>
                         </div>
+
                         <div
                             v-if="order.data.discount_total > 0"
-                            class="flex justify-between text-xs font-bold uppercase text-red-500"
+                            class="flex justify-between text-xs font-bold uppercase text-rose-400"
                         >
                             <span>Скидка:</span>
                             <span>-{{ computedDiscountTotal }}</span>
                         </div>
-                        <div class="flex justify-between border-t border-slate-800 pt-4">
-                            <span class="text-lg font-black uppercase text-white">Итого:</span>
-                            <span class="text-2xl font-black text-orange-500">{{
-                                computedTotalPrice
-                            }}</span>
+
+                        <div
+                            class="flex items-center justify-between border-t border-rancho-ink-800 pt-4"
+                        >
+                            <span class="text-sm font-black uppercase text-white sm:text-lg"
+                                >Итого:</span
+                            >
+                            <span class="text-lg font-black text-rancho-mint sm:text-xl">
+                                {{ computedTotalPrice }}
+                            </span>
                         </div>
                     </div>
                 </section>
 
+                <!-- ТЕХИНФОРМАЦИЯ ДОСТАВКИ -->
                 <section
                     v-if="order.data.delivery_meta"
-                    class="rounded-3xl border border-slate-800 bg-slate-900/50 p-6"
+                    class="rounded-2xl border border-rancho-ink-800 bg-rancho-ink-900/50 p-4 py-6 sm:rounded-3xl sm:p-6"
                 >
                     <h3
-                        class="mb-4 text-[10px] font-black uppercase tracking-widest text-slate-500"
+                        class="mb-4 text-[10px] font-black uppercase tracking-widest text-rancho-ink-500"
                     >
                         Техническая информация доставки
                     </h3>
-                    <div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
+
+                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-4 sm:gap-4">
                         <div
                             v-for="(value, key) in order.data.delivery_meta"
                             :key="key"
-                            class="rounded-2xl border border-slate-800 bg-slate-950 p-4"
+                            class="rounded-2xl border border-rancho-ink-800 bg-rancho-ink-950 p-3 sm:p-4"
                         >
                             <p
-                                class="mb-1 text-[9px] font-black uppercase text-slate-400 opacity-50"
+                                class="mb-1 text-[9px] font-black uppercase text-rancho-ink-400 opacity-60"
                             >
                                 {{ key }}
                             </p>
@@ -222,84 +241,131 @@
                     </div>
                 </section>
 
+                <!-- ЗАМЕТКА АДМИНА -->
                 <section
-                    v-if="can.editAdminNote"
-                    class="flex items-center justify-between gap-4 rounded-3xl border border-red-500/20 bg-red-500/5 p-6"
+                    class="space-y-4 rounded-2xl border border-rancho-ink-800 bg-rancho-ink-900/50 p-4 sm:rounded-3xl sm:p-6"
                 >
-                    <div class="flex items-start gap-3">
-                        <ExclamationTriangleIcon
-                            class="h-5 w-5 shrink-0 text-red-400"
+                    <div class="flex items-center gap-2">
+                        <ChatBubbleLeftRightIcon
+                            class="h-4 w-4 text-rancho-mint"
                             aria-hidden="true"
                         />
-                        <div>
-                            <h3
-                                class="text-[10px] font-black uppercase tracking-widest text-red-400"
+                        <h3
+                            class="text-[10px] font-black uppercase tracking-widest text-rancho-ink-500"
+                        >
+                            Заметка администратора
+                        </h3>
+                    </div>
+
+                    <div v-if="can.editAdminNote" class="relative">
+                        <BaseTextarea
+                            v-model="form.admin_note"
+                            @blur="submit"
+                            :error="form.errors.admin_note"
+                            placeholder="Напишите что-нибудь о заказе..."
+                            :max-height="400"
+                            theme="dark"
+                        />
+
+                        <div class="absolute bottom-3 right-3 flex items-center gap-2">
+                            <span
+                                v-if="form.processing"
+                                class="animate-pulse text-[9px] font-black uppercase text-rancho-mint"
                             >
-                                Опасная зона
-                            </h3>
-                            <p class="mt-1 text-[10px] leading-tight text-red-300/60">
-                                Удаление заказа приведет к его полному исчезновению из базы данных и
-                                статистики.
-                            </p>
+                                Сохранение...
+                            </span>
                         </div>
                     </div>
 
-                    <AdminDeleteButton
-                        @click="deleteOrder"
-                        title="Удалить заказ"
-                        :disabled="isDeleting(props.order.data.id)"
-                    />
+                    <div
+                        class="min-h-[100px] rounded-2xl border border-dashed border-rancho-ink-800 bg-rancho-ink-950/30 p-4"
+                    >
+                        <div
+                            v-if="order.data.admin_note"
+                            class="text-xs italic leading-relaxed text-rancho-ink-200"
+                        >
+                            «{{ order.data.admin_note }}»
+                        </div>
+                        <div
+                            v-else
+                            class="flex h-full items-center justify-center text-[10px] font-bold uppercase tracking-widest text-rancho-ink-500"
+                        >
+                            Заметок пока нет
+                        </div>
+                    </div>
+
+                    <p class="px-2 text-[9px] leading-tight text-rancho-ink-500">
+                        * Эта информация видна всему персоналу, но редактируется только
+                        администратором.
+                    </p>
                 </section>
             </div>
 
+            <!-- RIGHT COLUMN -->
             <div class="space-y-6">
-                <section class="rounded-3xl border border-slate-800 bg-slate-900/50 p-6">
+                <!-- ПОКУПАТЕЛЬ -->
+                <section
+                    class="rounded-2xl border border-rancho-ink-800 bg-rancho-ink-900/50 p-4 sm:rounded-3xl sm:p-6"
+                >
                     <h3
-                        class="mb-6 text-[10px] font-black uppercase tracking-widest text-slate-500"
+                        class="mb-6 text-[10px] font-black uppercase tracking-widest text-rancho-ink-500"
                     >
                         Покупатель
                     </h3>
+
                     <div class="space-y-4">
-                        <div class="flex items-center gap-4">
+                        <!-- ИМЯ -->
+                        <div class="flex items-center gap-2 sm:gap-4">
                             <div
-                                class="flex h-10 w-10 items-center justify-center rounded-full bg-orange-500/10 text-orange-500"
+                                class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-rancho-mint/10 text-rancho-mint sm:h-10 sm:w-10"
+                                aria-hidden="true"
                             >
-                                <UserIcon class="h-5 w-5" />
+                                <UserIcon class="h-4 w-4 sm:h-5 sm:w-5" />
                             </div>
-                            <div>
-                                <p class="text-xs font-black uppercase text-slate-500">Имя</p>
+                            <div class="space-y-1">
+                                <p class="text-xs font-black text-rancho-ink-500 sm:uppercase">
+                                    Имя
+                                </p>
                                 <p class="text-sm font-bold text-white">
                                     {{ order.data.customer_name }}
                                 </p>
                             </div>
                         </div>
-                        <div class="flex items-center gap-4">
+
+                        <!-- ТЕЛЕФОН -->
+                        <div class="flex items-center gap-2 sm:gap-4">
                             <div
-                                class="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500/10 text-blue-500"
+                                class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-rancho-sky/15 text-rancho-sky sm:h-10 sm:w-10"
+                                aria-hidden="true"
                             >
-                                <PhoneIcon class="h-5 w-5" />
+                                <PhoneIcon class="h-4 w-4 sm:h-5 sm:w-5" />
                             </div>
                             <a
                                 :href="`tel:${order.data.customer_phone}`"
-                                class="block transition-colors hover:text-orange-500"
+                                class="block space-y-1 transition-colors hover:text-rancho-mint"
                             >
-                                <p class="text-xs font-black uppercase text-slate-500">Телефон</p>
+                                <p class="text-xs font-black text-rancho-ink-500 sm:uppercase">
+                                    Телефон
+                                </p>
                                 <p class="text-sm font-bold text-white">
                                     {{ order.data.customer_phone }}
                                 </p>
                             </a>
                         </div>
-                        <div class="flex items-start gap-4 pt-2">
+
+                        <!-- АДРЕС -->
+                        <div class="flex items-start gap-2 sm:gap-4">
                             <div
-                                class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-500/10 text-green-500"
+                                class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-rancho-pine/20 text-rancho-mint sm:h-10 sm:w-10"
+                                aria-hidden="true"
                             >
-                                <MapPinIcon class="h-5 w-5" />
+                                <MapPinIcon class="h-4 w-4 sm:h-5 sm:w-5" />
                             </div>
-                            <div>
-                                <p class="text-xs font-black uppercase text-slate-500">
+                            <div class="space-y-1">
+                                <p class="text-xs font-black text-rancho-ink-500 sm:uppercase">
                                     Адрес доставки
                                 </p>
-                                <p class="text-sm font-bold leading-relaxed text-white">
+                                <p class="text-xs font-bold leading-relaxed text-white">
                                     {{
                                         order.data.is_pickup
                                             ? 'Самовывоз из магазина'
@@ -310,39 +376,47 @@
                         </div>
                     </div>
 
+                    <!-- КОММЕНТАРИЙ -->
                     <div
                         v-if="order.data.customer_comment"
-                        class="mt-6 rounded-2xl border border-dashed border-slate-700 bg-slate-950 p-4"
+                        class="mt-6 rounded-2xl border border-dashed border-rancho-ink-700 bg-rancho-ink-950 p-4"
                     >
                         <p
-                            class="mb-2 flex items-center gap-2 text-[10px] font-black uppercase text-slate-500"
+                            class="mb-2 flex items-center gap-2 text-[10px] font-black uppercase text-rancho-ink-500"
                         >
-                            <ChatBubbleLeftEllipsisIcon class="h-3 w-3" />
+                            <ChatBubbleLeftEllipsisIcon class="h-3 w-3" aria-hidden="true" />
                             Комментарий клиента
                         </p>
-                        <p class="text-xs italic text-slate-300">
+                        <p class="text-xs italic text-rancho-ink-200">
                             «{{ order.data.customer_comment }}»
                         </p>
                     </div>
                 </section>
 
-                <section class="space-y-6 rounded-3xl border border-slate-800 bg-slate-900/50 p-6">
+                <!-- СТАТУС -->
+                <section
+                    class="space-y-6 rounded-2xl border border-rancho-ink-800 bg-rancho-ink-900/50 p-4 sm:rounded-3xl sm:p-6"
+                >
                     <div>
-                        <label class="mb-3 block text-[10px] font-black uppercase text-slate-500"
-                            >Текущий статус: {{ order.data.status_label }}</label
+                        <label
+                            class="mb-3 block text-[10px] font-black uppercase text-rancho-ink-500"
                         >
+                            Текущий статус: {{ order.data.status_label }}
+                        </label>
+
                         <div class="grid grid-cols-1 gap-2">
                             <button
                                 v-for="(info, key) in ORDER_STATUSES"
                                 :key="key"
+                                type="button"
                                 @click="submit(key)"
                                 :class="[
-                                    'w-full rounded-xl border py-3 text-[10px] font-black uppercase transition-all',
+                                    'w-full rounded-xl border py-3 text-[10px] font-black uppercase transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-rancho-mint/40',
                                     order.data.status === key
-                                        ? 'border-white bg-white text-slate-950'
-                                        : 'border-slate-800 bg-slate-950 text-slate-500 hover:border-slate-600',
+                                        ? 'border-rancho-mint bg-rancho-mint text-rancho-ink-950'
+                                        : 'border-rancho-ink-800 bg-rancho-ink-950 text-rancho-ink-400 hover:border-rancho-ink-600 hover:text-rancho-ink-200',
                                     !can.editAdminNote &&
-                                        'cursor-not-allowed opacity-50 hover:border-slate-800',
+                                        'cursor-not-allowed opacity-50 hover:border-rancho-ink-800',
                                 ]"
                             >
                                 {{ info.label }}
@@ -351,55 +425,13 @@
                     </div>
                 </section>
 
-                <section class="space-y-4 rounded-3xl border border-slate-800 bg-slate-900/50 p-6">
-                    <div class="flex items-center gap-2">
-                        <ChatBubbleLeftRightIcon class="h-4 w-4 text-orange-500" />
-                        <h3 class="text-[10px] font-black uppercase tracking-widest text-slate-500">
-                            Заметка администратора
-                        </h3>
-                    </div>
-
-                    <div class="relative" v-if="can.editAdminNote">
-                        <BaseTextarea
-                            v-model="form.admin_note"
-                            @blur="submit"
-                            :error="form.errors.admin_note"
-                            placeholder="Напишите что-нибудь о заказе..."
-                            :max-height="400"
-                        />
-
-                        <div class="absolute bottom-3 right-3 flex items-center gap-2">
-                            <span
-                                v-if="form.processing"
-                                class="animate-pulse text-[9px] font-black uppercase text-orange-500"
-                            >
-                                Сохранение...
-                            </span>
-                        </div>
-                    </div>
-
-                    <div
-                        class="min-h-[100px] rounded-2xl border border-dashed border-slate-800 bg-slate-950/30 p-4"
-                    >
-                        <div
-                            v-if="order.data.admin_note"
-                            class="text-xs italic leading-relaxed text-slate-300"
-                        >
-                            «{{ order.data.admin_note }}»
-                        </div>
-                        <div
-                            v-else
-                            class="flex h-full items-center justify-center text-[10px] font-bold uppercase tracking-widest text-slate-600"
-                        >
-                            Заметок пока нет
-                        </div>
-                    </div>
-
-                    <p class="px-2 text-[9px] leading-tight text-slate-500">
-                        * Эта информация видна всему персоналу, но редактируется только
-                        администратором.
-                    </p>
-                </section>
+                <DangerZone
+                    :show="can.editAdminNote"
+                    description="Удаление заказа приведёт к его полному исчезновению из базы данных и статистики."
+                    button-title="Удалить заказ"
+                    :disabled="isDeleting(props.order.data.id)"
+                    @confirm="deleteOrder"
+                />
             </div>
         </div>
     </div>

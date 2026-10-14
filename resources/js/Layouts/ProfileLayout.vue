@@ -41,7 +41,7 @@
 <template>
     <div class="bg-rancho-ink-950 min-h-screen text-white">
         <SeoMeta :force-robots="'nofollow, noindex'" />
-        <Toaster />
+        <Toaster theme="dark" />
 
         <TheHeader theme="dark" />
 

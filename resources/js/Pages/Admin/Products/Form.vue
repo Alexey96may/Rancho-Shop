@@ -1,5 +1,5 @@
 <script setup lang="ts">
-    import { PropType, computed, ref } from 'vue';
+    import { type PropType, computed, ref } from 'vue';
 
     import { useForm } from '@inertiajs/vue3';
 
@@ -9,13 +9,15 @@
     import SEOSection from '@/Components/Admin/Sections/SEOSection.vue';
     import AdminPageHeader from '@/Components/Admin/Shared/AdminPageHeader.vue';
     import AdminBaseTextarea from '@/Components/Admin/UI/AdminBaseTextarea.vue';
+    import DangerZone from '@/Components/Sections/DangerZone.vue';
     import MediaGallery from '@/Components/Shared/MediaGallery.vue';
+    import AppImage from '@/Components/UI/AppImage.vue';
     import BaseCancelButton from '@/Components/UI/BaseCancelButton.vue';
     import BaseCreateButton from '@/Components/UI/BaseCreateButton.vue';
-    import BaseDeleteButton from '@/Components/UI/BaseDeleteButton.vue';
     import BaseInput from '@/Components/UI/BaseInput.vue';
     import BaseModal from '@/Components/UI/BaseModal.vue';
     import BaseSelect from '@/Components/UI/BaseSelect.vue';
+    import BaseSmartTime from '@/Components/UI/BaseSmartTime.vue';
     import BaseSwitch from '@/Components/UI/BaseSwitch.vue';
     import ImageUpload from '@/Components/UI/ImageUploader.vue';
     import AdminLayout from '@/Layouts/AdminLayout.vue';
@@ -24,15 +26,7 @@
     import { useAdminForm } from '@/composables/crud/useAdminForm';
     import type { GalleryItem } from '@/composables/features/useMediaUpload';
     import { useMediaUpload, useSingleImagePreview } from '@/composables/features/useMediaUpload';
-    import type {
-        AdminProduct,
-        Animal,
-        AvailabilityType,
-        Category,
-        Media,
-        ResourceSingle,
-    } from '@/types';
-    import { formatDateTime, formatRelativeTime } from '@/utils/format';
+    import type { AdminProduct, AvailabilityType, Category, Media, ResourceSingle } from '@/types';
 
     defineOptions({ layout: AdminLayout });
 
@@ -90,11 +84,10 @@
         slug: props.product?.data?.slug ?? '',
         description: props.product?.data?.description ?? '',
         category_id: props.product?.data?.category_id ?? null,
-        availability_type: props.product?.data?.availability.value ?? ('stock' as AvailabilityType),
+        availability_type: props.product?.data?.availability.value ?? 'stock',
         is_active: props.product?.data?.is_active ?? true,
         attributes: props.product?.data?.attributes ?? {},
         animal_ids: props.product?.data?.animals?.map((a) => a.id) ?? [],
-        // Spatie Media
         main_photo: props.product?.data?.main_photo
             ? [...props.product.data?.main_photo]
             : ([] as Array<Media | File>),
@@ -102,7 +95,6 @@
             ? [...props.product.data?.gallery]
             : ([] as Array<Media | File>),
         remove_media: [] as number[],
-        // Seo
         seo: {
             title: props.product?.data.seo?.title || '',
             description: props.product?.data.seo?.description || '',
@@ -118,11 +110,6 @@
     const { currentFileForUpload, currentExistingImage } = useSingleImagePreview(
         () => form.main_photo,
     );
-
-    const showExactDate = ref(false);
-    const toggleDate = () => {
-        showExactDate.value = !showExactDate.value;
-    };
 
     const { submitForm } = useAdminForm();
     const { deleteEntity, isDeleting } = useAdminCrud();
@@ -151,8 +138,14 @@
         },
     });
 
-    const availabilityOptions = [
+    interface AvailabilityOption {
+        value: AvailabilityType;
+        label: string;
+    }
+
+    const availabilityOptions: AvailabilityOption[] = [
         { value: 'stock', label: 'В наличии' },
+        { value: 'weekly', label: 'Раз в неделю' },
         { value: 'daily', label: 'По графику' },
         { value: 'preorder', label: 'Предзаказ' },
     ];
@@ -177,33 +170,42 @@
         />
     </Teleport>
 
-    <div class="space-y-6">
-        <BaseCancelButton :href="backUrl" label="Назад" />
+    <div class="space-y-12 sm:space-y-8">
+        <BaseCancelButton :href="backUrl" label="Назад" theme="dark" />
 
-        <nav class="flex gap-2 border-b border-slate-800 pb-px" role="tablist">
+        <!-- TABS -->
+        <nav
+            class="flex overflow-x-auto border-b border-rancho-ink-800 pb-px"
+            role="tablist"
+            aria-label="Разделы формы"
+        >
             <button
                 v-for="tab in tabs"
                 :key="tab.id"
+                type="button"
                 @click="activeTab = tab.id"
                 role="tab"
                 :aria-selected="activeTab === tab.id"
-                class="flex items-center gap-2 px-6 py-4 text-xs font-black uppercase tracking-widest transition-all"
+                class="flex shrink-0 items-center gap-2 px-4 py-3 text-[10px] font-black uppercase tracking-widest transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-rancho-mint/40 sm:px-6 sm:py-4 sm:text-xs"
                 :class="
                     activeTab === tab.id
-                        ? 'border-b-2 border-emerald-600 text-white'
-                        : 'text-slate-500 hover:text-slate-300'
+                        ? 'border-b-2 border-rancho-mint text-white'
+                        : 'border-b-2 border-transparent text-rancho-ink-500 hover:text-rancho-ink-200'
                 "
             >
-                <component :is="tab.icon" class="h-4 w-4" />
+                <component :is="tab.icon" class="h-4 w-4" aria-hidden="true" />
                 {{ tab.name }}
             </button>
         </nav>
 
-        <form @submit.prevent="submit" class="grid grid-cols-1 gap-8 xl:grid-cols-12">
+        <!-- FORM -->
+        <form @submit.prevent="submit" class="grid grid-cols-1 gap-6 xl:grid-cols-12">
+            <!-- LEFT COLUMN -->
             <div class="xl:col-span-8">
+                <!-- GENERAL TAB -->
                 <div
                     v-show="activeTab === 'general'"
-                    class="space-y-8 rounded-3xl border border-slate-800 bg-slate-900/50 p-6 md:p-8"
+                    class="space-y-6 rounded-2xl border border-rancho-ink-800 bg-rancho-ink-900/50 p-4 sm:space-y-8 sm:rounded-3xl sm:p-6 md:p-8"
                 >
                     <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
                         <ImageUpload
@@ -214,39 +216,43 @@
                             :error="form.errors.main_photo"
                         />
 
-                        <BaseInput
-                            v-model="form.name"
-                            v-model:error="form.errors.name"
-                            label="Название товара"
-                            placeholder="Напр: Молоко козье пастеризованное"
-                            required
-                        />
+                        <div class="flex flex-col gap-4">
+                            <BaseInput
+                                v-model="form.name"
+                                v-model:error="form.errors.name"
+                                label="Название товара"
+                                placeholder="Напр: Молоко козье пастеризованное"
+                                required
+                                theme="dark"
+                            />
 
-                        <BaseInput
-                            v-model="form.slug"
-                            v-model:error="form.errors.slug"
-                            label="URL Slug (оставьте пустым для авто)"
-                            placeholder="moloko-kozie"
-                        />
+                            <BaseInput
+                                v-model="form.slug"
+                                v-model:error="form.errors.slug"
+                                label="URL Slug (оставьте пустым для авто)"
+                                placeholder="moloko-kozie"
+                                theme="dark"
+                            />
 
-                        <BaseSelect
-                            v-model="form.category_id"
-                            v-model:error="form.errors.category_id"
-                            :options="categories.data"
-                            label="Категория"
-                            placeholder="Выберите категорию"
-                            variant="admin"
-                        />
+                            <BaseSelect
+                                v-model="form.category_id"
+                                v-model:error="form.errors.category_id"
+                                :options="categories.data"
+                                label="Категория"
+                                placeholder="Выберите категорию"
+                                variant="admin"
+                            />
 
-                        <BaseSelect
-                            v-model="form.availability_type"
-                            v-model:error="form.errors.availability_type"
-                            :options="availabilityOptions"
-                            valueKey="value"
-                            labelKey="label"
-                            label="Тип доступности"
-                            variant="admin"
-                        />
+                            <BaseSelect
+                                v-model="form.availability_type"
+                                v-model:error="form.errors.availability_type"
+                                :options="availabilityOptions"
+                                value-key="value"
+                                label-key="label"
+                                label="Тип доступности"
+                                variant="admin"
+                            />
+                        </div>
                     </div>
 
                     <AdminBaseTextarea
@@ -257,21 +263,25 @@
                         rows="6"
                     />
 
+                    <!-- ANIMALS -->
                     <div>
                         <label
-                            class="mb-3 block text-[10px] font-black uppercase tracking-widest text-slate-500"
+                            class="mb-3 block text-[10px] font-black uppercase tracking-widest text-rancho-ink-500"
                         >
                             Источник (Животные)
                         </label>
-                        <div class="flex flex-wrap gap-3">
+
+                        <div
+                            class="flex max-h-48 flex-wrap gap-2 overflow-auto sm:max-h-60 sm:gap-3"
+                        >
                             <label
                                 v-for="animal in animals"
                                 :key="animal.id"
-                                class="flex cursor-pointer items-center gap-2 rounded-2xl border px-4 py-2 transition-all"
+                                class="flex cursor-pointer items-center gap-2 rounded-2xl border px-3 py-2 transition-all sm:px-4"
                                 :class="
                                     form.animal_ids.includes(animal.id)
-                                        ? 'border-emerald-600 bg-emerald-600/10 text-white'
-                                        : 'border-slate-800 text-slate-500 hover:border-slate-700'
+                                        ? 'border-rancho-mint bg-rancho-mint/10 text-white'
+                                        : 'border-rancho-ink-800 text-rancho-ink-400 hover:border-rancho-ink-600 hover:text-rancho-ink-200'
                                 "
                             >
                                 <input
@@ -286,13 +296,16 @@
                     </div>
                 </div>
 
+                <!-- MEDIA TAB -->
                 <MediaGallery
                     v-show="activeTab === 'media'"
                     v-model="form.gallery"
+                    theme="dark"
                     @remove="removeGalleryItem"
                     @preview="openImage"
-                    ><label
-                        class="relative flex aspect-square cursor-pointer flex-col items-center justify-center rounded-[2rem] border-2 border-dashed border-slate-800 bg-slate-950/20 transition-all hover:border-orange-500/50 hover:bg-slate-950/40"
+                >
+                    <label
+                        class="bg-ranko-ink-950/50 group relative flex aspect-square cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-rancho-ink-700 transition-all focus-within:border-rancho-mint focus-within:ring-4 focus-within:ring-rancho-mint/20 hover:border-rancho-mint/50 hover:bg-rancho-ink-900 sm:rounded-3xl"
                     >
                         <input
                             type="file"
@@ -301,11 +314,17 @@
                             @change="handleFile($event, 'gallery')"
                             class="sr-only"
                         />
-                        <PhotoIcon class="mb-2 h-8 w-8 text-slate-700" />
+
+                        <PhotoIcon
+                            class="mb-2 h-7 w-7 text-rancho-ink-500 transition-colors group-hover:text-rancho-mint sm:h-8 sm:w-8"
+                            aria-hidden="true"
+                        />
+
                         <span
-                            class="text-[10px] font-black uppercase tracking-widest text-slate-500"
-                            >Добавить</span
+                            class="text-[10px] font-black uppercase tracking-widest text-rancho-ink-500 transition-colors group-hover:text-rancho-mint"
                         >
+                            Добавить
+                        </span>
                     </label>
                 </MediaGallery>
 
@@ -321,93 +340,70 @@
                 />
             </div>
 
+            <!-- RIGHT COLUMN -->
             <aside class="xl:col-span-4">
-                <div class="sticky top-6 space-y-6">
-                    <div class="rounded-3xl border border-slate-800 bg-slate-900/50 p-6">
+                <div class="space-y-6 xl:sticky xl:top-6">
+                    <!-- ACTIONS -->
+                    <div
+                        class="rounded-2xl border border-rancho-ink-800 bg-rancho-ink-900/50 p-4 sm:rounded-3xl sm:p-6"
+                    >
                         <BaseSwitch
                             v-model="form.is_active"
                             label="Статус публикации"
                             active-text="Опубликован"
                             inactive-text="Черновик"
+                            theme="dark"
                         />
 
-                        <hr class="my-6 border-slate-800" />
+                        <hr class="my-6 border-rancho-ink-800" />
 
                         <div class="space-y-4">
-                            <div
-                                class="flex justify-between text-[10px] font-black uppercase tracking-widest"
-                            >
-                                <span class="text-slate-500">Создан:</span>
-                                <Transition name="fade-date" mode="out-in">
-                                    <time
-                                        :key="showExactDate.toString()"
-                                        :datetime="product?.data.created_at"
-                                        :title="
-                                            showExactDate
-                                                ? 'Нажмите, чтобы увидеть время назад'
-                                                : 'Нажмите, чтобы увидеть точную дату'
-                                        "
-                                        @click="toggleDate"
-                                        class="cursor-pointer select-none text-[10px] font-medium text-slate-500 transition-colors hover:text-slate-300"
-                                    >
-                                        {{
-                                            showExactDate
-                                                ? formatDateTime(product?.data.created_at || null)
-                                                : formatRelativeTime(
-                                                      product?.data.created_at || null,
-                                                  )
-                                        }}
-                                    </time>
-                                </Transition>
+                            <div class="flex justify-between">
+                                <span
+                                    class="text-[10px] font-black uppercase tracking-widest text-rancho-ink-500"
+                                    >Создан:</span
+                                >
+
+                                <BaseSmartTime
+                                    v-if="product?.data.created_at"
+                                    :date="product?.data.created_at"
+                                />
                             </div>
-                            <div
-                                class="flex justify-between text-[10px] font-black uppercase tracking-widest"
-                            >
-                                <span class="text-slate-500">ID товара:</span>
-                                <span class="text-slate-300">{{
-                                    product?.data?.id ?? 'Новый'
-                                }}</span>
+
+                            <div class="flex items-center justify-between">
+                                <span
+                                    class="text-[10px] font-black uppercase tracking-widest text-rancho-ink-500"
+                                    >ID товара:</span
+                                >
+                                <span class="text-sm font-black text-rancho-ink-300">
+                                    {{ product?.data?.id ?? 'Новый' }}
+                                </span>
                             </div>
                         </div>
 
-                        <BaseCreateButton
-                            type="submit"
-                            :label="isEdit ? 'Обновить данные' : 'Создать товар'"
-                            :disabled="form.processing"
-                            class="mt-8 w-full"
-                        />
-                    </div>
-
-                    <div
-                        v-if="isEdit"
-                        class="rounded-3xl border border-red-900/30 bg-red-900/10 p-6"
-                    >
-                        <h4 class="text-[10px] font-black uppercase tracking-widest text-red-500">
-                            Опасная зона
-                        </h4>
-                        <p class="mt-2 text-xs text-red-900/70">
-                            Удаление продукта приведет к его перемещению в корзину.
-                        </p>
-
-                        <BaseDeleteButton
-                            v-if="product?.data.can_delete"
-                            :disabled="isDeleting(product?.data.id)"
-                            @confirm="deletePage"
-                            ><span v-if="isDeleting(product?.data.id)">Удаление...</span>
-                            <span v-else>Удалить продукт</span>
-                        </BaseDeleteButton>
-
-                        <div
-                            v-else
-                            class="rounded-xl bg-orange-500/10 p-3 text-center text-[9px] font-bold uppercase text-orange-500"
-                        >
-                            Системная страница: удаление запрещено
+                        <div class="mt-8 w-full text-end">
+                            <BaseCreateButton
+                                type="submit"
+                                :label="isEdit ? 'Обновить' : 'Создать'"
+                                :disabled="form.processing"
+                            />
                         </div>
                     </div>
+
+                    <DangerZone
+                        v-if="product?.data.id"
+                        :show="isEdit"
+                        description="Удаление продукта приведёт к его перемещению в корзину."
+                        :button-title="`Удалить товар «${product.data.name}»`"
+                        button-label="Удалить продукт"
+                        :disabled="isDeleting(product.data.id)"
+                        @confirm="deletePage"
+                    />
                 </div>
             </aside>
         </form>
 
+        <!-- LIGHTBOX -->
         <BaseModal :show="isModalOpen" variant="lightbox" @close="selectedImage = null">
             <AppImage
                 v-if="selectedImage"
@@ -417,22 +413,3 @@
         </BaseModal>
     </div>
 </template>
-
-<style scoped>
-    .fade-date-enter-active,
-    .fade-date-leave-active {
-        transition:
-            opacity 0.2s ease,
-            transform 0.2s ease;
-    }
-
-    .fade-date-enter-from {
-        opacity: 1;
-        transform: translateY(2px);
-    }
-
-    .fade-date-leave-to {
-        opacity: 0;
-        transform: translateY(-2px);
-    }
-</style>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-    import { PropType, watch } from 'vue';
+    import { type PropType, watch } from 'vue';
 
     import { router, useForm } from '@inertiajs/vue3';
 
@@ -123,60 +123,71 @@
             />
         </Teleport>
 
-        <div class="space-y-8">
-            <div class="flex items-center justify-between gap-4">
+        <div class="space-y-10">
+            <!-- SEARCH + ADD -->
+            <div
+                class="flex flex-col-reverse gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-4"
+            >
                 <AdminSearchInput
                     v-model="filterForm.search"
                     placeholder="Поиск по названию или ID..."
+                    class="sm:max-w-md"
                 />
-
                 <BaseCreateButton
                     @click="navigateWithContext('admin.catalog', 'create')"
                     label="Добавить вариант"
+                    class="self-end sm:self-auto"
                 />
             </div>
-            <div class="l flex flex-wrap gap-3 lg:col-span-8">
+
+            <!-- FILTERS -->
+            <div class="flex flex-wrap gap-3">
                 <BaseSelect
                     v-model="filterForm.product_id"
                     :options="products"
                     placeholder="Все товары"
-                    valueKey="id"
-                    labelKey="name"
+                    label="Товар"
+                    value-key="id"
+                    label-key="name"
                     variant="admin"
-                    class="w-full lg:w-48"
+                    class="w-full sm:w-56 lg:w-64"
                 />
 
                 <BaseSelect
                     v-model="filterForm.unit_id"
                     :options="units"
                     placeholder="Все измерения"
-                    valueKey="id"
-                    labelKey="name"
+                    label="Измерение"
+                    value-key="id"
+                    label-key="name"
                     variant="admin"
-                    class="w-full lg:w-32"
+                    class="w-full sm:w-44 lg:w-48"
                 />
 
                 <BaseSelect
                     v-model="filterForm.sort"
                     :options="sortOptions"
-                    valueKey="value"
-                    labelKey="label"
+                    value-key="value"
+                    label-key="label"
                     placeholder="По умолчанию"
+                    label="Сортировка"
                     variant="admin"
-                    class="w-full lg:w-48"
+                    class="w-full sm:w-56 lg:w-64"
                 />
             </div>
 
+            <!-- TABLE HEADER (desktop only) -->
             <div
-                class="hidden grid-cols-12 gap-4 px-8 text-[9px] font-black uppercase tracking-[0.3em] text-slate-600 lg:grid"
+                class="border-rancho-ink-800 text-rancho-ink-500 hidden grid-cols-12 gap-4 border-b px-6 pb-2 text-[9px] font-black uppercase tracking-[0.3em] lg:grid"
             >
-                <div class="col-span-5">Товар / Характеристики</div>
+                <div class="col-span-4">Товар / Характеристики</div>
                 <div class="col-span-2 text-center">Цена за ед.</div>
                 <div class="col-span-2 text-center">Складской запас</div>
                 <div class="col-span-2 text-center">По умолчанию</div>
                 <div class="col-span-1"></div>
             </div>
 
+            <!-- LIST / LOADER / EMPTY -->
             <Transition name="fade-slide" mode="out-in">
                 <div v-if="variants.data.length" key="variants" class="relative min-h-[400px]">
                     <TransitionGroup tag="div" name="catalog-list" class="space-y-3">
@@ -225,8 +236,9 @@
                 />
             </Transition>
 
+            <!-- PAGINATION -->
             <Transition name="fade-slide" mode="out-in">
-                <AdminPagination v-if="!isFiltering" :links="variants.meta.links" />
+                <AdminPagination v-if="!isFiltering" :links="variants.meta.links" theme="dark" />
             </Transition>
         </div>
     </div>
@@ -240,5 +252,11 @@
     .fade-slide-enter-from {
         opacity: 0;
         transform: translateY(-10px);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .fade-slide-enter-active {
+            transition: none;
+        }
     }
 </style>

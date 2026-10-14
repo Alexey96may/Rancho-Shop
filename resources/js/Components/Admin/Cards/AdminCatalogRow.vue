@@ -59,15 +59,16 @@
 <template>
     <div
         role="listitem"
-        class="group relative grid grid-cols-1 items-center gap-4 rounded-[1rem] border border-slate-800 bg-slate-900/40 p-4 transition-all hover:border-orange-500/30 hover:bg-slate-900/60 lg:grid-cols-12 lg:px-8 lg:py-3"
+        class="border-rancho-ink-800 bg-rancho-ink-900/40 hover:border-rancho-mint/40 hover:bg-rancho-ink-900/60 group relative grid grid-cols-1 items-center gap-4 rounded-2xl border p-4 transition-all sm:grid-cols-2 lg:grid-cols-12 lg:px-6 lg:py-3"
         :class="{
             'pointer-events-none scale-[0.98] opacity-40 grayscale-[0.5]': disabled,
-            'border-red-800': outOfStock,
+            'border-rose-800': outOfStock,
         }"
     >
-        <div class="col-span-5 flex items-center gap-4">
+        <!-- ТОВАР + НАЗВАНИЕ (mobile: full width, desktop: col-span-5) -->
+        <div class="flex items-center gap-4 sm:col-span-2 lg:col-span-4">
             <div
-                class="relative h-14 w-14 shrink-0 overflow-hidden rounded-2xl border border-slate-700/50 bg-slate-800"
+                class="border-rancho-ink-700 bg-rancho-ink-800 relative h-14 w-14 shrink-0 overflow-hidden rounded-2xl border"
             >
                 <AppImage
                     v-if="variant.media?.main"
@@ -77,33 +78,31 @@
                     type="thumbnails"
                 />
 
-                <div v-else class="flex h-full w-full items-center justify-center text-slate-600">
+                <div
+                    v-else
+                    class="text-rancho-ink-500 flex h-full w-full items-center justify-center"
+                >
                     <PackageIcon class="h-6 w-6" />
                 </div>
             </div>
+
             <div class="min-w-0">
                 <h3
-                    class="truncate text-sm font-black text-white transition-colors group-hover:text-orange-500"
-                    :class="{
-                        'text-red-800': outOfStock,
-                    }"
+                    class="group-hover:text-rancho-mint truncate text-sm font-black text-white transition-colors"
+                    :class="{ 'text-rose-400': outOfStock }"
                 >
                     {{ variant.product?.name || 'Без названия' }}
                 </h3>
-                <div class="flex items-center gap-2 text-[11px] font-bold text-slate-500">
-                    <span
-                        class="truncate"
-                        :class="{
-                            'text-red-800': outOfStock,
-                        }"
-                        >{{ variant.name }}</span
-                    >
+
+                <div class="text-rancho-ink-500 flex items-center gap-2 text-[11px] font-bold">
+                    <span class="truncate" :class="{ 'text-rose-400': outOfStock }">
+                        {{ variant.name }}
+                    </span>
+
                     <span
                         v-if="variant.unit"
-                        class="absolute left-0 top-0 -translate-x-[25%] -translate-y-[25%] rounded bg-slate-400 px-1.5 py-0.5 text-[9px] uppercase tracking-tighter text-slate-800 opacity-90 transition-colors group-hover:bg-slate-300 group-hover:text-orange-800"
-                        :class="{
-                            'text-red-800': outOfStock,
-                        }"
+                        class="bg-rancho-ink-300 text-rancho-ink-800 group-hover:bg-rancho-ink-200 group-hover:text-rancho-ink-900 absolute right-0 top-0 -translate-y-[30%] translate-x-[30%] rounded px-1.5 py-0.5 text-[9px] uppercase tracking-tighter opacity-90 transition-colors lg:left-0 lg:right-auto lg:-translate-x-[30%]"
+                        :class="{ 'text-rose-400': outOfStock }"
                     >
                         {{ variant.unit.short }}
                     </span>
@@ -111,7 +110,8 @@
             </div>
         </div>
 
-        <div class="col-span-2 flex flex-col items-center justify-center">
+        <!-- ЦЕНА (mobile: 1 колонка из 2, desktop: col-span-2) -->
+        <div class="flex items-center justify-center lg:col-span-2">
             <AdminNumberInput
                 :model-value="variant.price"
                 @update:model-value="handlePriceChange"
@@ -121,7 +121,8 @@
             />
         </div>
 
-        <div class="col-span-2 flex items-center justify-center">
+        <!-- СКЛАД (mobile: 1 колонка из 2, desktop: col-span-2) -->
+        <div class="flex items-center justify-center lg:col-span-2">
             <AdminNumberInput
                 :model-value="variant.stock"
                 @update:model-value="handleStockChange"
@@ -131,7 +132,8 @@
             />
         </div>
 
-        <div class="col-span-2 flex justify-center">
+        <!-- TOGGLE (mobile: full width, desktop: col-span-2) -->
+        <div class="flex justify-center sm:col-span-2 lg:col-span-2">
             <BaseStatusToggle
                 :model-value="variant.is_default"
                 @update:model-value="handleDefaultChange"
@@ -140,7 +142,8 @@
             />
         </div>
 
-        <div class="col-span-1 flex justify-end gap-2">
+        <!-- КНОПКИ (mobile: full width, desktop: col-span-1) -->
+        <div class="flex justify-end gap-2 sm:col-span-2">
             <AdminEditButton
                 @click="$emit('edit', variant)"
                 :title="`Редактировать ${variant.name}`"

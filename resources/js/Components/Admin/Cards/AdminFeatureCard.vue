@@ -4,9 +4,9 @@
     import { ChevronRightIcon, Settings2Icon } from 'lucide-vue-next';
 
     import BaseVisibilityToggle from '@/Components/UI/BaseVisibilityToggle.vue';
-    import { AdminLandingBlock } from '@/types';
+    import type { AdminLandingBlock } from '@/types';
 
-    const props = defineProps<{
+    defineProps<{
         block: AdminLandingBlock;
     }>();
 
@@ -18,19 +18,20 @@
 <template>
     <article
         :aria-labelledby="`block-title-${block.id}`"
-        class="shadow-xl group relative flex flex-col rounded-[2.5rem] border border-slate-800 bg-slate-900/40 p-8 transition-all hover:border-orange-500/30 hover:bg-slate-900/60"
+        class="border-rancho-ink-800 bg-rancho-ink-900/40 shadow-xl hover:border-rancho-mint/40 hover:bg-rancho-ink-900/60 group relative flex flex-col rounded-2xl border p-6 transition-all sm:rounded-3xl sm:p-8"
     >
-        <div class="mb-6 flex items-start justify-between">
-            <div class="space-y-2">
+        <div class="mb-6 flex items-center justify-between gap-5">
+            <div class="space-y-4">
                 <span
                     role="status"
-                    class="rounded-lg border border-slate-800 bg-slate-950 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-orange-500"
+                    class="border-rancho-ink-800 bg-rancho-ink-950 text-rancho-mint rounded-lg border px-3 py-1 text-[10px] font-black uppercase tracking-widest"
                 >
                     {{ block.label }}
                 </span>
+
                 <h3
                     :id="`block-title-${block.id}`"
-                    class="text-xl font-bold leading-tight text-slate-100"
+                    class="text-rancho-ink-100 text-sm font-bold sm:text-xl"
                     v-html="block.title"
                 ></h3>
             </div>
@@ -43,42 +44,44 @@
             />
         </div>
 
+        <!-- CONTENT PREVIEW -->
         <div
-            class="mb-8 grid grid-cols-2 gap-3"
+            class="mb-8 grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3"
             role="list"
             :aria-label="`Предпросмотр элементов блока ${block.label}`"
         >
             <div
-                v-for="(item, idx) in block.content.slice(0, 4)"
+                v-for="(item, idx) in block.content.slice(0, 3)"
                 :key="idx"
                 role="listitem"
-                class="flex items-center gap-2 rounded-2xl border border-slate-800/50 bg-slate-950/60 p-3"
+                class="border-rancho-ink-800/60 bg-rancho-ink-950/60 flex items-center gap-2 rounded-2xl border p-3"
             >
-                <div class="h-1.5 w-1.5 rounded-full bg-orange-500" aria-hidden="true"></div>
-                <span class="truncate text-[10px] font-bold text-slate-400">
+                <div
+                    class="bg-rancho-mint h-1.5 w-1.5 shrink-0 rounded-full"
+                    aria-hidden="true"
+                ></div>
+
+                <span class="text-rancho-ink-300 truncate text-[10px] font-bold">
                     {{ item.title || 'Элемент без названия' }}
                 </span>
             </div>
 
             <div
                 v-if="block.content.length === 0"
-                class="col-span-2 py-2 text-center text-[10px] italic text-slate-600"
+                class="text-rancho-ink-500 col-span-1 py-2 text-center text-[10px] italic sm:col-span-2"
             >
                 Контент не заполнен
             </div>
         </div>
 
+        <!-- CTA -->
         <Link
             :href="route('admin.features.edit', block.id)"
             :aria-label="`Настроить контент для блока ${block.label}`"
-            class="mt-auto flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-800 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-white transition-all hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500 group-hover:bg-slate-700"
+            class="bg-rancho-ink-800 hover:bg-rancho-mint hover:text-rancho-ink-950 focus-visible:ring-rancho-mint/40 group-hover:bg-rancho-ink-700 group-hover:hover:bg-rancho-mint mt-auto flex w-full items-center justify-center gap-2 rounded-2xl py-4 text-[10px] font-black tracking-[0.2em] text-white transition-all focus:outline-none focus-visible:ring-2"
         >
             <Settings2Icon class="h-4 w-4" aria-hidden="true" />
-            <span>Настроить контент</span>
-            <ChevronRightIcon
-                class="ml-1 h-4 w-4 -translate-x-2 opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100"
-                aria-hidden="true"
-            />
+            <span class="text-xs">Настроить</span>
         </Link>
     </article>
 </template>

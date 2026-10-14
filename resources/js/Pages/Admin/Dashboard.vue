@@ -17,7 +17,7 @@
     import AdminDashboardCard from '@/Components/Admin/Cards/DashboardCard.vue';
     import AdminPageHeader from '@/Components/Admin/Shared/AdminPageHeader.vue';
     import AdminLayout from '@/Layouts/AdminLayout.vue';
-    import { SharedData } from '@/types';
+    import type { SharedData } from '@/types';
     import { formatMoney } from '@/utils/format';
 
     defineOptions({ layout: AdminLayout });
@@ -70,8 +70,8 @@
         <AdminPageHeader title="Админ-Панель" subtitle="Управление сайтом" />
     </Teleport>
 
-    <section>
-        <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    <section class="space-y-6">
+        <div class="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             <!-- ORDERS -->
             <AdminDashboardCard
                 v-if="can.manageOrders"
@@ -82,13 +82,12 @@
                 :count="stats.orders.total"
             />
 
-            <!-- ANALYTICS (без count) -->
+            <!-- ANALYTICS -->
             <AdminDashboardCard
                 v-if="can.manageAnalitics"
                 title="Аналитика"
                 description="Данные по заказам"
                 :href="route('admin.analytics.index')"
-                :active="route().current('admin.analytics.*')"
                 :icon="ChartBarIcon"
             />
 
@@ -154,13 +153,24 @@
         <!-- REVENUE BLOCK -->
         <div
             v-if="can.manageOrders && stats.orders.revenue"
-            class="mt-6 rounded-2xl border border-slate-200 bg-white p-6"
+            class="border-rancho-ink-800 from-rancho-ink-950 to-rancho-ink-900/60 relative overflow-hidden rounded-2xl border bg-gradient-to-br p-6 sm:p-8"
         >
-            <div class="text-xs uppercase tracking-wider text-slate-500">
-                Выручка (оплаченные заказы)
-            </div>
-            <div class="mt-2 text-3xl font-black text-emerald-600">
-                {{ formatMoney(stats.orders.revenue) }}
+            <!-- Декоративный blur -->
+            <div
+                class="bg-rancho-mint/10 pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full blur-3xl"
+                aria-hidden="true"
+            ></div>
+
+            <div class="relative">
+                <div
+                    class="text-rancho-ink-400 text-[10px] font-black uppercase tracking-[0.2em] sm:text-[11px]"
+                >
+                    Выручка (оплаченные заказы)
+                </div>
+
+                <div class="text-rancho-mint mt-3 text-2xl font-black sm:text-3xl md:text-4xl">
+                    {{ formatMoney(stats.orders.revenue) }}
+                </div>
             </div>
         </div>
     </section>

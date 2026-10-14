@@ -147,7 +147,7 @@
                             <button
                                 v-if="hasActiveFilters"
                                 @click="resetFilters"
-                                class="text-rancho-ember text-xs font-bold hover:underline"
+                                class="text-xs font-bold text-rancho-ember hover:underline"
                             >
                                 Сбросить
                             </button>
@@ -209,7 +209,8 @@
                     </Transition>
                 </div>
             </div>
+
+            <MainPagination v-scroll-reveal :links="products.meta.links" theme="light" />
         </AppContainer>
-        <MainPagination v-scroll-reveal :links="products.meta.links" theme="light" />
     </div>
 </template>

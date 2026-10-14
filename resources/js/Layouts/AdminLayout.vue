@@ -27,7 +27,8 @@
     import SeoMeta from '@/Components/Shared/SeoMeta.vue';
     import Toaster from '@/Components/Shared/Toaster.vue';
     import { useFlashToasts } from '@/composables/useFlashToasts';
-    import { SharedData } from '@/types';
+    import type { SharedData } from '@/types';
+    import { getInitials } from '@/utils/user';
 
     useFlashToasts();
 
@@ -56,25 +57,21 @@
         document.body.style.overflow = open ? 'hidden' : '';
     });
 
-    // === Инициалы для аватарки ===
     const userInitial = computed(() => {
-        const name = userName.value.trim();
-        if (!name) return '?';
-        return name.charAt(0).toUpperCase();
+        return getInitials(userName.value);
     });
 </script>
 
 <template>
     <SeoMeta :force-robots="'nofollow, noindex'" :seo="page.props?.seo" />
+    <Toaster theme="dark" />
 
-    <Toaster />
-
-    <div class="flex min-h-screen bg-slate-950 font-sans text-slate-200">
+    <div class="bg-rancho-ink-950 text-rancho-ink-200 flex min-h-screen font-sans">
         <!-- Backdrop -->
         <Transition name="backdrop">
             <div
                 v-if="isSidebarOpen"
-                class="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden"
+                class="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm lg:hidden"
                 @click="closeSidebar"
                 aria-hidden="true"
             />
@@ -83,31 +80,32 @@
         <!-- SIDEBAR -->
         <aside
             id="admin-sidebar"
-            class="fixed inset-y-0 left-0 z-50 flex h-screen w-72 shrink-0 flex-col gap-6 overflow-y-auto border-r border-slate-900 bg-slate-950 p-4 transition-transform duration-300 sm:gap-8 sm:p-6 lg:sticky lg:top-0 lg:translate-x-0"
+            class="border-rancho-ink-800 bg-rancho-ink-950 fixed inset-y-0 left-0 z-50 flex h-screen w-72 shrink-0 flex-col gap-6 overflow-y-auto border-r p-4 transition-transform duration-300 sm:gap-8 sm:p-6 lg:sticky lg:top-0 lg:translate-x-0"
             :class="isSidebarOpen ? 'translate-x-0' : '-translate-x-full'"
         >
             <!-- Закрытие -->
             <button
                 type="button"
-                class="absolute right-3 top-3 rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-900 hover:text-white lg:hidden"
+                class="text-rancho-ink-400 hover:bg-rancho-ink-900 absolute right-3 top-3 rounded-lg p-2 transition-colors hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-rancho-pine/40 lg:hidden"
                 @click="closeSidebar"
                 aria-label="Закрыть меню"
             >
-                <XMarkIcon class="h-5 w-5 sm:h-6 sm:w-6" />
+                <XMarkIcon class="h-5 w-5 sm:h-6 sm:w-6" aria-hidden="true" />
             </button>
 
             <!-- Логотип -->
             <div class="flex items-center gap-2 pl-2 sm:pl-4">
                 <Link
                     :href="route('home')"
-                    class="text-xl font-black uppercase leading-none tracking-tighter text-white sm:text-2xl"
+                    class="hover:text-rancho-mint text-xl font-black uppercase leading-none tracking-tighter text-white transition-colors sm:text-2xl"
                 >
-                    Ранчо <span class="text-orange-600">Admin</span>
+                    Ранчо
+                    <span class="text-rancho-mint">Admin</span>
                 </Link>
             </div>
 
             <!-- Меню -->
-            <nav role="navigation">
+            <nav role="navigation" aria-label="Админ-навигация">
                 <ul class="flex flex-col gap-0.5 sm:gap-1">
                     <li>
                         <AdminSidebarLink
@@ -118,8 +116,9 @@
                         />
                     </li>
 
+                    <!-- МАГАЗИН -->
                     <li
-                        class="mb-1 mt-5 px-3 text-[9px] font-black uppercase tracking-[0.2em] text-slate-600 sm:mb-2 sm:mt-6 sm:px-4 sm:text-[10px]"
+                        class="text-rancho-ink-500 mb-1 mt-5 px-3 text-[9px] font-black uppercase tracking-[0.2em] sm:mb-2 sm:mt-6 sm:px-4 sm:text-[10px]"
                     >
                         Магазин
                     </li>
@@ -164,8 +163,9 @@
                         />
                     </li>
 
+                    <!-- ФЕРМА -->
                     <li
-                        class="mb-1 mt-5 px-3 text-[9px] font-black uppercase tracking-[0.2em] text-slate-600 sm:mb-2 sm:mt-6 sm:px-4 sm:text-[10px]"
+                        class="text-rancho-ink-500 mb-1 mt-5 px-3 text-[9px] font-black uppercase tracking-[0.2em] sm:mb-2 sm:mt-6 sm:px-4 sm:text-[10px]"
                     >
                         Ферма
                     </li>
@@ -178,8 +178,9 @@
                         />
                     </li>
 
+                    <!-- КОНТЕНТ -->
                     <li
-                        class="mb-1 mt-5 px-3 text-[9px] font-black uppercase tracking-[0.2em] text-slate-600 sm:mb-2 sm:mt-6 sm:px-4 sm:text-[10px]"
+                        class="text-rancho-ink-500 mb-1 mt-5 px-3 text-[9px] font-black uppercase tracking-[0.2em] sm:mb-2 sm:mt-6 sm:px-4 sm:text-[10px]"
                     >
                         Контент
                     </li>
@@ -224,8 +225,9 @@
                         />
                     </li>
 
+                    <!-- СИСТЕМА -->
                     <li
-                        class="mb-1 mt-5 px-3 text-[9px] font-black uppercase tracking-[0.2em] text-slate-600 sm:mb-2 sm:mt-6 sm:px-4 sm:text-[10px]"
+                        class="text-rancho-ink-500 mb-1 mt-5 px-3 text-[9px] font-black uppercase tracking-[0.2em] sm:mb-2 sm:mt-6 sm:px-4 sm:text-[10px]"
                     >
                         Система
                     </li>
@@ -260,40 +262,43 @@
         <!-- CONTENT -->
         <div class="flex min-w-0 flex-1 flex-col">
             <header
-                class="sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-slate-900 bg-slate-950/80 px-3 backdrop-blur-md sm:h-16 sm:gap-3 sm:px-4 md:h-20 md:gap-4 md:px-6 lg:px-10"
+                class="border-rancho-ink-800 bg-rancho-ink-950/80 sticky top-0 z-30 flex h-14 items-center gap-2 border-b px-3 py-8 backdrop-blur-md sm:h-16 sm:gap-3 sm:px-4 md:h-20 md:gap-4 md:px-6 lg:px-10"
             >
                 <!-- Hamburger -->
                 <button
                     type="button"
-                    class="shrink-0 rounded-lg p-2 text-slate-300 transition-colors hover:bg-slate-900 hover:text-white lg:hidden"
+                    class="text-rancho-ink-200 hover:bg-rancho-ink-900 shrink-0 rounded-lg p-2 pl-0 transition-colors hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-rancho-pine/40 lg:hidden"
                     @click="isSidebarOpen = true"
                     aria-label="Открыть меню"
                 >
-                    <Bars3Icon class="h-5 w-5 sm:h-6 sm:w-6" />
+                    <Bars3Icon class="h-5 w-5 sm:h-6 sm:w-6" aria-hidden="true" />
                 </button>
 
-                <!-- Заголовок страницы (слот) -->
-                <h1 id="admin-header-content" class="min-w-0 flex-1 truncate"></h1>
+                <!-- Заголовок страницы (телепорт) -->
+                <h1 id="admin-header-content" class="min-w-0 flex-1 truncate text-xs"></h1>
 
                 <!-- Правый блок: юзер -->
                 <div class="flex shrink-0 items-center gap-2 sm:gap-3 md:gap-4">
                     <div class="hidden text-right md:block">
                         <p class="text-xs font-bold leading-tight text-white md:text-sm">
-                            <Link :href="route('profile.edit')" class="hover:text-orange-500">
+                            <Link
+                                :href="route('profile.edit')"
+                                class="hover:text-rancho-mint transition-colors"
+                            >
                                 {{ userName }}
                             </Link>
                         </p>
                         <span
-                            class="text-[9px] font-bold uppercase tracking-tighter text-orange-500 md:text-[10px]"
+                            class="text-rancho-mint text-[9px] font-bold uppercase tracking-tighter md:text-[10px]"
                         >
                             {{ userRole }}
                         </span>
                     </div>
 
-                    <!-- Аватарка (показывается до md) -->
+                    <!-- Аватарка (до md) -->
                     <Link
                         :href="route('profile.edit')"
-                        class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-800 text-xs font-black text-orange-500 transition-colors hover:bg-slate-700 sm:h-9 sm:w-9 md:hidden"
+                        class="bg-rancho-ink-800 text-rancho-mint hover:bg-rancho-ink-700 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-black transition-colors sm:h-9 sm:w-9 md:hidden"
                         :aria-label="userName"
                     >
                         {{ userInitial }}
@@ -301,7 +306,7 @@
                 </div>
             </header>
 
-            <div id="main-content" class="min-w-0 flex-1 p-3 sm:p-4 md:p-6 lg:p-8 xl:p-10">
+            <div id="main-content" class="min-w-0 flex-1 px-4 py-12 sm:p-6 lg:p-8 xl:p-10">
                 <slot v-if="isMounted" />
             </div>
         </div>
@@ -318,12 +323,22 @@
         opacity: 0;
     }
 
-    /* Скрыть скроллбар у сайдбара на мобилке */
+    /* Скроллбар сайдбара */
     #admin-sidebar::-webkit-scrollbar {
         width: 4px;
     }
     #admin-sidebar::-webkit-scrollbar-thumb {
-        background-color: rgb(51 65 85);
+        background-color: #403a2d; /* rancho-ink-700 */
         border-radius: 9999px;
+    }
+    #admin-sidebar::-webkit-scrollbar-thumb:hover {
+        background-color: #756d57; /* rancho-ink-500 */
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .backdrop-enter-active,
+        .backdrop-leave-active {
+            transition: none;
+        }
     }
 </style>

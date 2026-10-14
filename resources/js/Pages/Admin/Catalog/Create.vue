@@ -41,40 +41,50 @@
             <div class="flex items-center gap-4">
                 <Link
                     :href="route('admin.catalog.index')"
-                    class="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-800 bg-slate-900/40 text-slate-400 transition-all hover:bg-slate-800 hover:text-white"
+                    class="border-rancho-ink-800 bg-rancho-ink-900/40 text-rancho-ink-400 hover:bg-rancho-ink-800 focus-visible:ring-rancho-mint/40 flex h-10 w-10 items-center justify-center rounded-xl border transition-all hover:text-white focus:outline-none focus-visible:ring-2"
                 >
-                    <ChevronLeftIcon class="h-5 w-5" />
+                    <ChevronLeftIcon class="h-5 w-5" aria-hidden="true" />
                 </Link>
                 <div>
                     <h1 class="text-2xl font-black uppercase tracking-tighter text-white">
                         Новый вариант
                     </h1>
-                    <p class="text-[10px] font-black uppercase tracking-widest text-orange-500">
+                    <p class="text-rancho-mint text-[10px] font-black uppercase tracking-widest">
                         Добавление позиции в каталог
                     </p>
                 </div>
             </div>
         </template>
 
-        <form @submit.prevent="submit" class="grid grid-cols-1 gap-8 lg:grid-cols-3">
+        <form @submit.prevent="submit" class="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-8">
+            <!-- LEFT COLUMN -->
             <div class="space-y-6 lg:col-span-2">
-                <div class="shadow-xl rounded-[2.5rem] border border-slate-800 bg-slate-900/40 p-8">
-                    <div class="mb-8 flex items-center gap-3 border-b border-slate-800 pb-6">
-                        <PackagePlusIcon class="h-5 w-5 text-orange-500" />
+                <!-- ОСНОВНАЯ ИНФОРМАЦИЯ -->
+                <div
+                    class="border-rancho-ink-800 bg-rancho-ink-900/40 shadow-xl rounded-2xl border p-4 sm:rounded-3xl sm:p-6 md:p-8"
+                >
+                    <div
+                        class="border-rancho-ink-800 mb-6 flex items-center gap-3 border-b pb-4 sm:mb-8 sm:pb-6"
+                    >
+                        <PackagePlusIcon class="text-rancho-mint h-5 w-5" aria-hidden="true" />
                         <h2 class="text-sm font-bold uppercase tracking-wider text-white">
                             Основная информация
                         </h2>
                     </div>
 
-                    <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+                    <div class="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2">
+                        <!-- PRODUCT -->
                         <div class="space-y-2">
                             <label
-                                class="ml-2 text-[10px] font-black uppercase tracking-widest text-slate-500"
-                                >Основной товар</label
+                                for="variant-product"
+                                class="text-rancho-ink-400 ml-2 text-[10px] font-black uppercase tracking-[0.15em]"
                             >
+                                Основной товар
+                            </label>
                             <select
+                                id="variant-product"
                                 v-model="form.product_id"
-                                class="w-full rounded-2xl border-slate-800 bg-slate-950 px-4 py-4 text-sm text-white focus:border-orange-500 focus:ring-orange-500/20"
+                                class="border-rancho-ink-800 bg-rancho-ink-950 focus:border-rancho-mint focus:ring-rancho-mint/20 w-full rounded-2xl border px-4 py-3 text-sm text-white transition-all focus:outline-none focus:ring-2"
                                 :class="{ 'border-rose-500': form.errors.product_id }"
                             >
                                 <option value="" disabled>Выберите товар...</option>
@@ -86,81 +96,109 @@
                                     {{ product.name }}
                                 </option>
                             </select>
-                            <p v-if="form.errors.product_id" class="ml-2 text-[10px] text-rose-500">
+                            <p
+                                v-if="form.errors.product_id"
+                                class="ml-2 text-[10px] font-bold uppercase text-rose-500"
+                                role="alert"
+                            >
                                 {{ form.errors.product_id }}
                             </p>
                         </div>
 
+                        <!-- NAME -->
                         <div class="space-y-2">
                             <label
-                                class="ml-2 text-[10px] font-black uppercase tracking-widest text-slate-500"
-                                >Название варианта (напр. "2 года", "Композиция")</label
+                                for="variant-name"
+                                class="text-rancho-ink-400 ml-2 text-[10px] font-black uppercase tracking-[0.15em]"
                             >
+                                Название варианта
+                            </label>
                             <input
+                                id="variant-name"
                                 v-model="form.name"
                                 type="text"
-                                placeholder="Введите название..."
-                                class="w-full rounded-2xl border-slate-800 bg-slate-950 px-4 py-4 text-sm text-white focus:border-orange-500 focus:ring-orange-500/20"
+                                placeholder="Напр. «2 года», «Композиция»"
+                                class="border-rancho-ink-800 bg-rancho-ink-950 placeholder:text-rancho-ink-600 focus:border-rancho-mint focus:ring-rancho-mint/20 w-full rounded-2xl border px-4 py-3 text-sm text-white transition-all focus:outline-none focus:ring-2"
                                 :class="{ 'border-rose-500': form.errors.name }"
                             />
-                            <p v-if="form.errors.name" class="ml-2 text-[10px] text-rose-500">
+                            <p
+                                v-if="form.errors.name"
+                                class="ml-2 text-[10px] font-bold uppercase text-rose-500"
+                                role="alert"
+                            >
                                 {{ form.errors.name }}
                             </p>
                         </div>
 
+                        <!-- PRICE -->
                         <div class="space-y-2">
                             <label
-                                class="ml-2 text-[10px] font-black uppercase tracking-widest text-slate-500"
-                                >Цена продажи (₽)</label
+                                for="variant-price"
+                                class="text-rancho-ink-400 ml-2 text-[10px] font-black uppercase tracking-[0.15em]"
                             >
+                                Цена продажи (₽)
+                            </label>
                             <input
+                                id="variant-price"
                                 v-model="form.price"
                                 type="number"
                                 step="0.01"
                                 placeholder="0.00"
-                                class="w-full rounded-2xl border-slate-800 bg-slate-950 px-4 py-4 text-sm text-white focus:border-orange-500 focus:ring-orange-500/20"
+                                class="border-rancho-ink-800 bg-rancho-ink-950 placeholder:text-rancho-ink-600 focus:border-rancho-mint focus:ring-rancho-mint/20 w-full rounded-2xl border px-4 py-3 text-sm text-white transition-all focus:outline-none focus:ring-2"
                             />
                         </div>
 
+                        <!-- OLD PRICE -->
                         <div class="space-y-2">
                             <label
-                                class="ml-2 text-[10px] font-black uppercase tracking-widest text-slate-500"
-                                >Старая цена (для скидки)</label
+                                for="variant-old-price"
+                                class="text-rancho-ink-400 ml-2 text-[10px] font-black uppercase tracking-[0.15em]"
                             >
+                                Старая цена (для скидки)
+                            </label>
                             <input
+                                id="variant-old-price"
                                 v-model="form.old_price"
                                 type="number"
                                 step="0.01"
                                 placeholder="0.00"
-                                class="w-full rounded-2xl border-slate-800 bg-slate-950 px-4 py-4 text-sm text-white focus:border-orange-500 focus:ring-orange-500/20"
+                                class="border-rancho-ink-800 bg-rancho-ink-950 placeholder:text-rancho-ink-600 focus:border-rancho-mint focus:ring-rancho-mint/20 w-full rounded-2xl border px-4 py-3 text-sm text-white transition-all focus:outline-none focus:ring-2"
                             />
                         </div>
                     </div>
                 </div>
 
-                <div class="shadow-xl rounded-[2.5rem] border border-slate-800 bg-slate-900/40 p-8">
+                <!-- АТРИБУТЫ -->
+                <div
+                    class="border-rancho-ink-800 bg-rancho-ink-900/40 shadow-xl rounded-2xl border p-4 sm:rounded-3xl sm:p-6 md:p-8"
+                >
                     <div class="mb-6 flex items-center gap-3">
-                        <LayersIcon class="h-5 w-5 text-orange-500" />
+                        <LayersIcon class="text-rancho-mint h-5 w-5" aria-hidden="true" />
                         <h2 class="text-sm font-bold uppercase tracking-wider text-white">
                             Дополнительные атрибуты
                         </h2>
                     </div>
-                    <p class="mb-6 text-xs text-slate-500">
+
+                    <p class="text-rancho-ink-400 mb-6 text-xs">
                         Здесь можно указать специфические характеристики в формате JSON или добавить
                         поля динамически.
                     </p>
 
-                    <div class="rounded-2xl border border-slate-800 bg-slate-950 p-4">
-                        <pre class="text-[10px] text-orange-400">
+                    <div class="border-rancho-ink-800 bg-rancho-ink-950 rounded-2xl border p-4">
+                        <pre class="text-rancho-mint text-[10px]">
 // Настройка атрибутов (в разработке)</pre
                         >
                     </div>
                 </div>
             </div>
 
+            <!-- RIGHT COLUMN -->
             <div class="space-y-6">
-                <div class="shadow-xl rounded-[2.5rem] border border-slate-800 bg-slate-900/40 p-8">
-                    <div class="mb-8 border-b border-slate-800 pb-6">
+                <!-- СТАТУС И НАЛИЧИЕ -->
+                <div
+                    class="border-rancho-ink-800 bg-rancho-ink-900/40 shadow-xl rounded-2xl border p-4 sm:rounded-3xl sm:p-6 md:p-8"
+                >
+                    <div class="border-rancho-ink-800 mb-6 border-b pb-4 sm:mb-8 sm:pb-6">
                         <h2
                             class="text-center text-sm font-bold uppercase tracking-wider text-white"
                         >
@@ -168,27 +206,35 @@
                         </h2>
                     </div>
 
-                    <div class="space-y-6">
+                    <div class="space-y-5 sm:space-y-6">
+                        <!-- STOCK -->
                         <div class="space-y-2">
                             <label
-                                class="text-[10px] font-black uppercase tracking-widest text-slate-500"
-                                >Количество на складе</label
+                                for="variant-stock"
+                                class="text-rancho-ink-400 text-[10px] font-black uppercase tracking-[0.15em]"
                             >
+                                Количество на складе
+                            </label>
                             <input
+                                id="variant-stock"
                                 v-model="form.stock"
                                 type="number"
-                                class="w-full rounded-2xl border-slate-800 bg-slate-950 px-4 py-4 text-center text-xl font-black text-white focus:border-orange-500 focus:ring-orange-500/20"
+                                class="border-rancho-ink-800 bg-rancho-ink-950 focus:border-rancho-mint focus:ring-rancho-mint/20 w-full rounded-2xl border px-4 py-3 text-center text-xl font-black text-white transition-all focus:outline-none focus:ring-2"
                             />
                         </div>
 
+                        <!-- UNIT -->
                         <div class="space-y-2">
                             <label
-                                class="text-[10px] font-black uppercase tracking-widest text-slate-500"
-                                >Единица измерения</label
+                                for="variant-unit"
+                                class="text-rancho-ink-400 text-[10px] font-black uppercase tracking-[0.15em]"
                             >
+                                Единица измерения
+                            </label>
                             <select
+                                id="variant-unit"
                                 v-model="form.unit_id"
-                                class="w-full rounded-2xl border-slate-800 bg-slate-950 px-4 py-4 text-sm text-white focus:border-orange-500 focus:ring-orange-500/20"
+                                class="border-rancho-ink-800 bg-rancho-ink-950 focus:border-rancho-mint focus:ring-rancho-mint/20 w-full rounded-2xl border px-4 py-3 text-sm text-white transition-all focus:outline-none focus:ring-2"
                             >
                                 <option v-for="unit in units" :key="unit.id" :value="unit.id">
                                     {{ unit.name }} ({{ unit.short }})
@@ -196,34 +242,39 @@
                             </select>
                         </div>
 
+                        <!-- IS DEFAULT -->
                         <label
-                            class="transition-hover flex cursor-pointer items-center justify-between rounded-2xl border border-slate-800 bg-slate-950 p-4 hover:border-slate-700"
+                            class="border-rancho-ink-800 bg-rancho-ink-950 hover:border-rancho-ink-700 flex cursor-pointer items-center justify-between rounded-2xl border p-4 transition-colors"
                         >
-                            <span class="text-xs font-bold text-slate-300"
-                                >Вариант по умолчанию</span
-                            >
+                            <span class="text-rancho-ink-200 text-xs font-bold">
+                                Вариант по умолчанию
+                            </span>
                             <input
                                 v-model="form.is_default"
                                 type="checkbox"
-                                class="h-5 w-5 rounded border-slate-800 bg-slate-900 text-orange-600 focus:ring-orange-500"
+                                class="border-rancho-ink-800 bg-rancho-ink-900 text-rancho-mint focus:ring-rancho-mint/40 h-5 w-5 rounded"
                             />
                         </label>
 
+                        <!-- SUBMIT -->
                         <button
                             type="submit"
                             :disabled="form.processing"
-                            class="flex w-full items-center justify-center gap-3 rounded-2xl bg-orange-600 py-5 text-xs font-black uppercase tracking-[0.2em] text-white transition-all hover:bg-orange-500 disabled:opacity-50"
+                            class="bg-rancho-mint text-rancho-ink-950 shadow-md hover:bg-rancho-mint/90 hover:shadow-lg focus-visible:ring-rancho-mint/40 disabled:hover:bg-rancho-mint disabled:hover:shadow-md flex w-full items-center justify-center gap-3 rounded-2xl py-4 text-xs font-black uppercase tracking-[0.2em] transition-all focus:outline-none focus-visible:ring-4 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 sm:py-5"
                         >
-                            <SaveIcon class="h-5 w-5" />
+                            <SaveIcon class="h-5 w-5" aria-hidden="true" />
                             {{ form.processing ? 'Сохранение...' : 'Создать вариант' }}
                         </button>
                     </div>
                 </div>
 
-                <div class="rounded-3xl border border-blue-500/10 bg-blue-500/5 p-6">
+                <!-- HINT -->
+                <div
+                    class="rounded-2xl border border-rancho-sky/20 bg-rancho-sky/5 p-5 sm:rounded-3xl sm:p-6"
+                >
                     <div class="flex gap-3">
-                        <InfoIcon class="h-5 w-5 shrink-0 text-blue-500" />
-                        <p class="text-[11px] leading-relaxed text-blue-200/60">
+                        <InfoIcon class="h-5 w-5 shrink-0 text-rancho-sky" aria-hidden="true" />
+                        <p class="text-rancho-ink-300 text-[11px] leading-relaxed">
                             Вариант по умолчанию будет первым отображаться в карточке товара в
                             публичной части сайта.
                         </p>

@@ -27,22 +27,26 @@
         :aria-checked="modelValue"
         :disabled="disabled"
         @click="toggle"
-        class="flex w-full items-center justify-between rounded-2xl border p-4 transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+        class="flex w-full items-center justify-between gap-2 rounded-2xl border px-2 py-4 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-rancho-mint/40 sm:p-4"
         :class="[
-            modelValue ? 'border-emerald-500/30 bg-slate-950' : 'border-slate-800 bg-slate-950',
-            disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:border-slate-700',
+            modelValue
+                ? 'border-rancho-mint/40 bg-rancho-ink-950'
+                : 'border-rancho-ink-800 bg-rancho-ink-950',
+            disabled
+                ? 'cursor-not-allowed opacity-50'
+                : 'cursor-pointer hover:border-rancho-ink-700',
         ]"
     >
         <span
             class="text-[10px] font-black uppercase tracking-widest transition-colors"
-            :class="modelValue ? 'text-slate-300' : 'text-slate-500'"
+            :class="modelValue ? 'text-rancho-ink-200' : 'text-rancho-ink-500'"
         >
             {{ label }}
         </span>
 
         <div
-            class="h-2.5 w-2.5 rounded-full transition-all duration-300"
-            :class="[modelValue ? 'bg-emerald-500 shadow-[0_0_10px_#10b981]' : 'bg-slate-700']"
+            class="h-2.5 w-2.5 shrink-0 rounded-full transition-all duration-300"
+            :class="modelValue ? 'bg-rancho-mint shadow-[0_0_10px_#7AB89A]' : 'bg-rancho-ink-700'"
         ></div>
 
         <span class="sr-only">{{ modelValue ? 'Активно' : 'Неактивно' }}</span>

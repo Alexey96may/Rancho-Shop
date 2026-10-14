@@ -1,5 +1,5 @@
 <script setup lang="ts">
-    import { PropType, watch } from 'vue';
+    import { type PropType, watch } from 'vue';
 
     import { useForm } from '@inertiajs/vue3';
 
@@ -15,7 +15,7 @@
     import { useNavigation } from '@/composables/features/useNavigation';
     import { useAdminFilters } from '@/composables/routing/useAdminFilters';
     import { useAdminNavigation } from '@/composables/routing/useAdminNavigation';
-    import { AdminPage, Paginated } from '@/types';
+    import type { AdminPage, Paginated } from '@/types';
 
     defineOptions({ layout: AdminLayout });
 
@@ -70,11 +70,13 @@
             />
         </Teleport>
 
-        <div class="space-y-6">
-            <div class="flex items-center justify-between gap-3 sm:flex-row">
+        <div class="space-y-10">
+            <!-- SEARCH + CREATE -->
+            <div class="flex flex-col-reverse gap-4 sm:flex-row sm:items-end sm:justify-between">
                 <AdminSearchInput
                     v-model="filterForm.search"
                     placeholder="Поиск страниц по названию..."
+                    class="w-full sm:max-w-md"
                 />
 
                 <BaseCreateButton
@@ -84,11 +86,13 @@
                         })
                     "
                     label="Создать"
+                    class="self-end sm:self-auto"
                 />
             </div>
 
+            <!-- TABLE HEADER (desktop) -->
             <div
-                class="hidden grid-cols-12 gap-4 px-8 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 md:grid"
+                class="border-rancho-ink-800 text-rancho-ink-500 hidden grid-cols-12 gap-4 border-b px-6 pb-2 text-[10px] font-black uppercase tracking-[0.2em] md:grid"
             >
                 <div class="col-span-5">Заголовок / Slug</div>
                 <div class="col-span-3 text-center">Тип и Шаблон</div>
@@ -96,8 +100,9 @@
                 <div class="col-span-2 text-right">Действия</div>
             </div>
 
+            <!-- LIST -->
             <Transition name="fade-slide" mode="out-in">
-                <div class="space-y-3" role="list" v-if="pages.data.length" key="page-list">
+                <div v-if="pages.data.length" key="page-list" class="space-y-3" role="list">
                     <TransitionGroup name="stagger">
                         <AdminPageCard
                             v-for="(page, index) in pages.data"
@@ -128,9 +133,10 @@
                 />
             </Transition>
 
+            <!-- PAGINATION -->
             <Transition name="fade-slide" mode="out-in">
                 <footer v-show="pages.data.length > 0 && !isFiltering">
-                    <AdminPagination :links="pages.meta.links" />
+                    <AdminPagination :links="pages.meta.links" theme="dark" />
                 </footer>
             </Transition>
         </div>
@@ -169,5 +175,14 @@
     .fade-slide-enter-from {
         opacity: 0;
         transform: translateY(-10px);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .stagger-enter-active,
+        .stagger-leave-active,
+        .stagger-move,
+        .fade-slide-enter-active {
+            transition: none;
+        }
     }
 </style>

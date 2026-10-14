@@ -134,7 +134,7 @@
         extensions: [
             StarterKit.configure({
                 heading: { levels: [1, 2, 3, 4, 5, 6] },
-                dropcursor: { color: '#f97316', width: 2 },
+                dropcursor: { color: '#7AB89A', width: 2 },
             }),
             Underline,
             TextStyle,
@@ -142,18 +142,18 @@
             Link.configure({
                 openOnClick: false,
                 HTMLAttributes: {
-                    class: 'text-orange-500 underline decoration-orange-500/30 underline-offset-4 cursor-pointer',
+                    class: 'text-rancho-mint underline decoration-rancho-mint/30 underline-offset-4 cursor-pointer',
                 },
             }),
             Image.configure({
                 HTMLAttributes: {
-                    class: 'rounded-2xl border border-slate-800 max-w-full h-auto my-8 max-w-[250px] max-h-[250px]',
+                    class: 'rounded-2xl border border-rancho-ink-800 max-w-full h-auto my-8 max-w-[250px] max-h-[250px]',
                 },
             }),
         ],
         editorProps: {
             attributes: {
-                class: 'prose prose-invert max-w-none focus:outline-none min-h-[350px] p-8 text-slate-300',
+                class: 'prose prose-invert max-w-none focus:outline-none min-h-[350px] p-4 sm:p-6 text-rancho-ink-300',
             },
         },
         onUpdate: debounce(({ editor }) => {
@@ -169,6 +169,9 @@
         }
     });
 
+    const currentHeadingLevel = ref<number>(0);
+    const isSyncingHeading = ref(false);
+
     watch(
         () => content.value,
         (newValue) => {
@@ -177,16 +180,66 @@
             }
         },
     );
+
+    watch(
+        () => {
+            if (!editor.value) return 0;
+            for (const level of [1, 2, 3, 4, 5, 6] as const) {
+                if (editor.value.isActive('heading', { level })) return level;
+            }
+            return 0;
+        },
+        (level) => {
+            isSyncingHeading.value = true;
+            currentHeadingLevel.value = level;
+            // Сбрасываем флаг после того, как v-model обновится
+            requestAnimationFrame(() => {
+                isSyncingHeading.value = false;
+            });
+        },
+        { immediate: true },
+    );
+
+    // Обработчик смены стиля через select
+    const onHeadingChange = (e: Event) => {
+        if (isSyncingHeading.value) return;
+        if (!editor.value) return;
+
+        const level = Number((e.target as HTMLSelectElement).value);
+
+        if (level === 0) {
+            editor.value.chain().focus().setParagraph().run();
+        } else {
+            editor.value
+                .chain()
+                .focus()
+                .toggleHeading({ level: level as 1 | 2 | 3 | 4 | 5 | 6 })
+                .run();
+        }
+    };
 </script>
 
 <template>
-    <div class="rounded-[2.5rem] border border-slate-800 bg-slate-900/30 p-4">
-        <div
-            class="mb-4 ml-4 flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-4"
-        >
-            <div class="flex flex-wrap items-center gap-1">
+    <div
+        class="border-rancho-ink-800 bg-rancho-ink-900/30 rounded-2xl border p-3 sm:rounded-3xl sm:p-4"
+    >
+        <!-- TOOLBAR -->
+        <div class="border-rancho-ink-800 mb-4 space-y-2 border-b pb-4">
+            <!-- MODE TOGGLE -->
+            <button
+                type="button"
+                @click="isHtmlMode = !isHtmlMode"
+                class="mode-toggle-btn m-auto block"
+            >
+                <component :is="isHtmlMode ? Eye : Code2" class="h-4 w-4" />
+                {{ isHtmlMode ? 'Визуально' : 'HTML' }}
+            </button>
+
+            <!-- ROW 1: History + Headings + Paragraph -->
+            <div class="flex flex-wrap items-center justify-center gap-1">
                 <template v-if="!isHtmlMode && editor">
-                    <div class="mr-2 flex items-center gap-1 border-r border-slate-800 pr-2">
+                    <!-- UNDO / REDO -->
+                    <div class="flex items-center gap-0.5">
                         <button
                             type="button"
                             @click="editor.chain().focus().undo().run()"
@@ -196,6 +249,7 @@
                         >
                             <Undo class="h-4 w-4" />
                         </button>
+
                         <button
                             type="button"
                             @click="editor.chain().focus().redo().run()"
@@ -207,116 +261,119 @@
                         </button>
                     </div>
 
-                    <div class="mr-2 flex items-center gap-1 border-r border-slate-800 pr-2">
+                    <div class="bg-rancho-ink-700 mx-1 h-5 w-px sm:mx-2" aria-hidden="true"></div>
+
+                    <!-- HEADING SELECT -->
+                    <select
+                        :value="currentHeadingLevel"
+                        @change="onHeadingChange"
+                        class="border-rancho-ink-800 bg-rancho-ink-950 text-rancho-ink-300 focus:border-rancho-mint focus:ring-rancho-mint/20 h-8 cursor-pointer rounded-lg border pl-2 pr-7 text-xs font-bold transition-colors focus:outline-none focus:ring-2"
+                        title="Стиль текста"
+                        aria-label="Стиль текста"
+                    >
+                        <option value="0">Абзац</option>
+                        <option value="1">H1</option>
+                        <option value="2">H2</option>
+                        <option value="3">H3</option>
+                        <option value="4">H4</option>
+                        <option value="5">H5</option>
+                        <option value="6">H6</option>
+                    </select>
+
+                    <div class="bg-rancho-ink-700 mx-1 h-5 w-px sm:mx-2" aria-hidden="true"></div>
+
+                    <!-- TEXT STYLES -->
+                    <div class="flex items-center justify-center gap-0.5">
                         <button
                             type="button"
                             @click="editor.chain().focus().toggleBold().run()"
                             :class="{ 'active-btn': editor.isActive('bold') }"
                             class="toolbar-btn"
+                            title="Жирный (Ctrl+B)"
                         >
                             <Bold class="h-4 w-4" />
                         </button>
+
                         <button
                             type="button"
                             @click="editor.chain().focus().toggleItalic().run()"
                             :class="{ 'active-btn': editor.isActive('italic') }"
                             class="toolbar-btn"
+                            title="Курсив (Ctrl+I)"
                         >
                             <Italic class="h-4 w-4" />
                         </button>
+
                         <button
                             type="button"
                             @click="editor.chain().focus().toggleUnderline().run()"
                             :class="{ 'active-btn': editor.isActive('underline') }"
                             class="toolbar-btn"
+                            title="Подчеркнутый (Ctrl+U)"
                         >
                             <UnderlineIcon class="h-4 w-4" />
                         </button>
                     </div>
 
-                    <div class="mr-2 flex items-center gap-1 border-r border-slate-800 pr-2">
-                        <button
-                            type="button"
-                            @click="editor.chain().focus().toggleHeading({ level: 1 }).run()"
-                            :class="{ 'active-btn': editor.isActive('heading', { level: 1 }) }"
-                            class="toolbar-btn"
-                            title="H2"
-                        >
-                            <Heading1 class="h-4 w-4" />
-                        </button>
-                        <button
-                            type="button"
-                            @click="editor.chain().focus().toggleHeading({ level: 2 }).run()"
-                            :class="{ 'active-btn': editor.isActive('heading', { level: 2 }) }"
-                            class="toolbar-btn"
-                            title="H2"
-                        >
-                            <Heading2 class="h-4 w-4" />
-                        </button>
-                        <button
-                            type="button"
-                            @click="editor.chain().focus().toggleHeading({ level: 3 }).run()"
-                            :class="{ 'active-btn': editor.isActive('heading', { level: 3 }) }"
-                            class="toolbar-btn"
-                            title="H3"
-                        >
-                            <Heading3 class="h-4 w-4" />
-                        </button>
-                        <button
-                            type="button"
-                            @click="editor.chain().focus().toggleHeading({ level: 4 }).run()"
-                            :class="{ 'active-btn': editor.isActive('heading', { level: 4 }) }"
-                            class="toolbar-btn"
-                            title="H4"
-                        >
-                            <Heading4 class="h-4 w-4" />
-                        </button>
-                        <button
-                            type="button"
-                            @click="editor.chain().focus().toggleHeading({ level: 5 }).run()"
-                            :class="{ 'active-btn': editor.isActive('heading', { level: 5 }) }"
-                            class="toolbar-btn text-[10px] font-bold"
-                        >
-                            H5
-                        </button>
-                        <button
-                            type="button"
-                            @click="editor.chain().focus().toggleHeading({ level: 6 }).run()"
-                            :class="{ 'active-btn': editor.isActive('heading', { level: 6 }) }"
-                            class="toolbar-btn text-[10px] font-bold"
-                        >
-                            H6
-                        </button>
-                    </div>
+                    <div class="bg-rancho-ink-700 mx-1 h-5 w-px sm:mx-2" aria-hidden="true"></div>
 
-                    <div class="mr-2 flex items-center gap-1 border-r border-slate-800 pr-2">
+                    <!-- COLOR -->
+                    <input
+                        type="color"
+                        @input="
+                            editor
+                                .chain()
+                                .focus()
+                                .setColor(($event.target as HTMLInputElement).value)
+                                .run()
+                        "
+                        :value="editor.getAttributes('textStyle').color || '#b5ac96'"
+                        class="border-rancho-ink-800 h-8 w-8 cursor-pointer rounded-lg border bg-transparent p-0.5"
+                        title="Цвет текста"
+                    />
+                </template>
+            </div>
+
+            <!-- ROW 2: Lists, Blocks, Link, Image -->
+            <div class="flex flex-wrap items-center justify-center gap-1">
+                <template v-if="!isHtmlMode && editor">
+                    <!-- LISTS / QUOTE -->
+                    <div class="flex items-center gap-0.5">
                         <button
                             type="button"
                             @click="editor.chain().focus().toggleBulletList().run()"
                             :class="{ 'active-btn': editor.isActive('bulletList') }"
                             class="toolbar-btn"
+                            title="Маркированный список"
                         >
                             <List class="h-4 w-4" />
                         </button>
+
                         <button
                             type="button"
                             @click="editor.chain().focus().toggleOrderedList().run()"
                             :class="{ 'active-btn': editor.isActive('orderedList') }"
                             class="toolbar-btn"
+                            title="Нумерованный список"
                         >
                             <ListOrdered class="h-4 w-4" />
                         </button>
+
                         <button
                             type="button"
                             @click="editor.chain().focus().toggleBlockquote().run()"
                             :class="{ 'active-btn': editor.isActive('blockquote') }"
                             class="toolbar-btn"
+                            title="Цитата"
                         >
                             <Quote class="h-4 w-4" />
                         </button>
                     </div>
 
-                    <div class="mr-2 flex items-center gap-1 border-r border-slate-800 pr-2">
+                    <div class="bg-rancho-ink-700 mx-1 h-5 w-px sm:mx-2" aria-hidden="true"></div>
+
+                    <!-- BLOCKS -->
+                    <div class="flex items-center gap-0.5">
                         <button
                             type="button"
                             @click="editor.chain().focus().setHardBreak().run()"
@@ -325,26 +382,21 @@
                         >
                             <WrapText class="h-4 w-4" />
                         </button>
+
                         <button
                             type="button"
                             @click="editor.chain().focus().setHorizontalRule().run()"
                             class="toolbar-btn"
-                            title="Линия (HR)"
+                            title="Горизонтальная линия"
                         >
                             <Minus class="h-4 w-4" />
                         </button>
-                        <button
-                            type="button"
-                            @click="editor.chain().focus().setParagraph().run()"
-                            :class="{ 'active-btn': editor.isActive('paragraph') }"
-                            class="toolbar-btn"
-                            title="Абзац"
-                        >
-                            <Type class="h-4 w-4" />
-                        </button>
                     </div>
 
-                    <div class="mr-2 flex items-center gap-1 border-r border-slate-800 pr-2">
+                    <div class="bg-rancho-ink-700 mx-1 h-5 w-px sm:mx-2" aria-hidden="true"></div>
+
+                    <!-- LINK / IMAGE -->
+                    <div class="flex items-center gap-0.5">
                         <button
                             type="button"
                             @click="openLinkModal"
@@ -354,25 +406,28 @@
                         >
                             <LinkIcon class="h-4 w-4" />
                         </button>
+
                         <button
                             v-if="editor.isActive('link')"
                             type="button"
                             @click="editor.chain().focus().unsetLink().run()"
-                            class="toolbar-btn text-red-400"
-                            title="Ссылка"
+                            class="toolbar-btn text-rose-400"
+                            title="Удалить ссылку"
                         >
                             <Unlink class="h-4 w-4" />
                         </button>
+
                         <button
                             type="button"
                             @click="fileInput?.click()"
                             :disabled="isUploading"
                             class="toolbar-btn"
-                            title="Фото"
+                            title="Загрузить изображение"
                         >
                             <Loader2 v-if="isUploading" class="h-4 w-4 animate-spin" />
                             <ImageIcon v-else class="h-4 w-4" />
                         </button>
+
                         <input
                             ref="fileInput"
                             type="file"
@@ -381,50 +436,35 @@
                             @change="handleFileUpload"
                         />
                     </div>
-
-                    <div class="flex items-center gap-1">
-                        <input
-                            type="color"
-                            @input="
-                                editor
-                                    .chain()
-                                    .focus()
-                                    .setColor(($event.target as HTMLInputElement).value)
-                                    .run()
-                            "
-                            :value="editor.getAttributes('textStyle').color || '#cbd5e1'"
-                            class="h-6 w-6 cursor-pointer rounded border-none bg-transparent"
-                            title="Цвет текста"
-                        />
-                    </div>
                 </template>
             </div>
-
-            <button type="button" @click="isHtmlMode = !isHtmlMode" class="mode-toggle-btn">
-                <component :is="isHtmlMode ? Eye : Code2" class="h-4 w-4" />
-                {{ isHtmlMode ? 'Визуально' : 'HTML' }}
-            </button>
         </div>
 
-        <div class="grid gap-2 px-2">
+        <!-- EDITOR -->
+        <div class="grid gap-2 px-1 sm:px-2">
             <div v-show="!isHtmlMode" class="editor-container">
                 <EditorContent :editor="editor" />
             </div>
-            <div v-if="isHtmlMode" class="editor-container bg-slate-950">
-                <textarea v-model="content" rows="22" class="html-textarea border-none"></textarea>
-                <p v-if="errors?.content" class="text-xs font-medium text-red-500">
+
+            <div v-if="isHtmlMode" class="editor-container bg-rancho-ink-950">
+                <textarea v-model="content" rows="30" class="html-textarea border-none"></textarea>
+                <p
+                    v-if="errors?.content"
+                    class="px-2 pb-3 text-xs font-medium text-rose-500 sm:px-4"
+                >
                     {{ errors?.content }}
                 </p>
             </div>
         </div>
     </div>
 
+    <!-- LINK MODAL (без изменений) -->
     <BaseModal :show="isLinkModalShow" title="Управление ссылкой" @close="isLinkModalShow = false">
         <div class="space-y-4">
             <div>
                 <label
                     for="urllink"
-                    class="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-500"
+                    class="text-rancho-ink-500 mb-2 block text-xs font-bold uppercase tracking-wider"
                 >
                     URL адрес
                 </label>
@@ -433,7 +473,7 @@
                     id="urllink"
                     type="url"
                     placeholder="https://example.com"
-                    class="w-full rounded-2xl border border-slate-800 bg-slate-950 p-4 text-white outline-none transition-colors focus:border-orange-500"
+                    class="border-rancho-ink-800 bg-rancho-ink-950 focus:border-rancho-mint focus:ring-rancho-mint/20 w-full rounded-2xl border p-4 text-white outline-none transition-colors focus:ring-2"
                     @keydown.enter="saveLink"
                 />
             </div>
@@ -441,17 +481,18 @@
             <div class="flex gap-3">
                 <button
                     @click="saveLink"
-                    class="flex-1 rounded-2xl bg-orange-500 py-4 font-black uppercase tracking-widest text-white transition-all hover:bg-orange-600 active:scale-95"
+                    class="bg-rancho-mint text-rancho-ink-950 hover:bg-rancho-mint/90 flex-1 rounded-2xl py-4 text-xs font-black uppercase tracking-widest transition-all active:scale-95"
                 >
                     Применить
                 </button>
+
                 <button
                     v-if="editor?.isActive('link')"
                     @click="
                         linkUrl = '';
                         saveLink();
                     "
-                    class="rounded-2xl border border-red-500/30 bg-red-500/10 px-6 text-red-500 transition-all hover:bg-red-500 hover:text-white"
+                    class="rounded-2xl border border-rose-500/30 bg-rose-500/10 px-6 text-rose-400 transition-all hover:bg-rose-500 hover:text-white"
                     title="Удалить ссылку"
                 >
                     <Unlink class="h-5 w-5" />
@@ -463,19 +504,23 @@
 
 <style scoped>
     .toolbar-btn {
-        @apply rounded-lg p-2 text-slate-500 transition-all hover:bg-slate-800 hover:text-white disabled:opacity-20;
+        @apply text-rancho-ink-500 hover:bg-rancho-ink-800 rounded-lg p-2 transition-all hover:text-white disabled:opacity-20;
     }
+
     .active-btn {
-        @apply bg-orange-500/10 text-orange-500;
+        @apply bg-rancho-mint/10 text-rancho-mint;
     }
+
     .mode-toggle-btn {
-        @apply flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-950 px-4 py-2 text-[10px] font-black uppercase tracking-wider text-slate-400 transition-all hover:border-orange-500 hover:text-white;
+        @apply border-rancho-ink-800 bg-rancho-ink-950 text-rancho-ink-400 hover:border-rancho-mint flex items-center gap-2 rounded-xl border px-4 py-2 text-[10px] font-black uppercase tracking-wider transition-all hover:text-white;
     }
+
     .editor-container {
-        @apply w-full overflow-hidden rounded-[2rem] border border-slate-800 bg-slate-950 transition-all focus-within:border-orange-500;
+        @apply border-rancho-ink-800 bg-rancho-ink-950 focus-within:border-rancho-mint w-full overflow-hidden rounded-2xl border transition-all sm:rounded-3xl;
     }
+
     .html-textarea {
-        @apply min-h-[350px] w-full resize-none bg-transparent p-8 font-mono text-sm leading-relaxed text-orange-400/90 outline-none;
+        @apply text-rancho-mint/90 min-h-[350px] w-full resize-none bg-transparent p-4 font-mono text-sm leading-relaxed outline-none sm:p-8;
     }
 
     :deep(.tiptap) {

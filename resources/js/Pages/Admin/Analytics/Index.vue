@@ -1,5 +1,5 @@
 <script setup lang="ts">
-    import { PropType, computed, onMounted, onUnmounted, ref } from 'vue';
+    import { type PropType, computed, onMounted, onUnmounted, ref } from 'vue';
 
     import { Deferred, router, usePage } from '@inertiajs/vue3';
 
@@ -11,8 +11,10 @@
     import AdminLoader from '@/Components/Admin/UI/AdminLoader.vue';
     import StatCard from '@/Components/UI/StatCard.vue';
     import AdminLayout from '@/Layouts/AdminLayout.vue';
-    import { DailySalesResource } from '@/types';
+    import type { DailySalesResource } from '@/types';
     import { formatMoney } from '@/utils/format';
+
+    defineOptions({ layout: AdminLayout });
 
     const props = defineProps({
         overview: {
@@ -34,8 +36,6 @@
         },
     });
 
-    defineOptions({ layout: AdminLayout });
-
     const periods = [
         { label: '7д', value: 7 },
         { label: '30д', value: 30 },
@@ -55,7 +55,7 @@
 
     const apexchart = VueApexCharts;
 
-    /* ===== Реактивная ширина экрана для ApexCharts ===== */
+    /* ===== Реактивная ширина экрана ===== */
     const viewportWidth = ref(typeof window !== 'undefined' ? window.innerWidth : 1280);
 
     function handleResize() {
@@ -67,6 +67,7 @@
         if (typeof window === 'undefined') return;
         window.addEventListener('resize', handleResize, { passive: true });
     });
+
     onUnmounted(() => {
         if (typeof window === 'undefined') return;
         window.removeEventListener('resize', handleResize);
@@ -75,25 +76,32 @@
     const isMobile = computed(() => viewportWidth.value < 640);
     const isTablet = computed(() => viewportWidth.value >= 640 && viewportWidth.value < 1024);
 
-    /* ===== Высота графика ===== */
     const chartHeight = computed(() => {
         if (isMobile.value) return 240;
         if (isTablet.value) return 300;
         return 350;
     });
 
-    /* ===== ApexOptions — реактивно зависит от ширины ===== */
+    /* ===== Цвета для графика из палитры rancho ===== */
+    const CHART_COLOR = '#7AB89A'; // mint
+    const CHART_AXIS_COLOR = '#948B74'; // ink-400
+    const CHART_GRID_COLOR = '#2A261D'; // ink-800
+
     const chartOptions = computed<ApexOptions>(() => ({
         chart: {
             type: 'area',
-            toolbar: { show: !isMobile.value }, // на мобилке тулбар скрыт
-            zoom: { enabled: !isMobile.value }, // зум только на десктопе
+            toolbar: { show: !isMobile.value },
+            zoom: { enabled: !isMobile.value },
             fontFamily: 'inherit',
             background: 'transparent',
             sparkline: { enabled: false },
         },
         dataLabels: { enabled: false },
-        stroke: { curve: 'smooth', width: isMobile.value ? 1.5 : 2, colors: ['#6366f1'] },
+        stroke: {
+            curve: 'smooth',
+            width: isMobile.value ? 1.5 : 2,
+            colors: [CHART_COLOR],
+        },
         fill: {
             type: 'gradient',
             gradient: {
@@ -101,6 +109,10 @@
                 opacityFrom: 0.45,
                 opacityTo: 0.05,
                 stops: [20, 100],
+                colorStops: [
+                    { offset: 0, color: CHART_COLOR, opacity: 0.45 },
+                    { offset: 100, color: CHART_COLOR, opacity: 0.05 },
+                ],
             },
         },
         xaxis: {
@@ -110,7 +122,7 @@
             tickAmount: isMobile.value ? 4 : undefined,
             labels: {
                 style: {
-                    colors: '#64748b',
+                    colors: CHART_AXIS_COLOR,
                     fontSize: isMobile.value ? '9px' : '10px',
                 },
                 rotate: isMobile.value ? 0 : -45,
@@ -121,7 +133,7 @@
         yaxis: {
             labels: {
                 style: {
-                    colors: '#64748b',
+                    colors: CHART_AXIS_COLOR,
                     fontSize: isMobile.value ? '9px' : '11px',
                 },
                 formatter: (val: number) => {
@@ -134,12 +146,15 @@
             },
         },
         grid: {
-            borderColor: '#1e293b',
+            borderColor: CHART_GRID_COLOR,
             strokeDashArray: 4,
             padding: { left: isMobile.value ? 0 : 10, right: isMobile.value ? 0 : 10 },
         },
         theme: { mode: 'dark' },
-        tooltip: { x: { show: false }, theme: 'dark' },
+        tooltip: {
+            x: { show: false },
+            theme: 'dark',
+        },
         legend: { show: false },
     }));
 
@@ -157,6 +172,14 @@
     const computedTotalRev = computed(() => formatMoney(props.overview.total_revenue));
     const computedOrdersCount = computed(() => props.overview.orders_count);
     const computedUsersCount = computed(() => props.overview.users_count);
+
+    const chartWidth = computed(() => {
+        const points = props.charts?.sales.data.length ?? 0;
+
+        if (viewportWidth.value >= 640) return undefined;
+
+        return Math.max(600, points * 40);
+    });
 </script>
 
 <template>
@@ -171,54 +194,69 @@
                 label="Общая выручка"
                 :value="computedTotalRev"
                 :icon="CurrencyDollarIcon"
-                labelColor="text-green-500"
+                label-color="text-rancho-mint"
             />
 
-            <StatCard label="Заказов всего" :value="computedOrdersCount" :icon="ShoppingBagIcon" />
+            <StatCard
+                label="Заказов всего"
+                :value="computedOrdersCount"
+                :icon="ShoppingBagIcon"
+                label-color="text-rancho-buttercup"
+            />
 
             <StatCard
                 label="Клиентов"
                 :value="computedUsersCount"
                 :icon="UsersIcon"
+                label-color="text-rancho-sky"
                 class="sm:col-span-2 lg:col-span-1"
             />
         </div>
 
         <!-- Chart Card -->
         <div
-            class="rounded-2xl border border-slate-800/50 bg-slate-900/50 py-4 sm:rounded-3xl sm:p-6 md:p-8"
+            class="border-rancho-ink-800 bg-rancho-ink-900/50 rounded-2xl border py-4 sm:rounded-3xl sm:p-6 md:p-8"
         >
             <!-- Заголовок -->
-            <h3
-                class="mb-4 flex items-center gap-2 px-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 sm:mb-6 sm:text-[11px] sm:tracking-[0.3em] md:mb-8"
-            >
-                <span class="h-2 w-2 shrink-0 animate-pulse rounded-full bg-indigo-500"></span>
-                <span class="truncate">
-                    <template v-if="filters?.days > 0">
-                        Динамика продаж за {{ filters.days }} дней
-                    </template>
-                    <template v-else>Динамика продаж за всё время</template>
-                </span>
-            </h3>
-
-            <!-- Переключатель периодов -->
-            <div
-                class="mb-4 flex w-full gap-0.5 overflow-x-auto rounded-xl border border-slate-800 bg-slate-950 p-1 sm:mb-6 sm:inline-flex sm:w-auto sm:gap-1 md:mb-8"
-            >
-                <button
-                    v-for="period in periods"
-                    :key="period.value"
-                    @click="setPeriod(period.value)"
-                    :disabled="isProcessing"
-                    class="flex-1 whitespace-nowrap rounded-lg px-2 py-1.5 text-[10px] font-bold uppercase tracking-widest transition-all sm:flex-none sm:px-4"
-                    :class="[
-                        filters?.days === period.value
-                            ? 'shadow-lg bg-indigo-600 text-white shadow-indigo-500/20'
-                            : 'text-slate-500 hover:text-slate-300',
-                    ]"
+            <div class="px-2">
+                <h3
+                    class="text-rancho-ink-300 mb-4 flex items-center gap-2 px-2 text-[10px] font-black uppercase tracking-[0.2em] sm:mb-6 sm:text-[11px] sm:tracking-[0.3em] md:mb-8"
                 >
-                    {{ period.label }}
-                </button>
+                    <span
+                        class="bg-rancho-mint h-2 w-2 shrink-0 animate-pulse rounded-full"
+                        aria-hidden="true"
+                    ></span>
+                    <span class="truncate">
+                        <template v-if="filters?.days > 0">
+                            Динамика продаж за {{ filters.days }} дней
+                        </template>
+                        <template v-else>Динамика продаж за всё время</template>
+                    </span>
+                </h3>
+
+                <!-- Переключатель периодов -->
+                <div
+                    class="border-rancho-ink-800 bg-rancho-ink-950 mb-4 flex w-full gap-0.5 overflow-x-auto rounded-xl border p-1 sm:mb-6 sm:inline-flex sm:w-auto sm:gap-1 md:mb-8"
+                    role="tablist"
+                    aria-label="Период"
+                >
+                    <button
+                        v-for="period in periods"
+                        :key="period.value"
+                        type="button"
+                        @click="setPeriod(period.value)"
+                        :disabled="isProcessing"
+                        :aria-pressed="filters?.days === period.value"
+                        class="focus-visible:ring-rancho-mint/40 flex-1 whitespace-nowrap rounded-lg px-2 py-1.5 text-[10px] font-bold uppercase tracking-widest transition-all focus:outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50 sm:flex-none sm:px-4"
+                        :class="[
+                            filters?.days === period.value
+                                ? 'bg-rancho-mint text-rancho-ink-950 shadow-lg shadow-rancho-mint/20'
+                                : 'text-rancho-ink-400 hover:text-rancho-ink-100',
+                        ]"
+                    >
+                        {{ period.label }}
+                    </button>
+                </div>
             </div>
 
             <!-- Deferred chart -->
@@ -230,23 +268,29 @@
                     >
                         <AdminLoader text="Сборка данных" />
                         <div
-                            class="h-1.5 w-full max-w-xs overflow-hidden rounded-full bg-slate-800/50"
+                            class="bg-rancho-ink-800/50 h-1.5 w-full max-w-xs overflow-auto rounded-full"
                         >
                             <div
-                                class="h-full animate-[progress_2s_ease-in-out_infinite] bg-indigo-500"
+                                class="bg-rancho-mint h-full animate-[progress_2s_ease-in-out_infinite]"
                             ></div>
                         </div>
                     </div>
                 </template>
 
                 <Transition name="chart-fade" appear>
-                    <div v-if="charts" :style="{ height: chartHeight + 'px' }">
-                        <apexchart
-                            width="100%"
-                            height="100%"
-                            :options="chartOptions"
-                            :series="series"
-                        />
+                    <div
+                        v-if="charts"
+                        class="overflow-x-auto"
+                        :style="{ height: chartHeight + 'px' }"
+                    >
+                        <div :style="{ width: chartWidth + 'px', height: '100%' }">
+                            <apexchart
+                                width="100%"
+                                height="100%"
+                                :options="chartOptions"
+                                :series="series"
+                            />
+                        </div>
                     </div>
                 </Transition>
             </Deferred>
@@ -280,5 +324,11 @@
     }
     .overflow-x-auto {
         scrollbar-width: none;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .chart-fade-enter-active {
+            transition: none;
+        }
     }
 </style>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-    import { PropType, watch } from 'vue';
+    import { type PropType, watch } from 'vue';
 
     import { useForm } from '@inertiajs/vue3';
 
@@ -21,7 +21,7 @@
     import { useAdminForm } from '@/composables/crud/useAdminForm';
     import { useAdminFilters } from '@/composables/routing/useAdminFilters';
     import { type DraggableEvent, useAdminReorder } from '@/composables/routing/useAdminReorder';
-    import { Paginated, UnitAdmin } from '@/types';
+    import type { Paginated, UnitAdmin } from '@/types';
     import { triggerVibration } from '@/utils/navigator';
 
     defineOptions({ layout: AdminLayout });
@@ -97,17 +97,25 @@
         />
     </Teleport>
 
-    <div class="space-y-6">
-        <div class="flex justify-end">
+    <div class="space-y-10">
+        <!-- SEARCH + CREATE -->
+        <div class="flex flex-col-reverse gap-4 sm:flex-row sm:items-end sm:justify-between">
             <AdminSearchInput
                 v-model="filterForm.search"
                 placeholder="Поиск по имени, слагу и сокращению..."
+                class="w-full sm:max-w-md"
             />
 
-            <BaseCreateButton @click="openModal(form)" label="Добавить" />
+            <BaseCreateButton
+                @click="openModal(form)"
+                label="Добавить"
+                theme="dark"
+                class="self-end sm:self-auto"
+            />
         </div>
 
-        <div class="animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <!-- LIST -->
+        <div>
             <Transition name="fade-slide" mode="out-in">
                 <draggable
                     v-if="units.data.length"
@@ -168,59 +176,69 @@
             </Transition>
         </div>
 
-        <Transition name="fade-slide" mode="out-in">
-            <AdminPagination v-show="!isFiltering" :links="units.meta.links" />
-        </Transition>
+        <!-- PAGINATION -->
+        <AdminPagination v-show="!isFiltering" :links="units.meta.links" theme="dark" />
     </div>
 
+    <!-- MODAL -->
     <Modal :show="isModalOpen" @close="closeModal" max-width="2xl" aria-labelledby="modal-title">
-        <h2 class="mb-8 text-lg font-black uppercase tracking-widest text-white">
-            {{ editMode ? 'Редактировать' : 'Новая единица' }}
-        </h2>
+        <div class="px-2 py-1 pb-4 sm:p-8">
+            <h2
+                id="modal-title"
+                class="mb-6 pr-6 text-sm font-black uppercase tracking-widest text-white sm:mb-8 sm:text-lg"
+            >
+                {{ editMode ? 'Редактировать' : 'Новая единица' }}
+            </h2>
 
-        <form @submit.prevent="submit" class="space-y-5">
-            <BaseInput
-                v-model="form.name"
-                v-model:error="form.errors.name"
-                label="Название"
-                placeholder="Килограмм"
-                :disabled="form.processing"
-            />
-
-            <div class="grid grid-cols-2 gap-4">
+            <form @submit.prevent="submit" class="space-y-8">
                 <BaseInput
-                    v-model="form.short"
-                    v-model:error="form.errors.short"
-                    label="Сокращение"
-                    placeholder="кг"
+                    v-model="form.name"
+                    v-model:error="form.errors.name"
+                    label="Название"
+                    placeholder="Килограмм"
                     :disabled="form.processing"
+                    theme="dark"
                 />
 
-                <BaseInput
-                    v-model="form.slug"
-                    v-model:error="form.errors.slug"
-                    label="Slug"
-                    placeholder="kg"
-                    :disabled="form.processing"
-                />
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
+                    <BaseInput
+                        v-model="form.short"
+                        v-model:error="form.errors.short"
+                        label="Сокращение"
+                        placeholder="кг"
+                        :disabled="form.processing"
+                        theme="dark"
+                    />
 
-                <AdminNumberInput
-                    v-model.number="form.low_stock_threshold"
-                    v-model:error="form.errors.low_stock_threshold"
-                    label="Порог низкого остатка"
-                    :step="1"
-                    placeholder="1"
-                    :disabled="form.processing"
-                    :min="0"
-                />
-            </div>
+                    <BaseInput
+                        v-model="form.slug"
+                        v-model:error="form.errors.slug"
+                        label="Slug"
+                        placeholder="kg"
+                        :disabled="form.processing"
+                        theme="dark"
+                    />
 
-            <BaseSubmitButton
-                :processing="form.processing"
-                :is-edit="editMode"
-                :label="editMode ? 'Обновить' : 'Создать '"
-            />
-        </form>
+                    <AdminNumberInput
+                        v-model.number="form.low_stock_threshold"
+                        v-model:error="form.errors.low_stock_threshold"
+                        label="Порог низкого остатка"
+                        :step="1"
+                        placeholder="1"
+                        :disabled="form.processing"
+                        :min="0"
+                    />
+                </div>
+
+                <div class="flex justify-end">
+                    <BaseSubmitButton
+                        :processing="form.processing"
+                        :is-edit="editMode"
+                        :label="editMode ? 'Обновить' : 'Создать'"
+                    />
+                </div>
+            </form>
+        </div>
     </Modal>
 </template>
 
@@ -235,11 +253,13 @@
         user-select: text;
     }
 
+    /* Карточка, «оставленная» на старом месте при перетаскивании */
     .chosen-card {
+        background-color: rgba(122, 184, 154, 0.05); /* rancho-mint / 5% */
         opacity: 0.4;
-        background-color: rgba(249, 115, 22, 0.05);
     }
 
+    /* Летящая карточка */
     .drag-card {
         opacity: 1 !important;
         transform: scale(1.02);
@@ -251,9 +271,10 @@
         transition: none !important;
     }
 
+    /* «Призрак» — место, куда упадёт */
     .ghost-card {
-        background-color: rgba(249, 115, 22, 0.1) !important;
-        border: 1px dashed rgb(92, 92, 92) !important;
+        background-color: rgba(122, 184, 154, 0.1) !important; /* rancho-mint / 10% */
+        border: 1px dashed rgb(64, 58, 45) !important; /* rancho-ink-700 */
         border-radius: 1.5rem;
         opacity: 0.4 !important;
     }
@@ -263,27 +284,28 @@
         cursor: grab;
     }
 
+    /* Подсветка после успешного дропа */
     .drop-highlight {
-        animation: pulse-border 2s cubic-bezier(0.4, 0, 0.6, 1);
         border-radius: 1.5rem;
         position: relative;
         z-index: 10;
+        animation: pulse-border 2s cubic-bezier(0.4, 0, 0.6, 1);
     }
 
     @keyframes pulse-border {
         0% {
-            outline: 1px solid #22c55e; /* green-500 */
-            box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.5);
+            outline: 1px solid #7ab89a; /* rancho-mint */
+            box-shadow: 0 0 0 4px rgba(122, 184, 154, 0.4);
             transform: scale(1.005);
         }
         30% {
-            outline: 1px solid #ffffff;
-            box-shadow: 0 0 0 10px rgba(255, 255, 255, 0);
+            outline: 1px solid rgba(122, 184, 154, 0.6);
+            box-shadow: 0 0 0 10px rgba(122, 184, 154, 0);
             transform: scale(1);
         }
         100% {
-            outline: 1px solid rgba(255, 255, 255, 0);
-            box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+            outline: 1px solid rgba(122, 184, 154, 0);
+            box-shadow: 0 0 0 0 rgba(122, 184, 154, 0);
         }
     }
 
@@ -294,5 +316,16 @@
     .fade-slide-enter-from {
         opacity: 0;
         transform: translateY(-10px);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .fade-slide-enter-active,
+        .chosen-card,
+        .drag-card,
+        .ghost-card,
+        .drop-highlight {
+            transition: none !important;
+            animation: none !important;
+        }
     }
 </style>

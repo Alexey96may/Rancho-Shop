@@ -62,17 +62,19 @@
     <div
         v-for="(zone, zIndex) in zones"
         :key="zIndex"
-        class="space-y-6 rounded-2xl border border-slate-800 bg-slate-950 p-6"
+        class="space-y-6 rounded-2xl border border-rancho-ink-800 bg-rancho-ink-950 p-4 sm:p-6"
     >
         <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <!-- LEFT: fields -->
             <div class="space-y-4">
                 <BaseInput
                     label="Название маршрута"
                     :model-value="String(zone.name)"
                     @update:model-value="zone.name = String($event)"
+                    theme="dark"
                 />
 
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
                     <AdminNumberInput v-model="zone.radius" :min="0" label="Радиус (м)" />
 
                     <AdminNumberInput v-model="zone.priority" :min="0" label="Приоритет" />
@@ -84,7 +86,7 @@
                     />
                 </div>
 
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
                     <AdminNumberInput
                         v-model="zone.delivery_price"
                         :min="0"
@@ -105,6 +107,7 @@
                 </div>
             </div>
 
+            <!-- RIGHT: path -->
             <div class="flex flex-col gap-2">
                 <AdminBaseTextarea
                     :label="zone.path.length + ' точек'"

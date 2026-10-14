@@ -1,5 +1,5 @@
 <script setup lang="ts">
-    import { PropType, watch } from 'vue';
+    import { type PropType, watch } from 'vue';
 
     import { useForm } from '@inertiajs/vue3';
 
@@ -22,7 +22,7 @@
     import { useAdminCrud } from '@/composables/crud/useAdminCrud';
     import { useAdminForm } from '@/composables/crud/useAdminForm';
     import { useAdminFilters } from '@/composables/routing/useAdminFilters';
-    import { AdminUser, Paginated, RoleInfo, UserRole } from '@/types';
+    import type { AdminUser, Paginated, RoleInfo, UserRole } from '@/types';
 
     defineOptions({ layout: AdminLayout });
 
@@ -103,24 +103,31 @@
         />
     </Teleport>
 
-    <section class="mb-8 space-y-6" aria-label="Инструменты поиска и фильтрации">
-        <div class="flex flex-col justify-between gap-4 md:flex-row md:items-center">
-            <div class="relative w-full max-w-md">
-                <AdminSearchInput
-                    v-model="filterForm.search"
-                    placeholder="Поиск: имя, почта или телефон..."
-                />
-            </div>
+    <!-- FILTERS -->
+    <section class="mb-6 space-y-10 sm:mb-8" aria-label="Инструменты поиска и фильтрации">
+        <!-- SEARCH + CREATE -->
+        <div
+            class="flex flex-col-reverse gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-4"
+        >
+            <AdminSearchInput
+                v-model="filterForm.search"
+                placeholder="Поиск: имя, почта или телефон..."
+                class="w-full sm:max-w-md"
+            />
 
-            <BaseCreateButton @click="openModal(form)" label="Добавить" :icon="UserPlusIcon" />
+            <BaseCreateButton
+                @click="openModal(form)"
+                label="Добавить"
+                :icon="UserPlusIcon"
+                class="self-end sm:self-auto"
+            />
         </div>
 
-        <div class="flex flex-col gap-4 border-t border-slate-800/50 pt-6">
-            <div class="flex items-center gap-2 text-slate-500">
-                <FunnelIcon class="h-4 w-4" />
-                <h2 class="text-[10px] font-black uppercase tracking-[0.2em]">
-                    Быстрый фильтр по ролям
-                </h2>
+        <!-- ROLE FILTER -->
+        <div class="flex flex-col gap-4 border-t border-rancho-ink-800/60 pt-6">
+            <div class="flex items-center gap-2 text-rancho-ink-500">
+                <FunnelIcon class="h-4 w-4" aria-hidden="true" />
+                <h2 class="text-xs font-black uppercase tracking-[0.2em]">Роли</h2>
             </div>
 
             <AdminRoleFilter
@@ -131,12 +138,13 @@
         </div>
     </section>
 
+    <!-- LIST -->
     <main class="relative min-h-[400px]">
         <Transition name="fade-slide">
             <div
                 v-if="users.data.length"
                 key="users"
-                class="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3"
+                class="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 xl:grid-cols-3"
             >
                 <TransitionGroup name="user-list">
                     <AdminUserCard
@@ -168,21 +176,24 @@
                 :description="
                     filterForm.search
                         ? 'По запросу «' + filterForm.search + '» совпадений нет'
-                        : 'Нет ни одного промокода'
+                        : 'Нет ни одного пользователя'
                 "
-        /></Transition>
+            />
+        </Transition>
     </main>
 
+    <!-- PAGINATION -->
     <Transition name="fade-slide" mode="out-in">
-        <AdminPagination v-show="!isFiltering" :links="users.meta.links" />
+        <AdminPagination v-show="!isFiltering" :links="users.meta.links" theme="dark" />
     </Transition>
 
+    <!-- MODAL -->
     <BaseModal
         :show="isModalOpen"
         :title="editMode ? 'Обновить данные' : 'Регистрация нового пользователя'"
         @close="closeModal"
     >
-        <form @submit.prevent="submit" class="grid gap-5 p-1">
+        <form @submit.prevent="submit" class="grid gap-5 p-2">
             <div class="grid grid-cols-1 gap-4">
                 <BaseInput
                     v-model="form.name"
@@ -190,15 +201,17 @@
                     label="ФИО Пользователя"
                     placeholder="Вася Пупкин"
                     :disabled="form.processing"
+                    theme="dark"
                 />
 
                 <BaseInput
                     v-model="form.email"
                     v-model:error="form.errors.email"
                     label="Электронная почта"
-                    type="mail"
+                    type="email"
                     placeholder="example@gmail.ru"
                     :disabled="form.processing"
+                    theme="dark"
                 />
 
                 <BaseInput
@@ -208,19 +221,19 @@
                     label="Телефонный номер"
                     placeholder="+7 (___) ___-__-__"
                     :disabled="form.processing"
+                    theme="dark"
                 />
             </div>
 
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <BaseSelect
                     v-model="form.role"
                     v-model:error="form.errors.role"
                     :options="roles"
                     variant="admin"
-                    type="password"
                     label="Назначить роль"
-                    labelKey="label"
-                    valueKey="value"
+                    label-key="label"
+                    value-key="value"
                 />
 
                 <BaseInput
@@ -230,11 +243,12 @@
                     type="password"
                     :placeholder="editMode ? 'Оставьте пустым' : '••••••••'"
                     :disabled="form.processing"
+                    theme="dark"
                 />
             </div>
 
-            <div class="flex gap-3 pt-6">
-                <BaseCancelButton @click="closeModal" />
+            <div class="flex flex-wrap items-center justify-between gap-2 pt-6">
+                <BaseCancelButton @click="closeModal" theme="dark" />
 
                 <BaseSubmitButton
                     :processing="form.processing"
@@ -279,5 +293,14 @@
     .fade-slide-enter-from {
         opacity: 0;
         transform: translateY(-10px);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .user-list-enter-active,
+        .user-list-leave-active,
+        .user-list-move,
+        .fade-slide-enter-active {
+            transition: none;
+        }
     }
 </style>

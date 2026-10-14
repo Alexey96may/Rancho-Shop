@@ -101,13 +101,13 @@
         <AdminPageHeader title="Список Животных" subtitle="Управление базой животных" />
     </Teleport>
 
-    <div class="py-8">
+    <div>
         <div class="space-y-10">
-            <section class="flex flex-col gap-4 lg:flex-row lg:items-end" aria-label="Фильтрация">
+            <section class="flex flex-col gap-4 sm:flex-row sm:items-end" aria-label="Фильтрация">
                 <AdminSearchInput
                     v-model="filterForm.search"
+                    class="order-2 sm:-order-none"
                     placeholder="Поиск по имени..."
-                    label="Поиск животных"
                 />
 
                 <BaseSelect
@@ -115,11 +115,11 @@
                     :options="categories"
                     placeholder="Все категории"
                     variant="admin"
-                    class="lg:w-64"
+                    class="order-3 sm:-order-none lg:w-64"
                 />
 
                 <BaseCreateButton
-                    class="self-end lg:self-auto"
+                    class="order-1 self-end sm:-order-none lg:self-auto"
                     label="Добавить"
                     @click="navigateWithContext('admin.animals', 'create')"
                 />

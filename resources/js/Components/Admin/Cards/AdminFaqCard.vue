@@ -1,17 +1,12 @@
 <script setup lang="ts">
     import { computed } from 'vue';
 
-    import {
-        Bars2Icon,
-        ChevronDownIcon,
-        PencilSquareIcon,
-        TrashIcon,
-    } from '@heroicons/vue/24/outline';
+    import { Bars2Icon, ChevronDownIcon, PencilSquareIcon } from '@heroicons/vue/24/outline';
 
     import AdminDeleteButton from '@/Components/Admin/UI/AdminDeleteButton.vue';
     import AdminEditButton from '@/Components/Admin/UI/AdminEditButton.vue';
     import BaseVisibilityToggle from '@/Components/UI/BaseVisibilityToggle.vue';
-    import { AdminFaq } from '@/types';
+    import type { AdminFaq } from '@/types';
     import { formatDateTime } from '@/utils/format';
 
     const props = defineProps<{
@@ -29,45 +24,50 @@
 
 <template>
     <div
-        class="group overflow-hidden rounded-3xl border border-slate-800 bg-slate-900/30 transition-all"
+        class="border-rancho-ink-800 bg-rancho-ink-900/30 group overflow-hidden rounded-3xl border transition-all"
         :class="{
-            'border-orange-500/50 bg-slate-900/60 ring-1 ring-orange-500/20': isOpen,
+            'border-rancho-mint/40 bg-rancho-ink-900/60 ring-rancho-mint/20 ring-1': isOpen,
             'scale-[0.97] opacity-50': isDeleting,
         }"
     >
+        <!-- HEADER -->
         <div class="flex items-center">
             <div
-                class="drag-handle flex cursor-grab items-center justify-center p-5 text-slate-700 hover:text-slate-400 active:cursor-grabbing"
+                class="drag-handle text-rancho-ink-600 hover:text-rancho-ink-400 flex cursor-grab items-center justify-center p-3 active:cursor-grabbing sm:p-5"
+                aria-hidden="true"
             >
                 <Bars2Icon class="h-5 w-5" />
             </div>
 
             <button
                 @click="emit('toggle', faq.id)"
-                class="flex flex-1 items-center justify-between py-5 pr-5 text-left focus:outline-none sm:pr-8"
+                class="focus-visible:ring-rancho-mint/40 flex flex-1 items-center justify-between gap-2 py-5 pr-5 text-left focus:outline-none focus-visible:ring-2 sm:pr-8"
                 :aria-expanded="isOpen"
             >
-                <div class="flex items-center gap-4">
-                    <h3 class="font-bold text-slate-200 transition-colors group-hover:text-white">
-                        {{ faq.question }}
-                    </h3>
-                </div>
+                <h3
+                    class="text-rancho-ink-200 text-xs font-bold transition-colors group-hover:text-white sm:text-sm"
+                >
+                    {{ faq.question }}
+                </h3>
 
                 <div class="flex items-center gap-4">
                     <span
                         v-if="!faq.is_published"
-                        class="hidden rounded-full border border-slate-700 bg-slate-800 px-3 py-1 text-[9px] font-black uppercase tracking-widest text-slate-500 sm:block"
+                        class="border-rancho-ink-700 bg-rancho-ink-800 text-rancho-ink-500 hidden rounded-full border px-3 py-1 text-[9px] font-black uppercase tracking-widest sm:block"
                     >
                         Черновик
                     </span>
+
                     <ChevronDownIcon
-                        class="h-5 w-5 text-slate-500 transition-transform duration-300"
-                        :class="{ 'rotate-180 text-orange-500': isOpen }"
+                        class="text-rancho-ink-500 h-5 w-5 transition-transform duration-300"
+                        :class="{ 'text-rancho-mint rotate-180': isOpen }"
+                        aria-hidden="true"
                     />
                 </div>
             </button>
         </div>
 
+        <!-- BODY -->
         <div
             class="grid transition-[grid-template-rows,opacity] duration-300 ease-in-out"
             :class="
@@ -77,23 +77,23 @@
             "
         >
             <div class="overflow-hidden">
-                <div class="border-t border-slate-800/50 p-5 sm:px-14 sm:pb-8">
+                <div class="border-rancho-ink-800/60 border-t p-5 sm:px-14 sm:pb-8">
                     <div
-                        class="prose prose-orange prose-invert mb-6 max-w-none text-sm leading-relaxed text-slate-400"
+                        class="text-rancho-ink-300 prose-a:text-rancho-mint prose prose-sm prose-invert mb-6 max-w-none text-xs leading-relaxed prose-headings:text-white prose-a:no-underline hover:prose-a:underline prose-strong:text-white sm:text-sm"
                         v-html="faq.answer"
                     ></div>
 
                     <div
-                        class="flex items-center justify-between gap-4 border-t border-slate-800/50 pt-6"
+                        class="border-rancho-ink-800/60 flex flex-col items-start justify-between gap-6 border-t pt-6 sm:flex-row sm:items-center"
                     >
                         <div
-                            class="text-[10px] font-black uppercase tracking-widest text-slate-600"
+                            class="text-rancho-ink-500 flex flex-col gap-2 text-[10px] font-black uppercase tracking-widest"
                         >
-                            Порядок: {{ faq.sort_order }} •
-                            {{ computedUpdatedAt }}
+                            <span> Порядок: {{ faq.sort_order }}</span>
+                            <span> {{ computedUpdatedAt }}</span>
                         </div>
 
-                        <div class="flex gap-2">
+                        <div class="flex gap-2 self-end">
                             <BaseVisibilityToggle
                                 :active="faq.is_published"
                                 active-title="Виден на сайте"

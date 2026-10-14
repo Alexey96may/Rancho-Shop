@@ -1,10 +1,10 @@
 <script setup lang="ts">
-    import { PropType } from 'vue';
+    import { type PropType } from 'vue';
 
     import AnimalForm from '@/Components/Admin/Sections/AnimalForm.vue';
     import AdminPageHeader from '@/Components/Admin/Shared/AdminPageHeader.vue';
     import AdminLayout from '@/Layouts/AdminLayout.vue';
-    import { AdminAnimal, Category, ResourceSingle } from '@/types';
+    import type { AdminAnimal, Category, ResourceSingle } from '@/types';
 
     defineOptions({ layout: AdminLayout });
 
@@ -65,7 +65,5 @@
         />
     </Teleport>
 
-    <div class="p-8">
-        <AnimalForm :animal="animal?.data || null" :back-url="backUrl" :categories="categories" />
-    </div>
+    <AnimalForm :animal="animal?.data || null" :back-url="backUrl" :categories="categories" />
 </template>

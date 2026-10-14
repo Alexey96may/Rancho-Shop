@@ -1,5 +1,5 @@
 <script setup lang="ts">
-    import { PropType, computed, ref } from 'vue';
+    import { type PropType, computed, ref } from 'vue';
 
     import { useForm } from '@inertiajs/vue3';
 
@@ -84,34 +84,44 @@
     </Teleport>
 
     <div class="space-y-6">
-        <nav class="no-scrollbar flex items-center gap-2 overflow-x-auto pb-2" role="tablist">
+        <!-- TABS -->
+        <nav
+            class="no-scrollbar flex items-center gap-2 overflow-x-auto py-2"
+            role="tablist"
+            aria-label="Разделы настроек"
+        >
             <button
                 v-for="section in SETTINGS_SECTIONS"
                 :key="section.id"
+                type="button"
                 @click="activeSection = section.id"
                 role="tab"
                 :aria-selected="activeSection === section.id"
-                class="flex items-center gap-2 whitespace-nowrap rounded-2xl px-5 py-3 text-sm font-bold transition-all"
+                class="flex shrink-0 items-center gap-2 whitespace-nowrap rounded-2xl px-5 py-3 text-sm font-bold transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-rancho-mint/40"
                 :class="
                     activeSection === section.id
-                        ? 'shadow-lg bg-orange-600 text-white shadow-orange-900/20'
-                        : 'border border-slate-800/50 bg-slate-800/40 text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+                        ? 'shadow-lg bg-rancho-mint text-rancho-ink-950 shadow-rancho-mint/20'
+                        : 'border border-rancho-ink-800 bg-rancho-ink-800/40 text-rancho-ink-400 hover:bg-rancho-ink-800 hover:text-rancho-ink-200'
                 "
             >
-                <component :is="section.icon" class="h-4 w-4" />
+                <component :is="section.icon" class="h-4 w-4" aria-hidden="true" />
                 {{ section.label }}
             </button>
         </nav>
 
-        <main class="min-h-[500px] rounded-3xl border border-slate-800 bg-slate-900/50 p-6 md:p-8">
+        <!-- CONTENT -->
+        <main
+            class="min-h-[500px] rounded-2xl border border-rancho-ink-800 bg-rancho-ink-900/50 p-4 sm:rounded-3xl sm:p-6 md:p-8"
+        >
             <form @submit.prevent="submit" class="space-y-6 overflow-hidden">
                 <Transition name="fade-slide">
                     <div :key="activeSection" class="space-y-6">
                         <div
                             v-for="(field, index) in currentFields"
                             :key="field.key"
-                            class="group flex flex-col gap-2 border-b border-slate-800/50 pb-6 last:border-0"
+                            class="group flex flex-col gap-2 border-b border-rancho-ink-800/60 pb-6 last:border-0"
                         >
+                            <!-- BOOLEAN -->
                             <BaseSwitch
                                 v-if="field.type === 'boolean'"
                                 :model-value="!!field.value"
@@ -120,19 +130,22 @@
                                 active-text="Включено"
                                 inactive-text="Выключено"
                                 :disabled="form.processing"
+                                theme="dark"
                             />
 
+                            <!-- SHOP STATUS -->
                             <BaseSelect
                                 v-else-if="field.key === 'shop_status'"
                                 v-model="field.value"
                                 :options="typeOptions"
                                 :label="formatLabel(field.key)"
-                                valueKey="value"
-                                labelKey="label"
+                                value-key="value"
+                                label-key="label"
                                 variant="admin"
-                                class="lg:w-64"
+                                class="w-full lg:w-64"
                             />
 
+                            <!-- DELIVERY ZONES -->
                             <div v-else-if="field.key === 'delivery_zones'">
                                 <DeliveryZoneManager
                                     :model-value="asZones(field.value)"
@@ -140,6 +153,7 @@
                                 />
                             </div>
 
+                            <!-- JSON -->
                             <AdminBaseTextarea
                                 v-else-if="field.type === 'json'"
                                 :id="field.key"
@@ -151,6 +165,7 @@
                                 rows="6"
                             />
 
+                            <!-- INTEGER -->
                             <AdminNumberInput
                                 v-else-if="field.type === 'integer'"
                                 :model-value="Number(field.value)"
@@ -162,6 +177,7 @@
                                 :disabled="form.processing"
                             />
 
+                            <!-- STRING -->
                             <BaseInput
                                 v-else
                                 :id="field.key"
@@ -170,19 +186,21 @@
                                 @update:model-value="field.value = String($event)"
                                 v-model:error="form.errors.settings"
                                 :disabled="form.processing"
+                                theme="dark"
                             />
 
-                            <p class="text-[10px] italic text-slate-600">
+                            <p class="text-[10px] italic text-rancho-ink-500">
                                 Ключ в БД: {{ field.key }}
                             </p>
                         </div>
                     </div>
                 </Transition>
 
+                <!-- FOOTER -->
                 <div
-                    class="mt-8 flex flex-col gap-4 border-t border-slate-800 pt-8 sm:flex-row sm:items-center sm:justify-between"
+                    class="mt-8 flex flex-col gap-4 border-t border-rancho-ink-800 pt-6 sm:flex-row sm:items-center sm:justify-between sm:pt-8"
                 >
-                    <div class="text-xs text-slate-500">
+                    <div class="text-xs text-rancho-ink-500">
                         Изменения применяются сразу ко всей системе
                     </div>
 
@@ -190,6 +208,7 @@
                         type="submit"
                         :label="form.processing ? 'Сохраняем...' : 'Сохранить всё'"
                         :disabled="form.processing"
+                        class="self-end sm:self-auto"
                     />
                 </div>
             </form>
@@ -223,5 +242,12 @@
     .no-scrollbar {
         -ms-overflow-style: none;
         scrollbar-width: none;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .fade-slide-enter-active,
+        .fade-slide-leave-active {
+            transition: none;
+        }
     }
 </style>

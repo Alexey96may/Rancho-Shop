@@ -1,5 +1,5 @@
 <script setup lang="ts">
-    import { PropType } from 'vue';
+    import { type PropType } from 'vue';
 
     import { useForm } from '@inertiajs/vue3';
 
@@ -105,20 +105,20 @@
         />
     </Teleport>
 
-    <div class="mx-auto max-w-5xl space-y-8">
+    <div class="mx-auto max-w-5xl space-y-6 sm:space-y-8">
         <BaseCancelButton :href="backUrl" label="Назад" />
 
         <form @submit.prevent="submit" class="space-y-6">
             <div
-                class="grid grid-cols-1 gap-6 rounded-[2.5rem] border border-slate-800 bg-slate-900/40 p-8 md:grid-cols-12"
+                class="border-rancho-ink-800 bg-rancho-ink-900/40 grid grid-cols-1 gap-4 rounded-2xl border p-4 sm:gap-5 sm:p-6 md:grid-cols-12 md:p-8"
             >
                 <BaseSelect
                     v-model="form.product_id"
                     v-model:error="form.errors.product_id"
                     :options="products"
                     label="Основной товар"
-                    labelKey="name"
-                    valueKey="id"
+                    label-key="name"
+                    value-key="id"
                     placeholder="Выберите товар"
                     class="md:col-span-8"
                     :disabled="form.processing"
@@ -131,8 +131,8 @@
                     :options="units"
                     label="Ед. измерения"
                     placeholder="Выберите единицу"
-                    labelKey="name"
-                    valueKey="id"
+                    label-key="name"
+                    value-key="id"
                     class="md:col-span-4"
                     variant="admin"
                 />
@@ -144,6 +144,7 @@
                     placeholder="Например: 500 мл, XL, Красный"
                     class="md:col-span-12"
                     :disabled="form.processing"
+                    theme="dark"
                 />
 
                 <AdminNumberInput
@@ -185,12 +186,13 @@
                         label="Вариант по умолчанию"
                         active-text="Главный вариант"
                         inactive-text="Обычный вариант"
+                        theme="dark"
                     />
                 </div>
             </div>
 
             <div
-                class="flex flex-wrap items-center justify-between gap-4 border-t border-slate-800/50 pt-8"
+                class="border-rancho-ink-800 flex flex-col-reverse items-stretch gap-4 border-t pt-6 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:pt-8"
             >
                 <BaseStatusToggle
                     v-if="!isEdit"
@@ -202,6 +204,7 @@
                     :processing="form.processing"
                     :is-edit="isEdit"
                     :label="isEdit ? 'Сохранить изменения' : 'Создать вариант'"
+                    class="sm:w-auto"
                 />
             </div>
         </form>

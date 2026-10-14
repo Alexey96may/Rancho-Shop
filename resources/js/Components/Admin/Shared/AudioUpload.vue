@@ -63,7 +63,7 @@
     <div class="space-y-4">
         <label
             :for="id"
-            class="ml-2 text-[10px] font-black uppercase tracking-widest text-slate-500"
+            class="text-rancho-ink-400 ml-2 text-[10px] font-black uppercase tracking-[0.15em]"
         >
             {{ label }}
         </label>
@@ -71,10 +71,10 @@
         <div class="grid gap-4 lg:grid-cols-2">
             <div class="flex flex-col gap-2">
                 <div
-                    class="flex items-center gap-4 rounded-3xl border border-slate-800 bg-slate-950/50 p-6 transition-colors focus-within:border-orange-500/50"
+                    class="border-rancho-ink-800 bg-rancho-ink-950/50 focus-within:border-rancho-mint/40 flex items-center gap-4 rounded-3xl border p-6 transition-colors"
                 >
                     <div
-                        class="flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-500/10 text-orange-500"
+                        class="bg-rancho-mint/70 flex h-12 w-12 items-center justify-center rounded-2xl text-rancho-paper"
                         aria-hidden="true"
                     >
                         <SpeakerWaveIcon class="h-6 w-6" />
@@ -91,7 +91,7 @@
 
                         <label
                             :for="id"
-                            class="inline-flex cursor-pointer items-center rounded-xl bg-slate-800 px-4 py-2 text-[10px] font-black uppercase text-orange-500 transition hover:bg-slate-700"
+                            class="bg-rancho-ink-800 text-rancho-mint hover:bg-rancho-ink-700 inline-flex cursor-pointer items-center rounded-xl px-4 py-2 text-[10px] font-black uppercase transition"
                         >
                             <span>Загрузить аудио</span>
                         </label>
@@ -100,12 +100,16 @@
                             <span
                                 v-if="isNewAudioSelected && fileName"
                                 :key="fileName"
-                                class="ml-2 truncate text-xs text-slate-400"
+                                class="text-rancho-ink-300 ml-2 truncate text-xs"
                             >
                                 {{ fileName }}
                             </span>
 
-                            <span v-else :key="'placeholder'" class="ml-2 text-xs text-slate-500">
+                            <span
+                                v-else
+                                :key="'placeholder'"
+                                class="text-rancho-ink-500 ml-2 text-xs"
+                            >
                                 Выберите файл
                             </span>
                         </Transition>
@@ -115,7 +119,7 @@
                         <button
                             v-if="isNewAudioSelected"
                             type="button"
-                            class="text-slate-500 transition-colors hover:text-red-500 focus:text-red-500 focus:outline-none"
+                            class="text-rancho-ink-500 transition-colors hover:text-rose-500 focus:text-rose-500 focus:outline-none"
                             aria-label="Удалить выбранный аудиофайл"
                             title="Удалить выбранный аудиофайл"
                             @click="emit('clear')"
@@ -130,31 +134,31 @@
                         v-if="modelValue.errors.voice"
                         :id="errorId"
                         role="alert"
-                        class="ml-2 text-[10px] font-bold uppercase text-red-500"
+                        class="ml-2 text-[10px] font-bold uppercase text-rose-500"
                     >
                         {{ modelValue.errors.voice }}
                     </p>
                 </Transition>
             </div>
 
-            <div class="relative min-h-[82px]">
+            <div class="relative">
                 <Transition name="fade-layout" mode="out-in">
                     <figure
                         v-if="fileName"
                         :key="'player'"
-                        class="flex flex-col justify-center rounded-3xl border border-orange-500/20 bg-orange-500/5 p-6"
+                        class="border-rancho-mint/20 bg-rancho-mint/5 flex flex-col justify-center rounded-3xl border p-6"
                     >
                         <figcaption
-                            class="mb-2 text-[9px] font-black uppercase tracking-tighter text-orange-500/60"
+                            class="text-rancho-mint/60 mb-2 text-[9px] font-black uppercase tracking-tighter"
                         >
                             Текущая запись:
-                            <span v-if="fileName" class="text-orange-400">{{ fileName }}</span>
+                            <span v-if="fileName" class="text-rancho-mint">{{ fileName }}</span>
                         </figcaption>
                         <audio
                             v-if="audioSrc"
                             :src="audioSrc"
                             controls
-                            class="h-8 w-full accent-orange-500"
+                            class="accent-rancho-mint h-8 w-full"
                             aria-label="Воспроизвести текущую аудиозапись"
                         >
                             Ваш браузер не поддерживает элемент <code>audio</code>.

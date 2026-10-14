@@ -43,18 +43,18 @@
         <div
             v-for="(file, index) in modelValue"
             :key="'id' in file ? file.id : index"
-            class="shadow-lg group relative aspect-square overflow-hidden rounded-2xl border border-slate-800 bg-slate-900"
+            class="border-rancho-ink-800 bg-rancho-ink-900 shadow-lg group relative aspect-square overflow-hidden rounded-2xl border"
             role="listitem"
         >
             <AppImage :src="file" type="previews" :alt="file.name" :class-name="'h-full w-full '" />
 
             <div
-                class="absolute inset-0 flex items-center justify-center gap-2 bg-slate-950/60 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100"
+                class="bg-rancho-ink-950/70 absolute inset-0 flex items-center justify-center gap-2 opacity-0 backdrop-blur-sm transition-opacity focus-within:opacity-100 group-hover:opacity-100"
             >
                 <button
                     type="button"
                     @click="$emit('preview', getImageUrl(file))"
-                    class="rounded-full bg-white/10 p-2 text-white backdrop-blur-md hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    class="flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur-md transition-all hover:bg-white/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60 active:scale-95"
                     title="Увеличить"
                 >
                     <PhotoIcon class="h-5 w-5" aria-hidden="true" />
@@ -65,7 +65,7 @@
                     type="button"
                     v-if="!isViewMode"
                     @click="remove(index)"
-                    class="rounded-full bg-red-500/20 p-2 text-red-400 backdrop-blur-md hover:bg-red-500/40 focus:outline-none focus:ring-2 focus:ring-red-500"
+                    class="flex h-10 w-10 items-center justify-center rounded-full bg-rose-500/30 text-rose-100 backdrop-blur-md transition-all hover:bg-rose-500/60 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-300 active:scale-95"
                     title="Удалить"
                 >
                     <XMarkIcon class="h-5 w-5" aria-hidden="true" />

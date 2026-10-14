@@ -1,5 +1,5 @@
 <script setup lang="ts">
-    import { PropType, ref, watch } from 'vue';
+    import { type PropType, ref, watch } from 'vue';
 
     import { router, useForm } from '@inertiajs/vue3';
 
@@ -25,7 +25,7 @@
     import { useAdminFilters } from '@/composables/routing/useAdminFilters';
     import { type DraggableEvent, useAdminReorder } from '@/composables/routing/useAdminReorder';
     import { useNotificationsStore } from '@/stores/notifications';
-    import { AdminFaq, Paginated } from '@/types';
+    import type { AdminFaq, Paginated } from '@/types';
     import { triggerVibration } from '@/utils/navigator';
 
     defineOptions({ layout: AdminLayout });
@@ -131,13 +131,25 @@
         />
     </Teleport>
 
-    <div class="max-w-5xl space-y-6">
-        <div class="flex flex-col items-center justify-between gap-4 sm:flex-row">
-            <AdminSearchInput v-model="filterForm.search" placeholder="Поиск вопроса..." />
+    <div class="space-y-10">
+        <!-- SEARCH + ADD -->
+        <div
+            class="flex flex-col-reverse items-stretch justify-between gap-4 sm:flex-row sm:items-end sm:gap-4"
+        >
+            <AdminSearchInput
+                v-model="filterForm.search"
+                placeholder="Поиск вопроса..."
+                class="w-full sm:max-w-md"
+            />
 
-            <BaseCreateButton @click="openModal(form)" label="Добавить вопрос" />
+            <BaseCreateButton
+                @click="openModal(form)"
+                label="Добавить вопрос"
+                class="self-end sm:self-auto"
+            />
         </div>
 
+        <!-- LIST -->
         <Transition name="fade-slide" mode="out-in">
             <draggable
                 v-if="faqs.data.length"
@@ -190,21 +202,23 @@
             />
         </Transition>
 
+        <!-- PAGINATION -->
         <Transition name="fade-slide" mode="out-in">
-            <AdminPagination v-show="!isFiltering" :links="faqs.meta.links" />
+            <AdminPagination v-show="!isFiltering" :links="faqs.meta.links" theme="dark" />
         </Transition>
     </div>
 
+    <!-- MODAL -->
     <Modal :show="isModalOpen" @close="closeModal" max-width="2xl" aria-labelledby="modal-title">
-        <div class="p-8">
+        <div class="px-2 py-1">
             <h3
                 id="modal-title"
-                class="mb-8 text-xl font-black uppercase tracking-tighter text-white"
+                class="mb-6 pr-6 text-sm font-black uppercase tracking-tighter text-white sm:mb-8 sm:text-xl"
             >
                 {{ editMode ? 'Редактировать вопрос' : 'Новый вопрос FAQ' }}
             </h3>
 
-            <form @submit.prevent="submit" class="space-y-6">
+            <form @submit.prevent="submit" class="space-y-5">
                 <BaseTextarea
                     v-model="form.question"
                     v-model:error="form.errors.question"
@@ -212,6 +226,7 @@
                     :disabled="form.processing"
                     placeholder="Например: Как активировать подписку?"
                     :max-height="150"
+                    theme="dark"
                 />
 
                 <BaseTextarea
@@ -221,9 +236,10 @@
                     label="Ответ (поддерживает HTML)"
                     placeholder="<p>Для активации перейдите в...</p>"
                     :max-height="150"
+                    theme="dark"
                 />
 
-                <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
                     <AdminNumberInput
                         label="Порядок вывода"
                         v-model="form.sort_order"
@@ -238,13 +254,13 @@
                     />
                 </div>
 
-                <div class="flex flex-col gap-4 pt-4 sm:flex-row">
-                    <BaseCancelButton label="Отмена" @click="isModalOpen = false" />
+                <div class="flex justify-between gap-3 pt-4">
+                    <BaseCancelButton label="Отмена" theme="dark" @click="isModalOpen = false" />
 
                     <BaseSubmitButton
                         :processing="form.processing"
                         :is-edit="editMode"
-                        :label="editMode ? 'Обновить' : 'Создать '"
+                        :label="editMode ? 'Обновить' : 'Создать'"
                     />
                 </div>
             </form>
@@ -263,11 +279,13 @@
         user-select: text;
     }
 
+    /* Карточка, «оставленная» на старом месте при перетаскивании */
     .chosen-card {
+        background-color: rgba(122, 184, 154, 0.05); /* rancho-mint / 5% */
         opacity: 0.4;
-        background-color: rgba(249, 115, 22, 0.05);
     }
 
+    /* Летящая карточка */
     .drag-card {
         opacity: 1 !important;
         transform: scale(1.02);
@@ -279,9 +297,10 @@
         transition: none !important;
     }
 
+    /* «Призрак» — место, куда упадёт */
     .ghost-card {
-        background-color: rgba(249, 115, 22, 0.1) !important;
-        border: 1px dashed rgb(92, 92, 92) !important;
+        background-color: rgba(122, 184, 154, 0.1) !important; /* rancho-mint / 10% */
+        border: 1px dashed rgb(64, 58, 45) !important; /* rancho-ink-700 */
         border-radius: 1.5rem;
         opacity: 0.4 !important;
     }
@@ -291,28 +310,28 @@
         cursor: grab;
     }
 
+    /* Подсветка после успешного дропа */
     .drop-highlight {
-        animation: pulse-border 2s cubic-bezier(0.4, 0, 0.6, 1);
-
         border-radius: 1.5rem;
         position: relative;
         z-index: 10;
+        animation: pulse-border 2s cubic-bezier(0.4, 0, 0.6, 1);
     }
 
     @keyframes pulse-border {
         0% {
-            outline: 1px solid #22c55e; /* green-500 */
-            box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.5);
+            outline: 1px solid #7ab89a; /* rancho-mint */
+            box-shadow: 0 0 0 4px rgba(122, 184, 154, 0.4);
             transform: scale(1.005);
         }
         30% {
-            outline: 1px solid #ffffff;
-            box-shadow: 0 0 0 10px rgba(255, 255, 255, 0);
+            outline: 1px solid rgba(122, 184, 154, 0.6);
+            box-shadow: 0 0 0 10px rgba(122, 184, 154, 0);
             transform: scale(1);
         }
         100% {
-            outline: 1px solid rgba(255, 255, 255, 0);
-            box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+            outline: 1px solid rgba(122, 184, 154, 0);
+            box-shadow: 0 0 0 0 rgba(122, 184, 154, 0);
         }
     }
 
@@ -323,5 +342,16 @@
     .fade-slide-enter-from {
         opacity: 0;
         transform: translateY(-10px);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .fade-slide-enter-active,
+        .chosen-card,
+        .drag-card,
+        .ghost-card,
+        .drop-highlight {
+            transition: none !important;
+            animation: none !important;
+        }
     }
 </style>

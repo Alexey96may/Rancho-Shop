@@ -15,7 +15,7 @@
 
 <template>
     <div
-        class="border-rancho-ink-800 bg-rancho-ink-900/50 hover:border-rancho-ink-700 group relative flex items-center justify-between overflow-hidden rounded-2xl border p-6 transition-colors"
+        class="border-rancho-ink-800 bg-rancho-ink-900/50 hover:border-rancho-ink-700 group relative flex items-center justify-between overflow-hidden rounded-2xl border px-4 py-6 transition-colors sm:p-6"
         role="region"
         :aria-label="`Статистика: ${label}`"
     >
@@ -25,7 +25,7 @@
             aria-hidden="true"
         ></div>
 
-        <div class="relative">
+        <div class="relative overflow-x-auto">
             <p
                 :class="[
                     labelColor === 'text-rancho-ink-400' ? 'group-hover:text-rancho-ink-200' : '',
@@ -36,7 +36,11 @@
                 {{ label }}
             </p>
 
-            <p class="mt-2 text-2xl font-black text-white" role="status" aria-atomic="true">
+            <p
+                class="mt-2 line-clamp-1 text-ellipsis text-xl font-black text-white sm:text-2xl"
+                role="status"
+                aria-atomic="true"
+            >
                 {{ value }}
             </p>
         </div>
@@ -45,7 +49,7 @@
             v-if="icon"
             class="bg-rancho-ink-800 group-hover:text-rancho-ink-950 group-hover:shadow-lg relative rounded-xl p-3 text-rancho-buttercup transition-all duration-300 group-hover:bg-rancho-buttercup group-hover:shadow-rancho-buttercup/20"
         >
-            <component :is="icon" class="h-6 w-6" aria-hidden="true" />
+            <component :is="icon" class="h-4 w-4 sm:h-6 sm:w-6" aria-hidden="true" />
         </div>
     </div>
 </template>

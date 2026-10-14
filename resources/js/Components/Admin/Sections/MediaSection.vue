@@ -38,7 +38,8 @@
 </script>
 
 <template>
-    <div class="animate-in fade-in zoom-in-95 space-y-12">
+    <div class="space-y-8 sm:space-y-12">
+        <!-- АУДИО -->
         <AudioUpload
             :model-value="modelValue"
             :existing-audio-url="existingVoiceUrl"
@@ -48,23 +49,29 @@
             @clear="clearNewVoice"
         />
 
-        <div class="space-y-6">
-            <div class="flex items-center justify-between px-2">
-                <label class="text-[10px] font-black uppercase tracking-widest text-slate-500"
-                    >Галерея изображений</label
+        <!-- ГАЛЕРЕЯ -->
+        <div class="space-y-4 sm:space-y-6">
+            <!-- Заголовок галереи -->
+            <div class="flex items-center justify-between gap-3 px-2">
+                <label
+                    class="text-ranko-ink-400 text-[10px] font-black uppercase tracking-[0.15em]"
                 >
-                <span class="text-[10px] font-bold uppercase text-slate-600"
-                    >Всего: {{ modelValue.gallery?.length || 0 }}</span
-                >
+                    Галерея изображений
+                </label>
+
+                <span class="text-ranko-ink-500 text-[10px] font-black uppercase tracking-wider">
+                    Всего: {{ modelValue.gallery?.length || 0 }}
+                </span>
             </div>
 
+            <!-- Сетка галереи + кнопка добавления -->
             <MediaGallery
                 v-model="modelValue.gallery"
                 @remove="removeGalleryItem"
                 @preview="openImage"
             >
                 <label
-                    class="relative flex aspect-square cursor-pointer flex-col items-center justify-center rounded-[2rem] border-2 border-dashed border-slate-800 bg-slate-950/20 transition-all hover:border-orange-500/50 hover:bg-slate-950/40"
+                    class="border-ranko-ink-700 bg-ranko-ink-950/50 hover:border-ranko-mint/50 hover:bg-ranko-ink-900 focus-within:border-ranko-mint focus-within:ring-ranko-mint/20 group relative flex aspect-square cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed transition-all focus-within:ring-4 sm:rounded-3xl"
                 >
                     <input
                         type="file"
@@ -73,21 +80,37 @@
                         @change="handleFile($event, 'gallery')"
                         class="sr-only"
                     />
-                    <PhotoIcon class="mb-2 h-8 w-8 text-slate-700" />
-                    <span class="text-[10px] font-black uppercase tracking-widest text-slate-500"
-                        >Добавить</span
+
+                    <PhotoIcon
+                        class="text-ranko-ink-500 group-hover:text-ranko-mint mb-2 h-7 w-7 transition-colors sm:h-8 sm:w-8"
+                        aria-hidden="true"
+                    />
+
+                    <span
+                        class="text-ranko-ink-500 group-hover:text-ranko-mint text-[10px] font-black uppercase tracking-widest transition-colors"
                     >
+                        Добавить
+                    </span>
                 </label>
             </MediaGallery>
 
-            <p
-                v-if="modelValue.errors.gallery"
-                class="animate-pulse text-center text-[10px] font-bold uppercase text-red-500"
+            <!-- Ошибка галереи -->
+            <Transition
+                enter-active-class="transition duration-200 ease-out"
+                enter-from-class="transform -translate-y-1 opacity-0"
+                enter-to-class="transform translate-y-0 opacity-100"
             >
-                {{ modelValue.errors.gallery }}
-            </p>
+                <p
+                    v-if="modelValue.errors.gallery"
+                    class="text-center text-[10px] font-bold uppercase tracking-wider text-rose-500"
+                    role="alert"
+                >
+                    {{ modelValue.errors.gallery }}
+                </p>
+            </Transition>
         </div>
 
+        <!-- МОДАЛКА ПРОСМОТРА -->
         <BaseModal :show="isModalOpen" variant="lightbox" @close="selectedImage = null">
             <AppImage
                 v-if="selectedImage"
@@ -97,14 +120,3 @@
         </BaseModal>
     </div>
 </template>
-
-<style scoped>
-    .fade-enter-active,
-    .fade-leave-active {
-        transition: opacity 0.3s ease;
-    }
-    .fade-enter-from,
-    .fade-leave-to {
-        opacity: 0;
-    }
-</style>

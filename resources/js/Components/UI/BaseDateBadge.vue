@@ -60,30 +60,34 @@
 
 <template>
     <div
-        class="flex items-center gap-3 rounded-2xl border border-slate-800 bg-slate-950/50 p-3 transition-colors"
-        :class="{ 'border-rose-500/20 bg-rose-950/5': isExpired }"
+        class="flex items-center gap-3 rounded-2xl border border-rancho-ink-800 bg-rancho-ink-950/50 p-3 transition-colors"
+        :class="{ 'border-rose-500/30 bg-rose-950/10': isExpired }"
     >
+        <!-- С датой -->
         <template v-if="parsedDate">
             <div
-                class="flex w-10 shrink-0 flex-col items-center overflow-hidden rounded-lg border bg-slate-900 transition-colors"
-                :class="isExpired ? 'border-rose-500/30' : 'border-orange-500/30'"
+                class="flex w-10 shrink-0 flex-col items-center overflow-hidden rounded-lg border bg-rancho-ink-900 transition-colors"
+                :class="isExpired ? 'border-rose-500/40' : 'border-rancho-mint/40'"
                 aria-hidden="true"
             >
                 <div
-                    class="w-full py-0.5 text-center text-[7px] font-black uppercase text-white transition-colors"
-                    :class="isExpired ? 'bg-rose-600' : 'bg-orange-600'"
+                    class="w-full py-0.5 text-center text-[7px] font-black uppercase transition-colors"
+                    :class="
+                        isExpired ? 'bg-rose-600 text-white' : 'bg-rancho-mint text-rancho-ink-950'
+                    "
                 >
                     {{ formattedMonth }}
                 </div>
+
                 <div class="text-lg font-black leading-tight text-white">
                     {{ formattedDay }}
                 </div>
             </div>
 
-            <div class="flex min-w-0 flex-col items-start">
+            <div class="flex min-w-0 flex-col items-start gap-1">
                 <span
                     class="text-[9px] font-black uppercase tracking-widest transition-colors"
-                    :class="isExpired ? 'text-rose-500' : 'text-slate-500'"
+                    :class="isExpired ? 'text-rose-400' : 'text-rancho-ink-500'"
                 >
                     {{ isExpired ? 'Истёк' : 'Истекает' }}
                 </span>
@@ -93,11 +97,11 @@
                     @click="toggleDataFormat"
                     :title="titleTooltip"
                     :aria-label="`${isExpired ? 'Истёк' : 'Истекает'}: ${currentTextValue}. ${titleTooltip}`"
-                    class="rounded text-left text-xs font-bold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+                    class="rounded text-left text-xs font-bold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-rancho-mint focus-visible:ring-offset-2 focus-visible:ring-offset-rancho-ink-950"
                     :class="[
                         isExpired
-                            ? 'text-rose-400/80 hover:text-rose-400'
-                            : 'text-white hover:text-orange-400',
+                            ? 'text-rose-300 hover:text-rose-200'
+                            : 'text-white hover:text-rancho-mint',
                     ]"
                 >
                     <Transition name="date-fade" mode="out-in">
@@ -109,14 +113,18 @@
             </div>
         </template>
 
+        <!-- Без даты (бессрочно) -->
         <template v-else>
-            <div class="flex items-center gap-3 text-slate-500" role="status">
-                <CalendarIcon class="h-5 w-5 text-slate-600" aria-hidden="true" />
-                <div class="flex flex-col">
-                    <span class="text-[9px] font-black uppercase tracking-widest text-slate-600">
+            <div class="flex items-center gap-3 text-rancho-ink-500" role="status">
+                <CalendarIcon class="h-5 w-5 text-rancho-ink-600" aria-hidden="true" />
+
+                <div class="flex flex-col gap-1">
+                    <span
+                        class="text-[9px] font-black uppercase tracking-widest text-rancho-ink-500"
+                    >
                         {{ label }}
                     </span>
-                    <span class="text-xs font-bold uppercase italic text-slate-400">
+                    <span class="text-xs font-bold uppercase italic text-rancho-ink-400">
                         {{ eternalText }}
                     </span>
                 </div>
@@ -141,5 +149,12 @@
     .date-fade-leave-to {
         opacity: 0;
         transform: translateY(-2px);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .date-fade-enter-active,
+        .date-fade-leave-active {
+            transition: none;
+        }
     }
 </style>

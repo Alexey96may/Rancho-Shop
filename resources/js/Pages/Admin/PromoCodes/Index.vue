@@ -1,5 +1,5 @@
 <script setup lang="ts">
-    import { PropType, watch } from 'vue';
+    import { type PropType, watch } from 'vue';
 
     import { router, useForm } from '@inertiajs/vue3';
 
@@ -91,27 +91,44 @@
         <AdminPageHeader title="Модерация промокодов" subtitle="Управление Промокодами магазина" />
     </Teleport>
 
-    <div class="animate-in fade-in space-y-8 duration-500">
-        <div class="flex flex-col flex-wrap items-center justify-between gap-4 sm:flex-row">
-            <div class="grid flex-1 grid-cols-1 gap-4 sm:grid-cols-2 lg:flex lg:items-center">
-                <AdminSearchInput v-model="filterForm.search" placeholder="Поиск по коду..." />
+    <div class="space-y-10">
+        <!-- SEARCH + FILTERS + CREATE -->
+        <div class="flex flex-col gap-8">
+            <div class="flex flex-col-reverse justify-between gap-4 sm:flex-row">
+                <AdminSearchInput
+                    v-model="filterForm.search"
+                    placeholder="Поиск по коду..."
+                    class="sm:col-span-2 lg:max-w-md"
+                />
 
+                <BaseCreateButton
+                    label="Создать код"
+                    class="self-end"
+                    @click="navigateWithContext('admin.promocodes', 'create')"
+                />
+            </div>
+
+            <div
+                class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:flex lg:flex-1 lg:items-end lg:gap-4"
+            >
                 <BaseSelect
                     v-model="filterForm.type"
                     :options="typeOptions"
                     placeholder="Все типы"
-                    valueKey="value"
-                    labelKey="label"
+                    label="Тип"
+                    value-key="value"
+                    label-key="label"
                     variant="admin"
-                    class="lg:w-64"
+                    class="w-full lg:w-56"
                 />
 
                 <BaseSelect
                     v-model="filterForm.status"
                     :options="statusOptions"
                     placeholder="Все статусы"
-                    valueKey="value"
-                    labelKey="label"
+                    label="Статус"
+                    value-key="value"
+                    label-key="label"
                     variant="admin"
                     class="w-full lg:w-56"
                 />
@@ -120,25 +137,21 @@
                     v-model="filterForm.sort"
                     :options="sortOptions"
                     placeholder="По умолчанию"
-                    valueKey="value"
-                    labelKey="label"
+                    label="Сортировка"
+                    value-key="value"
+                    label-key="label"
                     variant="admin"
                     class="w-full lg:w-56"
                 />
             </div>
-
-            <BaseCreateButton
-                class="self-end"
-                label="Создать код"
-                @click="navigateWithContext('admin.promocodes', 'create')"
-            />
         </div>
 
+        <!-- LIST -->
         <Transition name="fade-slide" mode="out-in">
             <div
                 v-if="promoCodes.data.length"
                 key="promos"
-                class="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3"
+                class="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 xl:grid-cols-3"
             >
                 <TransitionGroup name="stagger">
                     <PromoCodeCard
@@ -155,7 +168,8 @@
                                 `Удаление промокода «${promo.code}»`,
                             )
                         "
-                /></TransitionGroup>
+                    />
+                </TransitionGroup>
             </div>
 
             <AdminLoader v-else-if="isFiltering" key="loading" text="Синхронизация" />
@@ -179,8 +193,9 @@
             />
         </Transition>
 
+        <!-- PAGINATION -->
         <Transition name="fade-slide" mode="out-in">
-            <AdminPagination v-show="!isFiltering" :links="promoCodes.meta.links" />
+            <AdminPagination v-show="!isFiltering" :links="promoCodes.meta.links" theme="dark" />
         </Transition>
     </div>
 </template>
@@ -218,5 +233,14 @@
     .fade-slide-enter-from {
         opacity: 0;
         transform: translateY(-10px);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .stagger-enter-active,
+        .stagger-leave-active,
+        .stagger-move,
+        .fade-slide-enter-active {
+            transition: none;
+        }
     }
 </style>

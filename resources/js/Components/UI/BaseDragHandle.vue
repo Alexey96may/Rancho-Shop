@@ -19,8 +19,8 @@
         class="drag-handle flex shrink-0 items-center justify-center transition-all"
         :class="[
             disabled
-                ? 'cursor-not-allowed text-slate-800 opacity-20'
-                : 'cursor-grab text-slate-700 hover:text-slate-400 active:scale-95 active:cursor-grabbing',
+                ? 'cursor-not-allowed text-rancho-ink-800 opacity-20'
+                : 'cursor-grab text-rancho-ink-600 hover:text-rancho-ink-400 active:scale-95 active:cursor-grabbing',
         ]"
     >
         <div class="p-2">

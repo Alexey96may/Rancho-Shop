@@ -36,16 +36,16 @@
         :aria-label="areaLabel"
         :title="title"
         @click="handleClick"
-        class="group relative inline-flex items-center justify-center rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-slate-900"
+        class="focus-visible:ring-offset-rancho-ink-950 group relative inline-flex items-center justify-center rounded-xl transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-rancho-buttercup/40 focus-visible:ring-offset-2"
         :class="[
             isDisabled
-                ? 'cursor-not-allowed bg-slate-800 text-slate-600 opacity-40'
-                : 'bg-slate-800 text-slate-400 hover:bg-orange-600 hover:text-white active:scale-95',
+                ? 'bg-rancho-ink-800 text-rancho-ink-600 cursor-not-allowed opacity-40'
+                : 'bg-rancho-ink-800 text-rancho-ink-400 hover:text-rancho-ink-950 hover:bg-rancho-buttercup active:scale-95',
         ]"
     >
         <div class="relative flex items-center justify-center p-2.5">
             <component
-                :is="props.icon"
+                :is="icon"
                 class="h-5 w-5 transition-transform"
                 :class="{ 'group-hover:scale-110': !isDisabled }"
                 aria-hidden="true"

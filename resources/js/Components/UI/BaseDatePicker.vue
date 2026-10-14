@@ -36,12 +36,12 @@
 </script>
 
 <template>
-    <div class="flex flex-col space-y-2" :class="{ 'pointer-events-none opacity-60': disabled }">
+    <div class="flex flex-col gap-2" :class="{ 'pointer-events-none opacity-60': disabled }">
         <label
             v-if="label"
             :for="inputId"
-            class="ml-4 text-[10px] font-black uppercase tracking-widest transition-colors"
-            :class="error ? 'text-red-500' : 'text-slate-500'"
+            class="ml-2 text-[10px] font-black uppercase tracking-[0.15em] transition-colors"
+            :class="error ? 'text-rose-500' : 'text-rancho-ink-500'"
         >
             {{ label }}
         </label>
@@ -58,11 +58,11 @@
                 <div class="group relative">
                     <input
                         :id="inputId"
-                        class="w-full cursor-pointer rounded-2xl border bg-slate-950 p-4 font-bold text-white transition-all focus:ring-0"
+                        class="w-full cursor-pointer rounded-2xl border bg-rancho-ink-950 px-4 py-4 text-sm font-bold text-white placeholder:text-rancho-ink-500 focus:outline-none focus:ring-0"
                         :class="
                             error
-                                ? 'border-red-500/50 focus:border-red-500'
-                                : 'border-slate-800 focus:border-orange-500'
+                                ? 'border-rose-500/50 focus:border-rose-500'
+                                : 'border-rancho-ink-800 focus:border-rancho-mint'
                         "
                         :value="inputValue"
                         v-on="inputEvents"
@@ -77,25 +77,27 @@
                             v-if="model"
                             type="button"
                             @click.stop="clearDate"
-                            class="text-slate-600 transition-colors hover:text-white"
+                            class="rounded text-rancho-ink-600 transition-colors hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-rancho-mint/40"
+                            aria-label="Очистить дату"
                         >
-                            <XMarkIcon class="h-4 w-4" />
+                            <XMarkIcon class="h-4 w-4" aria-hidden="true" />
                         </button>
 
                         <CalendarIcon
                             class="h-5 w-5 transition-colors"
                             :class="
                                 error
-                                    ? 'text-red-500/50'
-                                    : 'text-slate-500 group-hover:text-slate-300'
+                                    ? 'text-rose-500/50'
+                                    : 'text-rancho-ink-500 group-hover:text-rancho-ink-300'
                             "
+                            aria-hidden="true"
                         />
                     </div>
                 </div>
             </template>
         </DatePicker>
 
-        <transition
+        <Transition
             enter-active-class="transition duration-200 ease-out"
             enter-from-class="transform -translate-y-1 opacity-0"
             enter-to-class="transform translate-y-0 opacity-100"
@@ -103,10 +105,11 @@
             <p
                 v-if="error"
                 :id="errorId"
-                class="ml-4 text-[10px] font-bold uppercase italic text-red-500"
+                class="ml-4 text-[10px] font-bold uppercase italic text-rose-500"
+                role="alert"
             >
                 {{ error }}
             </p>
-        </transition>
+        </Transition>
     </div>
 </template>

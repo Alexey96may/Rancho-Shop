@@ -1,7 +1,7 @@
 <script setup lang="ts">
-    import { PropType } from 'vue';
+    import { type PropType } from 'vue';
 
-    import { InertiaForm, useForm } from '@inertiajs/vue3';
+    import { type InertiaForm, useForm } from '@inertiajs/vue3';
 
     import AdminNumberInput from '@/Components/Admin/UI/AdminNumberInput.vue';
     import BaseCancelButton from '@/Components/UI/BaseCancelButton.vue';
@@ -63,10 +63,10 @@
 <template>
     <form
         @submit.prevent="handleSubmit"
-        class="shadow-2xl max-w-4xl space-y-8 rounded-[2.5rem] border border-slate-800 bg-slate-900/30 p-8"
+        class="shadow-2xl space-y-6 rounded-2xl border border-rancho-ink-800 bg-rancho-ink-900/30 p-4 sm:space-y-8 sm:rounded-3xl sm:p-6 md:p-8"
         aria-labelledby="form-title"
     >
-        <div class="grid grid-cols-1 gap-8 md:grid-cols-2">
+        <div class="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 md:gap-8">
             <BaseInput
                 v-model="form.code"
                 v-model:error="form.errors.code"
@@ -74,6 +74,7 @@
                 placeholder="SUMMER2026"
                 uppercase
                 :disabled="form.processing"
+                theme="dark"
             />
 
             <BaseInput
@@ -81,6 +82,7 @@
                 v-model:error="form.errors.description"
                 label="Описание (необязательно)"
                 placeholder="Скидка для постоянных клиентов"
+                theme="dark"
             />
 
             <BaseSelect
@@ -89,16 +91,16 @@
                 :options="typeOptions"
                 variant="admin"
                 label="Тип скидки"
-                labelKey="label"
-                valueKey="value"
-                class="lg:w-64"
+                label-key="label"
+                value-key="value"
+                class="w-full"
             />
 
             <AdminNumberInput
                 v-model="form.value"
                 v-model:error="form.errors.value"
                 :min="0"
-                :label="'Значение ' + '(' + (form.type === 'percent' ? '%' : 'в копейках') + ')'"
+                :label="'Значение (' + (form.type === 'percent' ? '%' : 'в копейках') + ')'"
                 :disabled="form.processing"
             />
 
@@ -131,32 +133,35 @@
                 label="Лимит использований"
             />
 
-            <div class="col-span-full pt-4">
+            <div class="col-span-full pt-2 sm:pt-4">
                 <BaseSwitch
                     v-model="form.is_active"
                     label="Статус промокода"
                     active-text="Промокод активен"
                     inactive-text="В черновик"
                     :disabled="form.processing"
+                    theme="dark"
                 />
             </div>
         </div>
 
-        <div class="flex items-center gap-4 border-t border-slate-800/50 pt-8">
-            <BaseCancelButton :href="returnPage" label="Назад" />
-
-            <BaseSubmitButton
-                :processing="form.processing"
-                :is-edit="isEdit"
-                :label="isEdit ? 'Сохранить изменения' : 'Создать промокод'"
-            />
-
+        <div class="flex flex-col gap-8 border-t border-rancho-ink-800/60 pt-6 sm:pt-8">
             <BaseStatusToggle
                 v-if="!isEdit"
                 v-model="form.create_another"
-                label="Создать еще один"
+                label="Создать потом ещё один"
                 :disabled="form.processing"
             />
+
+            <div class="flex flex-wrap items-center justify-between gap-2">
+                <BaseCancelButton :href="returnPage" label="Назад" theme="dark" />
+
+                <BaseSubmitButton
+                    :processing="form.processing"
+                    :is-edit="isEdit"
+                    :label="isEdit ? 'Сохранить изменения' : 'Создать промокод'"
+                />
+            </div>
         </div>
     </form>
 </template>

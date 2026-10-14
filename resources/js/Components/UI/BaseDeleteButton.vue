@@ -33,9 +33,9 @@
         :aria-label="areaLabel"
         :title="title || undefined"
         :class="[
-            'flex items-center gap-2 p-2 text-[10px] font-black uppercase transition-all',
+            'flex items-center gap-2 rounded-lg p-2 text-[10px] font-black uppercase outline-none transition-all focus-visible:ring-2 focus-visible:ring-rose-500/40',
             disabled
-                ? 'cursor-not-allowed text-slate-600 opacity-30'
+                ? 'text-rancho-ink-600 cursor-not-allowed opacity-30'
                 : 'text-rancho-ember hover:text-rancho-ember/70',
         ]"
     >

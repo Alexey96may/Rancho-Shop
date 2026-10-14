@@ -1,5 +1,5 @@
 <script setup lang="ts">
-    import { FunctionalComponent, HTMLAttributes, VNodeProps, computed } from 'vue';
+    import { type FunctionalComponent, type HTMLAttributes, type VNodeProps, computed } from 'vue';
 
     import { TrashIcon } from '@heroicons/vue/24/outline';
 
@@ -30,14 +30,15 @@
         :disabled="isDisabled"
         :aria-label="title"
         :title="title"
-        class="group relative inline-flex items-center justify-center rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-slate-900"
+        class="focus-visible:ring-offset-rancho-ink-950 group relative inline-flex items-center justify-center rounded-xl transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/40 focus-visible:ring-offset-2"
         :class="[
             isDisabled
-                ? 'cursor-not-allowed bg-slate-800 text-slate-500 opacity-40'
-                : 'bg-red-500/10 text-red-500/60 hover:bg-red-500/20 hover:text-red-500 active:scale-95',
+                ? 'bg-rancho-ink-800 text-rancho-ink-600 cursor-not-allowed opacity-40'
+                : 'bg-rancho-ink-800 text-rancho-ink-400 hover:bg-rose-500 hover:text-white active:scale-95',
         ]"
     >
         <div class="relative flex items-center justify-center p-2.5">
+            <!-- Спиннер -->
             <svg
                 v-if="loading"
                 class="h-5 w-5 animate-spin"
@@ -53,14 +54,15 @@
                     r="10"
                     stroke="currentColor"
                     stroke-width="4"
-                ></circle>
+                />
                 <path
                     class="opacity-75"
                     fill="currentColor"
                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                ></path>
+                />
             </svg>
 
+            <!-- Иконка -->
             <component
                 v-else
                 :is="icon"

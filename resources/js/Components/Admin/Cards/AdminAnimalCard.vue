@@ -7,14 +7,18 @@
 
     import AdminDeleteButton from '@/Components/Admin/UI/AdminDeleteButton.vue';
     import AdminEditButton from '@/Components/Admin/UI/AdminEditButton.vue';
-    import { AdminAnimal, SharedData } from '@/types';
+    import type { AdminAnimal, SharedData } from '@/types';
 
     defineProps<{
         animal: AdminAnimal;
         disabled: boolean;
     }>();
 
-    defineEmits(['edit', 'delete', 'restore']);
+    defineEmits<{
+        (e: 'edit', animal: AdminAnimal): void;
+        (e: 'delete', id: number): void;
+        (e: 'restore', id: number, name: string): void;
+    }>();
 
     const playVoice = (url: string) => {
         const audio = new Audio(url);
@@ -32,10 +36,11 @@
 <template>
     <div
         role="listitem"
-        class="group relative flex flex-col overflow-hidden rounded-[2.5rem] border border-slate-900 bg-slate-900/30 p-5 transition-all hover:border-orange-500/40 hover:bg-slate-900/60"
-        :class="{ 'border-red-500/10 bg-red-950/5 opacity-75': animal.is_trashed }"
+        class="border-rancho-ink-800 bg-rancho-ink-900/30 hover:border-rancho-mint/40 hover:bg-rancho-ink-900/60 group relative flex flex-col overflow-hidden rounded-3xl border p-5 transition-all"
+        :class="{ 'border-rose-500/20 bg-rose-950/5 opacity-75': animal.is_trashed }"
     >
-        <div class="relative h-48 w-full overflow-hidden rounded-[2rem] bg-slate-800">
+        <!-- IMAGE -->
+        <div class="bg-rancho-ink-800 relative h-48 w-full overflow-hidden rounded-2xl">
             <AppImage
                 :src="animal?.avatars?.[0] || ''"
                 :type="'thumbnails'"
@@ -45,61 +50,79 @@
                 :class="{ 'contrast-125 grayscale': animal.is_trashed }"
             />
 
+            <!-- Бейдж статуса -->
             <div class="absolute right-3 top-3 flex gap-2">
                 <span
-                    class="rounded-full bg-slate-950/60 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-white backdrop-blur-md"
-                    :class="{ 'border border-red-500/30 text-red-400': animal.is_trashed }"
+                    class="bg-rancho-ink-950/70 rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-widest text-white backdrop-blur-md"
+                    :class="
+                        animal.is_trashed
+                            ? 'border border-rose-500/40 text-rose-300'
+                            : 'border-rancho-ink-700 border'
+                    "
                 >
                     {{ animal.is_trashed ? 'В КОРЗИНЕ' : animal.status }}
                 </span>
             </div>
         </div>
-        <div class="mt-5 flex-1 px-2">
-            <div class="flex items-center justify-between">
-                <span class="text-[10px] font-bold uppercase tracking-[0.2em] text-orange-500">
+
+        <!-- CONTENT -->
+        <div class="mt-8 flex-1 px-2">
+            <div class="mb-2 flex items-center justify-between gap-3">
+                <span
+                    class="text-rancho-mint truncate text-[10px] font-black uppercase tracking-[0.2em]"
+                >
                     {{ animal.category?.name || 'Без категории' }}
                 </span>
+
+                <!-- Индикатор статуса -->
                 <div
-                    class="h-2 w-2 rounded-full"
+                    class="h-2 w-2 shrink-0 rounded-full"
                     :class="
                         animal.is_trashed
-                            ? 'bg-red-700 shadow-[0_0_8px_#b91c1c]'
+                            ? 'bg-rose-700 shadow-[0_0_8px_#b91c1c]'
                             : animal.is_active
-                              ? 'bg-emerald-500 shadow-[0_0_8px_#10b981]'
-                              : 'bg-red-500'
+                              ? 'bg-rancho-mint shadow-[0_0_8px_#7AB89A]'
+                              : 'bg-rose-500'
                     "
                     :aria-label="
                         animal.is_trashed ? 'В корзине' : animal.is_active ? 'Активен' : 'В архиве'
                     "
+                    role="status"
                 ></div>
             </div>
 
-            <h4 class="mt-2 line-clamp-1 text-xl font-black uppercase tracking-tight text-white">
+            <h4 class="mt-2 line-clamp-1 text-xl font-black tracking-tight text-white">
                 {{ animal.name }}
             </h4>
 
-            <div
-                v-if="animal.family?.parent"
-                class="mt-2 flex items-center gap-1.5 text-xs text-slate-500"
-            >
-                <span class="font-bold uppercase tracking-tighter text-slate-600">Родитель:</span>
-                <span class="truncate">{{ animal.family?.parent?.name }}</span>
+            <!-- Родитель -->
+            <div v-if="animal.family?.parent" class="mt-2 flex items-center gap-1.5 text-xs">
+                <span class="text-rancho-ink-500 font-bold tracking-tighter"> Родитель: </span>
+                <span class="text-rancho-ink-300 truncate">
+                    {{ animal.family?.parent?.name }}
+                </span>
             </div>
         </div>
 
-        <div class="mt-6 flex items-center justify-between border-t border-slate-800/50 px-2 pt-4">
+        <!-- FOOTER -->
+        <div
+            class="border-rancho-ink-800/70 mt-6 flex items-center justify-between border-t px-2 pt-4"
+        >
             <div class="flex gap-2">
                 <button
                     v-if="animal.voice_url && !animal.is_trashed"
+                    type="button"
                     @click="playVoice(animal.voice_url)"
-                    class="rounded-xl bg-slate-800 p-2 text-slate-400 hover:text-orange-500"
+                    class="bg-rancho-ink-800 text-rancho-ink-400 hover:bg-rancho-ink-700 hover:text-rancho-mint focus-visible:ring-rancho-mint/40 flex h-9 w-9 items-center justify-center rounded-xl transition-colors focus:outline-none focus-visible:ring-2"
                     title="Прослушать голос"
+                    aria-label="Прослушать голос животного"
                 >
-                    <SpeakerWaveIcon class="h-5 w-5" />
+                    <SpeakerWaveIcon class="h-4 w-4 sm:h-5 sm:w-5" aria-hidden="true" />
                 </button>
             </div>
+
             <div
-                class="flex gap-1 transition-opacity duration-300 lg:opacity-0 lg:group-hover:opacity-100"
+                class="flex gap-2 transition-opacity duration-300 lg:opacity-0 lg:group-hover:opacity-100"
             >
                 <AdminEditButton
                     v-if="animal.is_trashed && can.restore"

@@ -28,15 +28,18 @@
 </script>
 
 <template>
-    <div class="space-y-6 rounded-[2.5rem] border border-slate-800 bg-slate-900/30 p-8">
+    <div
+        class="border-rancho-ink-800 bg-rancho-ink-900/30 space-y-6 rounded-2xl border p-4 sm:rounded-3xl sm:p-6 md:p-8"
+    >
         <!-- Основное -->
-        <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+        <div class="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2">
             <BaseInput
                 v-model="title"
                 v-model:error="errors.title"
                 label="Заголовок страницы"
                 placeholder="Например: О нас"
                 :disabled="disabled"
+                theme="dark"
             />
 
             <BaseInput
@@ -45,11 +48,12 @@
                 label="URL Путь (Slug)"
                 placeholder="Например: about_us"
                 :disabled="disabled"
+                theme="dark"
             />
         </div>
 
         <!-- Тип и шаблон -->
-        <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+        <div class="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2">
             <BaseSelect
                 v-model="type"
                 v-model:error="errors.type"
@@ -76,6 +80,7 @@
             active-text="Посетители могут оставлять отзывы"
             inactive-text="Комментарии отключены"
             :disabled="disabled"
+            theme="dark"
         />
 
         <!-- Навигация в меню -->
@@ -87,6 +92,7 @@
                 active-text="Пункт появится в шапке сайта"
                 inactive-text="Скрыто из меню"
                 :disabled="disabled"
+                theme="dark"
             />
 
             <Transition
@@ -106,7 +112,8 @@
                         placeholder="0"
                         :disabled="disabled"
                     />
-                    <p class="mt-1.5 px-1 text-[10px] text-slate-500">
+
+                    <p class="text-rancho-ink-500 mt-1.5 px-1 text-[10px]">
                         Меньше число — выше пункт. Одинаковые значения сортируются по алфавиту.
                     </p>
                 </div>

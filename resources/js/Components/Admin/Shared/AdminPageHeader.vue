@@ -5,17 +5,18 @@
     }
 
     defineProps<Props>();
-
-    const emit = defineEmits<{
-        (e: 'action'): void;
-    }>();
 </script>
 
 <template>
-    <div>
-        <h1 class="text-xl font-black text-white">{{ title }}</h1>
+    <div class="min-w-0">
+        <h1 class="line-clamp-1 truncate text-sm font-black text-white sm:text-xl">
+            {{ title }}
+        </h1>
 
-        <p class="mt-1 text-xs uppercase tracking-tighter text-slate-500">
+        <p
+            v-if="subtitle"
+            class="text-rancho-ink-400 mt-0.5 line-clamp-1 truncate text-[10px] tracking-tight sm:text-xs"
+        >
             {{ subtitle }}
         </p>
     </div>
