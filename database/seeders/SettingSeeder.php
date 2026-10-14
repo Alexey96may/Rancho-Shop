@@ -40,19 +40,19 @@ class SettingSeeder extends Seeder
 
                     // (polyline)
                     'path' => [
-                                [34.30457, 44.85014],
-                                [34.32541, 44.83384],
-                                [34.12673, 44.94398],
-                                [34.11062, 44.95797],
-                                [34.09723, 44.97342],
-                                [34.07753, 44.9583],
-                                [34.07865, 44.95596],
-                                [34.09397, 44.94407],
-                                [34.10249, 44.95186],
-                                [34.11062, 44.95797],
-                                [34.12673, 44.94398],
-                                [34.30457, 44.85014],
-                            ],
+                        [34.30457, 44.85014],
+                        [34.32541, 44.83384],
+                        [34.12673, 44.94398],
+                        [34.11062, 44.95797],
+                        [34.09723, 44.97342],
+                        [34.07753, 44.9583],
+                        [34.07865, 44.95596],
+                        [34.09397, 44.94407],
+                        [34.10249, 44.95186],
+                        [34.11062, 44.95797],
+                        [34.12673, 44.94398],
+                        [34.30457, 44.85014],
+                    ],
 
                     // corridor width (meters)
                     'radius' => 700,
@@ -76,10 +76,16 @@ class SettingSeeder extends Seeder
             ['key' => 'animals_per_page', 'value' => '8', 'type' => 'integer'],
             ['key' => 'comments_per_page', 'value' => '8', 'type' => 'integer'],
             ['key' => 'orders_per_page', 'value' => '8', 'type' => 'integer'],
-            
+
             ['key' => 'featured_animals_limit', 'value' => '4', 'type' => 'integer'],
             ['key' => 'featured_products_limit', 'value' => '6', 'type' => 'integer'],
             ['key' => 'featured_comments_limit', 'value' => '6', 'type' => 'integer'],
+
+            // --- Payment (direct transfer) ---
+            ['key' => 'payment_direct_phone',     'value' => '+7 (978) 000-00-0',           'type' => 'string'],
+            ['key' => 'payment_direct_bank',      'value' => 'Мой Банк',                     'type' => 'string'],
+            ['key' => 'payment_direct_recipient', 'value' => 'Иван И.',                   'type' => 'string'],
+            ['key' => 'payment_direct_note_template', 'value' => 'Оплата заказа',            'type' => 'string'],
 
             // --- Marketing ---
             ['key' => 'header_announcement', 'value' => '🐄 Свежий удой ожидается в этот четверг! Успейте заказать.', 'type' => 'string'],

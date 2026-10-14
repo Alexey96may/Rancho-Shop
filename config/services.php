@@ -50,13 +50,6 @@ return [
         'secret_key' => env('PAYMASTER_SECRET_KEY'),
     ],
 
-    'direct' => [
-        'phone' => env('PAYMENT_DIRECT_PHONE'),
-        'bank' => env('PAYMENT_DIRECT_BANK'),
-        'recipient' => env('PAYMENT_DIRECT_RECIPIENT'),
-        'note' => env('PAYMENT_DIRECT_NOTE_TEMPLATE', 'Оплата заказа #:order_id'),
-    ],
-
     'tinkoff' => [
         'terminal_key' => env('TINKOFF_TERMINAL_KEY'),
         'secret_key' => env('TINKOFF_SECRET_KEY'),
@@ -67,6 +60,11 @@ return [
         'shop_id' => env('YOOKASSA_SHOP_ID'),
         'secret_key' => env('YOOKASSA_SECRET_KEY'),
         'api_url' => env('YOOKASSA_API_URL', 'https://api.yookassa.ru/v3/'),
+    ],
+
+    'telegram' => [
+        'bot_token' => env('TELEGRAM_BOT_TOKEN'),
+        'admin_chat_id' => env('TELEGRAM_ADMIN_CHAT_ID'),
     ],
 
 ];

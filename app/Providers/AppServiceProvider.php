@@ -35,19 +35,19 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         // Автоматический выбор платежного драйвера из .env
-        $this->app->bind(PaymentGatewayInterface::class, function () {
+        $this->app->bind(PaymentGatewayInterface::class, function ($app) {
             $driver = config('services.payment.driver', 'fake');
 
-            if (app()->isProduction() && config('services.payment.driver') === 'fake') {
+            if (app()->isProduction() && $driver === 'fake') {
                 throw new \RuntimeException('PAYMENT_DRIVER=fake недопустим в production');
             }
 
             return match ($driver) {
-                'tinkoff' => new TinkoffGateway,
-                'yookassa' => new YooKassaGateway,
-                'paymaster' => new PayMasterGateway,
-                'direct' => new DirectPaymentGateway,
-                default => new FakePaymentGateway,
+                'tinkoff' => $app->make(TinkoffGateway::class),
+                'yookassa' => $app->make(YooKassaGateway::class),
+                'paymaster' => $app->make(PayMasterGateway::class),
+                'direct' => $app->make(DirectPaymentGateway::class),
+                default => $app->make(FakePaymentGateway::class),
             };
         });
     }

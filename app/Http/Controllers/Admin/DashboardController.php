@@ -10,6 +10,7 @@ use App\Models\Comment;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductVariant;
+use App\Models\PromoCode;
 use App\Models\User;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -54,6 +55,11 @@ class DashboardController extends Controller
                         ->where('product_variants.stock', '>', 0)
                         ->whereColumn('product_variants.stock', '<', 'units.low_stock_threshold')
                         ->count(),
+                ],
+                'promocodes' => [
+                    'total' => PromoCode::count(),
+                    'active' => PromoCode::active()->count(),
+                    'used' => PromoCode::where('used_count', '>', 0)->count(),
                 ],
             ],
         ]);

@@ -102,6 +102,7 @@ export interface SharedData extends PageProps {
     };
     flash: FlashPayload;
     permissions: Permission[];
+
     [key: string]: any;
 }
 

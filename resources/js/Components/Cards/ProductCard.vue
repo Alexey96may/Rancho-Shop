@@ -36,14 +36,14 @@
         class="group flex h-full flex-col overflow-hidden rounded-2xl border transition-all duration-300"
         :class="[
             isAvailable
-                ? 'border-rancho-ink-200 hover:border-rancho-ink-300 hover:shadow-xl bg-white hover:-translate-y-0.5'
-                : 'border-rancho-ink-200 bg-rancho-ink-50 hover:shadow-sm opacity-80',
+                ? 'hover:shadow-xl border-rancho-ink-200 bg-white hover:-translate-y-0.5 hover:border-rancho-ink-300'
+                : 'hover:shadow-sm border-rancho-ink-200 bg-rancho-ink-50 opacity-80',
         ]"
     >
         <!-- Ссылка на товар / Фото -->
         <Link
             :href="route('catalog.show', product.slug)"
-            class="bg-rancho-ink-50 relative aspect-square max-h-48 overflow-hidden sm:max-h-64"
+            class="relative aspect-square max-h-48 overflow-hidden bg-rancho-ink-50 sm:max-h-64"
         >
             <AppImage
                 :alt="product.name"
@@ -71,7 +71,7 @@
                 <!-- Плашка при отсутствии варианта -->
                 <span
                     v-else
-                    class="bg-rancho-ink-800 text-rancho-ink-100 shadow-sm rounded-lg px-2 py-1 text-[10px] font-black uppercase tracking-wider"
+                    class="shadow-sm rounded-lg bg-rancho-ink-800 px-2 py-1 text-[10px] font-black uppercase tracking-wider text-rancho-ink-100"
                 >
                     Нет в наличии
                 </span>
@@ -81,7 +81,7 @@
         <!-- Контент карточки -->
         <div class="flex flex-grow flex-col gap-6 p-5">
             <div class="">
-                <div class="text-rancho-ember mb-1 text-[10px] font-bold uppercase tracking-widest">
+                <div class="mb-1 text-[10px] font-bold uppercase tracking-widest text-rancho-ember">
                     {{ product.category?.name }}
                 </div>
 
@@ -97,26 +97,26 @@
             <!-- Блок с ценой (если вариант есть) -->
             <div v-if="isAvailable" class="flex items-center gap-3">
                 <span class="text-xl font-black text-rancho-forest">
-                    {{ formatMoney(product.default_variant?.price) }}
+                    {{ formatMoney(product?.default_variant?.price) }}
                 </span>
 
                 <div v-if="discountBadge" class="flex flex-col">
-                    <span class="text-rancho-ink-400 text-xs leading-none line-through">
-                        {{ formatMoney(product.default_variant?.old_price) }}
+                    <span class="text-xs leading-none text-rancho-ink-400 line-through">
+                        {{ formatMoney(product?.default_variant?.old_price) }}
                     </span>
-                    <span class="text-rancho-ember text-[10px] font-bold">
+                    <span class="text-[10px] font-bold text-rancho-ember">
                         -{{ discountBadge }}%
                     </span>
                 </div>
 
-                <span class="text-rancho-ink-500 ml-auto text-sm">
+                <span class="ml-auto text-sm text-rancho-ink-500">
                     / {{ product.default_variant?.unit?.short ?? 'шт' }}
                 </span>
             </div>
 
             <!-- Заглушка цены (если варианта нет) -->
             <div v-else class="flex min-h-[36px] items-center justify-between">
-                <span class="text-rancho-ink-500 w-full text-center text-sm font-semibold">
+                <span class="w-full text-center text-sm font-semibold text-rancho-ink-500">
                     Товар недоступен
                 </span>
             </div>
@@ -128,7 +128,7 @@
                 <button
                     v-else
                     disabled
-                    class="bg-rancho-ink-200 text-rancho-ink-500 w-full cursor-not-allowed rounded-xl py-3 text-center text-xs font-bold transition-colors"
+                    class="w-full cursor-not-allowed rounded-xl bg-rancho-ink-200 py-3 text-center text-xs font-bold text-rancho-ink-500 transition-colors"
                 >
                     Нельзя заказать
                 </button>

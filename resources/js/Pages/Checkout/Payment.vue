@@ -60,12 +60,12 @@
         <Head title="Оплата заказа" />
 
         <div class="mx-auto max-w-2xl py-12">
-            <div class="border-rancho-ink-200 shadow-sm rounded-2xl border bg-white p-6 sm:p-8">
+            <div class="shadow-sm rounded-2xl border border-rancho-ink-200 bg-white p-6 sm:p-8">
                 <h1 v-scroll-reveal class="text-xl font-black text-rancho-forest sm:text-2xl">
                     Оплата заказа #{{ order.id }}
                 </h1>
 
-                <p v-scroll-reveal class="text-rancho-ink-600 mt-1.5 text-sm">
+                <p v-scroll-reveal class="mt-1.5 text-sm text-rancho-ink-600">
                     К оплате:
                     <span class="font-black text-rancho-forest">
                         {{ computedTotalPrice }}
@@ -75,11 +75,11 @@
                 <!-- 1. REDIRECT: ЮKassa / Тинькофф / PayMaster -->
                 <div v-if="payment.type === 'redirect'" v-scroll-reveal class="mt-8 text-center">
                     <div
-                        class="border-rancho-ink-200 inline-block h-8 w-8 animate-spin rounded-full border-4 border-t-rancho-pine"
+                        class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-rancho-ink-200 border-t-rancho-pine"
                         aria-hidden="true"
                     ></div>
 
-                    <p class="text-rancho-ink-600 mt-4 text-sm">
+                    <p class="mt-4 text-sm text-rancho-ink-600">
                         Перенаправление на платёжный шлюз...
                     </p>
 
@@ -112,30 +112,39 @@
 
                 <!-- 2. DIRECT: ручной перевод (СБП / карта) -->
                 <div v-else-if="payment.type === 'direct'" v-scroll-reveal class="mt-6 space-y-4">
-                    <div class="border-rancho-ink-200 bg-rancho-ink-50 rounded-xl border p-4">
+                    <div class="rounded-xl border border-rancho-ink-200 bg-rancho-ink-50 p-4">
                         <h3 class="text-sm font-black uppercase tracking-wider text-rancho-forest">
                             Реквизиты для перевода
                         </h3>
 
                         <dl class="mt-3 space-y-2 text-sm">
                             <div class="flex flex-col gap-0.5 sm:flex-row sm:gap-2">
-                                <dt class="text-rancho-ink-600 font-bold sm:w-40">Телефон:</dt>
+                                <dt class="font-bold text-rancho-ink-600 sm:w-40">Телефон:</dt>
                                 <dd class="text-rancho-forest">{{ payment.details?.phone }}</dd>
                             </div>
                             <div class="flex flex-col gap-0.5 sm:flex-row sm:gap-2">
-                                <dt class="text-rancho-ink-600 font-bold sm:w-40">Банк:</dt>
+                                <dt class="font-bold text-rancho-ink-600 sm:w-40">Банк:</dt>
                                 <dd class="text-rancho-forest">{{ payment.details?.bank }}</dd>
                             </div>
                             <div class="flex flex-col gap-0.5 sm:flex-row sm:gap-2">
-                                <dt class="text-rancho-ink-600 font-bold sm:w-40">Получатель:</dt>
+                                <dt class="font-bold text-rancho-ink-600 sm:w-40">Получатель:</dt>
                                 <dd class="text-rancho-forest">
                                     {{ payment.details?.recipient }}
+                                </dd>
+                            </div>
+                            <div
+                                v-if="payment.details?.note"
+                                class="flex flex-col gap-0.5 sm:flex-row sm:gap-2"
+                            >
+                                <dt class="font-bold text-rancho-ink-600 sm:w-40">Заметка:</dt>
+                                <dd class="text-rancho-forest">
+                                    {{ payment.details.note }}
                                 </dd>
                             </div>
                         </dl>
                     </div>
 
-                    <p class="text-rancho-ink-500 text-xs leading-relaxed">
+                    <p class="text-xs leading-relaxed text-rancho-ink-500">
                         После выполнения перевода администратор подтвердит получение средств, и
                         статус заказа изменится автоматически.
                     </p>
@@ -153,7 +162,7 @@
                 <!-- 3. FAKE: симуляция оплаты (локалка) -->
                 <div v-else-if="payment.type === 'fake'" v-scroll-reveal class="mt-6 text-center">
                     <div
-                        class="text-rancho-ink-800 mb-6 rounded-xl bg-rancho-buttercup/15 p-4 text-sm font-medium ring-1 ring-inset ring-rancho-buttercup/30"
+                        class="mb-6 rounded-xl bg-rancho-buttercup/15 p-4 text-sm font-medium text-rancho-ink-800 ring-1 ring-inset ring-rancho-buttercup/30"
                         role="status"
                     >
                         <strong class="font-black">Тестовый режим (Fake Driver):</strong>
@@ -187,7 +196,7 @@
 
                         <Link
                             :href="route('home')"
-                            class="border-rancho-ink-300 hover:bg-rancho-ink-50 inline-flex w-full items-center justify-center rounded-xl border-2 bg-white px-4 py-3 text-sm font-bold text-rancho-forest transition-all hover:border-rancho-forest focus:outline-none focus-visible:ring-4 focus-visible:ring-rancho-pine/30 active:scale-95"
+                            class="inline-flex w-full items-center justify-center rounded-xl border-2 border-rancho-ink-300 bg-white px-4 py-3 text-sm font-bold text-rancho-forest transition-all hover:border-rancho-forest hover:bg-rancho-ink-50 focus:outline-none focus-visible:ring-4 focus-visible:ring-rancho-pine/30 active:scale-95"
                         >
                             На главную
                         </Link>

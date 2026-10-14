@@ -27,6 +27,7 @@
         new?: number;
         week?: number;
         active?: number;
+        used?: number;
         pending?: number;
         revenue?: number;
         in_stock?: number;
@@ -42,6 +43,7 @@
             products: StatBlock;
             variants: StatBlock;
             animals: StatBlock;
+            promocodes: StatBlock;
         };
     }
 
@@ -123,10 +125,10 @@
             <!-- PROMOCODES -->
             <AdminDashboardCard
                 title="Промокоды"
-                description="Активные акции"
+                :description="`${stats.promocodes.active ?? 0} активных · +${stats.promocodes.used ?? 0} примененных`"
                 :href="route('admin.promocodes.index')"
                 :icon="TicketIcon"
-                :count="0"
+                :count="stats.promocodes.total"
             />
 
             <!-- COMMENTS -->
@@ -153,22 +155,22 @@
         <!-- REVENUE BLOCK -->
         <div
             v-if="can.manageOrders && stats.orders.revenue"
-            class="border-rancho-ink-800 from-rancho-ink-950 to-rancho-ink-900/60 relative overflow-hidden rounded-2xl border bg-gradient-to-br p-6 sm:p-8"
+            class="relative overflow-hidden rounded-2xl border border-rancho-ink-800 bg-gradient-to-br from-rancho-ink-950 to-rancho-ink-900/60 p-6 sm:p-8"
         >
             <!-- Декоративный blur -->
             <div
-                class="bg-rancho-mint/10 pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full blur-3xl"
+                class="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-rancho-mint/10 blur-3xl"
                 aria-hidden="true"
             ></div>
 
             <div class="relative">
                 <div
-                    class="text-rancho-ink-400 text-[10px] font-black uppercase tracking-[0.2em] sm:text-[11px]"
+                    class="text-[10px] font-black uppercase tracking-[0.2em] text-rancho-ink-400 sm:text-[11px]"
                 >
                     Выручка (оплаченные заказы)
                 </div>
 
-                <div class="text-rancho-mint mt-3 text-2xl font-black sm:text-3xl md:text-4xl">
+                <div class="mt-3 text-2xl font-black text-rancho-mint sm:text-3xl md:text-4xl">
                     {{ formatMoney(stats.orders.revenue) }}
                 </div>
             </div>

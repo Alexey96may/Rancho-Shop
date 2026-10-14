@@ -537,7 +537,7 @@
                                     <p class="truncate text-sm font-bold text-rancho-forest">
                                         {{ appliedPromo.code }}
                                     </p>
-                                    <p class="text-xs text-rancho-ink-600">
+                                    <p class="text-xs font-black text-rancho-ink-600">
                                         −{{ formatMoney(appliedPromo.discount) }}
                                     </p>
                                 </div>

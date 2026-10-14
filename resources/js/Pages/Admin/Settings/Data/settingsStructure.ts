@@ -2,6 +2,7 @@ import type { Component } from 'vue';
 
 import {
     Cog6ToothIcon,
+    CurrencyDollarIcon,
     DevicePhoneMobileIcon,
     GlobeAltIcon,
     PresentationChartLineIcon,
@@ -33,6 +34,17 @@ export const SETTINGS_SECTIONS: SettingSection[] = [
             'contact_vk',
             'address_farm',
             'farm_coords',
+        ],
+    },
+    {
+        id: 'payment',
+        label: 'Оплата',
+        icon: CurrencyDollarIcon,
+        keys: [
+            'payment_direct_phone',
+            'payment_direct_bank',
+            'payment_direct_recipient',
+            'payment_direct_note_template',
         ],
     },
     {
@@ -90,4 +102,8 @@ export const SETTINGS_LABELS: Record<string, string> = {
     featured_animals_limit: 'Лимит "Популярные животные"',
     featured_products_limit: 'Лимит "Популярные товары"',
     featured_comments_limit: 'Лимит отзывов на главной',
+    payment_direct_phone: 'Телефон для оплаты',
+    payment_direct_bank: 'Название Банка',
+    payment_direct_recipient: 'Имя получателя',
+    payment_direct_note_template: 'Заметка',
 };

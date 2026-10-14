@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\DTO\PaymentDirectDTO;
 use App\Models\Setting;
 use Illuminate\Support\Facades\Cache;
 
@@ -69,10 +70,10 @@ class SettingService
 
     public function all(): array
     {
-        return Cache::remember("settings.all", 86400, function () {
+        return Cache::remember('settings.all', 86400, function () {
             return Setting::all()
                 ->mapWithKeys(fn ($s) => [
-                    $s->key => $this->castValue($s->value, $s->type, $s->key)
+                    $s->key => $this->castValue($s->value, $s->type, $s->key),
                 ])
                 ->toArray();
         });
@@ -98,20 +99,32 @@ class SettingService
     }
 
     /**
-    * Get model collections for the admin panel (cache optimized)
-    */
+     * Get all payment settings for direct transfer.
+     */
+    public function paymentDirect(): PaymentDirectDTO
+    {
+        return PaymentDirectDTO::fromArray($this->group([
+            'payment_direct_phone',
+            'payment_direct_bank',
+            'payment_direct_recipient',
+            'payment_direct_note_template',
+        ]));
+    }
+
+    /**
+     * Get model collections for the admin panel (cache optimized)
+     */
     public function allModels()
     {
-        $rows = Cache::remember("settings.models", 86400, fn () =>
-            Setting::all()->toArray()
+        $rows = Cache::remember('settings.models', 86400, fn () => Setting::all()->toArray()
         );
 
         return Setting::hydrate($rows);
     }
 
     /**
-    * Select a specific group of settings
-    */
+     * Select a specific group of settings
+     */
     public function group(array $keys): array
     {
         $all = $this->all();
@@ -122,8 +135,8 @@ class SettingService
     }
 
     /**
-    * Parse the coordinate string into a readable array
-    */
+     * Parse the coordinate string into a readable array
+     */
     private function parseCoords(?string $value): ?array
     {
         if (!$value || !str_contains($value, ',')) {
@@ -139,8 +152,8 @@ class SettingService
     }
 
     /**
-    * Get delivery zones
-    */
+     * Get delivery zones
+     */
     public function deliveryZones(): array
     {
         return Cache::remember('delivery_zones', 3600, function () {
@@ -149,8 +162,8 @@ class SettingService
     }
 
     /**
-    * Centralized reset of the global settings cache
-    */
+     * Centralized reset of the global settings cache
+     */
     public function flushCache(): void
     {
         Cache::forget('settings.all');
