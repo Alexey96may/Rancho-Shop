@@ -76,7 +76,7 @@
 
                         <!-- MOBILE: horizontal scroll tabs -->
                         <nav
-                            class="-mx-4 flex gap-2 overflow-x-auto p-4 md:mx-0 md:flex-col md:overflow-visible md:px-0 md:pb-0"
+                            class="scrollbar-hide -mx-4 flex gap-2 overflow-x-auto px-4 py-4 md:mx-0 md:flex-col md:gap-1 md:overflow-visible md:px-0 md:py-0"
                             aria-label="Навигация профиля"
                         >
                             <Link
@@ -115,12 +115,12 @@
                                 История заказов
                             </Link>
 
-                            <!-- LOGOUT: mobile — в табах; desktop — отдельно снизу -->
+                            <!-- LOGOUT: только на мобилке, отделён от остальных -->
                             <Link
                                 :href="route('logout')"
                                 method="post"
                                 as="button"
-                                class="flex shrink-0 items-center gap-2 whitespace-nowrap rounded-2xl px-4 py-3 text-sm font-bold text-rancho-ink-500 outline-none transition-all hover:bg-rose-500/10 hover:text-rose-400 focus-visible:ring-2 focus-visible:ring-rose-500/40 md:hidden"
+                                class="flex shrink-0 items-center gap-2 whitespace-nowrap rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-600 outline-none transition-all hover:border-rose-300 hover:bg-rose-100 hover:text-rose-700 focus-visible:ring-2 focus-visible:ring-rose-500/40 active:scale-95 md:hidden"
                             >
                                 <ArrowRightStartOnRectangleIcon
                                     class="h-4 w-4"
