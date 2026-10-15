@@ -130,7 +130,7 @@
             ],
 
             button: [
-                'relative w-full cursor-pointer text-xs sm:text-sm transition-all focus:outline-none',
+                'relative w-full cursor-pointer text-xs sm:text-sm transition-all outline-none',
                 isDark
                     ? 'rounded-2xl border bg-rancho-ink-950 py-3 pl-4 pr-10 text-left text-rancho-ink-300'
                     : 'rounded-xl border bg-white py-2.5 pl-4 pr-10 text-left text-rancho-ink-800',

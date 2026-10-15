@@ -27,7 +27,7 @@
         :aria-checked="modelValue"
         :disabled="disabled"
         @click="toggle"
-        class="flex w-full items-center justify-between gap-2 rounded-2xl border px-2 py-4 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-rancho-mint/40 sm:p-4"
+        class="flex w-full items-center justify-between gap-2 rounded-2xl border p-4 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-rancho-mint/40"
         :class="[
             modelValue
                 ? 'border-rancho-mint/40 bg-rancho-ink-950'

@@ -1,6 +1,7 @@
 <script setup lang="ts">
-    import { computed, onMounted, ref, watch } from 'vue';
+    import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
+    import { router } from '@inertiajs/vue3';
     import { Link, usePage } from '@inertiajs/vue3';
 
     import {
@@ -50,23 +51,34 @@
         isSidebarOpen.value = false;
     }
 
-    watch(() => page.url, closeSidebar);
-
-    watch(isSidebarOpen, (open) => {
+    // Блокировка/разблокировка скролла body
+    function syncBodyScroll(open: boolean) {
         if (typeof document === 'undefined') return;
         document.body.style.overflow = open ? 'hidden' : '';
+    }
+
+    watch(isSidebarOpen, (open) => {
+        syncBodyScroll(open);
     });
 
-    const userInitial = computed(() => {
-        return getInitials(userName.value);
+    const offFinish = router.on('finish', () => {
+        closeSidebar();
+        syncBodyScroll(false);
     });
+
+    onBeforeUnmount(() => {
+        offFinish();
+        syncBodyScroll(false);
+    });
+
+    const userInitial = computed(() => getInitials(userName.value));
 </script>
 
 <template>
     <SeoMeta :force-robots="'nofollow, noindex'" :seo="page.props?.seo" />
     <Toaster theme="dark" />
 
-    <div class="bg-rancho-ink-950 text-rancho-ink-200 flex min-h-screen font-sans">
+    <div class="flex min-h-screen bg-rancho-ink-950 font-sans text-rancho-ink-200">
         <!-- Backdrop -->
         <Transition name="backdrop">
             <div
@@ -74,34 +86,34 @@
                 class="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm lg:hidden"
                 @click="closeSidebar"
                 aria-hidden="true"
-            />
+            ></div>
         </Transition>
 
         <!-- SIDEBAR -->
         <aside
             id="admin-sidebar"
-            class="border-rancho-ink-800 bg-rancho-ink-950 fixed inset-y-0 left-0 z-50 flex h-screen w-72 shrink-0 flex-col gap-6 overflow-y-auto border-r p-4 transition-transform duration-300 sm:gap-8 sm:p-6 lg:sticky lg:top-0 lg:translate-x-0"
+            class="fixed inset-y-0 left-0 z-50 flex h-dvh w-[85vw] max-w-72 shrink-0 flex-col gap-6 overflow-y-auto overscroll-contain border-r border-rancho-ink-800 bg-rancho-ink-950 p-4 transition-transform duration-300 sm:gap-8 sm:p-6 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0"
             :class="isSidebarOpen ? 'translate-x-0' : '-translate-x-full'"
         >
-            <!-- Закрытие -->
-            <button
-                type="button"
-                class="text-rancho-ink-400 hover:bg-rancho-ink-900 absolute right-3 top-3 rounded-lg p-2 transition-colors hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-rancho-pine/40 lg:hidden"
-                @click="closeSidebar"
-                aria-label="Закрыть меню"
-            >
-                <XMarkIcon class="h-5 w-5 sm:h-6 sm:w-6" aria-hidden="true" />
-            </button>
-
             <!-- Логотип -->
-            <div class="flex items-center gap-2 pl-2 sm:pl-4">
+            <div class="flex items-center justify-between gap-4">
                 <Link
                     :href="route('home')"
-                    class="hover:text-rancho-mint text-xl font-black uppercase leading-none tracking-tighter text-white transition-colors sm:text-2xl"
+                    class="text-xl font-black uppercase leading-none tracking-tighter text-white transition-colors hover:text-rancho-mint sm:text-2xl"
                 >
                     Ранчо
                     <span class="text-rancho-mint">Admin</span>
                 </Link>
+
+                <!-- Закрытие -->
+                <button
+                    type="button"
+                    class="rounded-lg p-2 pr-0 text-rancho-ink-400 transition-colors hover:bg-rancho-ink-900 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-rancho-pine/40 lg:hidden"
+                    @click="closeSidebar"
+                    aria-label="Закрыть меню"
+                >
+                    <XMarkIcon class="h-5 w-5 sm:h-6 sm:w-6" aria-hidden="true" />
+                </button>
             </div>
 
             <!-- Меню -->
@@ -118,7 +130,7 @@
 
                     <!-- МАГАЗИН -->
                     <li
-                        class="text-rancho-ink-500 mb-1 mt-5 px-3 text-[9px] font-black uppercase tracking-[0.2em] sm:mb-2 sm:mt-6 sm:px-4 sm:text-[10px]"
+                        class="mb-1 mt-5 px-3 text-[9px] font-black uppercase tracking-[0.2em] text-rancho-ink-500 sm:mb-2 sm:mt-6 sm:px-4 sm:text-[10px]"
                     >
                         Магазин
                     </li>
@@ -165,7 +177,7 @@
 
                     <!-- ФЕРМА -->
                     <li
-                        class="text-rancho-ink-500 mb-1 mt-5 px-3 text-[9px] font-black uppercase tracking-[0.2em] sm:mb-2 sm:mt-6 sm:px-4 sm:text-[10px]"
+                        class="mb-1 mt-5 px-3 text-[9px] font-black uppercase tracking-[0.2em] text-rancho-ink-500 sm:mb-2 sm:mt-6 sm:px-4 sm:text-[10px]"
                     >
                         Ферма
                     </li>
@@ -180,7 +192,7 @@
 
                     <!-- КОНТЕНТ -->
                     <li
-                        class="text-rancho-ink-500 mb-1 mt-5 px-3 text-[9px] font-black uppercase tracking-[0.2em] sm:mb-2 sm:mt-6 sm:px-4 sm:text-[10px]"
+                        class="mb-1 mt-5 px-3 text-[9px] font-black uppercase tracking-[0.2em] text-rancho-ink-500 sm:mb-2 sm:mt-6 sm:px-4 sm:text-[10px]"
                     >
                         Контент
                     </li>
@@ -227,7 +239,7 @@
 
                     <!-- СИСТЕМА -->
                     <li
-                        class="text-rancho-ink-500 mb-1 mt-5 px-3 text-[9px] font-black uppercase tracking-[0.2em] sm:mb-2 sm:mt-6 sm:px-4 sm:text-[10px]"
+                        class="mb-1 mt-5 px-3 text-[9px] font-black uppercase tracking-[0.2em] text-rancho-ink-500 sm:mb-2 sm:mt-6 sm:px-4 sm:text-[10px]"
                     >
                         Система
                     </li>
@@ -262,12 +274,12 @@
         <!-- CONTENT -->
         <div class="flex min-w-0 flex-1 flex-col">
             <header
-                class="border-rancho-ink-800 bg-rancho-ink-950/80 sticky top-0 z-30 flex h-14 items-center gap-2 border-b px-3 py-8 backdrop-blur-md sm:h-16 sm:gap-3 sm:px-4 md:h-20 md:gap-4 md:px-6 lg:px-10"
+                class="sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-rancho-ink-800 bg-rancho-ink-950/80 px-3 py-8 backdrop-blur-md sm:h-16 sm:gap-3 sm:px-4 md:h-20 md:gap-4 md:px-6 lg:px-10"
             >
                 <!-- Hamburger -->
                 <button
                     type="button"
-                    class="text-rancho-ink-200 hover:bg-rancho-ink-900 shrink-0 rounded-lg p-2 pl-0 transition-colors hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-rancho-pine/40 lg:hidden"
+                    class="shrink-0 rounded-lg p-2 pl-0 text-rancho-ink-200 transition-colors hover:bg-rancho-ink-900 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-rancho-pine/40 lg:hidden"
                     @click="isSidebarOpen = true"
                     aria-label="Открыть меню"
                 >
@@ -283,13 +295,13 @@
                         <p class="text-xs font-bold leading-tight text-white md:text-sm">
                             <Link
                                 :href="route('profile.edit')"
-                                class="hover:text-rancho-mint transition-colors"
+                                class="transition-colors hover:text-rancho-mint"
                             >
                                 {{ userName }}
                             </Link>
                         </p>
                         <span
-                            class="text-rancho-mint text-[9px] font-bold uppercase tracking-tighter md:text-[10px]"
+                            class="text-[9px] font-bold uppercase tracking-tighter text-rancho-mint md:text-[10px]"
                         >
                             {{ userRole }}
                         </span>
@@ -298,7 +310,7 @@
                     <!-- Аватарка (до md) -->
                     <Link
                         :href="route('profile.edit')"
-                        class="bg-rancho-ink-800 text-rancho-mint hover:bg-rancho-ink-700 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-black transition-colors sm:h-9 sm:w-9 md:hidden"
+                        class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-rancho-ink-800 text-xs font-black text-rancho-mint transition-colors hover:bg-rancho-ink-700 sm:h-9 sm:w-9 md:hidden"
                         :aria-label="userName"
                     >
                         {{ userInitial }}
