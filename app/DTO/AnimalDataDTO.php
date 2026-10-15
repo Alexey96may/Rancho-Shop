@@ -31,7 +31,10 @@ class AnimalDataDTO
             parent_id: !empty($validated['parent_id']) ? (int) $validated['parent_id'] : null,
             status: $validated['status'],
             bio: $validated['bio'] ?? null,
-            features: $validated['features'] ?? [],
+            features: array_values(array_filter(
+                $validated['features'] ?? [],
+                fn ($a) => !empty($a['label'])
+            )),
             is_commentable: (bool) ($validated['is_commentable'] ?? true),
             is_active: (bool) ($validated['is_active'] ?? false),
             seoData: $validated['seo'] ?? []

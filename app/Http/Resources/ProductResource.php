@@ -55,6 +55,7 @@ class ProductResource extends JsonResource
 
             'unit' => $mainVariant?->unit ? new UnitResource($mainVariant->unit) : null,
 
+            'schedule' => $this->schedule,
             'next_delivery_date' => $this->next_delivery_date?->format('Y-m-d'),
         ];
     }

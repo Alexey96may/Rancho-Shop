@@ -136,7 +136,7 @@
                 <BaseDragHandle />
 
                 <div class="relative flex-1 flex-col gap-4 sm:grid sm:grid-cols-3 sm:gap-4">
-                    <div class="flex flex-wrap items-center gap-2 sm:flex-col sm:gap-1">
+                    <div class="flex flex-wrap items-baseline gap-2 sm:flex-col sm:gap-1">
                         <span
                             class="text-[10px] font-black uppercase tracking-widest text-rancho-ink-500"
                         >
@@ -147,7 +147,7 @@
                         </span>
                     </div>
 
-                    <div class="flex flex-wrap items-center gap-2 sm:flex-col sm:gap-1">
+                    <div class="flex flex-wrap items-baseline gap-2 sm:flex-col sm:gap-1">
                         <span
                             class="text-[10px] font-black uppercase tracking-widest text-rancho-ink-500"
                         >
@@ -158,18 +158,18 @@
                         </span>
                     </div>
 
-                    <div class="flex flex-wrap items-center gap-2 sm:flex-col sm:gap-1">
+                    <div class="flex flex-wrap items-baseline gap-2 sm:flex-col sm:gap-1">
                         <span
                             class="text-[10px] font-black uppercase tracking-widest text-rancho-ink-500"
                         >
                             Slug
                         </span>
-                        <div class="flex items-center gap-1 text-rancho-ink-400">
-                            <LinkIcon class="h-3 w-3" aria-hidden="true" />
-                            <span class="line-clamp-1 font-mono text-[11px]">
+                        <span class="flex items-center gap-1 text-rancho-ink-400">
+                            <LinkIcon class="hidden h-3 w-3 sm:inline" aria-hidden="true" />
+                            <span class="line-clamp-1 font-mono text-[10px] text-sm">
                                 {{ unit.slug }}
                             </span>
-                        </div>
+                        </span>
                     </div>
                 </div>
             </div>

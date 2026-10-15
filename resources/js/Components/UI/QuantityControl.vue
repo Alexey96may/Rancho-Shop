@@ -4,9 +4,14 @@
     import { useCartStore } from '@/stores/cart';
     import type { CartItem, ProductVariantDTO } from '@/types';
 
-    const props = defineProps<{
+    interface Props {
         item: ProductVariantDTO | CartItem;
-    }>();
+        hasUndo?: boolean;
+    }
+
+    const props = withDefaults(defineProps<Props>(), {
+        hasUndo: false,
+    });
 
     const cart = useCartStore();
 
@@ -43,7 +48,7 @@
     };
 
     const decrease = () => {
-        cart.decrement(variantId.value, step.value);
+        cart.decrement(variantId.value, step.value, props.hasUndo);
     };
 
     const bump = ref(false);
@@ -64,7 +69,7 @@
     >
         <button
             @click.stop="decrease"
-            class="text-rancho-ink-100 rounded-md px-2 text-lg transition-all hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-rancho-buttercup active:scale-90"
+            class="rounded-md px-2 text-lg text-rancho-ink-100 transition-all hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-rancho-buttercup active:scale-90"
             aria-label="Уменьшить количество"
         >
             −
@@ -79,7 +84,7 @@
 
         <button
             @click.stop="increase"
-            class="text-rancho-ink-100 rounded-md px-2 text-lg transition-all hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-rancho-buttercup active:scale-90"
+            class="rounded-md px-2 text-lg text-rancho-ink-100 transition-all hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-rancho-buttercup active:scale-90"
             aria-label="Увеличить количество"
         >
             +

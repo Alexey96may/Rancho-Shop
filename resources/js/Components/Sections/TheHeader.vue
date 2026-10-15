@@ -92,6 +92,20 @@
     });
 
     const firstName = computed(() => user.value?.name?.split(' ')[0] ?? '');
+
+    const focusClass = computed(() =>
+        isDark
+            ? 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rancho-buttercup/60'
+            : 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rancho-pine/40',
+    );
+
+    const MAX_CART_BADGE = 99;
+
+    const cartBadgeLabel = computed(() => {
+        const count = cartStore.totalCleanItems;
+        if (count > MAX_CART_BADGE) return `${MAX_CART_BADGE}+`;
+        return String(count);
+    });
 </script>
 
 <template>
@@ -108,6 +122,7 @@
             <Link
                 :href="route('home')"
                 class="group flex min-w-0 shrink items-center gap-2 sm:gap-3"
+                :class="focusClass"
             >
                 <CowIcon
                     class="h-7 w-7 shrink-0 transition-colors sm:h-8 sm:w-8"
@@ -141,12 +156,13 @@
                 <Link
                     v-if="user"
                     :href="route('profile.edit')"
-                    class="group hidden items-center gap-2 rounded-xl border px-3 py-2 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-rancho-buttercup/40 md:flex"
-                    :class="
+                    class="group hidden items-center gap-2 rounded-xl border px-3 py-2 outline-none transition-all focus-visible:ring-2 focus-visible:ring-rancho-buttercup/40 md:flex"
+                    :class="[
                         isDark
                             ? 'border-rancho-ink-800 bg-rancho-ink-900/60 text-rancho-ink-200 hover:border-rancho-ink-700 hover:bg-rancho-ink-800 hover:text-rancho-buttercup'
-                            : 'border-rancho-ink-200 bg-rancho-ink-50 hover:border-rancho-ink-300 hover:bg-rancho-ink-100 text-rancho-forest hover:text-rancho-pine'
-                    "
+                            : 'border-rancho-ink-200 bg-rancho-ink-50 text-rancho-forest hover:border-rancho-ink-300 hover:bg-rancho-ink-100 hover:text-rancho-pine',
+                        focusClass,
+                    ]"
                 >
                     <UserIcon
                         class="h-5 w-5 transition-colors"
@@ -166,12 +182,13 @@
                 <Link
                     v-else
                     :href="route('login')"
-                    class="hidden items-center gap-1.5 rounded-lg p-2 font-sans text-xs font-bold uppercase tracking-wider transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-rancho-buttercup/40 md:flex"
-                    :class="
+                    class="flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-bold uppercase tracking-wider transition-colors"
+                    :class="[
                         isDark
-                            ? 'text-rancho-ink-400 hover:text-rancho-buttercup'
-                            : 'text-rancho-ink-500 hover:text-rancho-pine'
-                    "
+                            ? 'bg-rancho-buttercup text-rancho-ink-950 hover:bg-rancho-buttercup/90'
+                            : 'bg-rancho-pine text-white hover:bg-rancho-forest',
+                        focusClass,
+                    ]"
                 >
                     <UserIcon class="h-5 w-5" aria-hidden="true" />
                     <span>Войти</span>
@@ -188,11 +205,12 @@
                 <Link
                     :href="route('cart.index')"
                     class="shadow-md relative flex items-center gap-2 rounded-xl px-3 py-2 text-white transition-all focus:outline-none focus-visible:ring-4 focus-visible:ring-rancho-pine/30 active:scale-95 sm:px-4"
-                    :class="
+                    :class="[
                         isDark
-                            ? 'text-rancho-ink-950 bg-rancho-buttercup hover:bg-rancho-buttercup/90 focus-visible:ring-rancho-buttercup/40'
-                            : 'bg-rancho-pine hover:bg-rancho-forest'
-                    "
+                            ? 'bg-rancho-buttercup text-rancho-ink-950 hover:bg-rancho-buttercup/90'
+                            : 'bg-rancho-pine hover:bg-rancho-forest',
+                        focusClass,
+                    ]"
                     aria-label="Корзина"
                 >
                     <ShoppingBagIcon
@@ -207,10 +225,11 @@
                         :class="
                             isDark
                                 ? 'border-rancho-ink-950 bg-rancho-ink-950 text-rancho-buttercup'
-                                : 'bg-rancho-ember border-rancho-paper text-white'
+                                : 'border-rancho-paper bg-rancho-ember text-white'
                         "
+                        :aria-label="`Товаров в корзине: ${cartStore.totalCleanItems}`"
                     >
-                        {{ cartStore.totalCleanItems }}
+                        {{ cartBadgeLabel }}
                     </span>
                 </Link>
 
@@ -218,11 +237,12 @@
                 <button
                     type="button"
                     class="ml-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-rancho-buttercup/40 md:hidden"
-                    :class="
+                    :class="[
                         isDark
                             ? 'border-rancho-ink-800 bg-rancho-ink-900/60 text-rancho-ink-200 hover:bg-rancho-ink-800 hover:text-rancho-buttercup'
-                            : 'border-rancho-ink-200 bg-rancho-ink-50 hover:bg-rancho-ink-100 text-rancho-forest'
-                    "
+                            : 'border-rancho-ink-200 bg-rancho-ink-50 text-rancho-forest hover:bg-rancho-ink-100',
+                        focusClass,
+                    ]"
                     @click="isMenuOpen = true"
                     aria-label="Открыть меню"
                     :aria-expanded="isMenuOpen"
@@ -302,7 +322,7 @@
                             class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-base font-black"
                             :class="
                                 isDark
-                                    ? 'text-rancho-ink-950 bg-rancho-buttercup'
+                                    ? 'bg-rancho-buttercup text-rancho-ink-950'
                                     : 'bg-rancho-pine text-white'
                             "
                         >
@@ -327,15 +347,16 @@
                         :key="item.href"
                         :href="item.href"
                         class="flex items-center justify-between rounded-2xl px-4 py-3.5 text-base font-semibold transition-colors"
-                        :class="
+                        :class="[
                             isActive(item)
                                 ? isDark
                                     ? 'bg-rancho-buttercup/10 text-rancho-buttercup'
                                     : 'bg-rancho-pine/10 text-rancho-pine'
                                 : isDark
                                   ? 'text-rancho-ink-200 hover:bg-rancho-ink-900'
-                                  : 'hover:bg-rancho-ink-50 text-rancho-forest'
-                        "
+                                  : 'text-rancho-forest hover:bg-rancho-ink-50',
+                            focusClass,
+                        ]"
                     >
                         <span>{{ item.name }}</span>
                         <span
@@ -358,7 +379,7 @@
                         class="flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-bold uppercase tracking-wider transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-rancho-buttercup/40"
                         :class="
                             isDark
-                                ? 'text-rancho-ink-950 bg-rancho-buttercup hover:bg-rancho-buttercup/90'
+                                ? 'bg-rancho-buttercup text-rancho-ink-950 hover:bg-rancho-buttercup/90'
                                 : 'bg-rancho-pine text-white hover:bg-rancho-forest'
                         "
                     >

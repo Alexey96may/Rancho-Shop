@@ -3,15 +3,21 @@
 
     import { Link, usePage } from '@inertiajs/vue3';
 
+    import {
+        ArrowPathIcon,
+        InformationCircleIcon,
+        TagIcon,
+        TruckIcon,
+    } from '@heroicons/vue/24/outline';
+
     import CommentsSection from '@/Components/Sections/CommentsSection.vue';
-    import MediaGallery from '@/Components/Shared/MediaGallery.vue';
+    import ProductGallery from '@/Components/Shared/UIGallery.vue';
     import BaseModal from '@/Components/UI/BaseModal.vue';
     import BuyButton from '@/Components/UI/BuyButton.vue';
     import MainLayout from '@/Layouts/MainLayout.vue';
     import { useComments } from '@/composables/crud/useComments';
-    import type { GalleryItem } from '@/composables/features/useMediaUpload';
     import type { Comment, Paginated, Product, ResourceSingle, SharedData } from '@/types';
-    import { formatMoney } from '@/utils/format';
+    import { formatDateTime, formatMoney } from '@/utils/format';
 
     defineOptions({ layout: MainLayout });
 
@@ -73,11 +79,9 @@
         );
     });
 
-    const isAvailable = computed(() => !!productData.value?.default_variant?.is_in_stock);
-
     const selectedImage = ref<string | null>(null);
 
-    const openImage = (item: GalleryItem) => {
+    const openImage = (item: string) => {
         const previewUrl = getPreview(item);
 
         if (previewUrl) {
@@ -85,7 +89,7 @@
         }
     };
 
-    const getPreview = (item: GalleryItem | string | null | undefined): string => {
+    const getPreview = (item: string | null | undefined): string => {
         if (!item) return '';
 
         if (typeof item === 'string') {
@@ -140,38 +144,38 @@
                 return 'bg-rancho-pine/10 text-rancho-pine ring-rancho-pine/30';
         }
     });
+
+    const pluralizeDays = (n: number): string => {
+        const mod10 = n % 10;
+        const mod100 = n % 100;
+
+        if (mod10 === 1 && mod100 !== 11) return 'день';
+        if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return 'дня';
+        return 'дней';
+    };
 </script>
 
 <template>
     <main>
         <AppContainer class="min-h-screen bg-rancho-paper">
-            <section class="grid gap-12 py-12 sm:py-20 lg:grid-cols-2">
-                <!-- IMAGES -->
-                <div v-scroll-reveal class="space-y-4">
-                    <div
-                        class="aspect-square overflow-hidden rounded-3xl border border-rancho-ink-200 bg-rancho-ink-50"
-                    >
-                        <AppImage
-                            :src="productData.main_photo?.[0] || ''"
-                            :alt="productData.name"
-                            class-name="h-full w-full object-cover"
-                        />
-                    </div>
-
-                    <MediaGallery
-                        v-model="product.data.gallery"
-                        @preview="openImage"
-                        :is-view-mode="true"
-                    />
-                </div>
+            <section class="grid grid-cols-1 gap-12 pt-12 sm:pt-20 lg:grid-cols-2">
+                <ProductGallery
+                    v-scroll-reveal
+                    :main-photo="productData.main_photo?.[0]"
+                    :gallery="productData.gallery"
+                    :alt="productData.name"
+                    @preview="openImage"
+                />
 
                 <!-- INFO -->
                 <div v-scroll-reveal class="flex flex-col">
                     <!-- Категория -->
+
                     <span
                         v-if="productData.category?.name"
-                        class="text-[10px] font-black uppercase tracking-widest text-rancho-ember"
+                        class="inline-flex items-center gap-1.5 self-start rounded-full bg-rancho-ember/10 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-rancho-ember ring-1 ring-inset ring-rancho-ember/20 transition-all hover:bg-rancho-ember/20"
                     >
+                        <TagIcon class="h-3 w-3" aria-hidden="true" />
                         {{ productData.category.name }}
                     </span>
 
@@ -181,40 +185,45 @@
                     </h1>
 
                     <!-- PRICE -->
-                    <div v-if="price" class="mt-6 flex flex-wrap items-baseline gap-x-4 gap-y-2">
-                        <span class="text-3xl font-black text-rancho-forest sm:text-4xl">
-                            {{ price }}
-                        </span>
+                    <div v-if="price" class="mt-6 flex flex-col gap-1">
+                        <div v-if="discount" class="flex items-center gap-2">
+                            <span class="text-sm font-medium text-rancho-ink-400 line-through">
+                                {{ oldPrice }}
+                            </span>
+                            <span
+                                class="inline-flex items-center rounded-full bg-rancho-ember/10 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-rancho-ember ring-1 ring-inset ring-rancho-ember/20"
+                            >
+                                −{{ discount }}%
+                            </span>
+                        </div>
 
-                        <span
-                            v-if="discount"
-                            class="text-lg text-rancho-ink-400 line-through sm:text-xl"
-                        >
-                            {{ oldPrice }}
-                        </span>
-
-                        <span
-                            v-if="discount"
-                            class="rounded-lg bg-rancho-ember px-2 py-1 text-xs font-black uppercase tracking-wider text-white"
-                        >
-                            −{{ discount }}%
-                        </span>
-
-                        <span class="text-sm text-rancho-ink-500">
-                            / {{ productData.default_variant?.unit?.short ?? 'шт' }}
-                        </span>
+                        <div class="flex items-baseline gap-2">
+                            <span
+                                class="text-3xl font-black leading-none text-rancho-forest sm:text-4xl"
+                            >
+                                {{ price }}
+                            </span>
+                            <span class="text-sm font-medium text-rancho-ink-500">
+                                / {{ productData.default_variant?.unit?.name ?? 'шт' }}
+                            </span>
+                        </div>
                     </div>
 
-                    <!-- META -->
-                    <div class="mt-8 space-y-3 border-y border-rancho-ink-200 py-6 text-sm">
-                        <div class="flex items-center justify-between">
+                    <!-- BUY -->
+                    <div v-if="productData.default_variant" class="mt-6">
+                        <BuyButton :product="productData" />
+                    </div>
+
+                    <!-- META (только статус и наличие) -->
+                    <div class="mt-8 space-y-3 border-y border-rancho-ink-200 py-5 text-sm">
+                        <div class="flex items-center justify-between gap-2">
                             <span class="text-rancho-ink-500">Статус</span>
                             <span class="font-bold text-rancho-forest">
                                 {{ productData.availability.label }}
                             </span>
                         </div>
 
-                        <div class="flex items-center justify-between">
+                        <div class="flex items-center justify-between gap-2">
                             <span class="text-rancho-ink-500">Наличие</span>
                             <span
                                 class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wider ring-1 ring-inset"
@@ -234,20 +243,142 @@
                         </div>
                     </div>
 
-                    <!-- DESCRIPTION -->
-                    <p class="mt-6 text-sm leading-relaxed text-rancho-ink-600 sm:text-base">
-                        {{ productData.description || 'Описание пока отсутствует' }}
-                    </p>
+                    <!-- DELIVERY INFO — отдельный акцентный блок -->
+                    <div
+                        v-if="
+                            productData.next_delivery_date ||
+                            productData.schedule?.note ||
+                            productData.schedule?.interval_days
+                        "
+                        class="mt-6 space-y-4 rounded-2xl border border-rancho-ember/20 bg-rancho-ember/5 p-4 sm:p-5"
+                    >
+                        <div v-if="productData.next_delivery_date" class="flex items-center gap-3">
+                            <TruckIcon
+                                class="mt-0.5 h-5 w-5 shrink-0 text-rancho-ember"
+                                aria-hidden="true"
+                            />
+                            <div class="flex flex-col gap-0.5 text-sm sm:text-base">
+                                <span
+                                    class="text-[10px] font-black uppercase tracking-widest text-rancho-ember"
+                                >
+                                    Ближайшая поставка
+                                </span>
+                                <span class="font-bold text-rancho-forest">
+                                    {{
+                                        formatDateTime(
+                                            productData.next_delivery_date ?? '',
+                                            'do MMMM yyyy',
+                                        )
+                                    }}
+                                </span>
+                            </div>
+                        </div>
 
-                    <!-- BUY -->
-                    <div class="mt-auto pt-10">
-                        <BuyButton v-if="productData.default_variant" :product="productData" />
+                        <div
+                            v-if="productData.schedule?.interval_days"
+                            class="flex items-center gap-3 text-sm sm:text-base"
+                        >
+                            <ArrowPathIcon
+                                class="mt-0.5 h-5 w-5 shrink-0 text-rancho-ember"
+                                aria-hidden="true"
+                            />
+                            <div class="flex flex-col gap-0.5">
+                                <span
+                                    class="text-[10px] font-black uppercase tracking-widest text-rancho-ember"
+                                >
+                                    Периодичность
+                                </span>
+                                <span class="font-bold text-rancho-forest">
+                                    каждые {{ productData.schedule.interval_days }}
+                                    {{ pluralizeDays(productData.schedule.interval_days) }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div
+                            v-if="productData.schedule?.note"
+                            class="flex items-center gap-3 text-sm sm:text-base"
+                        >
+                            <InformationCircleIcon
+                                class="mt-0.5 h-5 w-5 shrink-0 text-rancho-ember"
+                                aria-hidden="true"
+                            />
+                            <div class="flex flex-col gap-0.5">
+                                <span
+                                    class="text-[10px] font-black uppercase tracking-widest text-rancho-ember"
+                                >
+                                    Примечание
+                                </span>
+                                <span class="text-rancho-ink-600">
+                                    {{ productData.schedule.note }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ATTRIBUTES -->
+                    <div v-if="productData.attributes?.length" class="mt-8">
+                        <h2
+                            class="text-xs font-black uppercase tracking-widest text-rancho-ink-500"
+                        >
+                            Характеристики
+                        </h2>
+
+                        <dl class="mt-3 divide-y divide-rancho-ink-100 text-sm">
+                            <div
+                                v-for="(attr, index) in productData.attributes"
+                                :key="index"
+                                class="flex items-start justify-between gap-4 py-2.5"
+                            >
+                                <dt class="text-rancho-ink-500">{{ attr.label }}</dt>
+                                <dd class="text-right font-medium text-rancho-forest">
+                                    {{ attr.value }}
+                                </dd>
+                            </div>
+                        </dl>
+                    </div>
+
+                    <!-- ANIMALS -->
+                    <div
+                        v-if="productData.animals?.length"
+                        class="mt-8 rounded-2xl border border-rancho-ink-200 bg-white p-4"
+                    >
+                        <h2
+                            class="text-xs font-black uppercase tracking-widest text-rancho-ink-500"
+                        >
+                            Кого благодарим
+                        </h2>
+
+                        <div class="mt-3 flex flex-wrap gap-2">
+                            <Link
+                                v-for="animal in productData.animals"
+                                :key="animal.id"
+                                :href="route('animals.show', animal.slug)"
+                                class="inline-flex items-center rounded-full border border-rancho-ink-200 bg-white px-3 py-1.5 text-xs font-bold text-rancho-forest transition-colors hover:border-rancho-pine hover:bg-rancho-ink-50"
+                            >
+                                {{ animal.name }}
+                            </Link>
+                        </div>
                     </div>
                 </div>
             </section>
 
+            <!-- DESCRIPTION — вынесено из INFO, на всю ширину -->
+            <section
+                v-if="productData.description"
+                v-scroll-reveal
+                class="mt-16 space-y-6 sm:mt-20"
+            >
+                <h2 class="text-text-xs font-black uppercase tracking-widest text-rancho-ink-500">
+                    О товаре
+                </h2>
+                <p class="max-w-3xl text-sm leading-relaxed text-rancho-ink-600 sm:text-base">
+                    {{ productData.description }}
+                </p>
+            </section>
+
             <!-- COMMENTS -->
-            <section v-if="productData.is_commentable" v-scroll-reveal class="mt-16 pb-12 sm:pb-20">
+            <section v-if="productData.is_commentable" v-scroll-reveal class="pb-12 sm:pb-20">
                 <CommentsSection
                     :comments="comments"
                     @submit="submitComment"
@@ -256,7 +387,7 @@
             </section>
         </AppContainer>
 
-        <BaseModal :show="isModalOpen" variant="lightbox" @close="selectedImage = null">
+        <BaseModal :show="isModalOpen" variant="ui" @close="selectedImage = null">
             <AppImage
                 v-if="selectedImage"
                 :src="selectedImage"

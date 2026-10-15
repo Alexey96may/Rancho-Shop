@@ -25,23 +25,21 @@ class AnimalFactory extends Factory
 
         return [
             'category_id' => Category::where('type', 'animal')->inRandomOrder()->first()?->id,
-            'name'        => $name,
-            'slug'        => Str::slug($name . '-' . $this->faker->unique()->numberBetween(1, 1000)),
-            'is_active'   => true,
-            'status'      => $this->faker->randomElement(['healthy', 'young', 'pregnant', 'sick']),
-            'bio'         => $this->faker->realText(200),
-            'features'    => $this->generateFeatures(),
+            'name' => $name,
+            'slug' => Str::slug($name . '-' . $this->faker->unique()->numberBetween(1, 1000)),
+            'is_active' => true,
+            'status' => $this->faker->randomElement(['healthy', 'young', 'pregnant', 'sick']),
+            'bio' => $this->faker->realText(200),
+            'features' => $this->generateFeatures(),
         ];
     }
 
     private function generateFeatures(): array
     {
         $common = [
-            'weight' => $this->faker->numberBetween(40, 600) . 'кг',
-            'birth_date' => $this->faker->date(),
-            'breed' => $this->faker->randomElement(['Голштинская', 'Джерсейская', 'Айширская', 'Зааненская', 'Нубийская']),
-            'yield' => $this->faker->numberBetween(15, 35) . 'л/день',
-            'horns' => $this->faker->boolean(),
+            ['label' => 'Вес', 'value' => '100 кг'],
+            ['label' => 'Рост', 'value' => '1 метр'],
+            ['label' => 'Порода', 'value' => 'царская'],
         ];
 
         return $common;

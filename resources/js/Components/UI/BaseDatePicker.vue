@@ -1,34 +1,95 @@
 <script setup lang="ts">
-    import { useId, watch } from 'vue';
+    import { computed, useId, watch } from 'vue';
 
-    import { CalendarIcon, XMarkIcon } from '@heroicons/vue/24/outline';
-    import { DatePicker } from 'v-calendar';
-    import 'v-calendar/dist/style.css';
-
-    const model = defineModel<any>();
-    const error = defineModel<string | undefined>('error');
+    type DateMode = 'date' | 'datetime-local' | 'time';
+    type OutputFormat = 'string' | 'date';
 
     interface Props {
         label?: string;
         placeholder?: string;
         disabled?: boolean;
-        mode?: 'date' | 'dateTime' | 'time';
+        min?: string | Date;
+        max?: string | Date;
+        /** Что показывать: только дата, дата+время, только время */
+        mode?: DateMode;
+        /** Что отдавать наружу: строку или Date-объект */
+        output?: OutputFormat;
     }
 
     const props = withDefaults(defineProps<Props>(), {
-        placeholder: 'Выберите дату и время',
+        placeholder: 'дд.мм.гггг',
         disabled: false,
-        mode: 'dateTime',
+        mode: 'date',
+        output: 'string',
     });
+
+    const model = defineModel<string | Date | null | undefined>({ default: null });
+    const error = defineModel<string | undefined>('error');
 
     const inputId = useId();
     const errorId = useId();
 
     watch(model, () => {
-        if (error.value) {
-            error.value = undefined;
-        }
+        if (error.value) error.value = undefined;
     });
+
+    /**
+     * Приводим входное значение к строке нужного формата для <input>:
+     * - mode="date"            → YYYY-MM-DD
+     * - mode="datetime-local"  → YYYY-MM-DDTHH:mm
+     * - mode="time"            → HH:mm
+     */
+    function toInputString(value: string | Date | null | undefined): string {
+        if (!value) return '';
+
+        let date: Date;
+
+        if (value instanceof Date) {
+            date = value;
+        } else {
+            // Строка: пробуем как есть, иначе — как дату
+            const parsed = new Date(value);
+            if (isNaN(parsed.getTime())) return '';
+            date = parsed;
+        }
+
+        const pad = (n: number) => String(n).padStart(2, '0');
+        const y = date.getFullYear();
+        const m = pad(date.getMonth() + 1);
+        const d = pad(date.getDate());
+        const hh = pad(date.getHours());
+        const mm = pad(date.getMinutes());
+
+        if (props.mode === 'date') return `${y}-${m}-${d}`;
+        if (props.mode === 'time') return `${hh}:${mm}`;
+        return `${y}-${m}-${d}T${hh}:${mm}`;
+    }
+
+    /**
+     * Приводим строку из <input> к нужному output:
+     * - output="string" → строка в формате mode
+     * - output="date"   → Date-объект
+     */
+    function fromInputString(value: string): string | Date | null {
+        if (!value) return null;
+
+        if (props.output === 'date') {
+            const parsed = new Date(value);
+            return isNaN(parsed.getTime()) ? null : parsed;
+        }
+
+        return value; // строка уже в нужном формате
+    }
+
+    const inputValue = computed(() => toInputString(model.value));
+
+    const minValue = computed(() => (props.min ? toInputString(props.min) : undefined));
+    const maxValue = computed(() => (props.max ? toInputString(props.max) : undefined));
+
+    const onInput = (event: Event) => {
+        const raw = (event.target as HTMLInputElement).value;
+        model.value = fromInputString(raw);
+    };
 
     const clearDate = () => {
         model.value = null;
@@ -46,56 +107,25 @@
             {{ label }}
         </label>
 
-        <DatePicker
-            v-model="model"
-            :mode="mode"
-            is-dark
-            is24hr
-            hide-time-header
-            :popover="{ visibility: 'click', placement: 'bottom' }"
-        >
-            <template #default="{ inputValue, inputEvents }">
-                <div class="group relative">
-                    <input
-                        :id="inputId"
-                        class="w-full cursor-pointer rounded-2xl border bg-rancho-ink-950 px-4 py-4 text-sm font-bold text-white placeholder:text-rancho-ink-500 focus:outline-none focus:ring-0"
-                        :class="
-                            error
-                                ? 'border-rose-500/50 focus:border-rose-500'
-                                : 'border-rancho-ink-800 focus:border-rancho-mint'
-                        "
-                        :value="inputValue"
-                        v-on="inputEvents"
-                        readonly
-                        :placeholder="placeholder"
-                        :aria-invalid="!!error"
-                        :aria-describedby="error ? errorId : undefined"
-                    />
-
-                    <div class="absolute right-4 top-4 flex items-center gap-2">
-                        <button
-                            v-if="model"
-                            type="button"
-                            @click.stop="clearDate"
-                            class="rounded text-rancho-ink-600 transition-colors hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-rancho-mint/40"
-                            aria-label="Очистить дату"
-                        >
-                            <XMarkIcon class="h-4 w-4" aria-hidden="true" />
-                        </button>
-
-                        <CalendarIcon
-                            class="h-5 w-5 transition-colors"
-                            :class="
-                                error
-                                    ? 'text-rose-500/50'
-                                    : 'text-rancho-ink-500 group-hover:text-rancho-ink-300'
-                            "
-                            aria-hidden="true"
-                        />
-                    </div>
-                </div>
-            </template>
-        </DatePicker>
+        <div class="group relative">
+            <input
+                :id="inputId"
+                :type="mode"
+                :value="inputValue"
+                :min="minValue"
+                :max="maxValue"
+                :disabled="disabled"
+                :aria-invalid="!!error"
+                :aria-describedby="error ? errorId : undefined"
+                class="w-full cursor-pointer overflow-hidden rounded-2xl border bg-rancho-ink-950 px-4 py-4 font-mono text-sm font-bold text-white [color-scheme:dark] placeholder:text-xs placeholder:text-rancho-ink-500 focus:outline-none focus:ring-0"
+                :class="
+                    error
+                        ? 'border-rose-500/50 focus:border-rose-500'
+                        : 'border-rancho-ink-800 focus:border-rancho-mint'
+                "
+                @input="onInput"
+            />
+        </div>
 
         <Transition
             enter-active-class="transition duration-200 ease-out"

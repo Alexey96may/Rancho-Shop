@@ -67,6 +67,12 @@ export interface PageProps {
     [key: string]: unknown;
 }
 
+export interface Attribute {
+    id: string;
+    label: string;
+    value: string;
+}
+
 export interface Permission {
     key: string;
     value: string;

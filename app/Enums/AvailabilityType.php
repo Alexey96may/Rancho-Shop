@@ -11,8 +11,8 @@ enum AvailabilityType: string
 
     public function label(): string
     {
-        return match($this) {
-            self::STOCK => 'В наличии',
+        return match ($this) {
+            self::STOCK => 'По наличию',
             self::DAILY => 'Ежедневно',
             self::PREORDER => 'Предзаказ',
             self::WEEKLY => 'Раз в неделю',

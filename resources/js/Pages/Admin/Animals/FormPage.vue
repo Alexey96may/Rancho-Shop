@@ -47,6 +47,10 @@
                 });
             },
         },
+        parents: {
+            type: Array as PropType<Array<{ id: number; name: string; category_id: number }>>,
+            default: () => [],
+        },
         backUrl: {
             type: String as PropType<string>,
             required: true,
@@ -65,5 +69,10 @@
         />
     </Teleport>
 
-    <AnimalForm :animal="animal?.data || null" :back-url="backUrl" :categories="categories" />
+    <AnimalForm
+        :animal="animal?.data || null"
+        :back-url="backUrl"
+        :categories="categories"
+        :parents="parents"
+    />
 </template>

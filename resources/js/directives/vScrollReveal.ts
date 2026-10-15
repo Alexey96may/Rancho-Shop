@@ -16,6 +16,7 @@ export const vScrollReveal: ObjectDirective<HTMLElement> = {
 
     mounted(el) {
         if (typeof window === 'undefined') return;
+
         if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
             el.classList.remove(BASE_CLASS);
             return;

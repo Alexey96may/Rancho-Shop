@@ -53,6 +53,10 @@ class AnimalController extends Controller
             'parent',
             'children',
             'seo',
+            'products' => function ($query) {
+                $query->where('is_active', true)
+                    ->select('products.id', 'products.name', 'products.slug', 'products.description');
+            },
         ]);
 
         $comments = $animal->comments()

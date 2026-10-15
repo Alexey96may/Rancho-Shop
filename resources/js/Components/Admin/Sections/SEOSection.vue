@@ -1,21 +1,59 @@
 <script setup lang="ts">
+    import { computed } from 'vue';
+
     import type { Errors } from '@inertiajs/core';
 
     import AdminBaseTextarea from '@/Components/Admin/UI/AdminBaseTextarea.vue';
     import BaseInput from '@/Components/UI/BaseInput.vue';
     import BaseSwitch from '@/Components/UI/BaseSwitch.vue';
 
-    const props = defineProps<{
-        modelValue: {
-            title: string;
-            description: string;
-            keywords: string;
-            canonical: string;
-            is_noindex: boolean;
-        };
-        disabled: boolean;
+    interface SeoData {
+        title: string;
+        description: string;
+        keywords: string;
+        canonical: string;
+        is_noindex: boolean;
+    }
+
+    interface Props {
+        modelValue: SeoData;
+        /** Имя сущности — животное, товар, страница */
+        pageName?: string;
+        /** Шаблон заголовка, если в проекте есть */
+        titleTemplate?: string;
         errors?: Errors;
-    }>();
+        disabled?: boolean;
+    }
+
+    const props = withDefaults(defineProps<Props>(), {
+        pageName: '',
+        titleTemplate: '{title} — {name}',
+    });
+
+    /**
+     * Если title задан — берём его (но всё равно оборачиваем в шаблон).
+     * Если title пуст — используем только name.
+     */
+    const snippetTitle = computed(() => {
+        const title = props.modelValue.title?.trim();
+        const name = props.pageName?.trim();
+
+        if (title && name) {
+            return props.titleTemplate.replace('{title}', title).replace('{name}', name);
+        }
+
+        if (title) return title;
+        if (name) return name;
+
+        return 'Заголовок появится здесь';
+    });
+
+    /**
+     * Итоговый canonical.
+     */
+    const snippetCanonical = computed(() => {
+        return props.modelValue.canonical || 'https://my-site.com › ...';
+    });
 </script>
 
 <template>
@@ -39,7 +77,7 @@
                 :error="errors?.canonical"
                 type="url"
                 label="Canonical URL (Основная ссылка)"
-                placeholder="https://rancho.ru/..."
+                :placeholder="snippetCanonical"
                 theme="dark"
                 class="w-full sm:flex-1"
             />
@@ -73,10 +111,10 @@
 
         <!-- GOOGLE PREVIEW -->
         <div
-            class="border-rancho-ink-800 bg-rancho-ink-950/80 rounded-2xl border p-4 sm:rounded-3xl sm:p-6"
+            class="rounded-2xl border border-rancho-ink-800 bg-rancho-ink-950/80 p-4 sm:rounded-3xl sm:p-6"
         >
             <p
-                class="text-rancho-ink-500 mb-3 text-[9px] font-black uppercase tracking-[0.2em] sm:mb-4"
+                class="mb-3 text-[9px] font-black uppercase tracking-[0.2em] text-rancho-ink-500 sm:mb-4"
             >
                 Предпросмотр в Google
                 <span v-if="modelValue.is_noindex" class="text-rancho-ember">
@@ -89,17 +127,17 @@
                 class="max-w-[600px] space-y-1 transition-all"
                 :class="{ 'opacity-30 grayscale': modelValue.is_noindex }"
             >
-                <p class="text-rancho-ink-400 truncate text-xs">
-                    {{ modelValue.canonical || 'https://rancho.ru › animals › ...' }}
+                <p class="truncate text-xs text-rancho-ink-400">
+                    {{ snippetCanonical }}
                 </p>
 
                 <h4
                     class="cursor-pointer truncate text-lg leading-tight text-rancho-sky hover:underline sm:text-xl"
                 >
-                    {{ modelValue.title || 'Заголовок появится здесь' }}
+                    {{ snippetTitle }}
                 </h4>
 
-                <p class="text-rancho-ink-300 line-clamp-2 text-sm leading-snug">
+                <p class="line-clamp-2 text-sm leading-snug text-rancho-ink-300">
                     {{ modelValue.description || 'Введите описание для сниппета...' }}
                 </p>
             </div>

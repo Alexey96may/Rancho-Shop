@@ -1,7 +1,7 @@
 <script setup lang="ts">
     import { computed, onMounted, ref, watch } from 'vue';
 
-    import { router } from '@inertiajs/vue3';
+    import { Link, router } from '@inertiajs/vue3';
 
     import { ShoppingCartIcon } from '@heroicons/vue/24/outline';
 
@@ -175,3 +175,41 @@
         </Transition>
     </AppContainer>
 </template>
+
+<style scoped>
+    /* Enter / leave */
+    .cart-item-enter-active,
+    .cart-item-leave-active {
+        transition:
+            opacity 0.3s ease,
+            transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .cart-item-enter-from {
+        opacity: 0;
+        transform: translateX(-20px) scale(0.98);
+    }
+
+    .cart-item-leave-to {
+        opacity: 0;
+        transform: translateX(20px) scale(0.98);
+    }
+
+    /* Уходящая карточка вырывается из потока — соседи съезжают плавно */
+    .cart-item-leave-active {
+        width: 100%;
+    }
+
+    /* Перемещение оставшихся карточек */
+    .cart-item-move {
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .cart-item-enter-active,
+        .cart-item-leave-active,
+        .cart-item-move {
+            transition: none;
+        }
+    }
+</style>

@@ -9,11 +9,13 @@
         product: Product;
         classes?: string;
         disabled?: boolean;
+        hasUndo?: boolean;
     }
 
     const props = withDefaults(defineProps<Props>(), {
         classes: '',
         disabled: false,
+        hasUndo: false,
     });
 
     const cart = useCartStore();
@@ -64,6 +66,7 @@
             <!-- STEP CONTROL -->
             <QuantityControl
                 v-if="isInCart && props.product.default_variant"
+                :hasUndo="hasUndo"
                 key="quantity"
                 :item="props.product.default_variant"
             />
@@ -78,7 +81,7 @@
                 :class="[
                     !isDisabled
                         ? 'shadow-lg bg-rancho-pine text-white hover:bg-rancho-forest'
-                        : 'bg-rancho-ink-200 text-rancho-ink-500 cursor-not-allowed',
+                        : 'cursor-not-allowed bg-rancho-ink-200 text-rancho-ink-500',
                     'focus:outline-none focus-visible:ring-4 focus-visible:ring-rancho-pine/30',
                     classes,
                 ]"

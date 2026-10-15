@@ -38,6 +38,19 @@
     function telHref(phone: string): string {
         return `tel:${phone.replace(/\D/g, '')}`;
     }
+
+    /* ===== Единый focus для всех интерактивных элементов ===== */
+    const focusClass = computed(
+        () =>
+            'rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rancho-buttercup/60',
+    );
+
+    /* ===== Единый стиль ссылок футера ===== */
+    const linkClass = computed(() => [
+        'inline-block rounded-md px-1 py-0.5 transition-colors',
+        'hover:text-rancho-buttercup hover:underline hover:decoration-2 hover:underline-offset-4',
+        focusClass.value,
+    ]);
 </script>
 
 <template>
@@ -45,21 +58,20 @@
         class="rounded-t-2xl pb-8 pt-14 transition-colors sm:pt-16 md:rounded-t-[2rem]"
         :class="
             isDark
-                ? 'border-rancho-ink-800 bg-rancho-ink-900 text-rancho-ink-200 border-t'
+                ? 'border-t border-rancho-ink-800 bg-rancho-ink-900 text-rancho-ink-200'
                 : 'border-t border-rancho-forest/20 bg-rancho-forest text-rancho-paper'
         "
     >
         <AppContainer>
-            <div class="mb-16 grid grid-cols-1 gap-14 sm:grid-cols-2 lg:grid-cols-4">
+            <div class="mb-16 grid grid-cols-1 gap-14 sm:grid-cols-2 sm:gap-9 lg:grid-cols-4">
                 <!-- BRAND -->
                 <div class="flex flex-col items-center gap-4">
                     <div class="flex items-center gap-3">
                         <CowIcon
-                            class="text-rancho-ink-950 h-8 w-8 shrink-0 rounded-full bg-rancho-buttercup p-1 sm:h-12 sm:w-12"
+                            class="h-8 w-8 shrink-0 rounded-full bg-rancho-buttercup p-1 text-rancho-ink-950 sm:h-12 sm:w-12"
                         />
                         <span
-                            class="font-header text-xl tracking-wide sm:text-2xl"
-                            :class="isDark ? 'text-rancho-paper' : 'text-rancho-paper'"
+                            class="font-header text-xl tracking-wide text-rancho-paper sm:text-2xl"
                         >
                             {{ footer.site_name || 'Молочная Долина' }}
                         </span>
@@ -78,12 +90,13 @@
                             :href="footer.contact_telegram"
                             target="_blank"
                             rel="noopener noreferrer"
-                            class="transition-colors"
-                            :class="
+                            class="rounded-md transition-colors"
+                            :class="[
                                 isDark
                                     ? 'text-rancho-ink-200 hover:text-rancho-buttercup'
-                                    : 'text-rancho-paper hover:text-rancho-buttercup'
-                            "
+                                    : 'text-rancho-paper hover:text-rancho-buttercup',
+                                focusClass,
+                            ]"
                             aria-label="Telegram"
                         >
                             <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
@@ -98,12 +111,13 @@
                             :href="footer.contact_vk"
                             target="_blank"
                             rel="noopener noreferrer"
-                            class="transition-colors"
-                            :class="
+                            class="rounded-md transition-colors"
+                            :class="[
                                 isDark
                                     ? 'text-rancho-ink-200 hover:text-rancho-buttercup'
-                                    : 'text-rancho-paper hover:text-rancho-buttercup'
-                            "
+                                    : 'text-rancho-paper hover:text-rancho-buttercup',
+                                focusClass,
+                            ]"
                             aria-label="VK"
                         >
                             <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
@@ -117,18 +131,12 @@
 
                 <!-- SECTIONS -->
                 <div class="flex flex-col items-center">
-                    <h4
-                        class="mb-6 font-header text-lg sm:text-xl"
-                        :class="isDark ? 'text-rancho-buttercup' : 'text-rancho-buttercup'"
-                    >
+                    <h4 class="mb-6 font-header text-lg text-rancho-buttercup sm:text-xl">
                         Разделы
                     </h4>
                     <ul class="space-y-4 font-sans text-sm opacity-90">
                         <li v-for="section in sectionsItems" :key="section.pathName">
-                            <Link
-                                :href="route(section.pathName)"
-                                class="inline-block transition-transform hover:translate-x-2 hover:text-rancho-buttercup"
-                            >
+                            <Link :href="route(section.pathName)" :class="linkClass">
                                 {{ section.name }}
                             </Link>
                         </li>
@@ -137,17 +145,14 @@
 
                 <!-- PRODUCTION -->
                 <div class="flex flex-col items-center">
-                    <h4
-                        class="mb-6 font-header text-lg sm:text-xl"
-                        :class="isDark ? 'text-rancho-buttercup' : 'text-rancho-buttercup'"
-                    >
+                    <h4 class="mb-6 font-header text-lg text-rancho-buttercup sm:text-xl">
                         Продукция
                     </h4>
                     <ul class="space-y-4 font-sans text-sm opacity-90">
                         <li v-for="production in productionItems" :key="production.params">
                             <Link
                                 :href="route(production.pathName, { category: production.params })"
-                                class="transition-colors hover:text-rancho-buttercup"
+                                :class="linkClass"
                             >
                                 {{ production.name }}
                             </Link>
@@ -157,10 +162,7 @@
 
                 <!-- CONTACTS -->
                 <div class="flex flex-col items-center">
-                    <h4
-                        class="mb-6 font-header text-lg sm:text-xl"
-                        :class="isDark ? 'text-rancho-buttercup' : 'text-rancho-buttercup'"
-                    >
+                    <h4 class="mb-6 font-header text-lg text-rancho-buttercup sm:text-xl">
                         Связаться с нами
                     </h4>
                     <ul class="space-y-4 font-sans text-sm opacity-90">
@@ -177,10 +179,7 @@
                                 class="h-5 w-5 shrink-0 text-rancho-buttercup"
                                 aria-hidden="true"
                             />
-                            <a
-                                :href="telHref(footer.contact_phone)"
-                                class="transition-colors hover:text-rancho-buttercup"
-                            >
+                            <a :href="telHref(footer.contact_phone)" :class="linkClass">
                                 {{ footer.contact_phone }}
                             </a>
                         </li>
@@ -190,10 +189,7 @@
                                 class="h-5 w-5 shrink-0 text-rancho-buttercup"
                                 aria-hidden="true"
                             />
-                            <a
-                                :href="`mailto:${footer.contact_email}`"
-                                class="transition-colors hover:text-rancho-buttercup"
-                            >
+                            <a :href="`mailto:${footer.contact_email}`" :class="linkClass">
                                 {{ footer.contact_email }}
                             </a>
                         </li>
@@ -206,22 +202,24 @@
                 class="flex flex-col justify-between gap-6 border-t pt-8 sm:gap-4 md:flex-row md:items-center"
                 :class="isDark ? 'border-rancho-ink-800' : 'border-rancho-paper/10'"
             >
-                <p class="font-sans text-xs opacity-60">
+                <p class="text-center font-sans text-xs opacity-60">
                     © {{ new Date().getFullYear() }} {{ footer.site_name || 'Молочная Долина' }}.
                     Сделано с любовью к природе.
                 </p>
 
-                <div class="flex flex-wrap gap-x-6 gap-y-2 font-sans text-xs opacity-80">
+                <div
+                    class="flex flex-wrap justify-center gap-x-6 gap-y-2 font-sans text-xs opacity-80"
+                >
                     <Link
                         :href="route('pages.show', 'privacy')"
-                        class="transition-colors hover:text-rancho-buttercup hover:opacity-100"
+                        :class="[linkClass, 'hover:opacity-100']"
                     >
                         Политика конфиденциальности
                     </Link>
 
                     <Link
                         :href="route('pages.show', 'offer')"
-                        class="transition-colors hover:text-rancho-buttercup hover:opacity-100"
+                        :class="[linkClass, 'hover:opacity-100']"
                     >
                         Публичная оферта
                     </Link>

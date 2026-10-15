@@ -142,7 +142,7 @@
                                 {{ page?.data.type_label }}
                             </span>
 
-                            <span class="text-rancho-ink-500 text-[10px] font-medium">
+                            <span class="text-[10px] font-medium text-rancho-ink-500">
                                 ID: {{ page?.data.id }}
                             </span>
                         </div>
@@ -160,7 +160,7 @@
                         :href="page?.data.url"
                         target="_blank"
                         rel="noopener noreferrer"
-                        class="text-rancho-ink-500 hover:text-rancho-mint group flex items-center gap-2 text-[10px] font-black uppercase transition-colors sm:self-auto"
+                        class="group flex items-center gap-2 text-[10px] font-black uppercase text-rancho-ink-500 transition-colors hover:text-rancho-mint sm:self-auto"
                     >
                         <EyeIcon
                             class="h-4 w-4 transition-transform group-hover:scale-110"
@@ -172,8 +172,8 @@
             </div>
 
             <!-- TABS -->
-            <div
-                class="border-rancho-ink-800 flex overflow-x-auto border-b"
+            <nav
+                class="flex gap-1 overflow-x-auto rounded-2xl border border-rancho-ink-800 bg-rancho-ink-950 p-1.5 sm:gap-2 sm:rounded-3xl sm:p-2"
                 role="tablist"
                 aria-label="Разделы формы"
             >
@@ -184,16 +184,16 @@
                     @click="activeTab = tab.id"
                     :aria-selected="activeTab === tab.id"
                     :class="[
-                        'focus-visible:ring-rancho-mint/40 flex shrink-0 items-center gap-2 border-b-2 px-4 py-3 text-[10px] font-black uppercase tracking-widest transition-all focus:outline-none focus-visible:ring-2 sm:px-6 sm:py-4',
                         activeTab === tab.id
-                            ? 'border-rancho-mint text-rancho-mint'
-                            : 'text-rancho-ink-500 hover:text-rancho-ink-200 border-transparent',
+                            ? 'shadow-lg bg-rancho-mint text-rancho-ink-950 shadow-rancho-mint/20'
+                            : 'text-rancho-ink-400 hover:bg-rancho-ink-900 hover:text-rancho-ink-100',
+                        'flex shrink-0 items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-[10px] font-black uppercase tracking-widest outline-none transition-all focus-visible:ring-2 focus-visible:ring-rancho-mint/40 sm:flex-1 sm:gap-3 sm:rounded-2xl sm:px-4 sm:py-3.5',
                     ]"
                 >
                     <component :is="tab.icon" class="h-4 w-4" aria-hidden="true" />
                     {{ tab.name }}
                 </button>
-            </div>
+            </nav>
 
             <!-- FORM -->
             <form @submit.prevent="submit" class="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:gap-8">
@@ -232,6 +232,7 @@
                         <div v-else-if="activeTab === 'seo'" key="seo">
                             <SeoSection
                                 v-model="form.seo"
+                                :page-name="form.title"
                                 :disabled="form.processing"
                                 :errors="form.errors"
                             />
@@ -244,7 +245,7 @@
                     <div class="space-y-6 lg:sticky lg:top-6">
                         <!-- ACTIONS -->
                         <div
-                            class="border-rancho-ink-800 bg-rancho-ink-900/30 flex flex-col gap-4 space-y-6 rounded-2xl border p-4 sm:rounded-3xl sm:p-6 md:p-8"
+                            class="flex flex-col gap-4 space-y-6 rounded-2xl border border-rancho-ink-800 bg-rancho-ink-900/30 p-4 sm:rounded-3xl sm:p-6 md:p-8"
                         >
                             <BaseSwitch
                                 v-model="form.is_active"
@@ -265,7 +266,7 @@
                         <!-- META + DELETE -->
                         <div
                             v-if="isEdit"
-                            class="border-rancho-ink-800 bg-rancho-ink-900/30 space-y-4 rounded-2xl border p-4 sm:rounded-3xl sm:p-6 md:p-8"
+                            class="space-y-4 rounded-2xl border border-rancho-ink-800 bg-rancho-ink-900/30 p-4 sm:rounded-3xl sm:p-6 md:p-8"
                         >
                             <div class="flex justify-between text-[10px] font-black uppercase">
                                 <span class="text-rancho-ink-500">Отзывы</span>
@@ -297,7 +298,7 @@
 
                             <div
                                 v-else
-                                class="bg-rancho-ember/10 text-rancho-ember ring-rancho-ember/20 rounded-xl p-3 text-center text-[9px] font-bold uppercase ring-1 ring-inset"
+                                class="rounded-xl bg-rancho-ember/10 p-3 text-center text-[9px] font-bold uppercase text-rancho-ember ring-1 ring-inset ring-rancho-ember/20"
                             >
                                 Системная страница: удаление запрещено
                             </div>

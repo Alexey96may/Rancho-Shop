@@ -50,10 +50,14 @@ class AnimalController extends Controller
         return Inertia::render('Admin/Animals/FormPage', [
             'animal' => null,
             'categories' => Category::where('type', 'animal')->get(['id', 'name', 'slug']),
+            'parents' => Animal::query()
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->get(['id', 'name', 'category_id']),
             'seo' => $this->seo('Добавление новой особи', robots: 'noindex, nofollow'),
             'backUrl' => $request->query('back')
-                    ? route('admin.animals.index') . $request->query('back')
-                    : route('admin.animals.index'),
+                ? route('admin.animals.index') . $request->query('back')
+                : route('admin.animals.index'),
         ]);
     }
 
@@ -86,6 +90,11 @@ class AnimalController extends Controller
         return Inertia::render('Admin/Animals/FormPage', [
             'animal' => new AdminAnimalResource($animal),
             'categories' => Category::where('type', 'animal')->get(['id', 'name', 'slug']),
+            'parents' => Animal::query()
+                ->where('is_active', true)
+                ->where('id', '!=', $animal->id)
+                ->orderBy('name')
+                ->get(['id', 'name', 'category_id']),
             'seo' => $this->seo("Редактирование {$animal->name}", robots: 'noindex, nofollow'),
             'backUrl' => $request->query('back')
                 ? route('admin.animals.index') . $request->query('back')
@@ -149,8 +158,10 @@ class AnimalController extends Controller
     {
         return Animal::query()
             ->when($request->current_id, fn ($q, $id) => $q->where('id', '!=', $id))
-            ->where('category_id', $request->category_id)
-            ->get(['id', 'name']);
+            ->when($request->category_id, fn ($q, $id) => $q->where('category_id', $id))
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get(['id', 'name', 'category_id']);
     }
 
     public function deleteMedia(Animal $animal, Media $media)

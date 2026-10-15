@@ -30,7 +30,7 @@
     /** Классы для пункта навигации */
     function navLinkClasses(isActive: boolean): string {
         return [
-            'flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-rancho-buttercup/40',
+            'flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold transition-all outline-none focus-visible:ring-2 focus-visible:ring-rancho-buttercup/40',
             isActive
                 ? 'bg-rancho-ink-800 text-white ring-1 ring-rancho-ink-700'
                 : 'text-rancho-ink-400 hover:bg-rancho-ink-900 hover:text-white',
@@ -39,40 +39,40 @@
 </script>
 
 <template>
-    <div class="bg-rancho-ink-950 min-h-screen text-white">
+    <div class="bg-rancho-ink-950 text-white">
         <SeoMeta :force-robots="'nofollow, noindex'" />
         <Toaster theme="dark" />
 
         <TheHeader theme="dark" />
 
-        <div class="py-12 sm:py-20">
+        <div class="min-h-screen py-12 sm:py-20">
             <AppContainer>
-                <h1 class="mb-8 text-xl font-black sm:text-2xl">Личный кабинет</h1>
+                <h1 class="mb-12 text-center text-xl font-black sm:text-left sm:text-2xl">
+                    Личный кабинет
+                </h1>
 
                 <div class="grid grid-cols-1 gap-8 md:grid-cols-4">
                     <!-- SIDEBAR / MOBILE TABS -->
                     <aside class="md:flex md:flex-col md:gap-2">
                         <!-- ADMIN LINK (только desktop) -->
-                        <template v-if="isStuff">
+                        <div v-if="isStuff" class="border-b border-rancho-ink-800 pb-8 sm:pb-6">
                             <Link
                                 :href="route('admin.dashboard')"
-                                class="hover:text-rancho-ink-950 mb-3 hidden items-center gap-3 rounded-2xl border border-rancho-buttercup/30 bg-rancho-buttercup/10 px-4 py-3 text-sm font-black text-rancho-buttercup transition-all hover:bg-rancho-buttercup focus:outline-none focus-visible:ring-2 focus-visible:ring-rancho-buttercup/40 md:flex"
+                                class="hidden items-center gap-3 rounded-2xl border border-rancho-buttercup/30 bg-rancho-buttercup/10 px-4 py-3 text-sm font-black text-rancho-buttercup outline-none transition-all hover:bg-rancho-buttercup hover:text-rancho-ink-950 focus-visible:ring-2 focus-visible:ring-rancho-buttercup/40 md:flex"
                             >
                                 <CpuChipIcon class="h-5 w-5 animate-pulse" aria-hidden="true" />
                                 Панель управления
                             </Link>
 
-                            <hr class="border-rancho-ink-800 my-1 hidden md:block" />
-
                             <!-- ADMIN LINK (mobile compact) -->
                             <Link
                                 :href="route('admin.dashboard')"
-                                class="hover:text-rancho-ink-950 mb-2 flex w-full items-center justify-center gap-2 rounded-2xl border border-rancho-buttercup/30 bg-rancho-buttercup/10 px-4 py-2.5 text-xs font-black text-rancho-buttercup transition-all hover:bg-rancho-buttercup focus:outline-none focus-visible:ring-2 focus-visible:ring-rancho-buttercup/40 md:hidden"
+                                class="flex w-full items-center justify-center gap-2 rounded-2xl border border-rancho-buttercup/30 bg-rancho-buttercup/10 px-4 py-2.5 text-xs font-black text-rancho-buttercup outline-none transition-all hover:bg-rancho-buttercup hover:text-rancho-ink-950 focus-visible:ring-2 focus-visible:ring-rancho-buttercup/40 md:hidden"
                             >
                                 <CpuChipIcon class="h-4 w-4 animate-pulse" aria-hidden="true" />
                                 Админка
                             </Link>
-                        </template>
+                        </div>
 
                         <!-- MOBILE: horizontal scroll tabs -->
                         <nav
@@ -120,7 +120,7 @@
                                 :href="route('logout')"
                                 method="post"
                                 as="button"
-                                class="text-rancho-ink-500 flex shrink-0 items-center gap-2 whitespace-nowrap rounded-2xl px-4 py-3 text-sm font-bold transition-all hover:bg-rose-500/10 hover:text-rose-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/40 md:hidden"
+                                class="flex shrink-0 items-center gap-2 whitespace-nowrap rounded-2xl px-4 py-3 text-sm font-bold text-rancho-ink-500 outline-none transition-all hover:bg-rose-500/10 hover:text-rose-400 focus-visible:ring-2 focus-visible:ring-rose-500/40 md:hidden"
                             >
                                 <ArrowRightStartOnRectangleIcon
                                     class="h-4 w-4"
@@ -130,14 +130,14 @@
                             </Link>
                         </nav>
 
-                        <hr class="border-rancho-ink-800 my-2 hidden md:block" />
+                        <hr class="my-2 hidden border-rancho-ink-800 md:block" />
 
                         <!-- LOGOUT: desktop -->
                         <Link
                             :href="route('logout')"
                             method="post"
                             as="button"
-                            class="text-rancho-ink-500 hidden w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-bold transition-all hover:bg-rose-500/10 hover:text-rose-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/40 md:flex"
+                            class="hidden w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-bold text-rancho-ink-500 outline-none transition-all hover:bg-rose-500/10 hover:text-rose-400 focus-visible:ring-2 focus-visible:ring-rose-500/40 md:flex"
                         >
                             <ArrowRightStartOnRectangleIcon class="h-5 w-5" aria-hidden="true" />
                             Выйти из профиля
@@ -146,7 +146,7 @@
 
                     <!-- MAIN -->
                     <main
-                        class="sm:border-rancho-ink-800 sm:bg-rancho-ink-900/50 rounded-2xl backdrop-blur-sm sm:border sm:p-6 md:col-span-3"
+                        class="rounded-2xl backdrop-blur-sm sm:border sm:border-rancho-ink-800 sm:bg-rancho-ink-900/50 sm:p-6 md:col-span-3"
                     >
                         <h2 class="mb-6 text-xl font-black text-white">{{ title }}</h2>
                         <slot />

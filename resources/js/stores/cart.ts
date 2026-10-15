@@ -59,15 +59,24 @@ export const useCartStore = defineStore(
         // ACTIONS
         // ======================
         function add(variant: ProductVariantDTO, product?: Product) {
+            if (variant.stock <= 0) {
+                notify.error(`«${product?.name ?? 'Товар'}» нет в наличии`);
+                return;
+            }
+
             const existingItem = items.value.find((i) => i.variant_id === variant.id);
 
             if (existingItem) {
-                if (existingItem.quantity >= existingItem.stock) {
+                const step = quantityFallback(variant.unit?.slug ?? '', variant.stock);
+                const next = existingItem.quantity + step;
+
+                if (next > existingItem.stock) {
                     existingItem.valid = false;
                     existingItem.reason = 'quantity_exceeded';
                     return;
                 }
-                existingItem.quantity = quantityFallback(variant.unit?.slug ?? '', variant.stock);
+
+                existingItem.quantity = round(next);
                 return;
             }
 
@@ -107,7 +116,7 @@ export const useCartStore = defineStore(
         }
 
         // Removing one unit or the entire product
-        function destroy(variantId: number) {
+        function destroy(variantId: number, hasUndo: boolean = false) {
             const index = items.value.findIndex((i) => i.variant_id === variantId);
             if (index === -1) return;
 
@@ -117,19 +126,23 @@ export const useCartStore = defineStore(
 
             pendingDestroyIds.value.add(variantId);
 
-            notify.withUndo(
-                `«${removed.name}» удалён из корзины`,
-                () => {
-                    const at = items.value.findIndex((i) => i.variant_id === variantId);
-                    const insertAt = at === -1 ? items.value.length : at;
-                    items.value.splice(insertAt, 0, removed);
-                    pendingDestroyIds.value.delete(variantId);
-                }, // Undo
-                () => {
-                    pendingDestroyIds.value.delete(variantId);
-                },
-                5000,
-            );
+            if (!hasUndo) {
+                pendingDestroyIds.value.delete(variantId);
+            } else {
+                notify.withUndo(
+                    `«${removed.name}» удалён из корзины`,
+                    () => {
+                        const at = items.value.findIndex((i) => i.variant_id === variantId);
+                        const insertAt = at === -1 ? items.value.length : at;
+                        items.value.splice(insertAt, 0, removed);
+                        pendingDestroyIds.value.delete(variantId);
+                    }, // Undo
+                    () => {
+                        pendingDestroyIds.value.delete(variantId);
+                    },
+                    5000,
+                );
+            }
         }
 
         // Clearing the entire cart (after ordering)
@@ -213,7 +226,7 @@ export const useCartStore = defineStore(
             }
         }
 
-        function decrement(variantId: number, step = 1) {
+        function decrement(variantId: number, step = 1, hasUndo?: boolean) {
             const item = items.value.find((i) => i.variant_id === variantId);
             if (!item) return;
 
@@ -221,10 +234,14 @@ export const useCartStore = defineStore(
 
             if (next > 0) {
                 item.quantity = next;
+                if (next <= item.stock) {
+                    item.valid = true;
+                    item.reason = null;
+                }
                 return;
             }
 
-            destroy(variantId);
+            destroy(variantId, hasUndo);
         }
 
         function round(value: number) {

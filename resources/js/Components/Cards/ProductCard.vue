@@ -85,13 +85,13 @@
                     {{ product.category?.name }}
                 </div>
 
-                <h3
-                    class="text-lg font-bold leading-tight text-rancho-forest transition-colors group-hover:text-rancho-pine sm:text-xl"
-                >
-                    <Link :href="route('catalog.show', product.slug)">
+                <Link :href="route('catalog.show', product.slug)">
+                    <h3
+                        class="text-lg font-bold leading-tight text-rancho-forest transition-colors group-hover:text-rancho-pine sm:text-xl"
+                    >
                         {{ product.name }}
-                    </Link>
-                </h3>
+                    </h3></Link
+                >
             </div>
 
             <!-- Блок с ценой (если вариант есть) -->
@@ -123,7 +123,7 @@
 
             <!-- Кнопка действия -->
             <div class="mt-auto">
-                <BuyButton v-if="isAvailable" :product="product" />
+                <BuyButton v-if="isAvailable" :has-undo="false" :product="product" />
 
                 <button
                     v-else

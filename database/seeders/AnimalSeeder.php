@@ -27,7 +27,11 @@ class AnimalSeeder extends Seeder
             'is_active' => true,
             'status' => 'healthy',
             'bio' => 'Легенда фермы.',
-            'features' => ['breed' => 'Голштинская', 'weight' => '580кг'],
+            'features' => [
+                ['label' => 'Вес', 'value' => '100 кг'],
+                ['label' => 'Рост', 'value' => '1 метр'],
+                ['label' => 'Порода', 'value' => 'царская'],
+            ],
         ]);
         $this->addMedia($zorka, 'cow.jpg');
 

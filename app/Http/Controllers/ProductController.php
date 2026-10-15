@@ -48,6 +48,10 @@ class ProductController extends Controller
             'media',
             'seo',
             'category',
+            'animals' => function ($query) {
+                $query->where('is_active', true)
+                    ->select('animals.id', 'animals.name', 'animals.slug');
+            },
             'defaultVariant.unit',
         ]);
 

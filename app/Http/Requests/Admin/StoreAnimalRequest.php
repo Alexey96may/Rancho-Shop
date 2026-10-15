@@ -33,6 +33,8 @@ class StoreAnimalRequest extends FormRequest
             'status' => 'required|string',
             'bio' => 'nullable|string',
             'features' => 'nullable|array',
+            'features.*.label' => 'required|string|max:255',
+            'features.*.value' => 'nullable|string|max:1000',
             'is_active' => 'boolean',
             'is_commentable' => 'boolean',
             'remove_media' => 'nullable|array',

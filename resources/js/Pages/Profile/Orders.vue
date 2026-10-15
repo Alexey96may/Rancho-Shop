@@ -55,15 +55,15 @@
 </script>
 
 <template>
-    <div class="space-y-6">
+    <div class="space-y-8">
         <!-- EMPTY -->
         <div
             v-if="orders.data.length === 0"
             v-scroll-reveal
-            class="border-rancho-ink-700 bg-rancho-ink-900/20 rounded-2xl border border-dashed py-12 text-center"
+            class="rounded-2xl border border-dashed border-rancho-ink-700 bg-rancho-ink-900/20 py-12 text-center"
             role="status"
         >
-            <p class="text-rancho-ink-300 text-sm">Вы ещё не совершали заказов на нашем сайте.</p>
+            <p class="text-sm text-rancho-ink-300">Вы ещё не совершали заказов на нашем сайте.</p>
         </div>
 
         <!-- LIST -->
@@ -72,7 +72,7 @@
                 v-for="order in orders.data"
                 :key="order.id"
                 v-scroll-reveal
-                class="border-rancho-ink-800 bg-rancho-ink-950 rounded-2xl border p-5 transition-all"
+                class="rounded-2xl border border-rancho-ink-800 bg-rancho-ink-950 p-5 transition-all"
                 :class="{
                     'opacity-60': order.status === 'cancelled',
                     'scale-95 opacity-60': isDeleting(order.id),
@@ -80,11 +80,11 @@
             >
                 <!-- HEADER -->
                 <div
-                    class="border-rancho-ink-800 mb-4 flex flex-wrap items-center justify-between gap-4 border-b pb-3"
+                    class="mb-4 flex flex-wrap items-center justify-between gap-4 border-b border-rancho-ink-800 pb-3"
                 >
                     <div>
                         <h3 class="text-sm font-black text-white">Заказ №{{ order.id }}</h3>
-                        <span class="text-rancho-ink-400 mt-0.5 block text-[10px]">
+                        <span class="mt-0.5 block text-[10px] text-rancho-ink-400">
                             От:
                             <BaseSmartTime :date="order.created_at" theme="dark" />
                         </span>
@@ -105,21 +105,21 @@
                     <div
                         v-for="item in order.items"
                         :key="item.id"
-                        class="bg-rancho-ink-900/40 flex items-center justify-between gap-3 rounded-xl p-2 text-xs"
+                        class="flex items-center justify-between gap-3 rounded-xl bg-rancho-ink-900/40 p-2 text-xs"
                     >
                         <!-- Есть slug → ссылка, иначе текст -->
                         <Link
                             v-if="item.product_slug"
                             :href="route('catalog.show', item.product_slug)"
-                            class="text-rancho-ink-200 min-w-0 font-medium transition-colors hover:text-rancho-buttercup hover:underline"
+                            class="min-w-0 font-medium text-rancho-ink-200 transition-colors hover:text-rancho-buttercup hover:underline"
                         >
                             {{ item.product_name || 'Товар' }}
                             <span class="ml-1 font-black text-white"> ×{{ item.quantity }} </span>
                         </Link>
 
-                        <span v-else class="text-rancho-ink-400 min-w-0 font-medium italic">
+                        <span v-else class="min-w-0 font-medium italic text-rancho-ink-400">
                             {{ item.product_name || 'Удалённый товар' }}
-                            <span class="text-rancho-ink-200 ml-1 font-black">
+                            <span class="ml-1 font-black text-rancho-ink-200">
                                 ×{{ item.quantity }}
                             </span>
                         </span>
@@ -132,11 +132,11 @@
 
                 <!-- FOOTER -->
                 <div
-                    class="border-rancho-ink-800 mt-2 flex items-center justify-between gap-4 border-t pt-3"
+                    class="mt-2 flex items-center justify-between gap-4 border-t border-rancho-ink-800 pt-3"
                 >
                     <div>
                         <span
-                            class="text-rancho-ink-400 block text-[10px] font-bold uppercase tracking-wider"
+                            class="block text-[10px] font-bold uppercase tracking-wider text-rancho-ink-400"
                         >
                             Итого к оплате
                         </span>

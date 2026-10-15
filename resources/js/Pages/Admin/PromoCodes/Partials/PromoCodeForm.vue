@@ -127,6 +127,7 @@
                 v-model="form.expires_at"
                 v-model:error="form.errors.expires_at"
                 label="Срок действия"
+                mode="datetime-local"
                 placeholder="Выберите дату окончания"
                 :disabled="form.processing"
             />
@@ -159,9 +160,7 @@
                 :disabled="form.processing"
             />
 
-            <div class="flex flex-wrap items-center justify-between gap-2">
-                <BaseCancelButton :href="returnPage" label="Назад" theme="dark" />
-
+            <div class="flex flex-wrap justify-end gap-2">
                 <BaseSubmitButton
                     :processing="form.processing"
                     :is-edit="isEdit"

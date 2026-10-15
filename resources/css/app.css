@@ -258,3 +258,13 @@ html {
         }
     }
 }
+
+@layer base {
+    *:focus {
+        outline: none;
+    }
+
+    *:focus-visible {
+        outline: none;
+    }
+}

@@ -76,10 +76,10 @@
 </script>
 
 <template>
-    <div class="space-y-8">
+    <div class="min-h-screen space-y-8">
         <!-- ROLE -->
         <div v-scroll-reveal class="flex items-center justify-between gap-2">
-            <span class="text-rancho-ink-500 block text-xs font-medium"> Ваша роль на сайте: </span>
+            <span class="block text-xs font-medium text-rancho-ink-500"> Ваша роль на сайте: </span>
             <span
                 v-if="user?.role"
                 class="inline-block rounded-xl border px-3 py-1 text-xs font-black uppercase tracking-wider"
@@ -109,15 +109,15 @@
         <div
             v-scroll-reveal
             v-if="latestOrder"
-            class="border-rancho-ink-800 from-rancho-ink-950 to-rancho-ink-900/60 flex flex-col gap-4 rounded-2xl border bg-gradient-to-r p-4 sm:flex-row sm:items-center sm:justify-between"
+            class="flex flex-col gap-4 rounded-2xl border border-rancho-ink-800 bg-gradient-to-r from-rancho-ink-950 to-rancho-ink-900/60 p-4 sm:flex-row sm:items-center sm:justify-between"
         >
             <div class="space-y-1">
                 <span
-                    class="text-rancho-ink-400 block text-[10px] font-black uppercase tracking-wider"
+                    class="block text-[10px] font-black uppercase tracking-wider text-rancho-ink-400"
                 >
                     Последний заказ
                 </span>
-                <div class="text-rancho-ink-300 text-xs">
+                <div class="text-xs text-rancho-ink-300">
                     От
                     <BaseSmartTime :date="latestOrder?.data.created_at" theme="dark" />
                     на сумму
@@ -127,7 +127,7 @@
 
             <Link
                 :href="route('profile.orders.index')"
-                class="border-rancho-ink-700 bg-rancho-ink-800 text-rancho-ink-200 hover:bg-rancho-ink-700 inline-flex items-center justify-center rounded-xl border px-4 py-2 text-xs font-black uppercase tracking-widest transition-colors hover:border-rancho-buttercup/50 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-rancho-buttercup/40"
+                class="inline-flex items-center justify-center rounded-xl border border-rancho-ink-700 bg-rancho-ink-800 px-4 py-2 text-xs font-black uppercase tracking-widest text-rancho-ink-200 transition-colors hover:border-rancho-buttercup/50 hover:bg-rancho-ink-700 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-rancho-buttercup/40"
             >
                 Все заказы
             </Link>
@@ -172,7 +172,7 @@
 
             <!-- PASSWORD -->
             <div class="space-y-4">
-                <h3 class="text-rancho-ink-500 text-sm font-black uppercase tracking-wider">
+                <h3 class="text-sm font-black uppercase tracking-wider text-rancho-ink-500">
                     Изменение пароля
                 </h3>
 

@@ -16,9 +16,7 @@
         existingVoiceUrl?: string | null;
     }>();
 
-    const { getPreview, handleFile, clearNewVoice, removeGalleryItem } = useMediaUpload(
-        props.modelValue,
-    );
+    const { handleFile, clearNewVoice, removeGalleryItem } = useMediaUpload(props.modelValue);
 
     const selectedImage = ref<string | null>(null);
 
@@ -29,10 +27,9 @@
         },
     });
 
-    const openImage = (item: GalleryItem) => {
-        const previewUrl = getPreview(item);
-        if (previewUrl) {
-            selectedImage.value = previewUrl;
+    const openImage = (url: string) => {
+        if (url) {
+            selectedImage.value = url;
         }
     };
 </script>

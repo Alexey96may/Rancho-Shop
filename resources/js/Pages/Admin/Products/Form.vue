@@ -1,11 +1,12 @@
 <script setup lang="ts">
-    import { type PropType, computed, ref } from 'vue';
+    import { type PropType, computed, ref, useId } from 'vue';
 
     import { useForm } from '@inertiajs/vue3';
 
     import { PhotoIcon } from '@heroicons/vue/24/outline';
 
     import FeaturesSection from '@/Components/Admin/Sections/FeaturesSection.vue';
+    import ProductScheduleFields from '@/Components/Admin/Sections/ProductScheduleFields.vue';
     import SEOSection from '@/Components/Admin/Sections/SEOSection.vue';
     import AdminPageHeader from '@/Components/Admin/Shared/AdminPageHeader.vue';
     import AdminBaseTextarea from '@/Components/Admin/UI/AdminBaseTextarea.vue';
@@ -26,7 +27,15 @@
     import { useAdminForm } from '@/composables/crud/useAdminForm';
     import type { GalleryItem } from '@/composables/features/useMediaUpload';
     import { useMediaUpload, useSingleImagePreview } from '@/composables/features/useMediaUpload';
-    import type { AdminProduct, AvailabilityType, Category, Media, ResourceSingle } from '@/types';
+    import type {
+        AdminProduct,
+        AvailabilityType,
+        Category,
+        Media,
+        ProductAttribute,
+        ProductSchedule,
+        ResourceSingle,
+    } from '@/types';
 
     defineOptions({ layout: AdminLayout });
 
@@ -79,6 +88,9 @@
     const activeTab = ref('general');
     const { tabs } = useAdminTabs();
 
+    let attrCounter = 0;
+    const makeAttrId = () => `attr-${++attrCounter}`;
+
     const form = useForm({
         name: props.product?.data?.name ?? '',
         slug: props.product?.data?.slug ?? '',
@@ -87,7 +99,10 @@
         availability_type: props.product?.data?.availability.value ?? 'stock',
         is_active: props.product?.data?.is_active ?? true,
         is_commentable: props.product?.data?.is_commentable ?? true,
-        attributes: props.product?.data?.attributes ?? {},
+        attributes: (props.product?.data?.attributes ?? []).map((a) => ({
+            ...a,
+            id: a.id ?? makeAttrId(),
+        })) as ProductAttribute[],
         animal_ids: props.product?.data?.animals?.map((a) => a.id) ?? [],
         main_photo: props.product?.data?.main_photo
             ? [...props.product.data?.main_photo]
@@ -96,6 +111,11 @@
             ? [...props.product.data?.gallery]
             : ([] as Array<Media | File>),
         remove_media: [] as number[],
+        schedule: (props.product?.data.schedule ?? {
+            next_delivery: props.product?.data.schedule?.next_delivery ?? null,
+            interval_days: props.product?.data.schedule?.interval_days ?? null,
+            note: props.product?.data.schedule?.note ?? null,
+        }) as ProductSchedule,
         seo: {
             title: props.product?.data.seo?.title || '',
             description: props.product?.data.seo?.description || '',
@@ -107,7 +127,7 @@
         voice: null,
     });
 
-    const { getPreview, handleFile, removeGalleryItem } = useMediaUpload(form);
+    const { handleFile, removeGalleryItem } = useMediaUpload(form);
     const { currentFileForUpload, currentExistingImage } = useSingleImagePreview(
         () => form.main_photo,
     );
@@ -151,10 +171,9 @@
         { value: 'preorder', label: 'Предзаказ' },
     ];
 
-    const openImage = (item: GalleryItem) => {
-        const previewUrl = getPreview(item);
-        if (previewUrl) {
-            selectedImage.value = previewUrl;
+    const openImage = (url: string) => {
+        if (url) {
+            selectedImage.value = url;
         }
     };
 
@@ -176,7 +195,7 @@
 
         <!-- TABS -->
         <nav
-            class="flex overflow-x-auto border-b border-rancho-ink-800 pb-px"
+            class="flex gap-1 overflow-x-auto rounded-2xl border border-rancho-ink-800 bg-rancho-ink-950 p-1.5 sm:gap-2 sm:rounded-3xl sm:p-2"
             role="tablist"
             aria-label="Разделы формы"
         >
@@ -187,12 +206,12 @@
                 @click="activeTab = tab.id"
                 role="tab"
                 :aria-selected="activeTab === tab.id"
-                class="flex shrink-0 items-center gap-2 px-4 py-3 text-[10px] font-black uppercase tracking-widest transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-rancho-mint/40 sm:px-6 sm:py-4 sm:text-xs"
-                :class="
+                :class="[
                     activeTab === tab.id
-                        ? 'border-b-2 border-rancho-mint text-white'
-                        : 'border-b-2 border-transparent text-rancho-ink-500 hover:text-rancho-ink-200'
-                "
+                        ? 'shadow-lg bg-rancho-mint text-rancho-ink-950 shadow-rancho-mint/20'
+                        : 'text-rancho-ink-400 hover:bg-rancho-ink-900 hover:text-rancho-ink-100',
+                    'flex shrink-0 items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-[10px] font-black uppercase tracking-widest outline-none transition-all focus-visible:ring-2 focus-visible:ring-rancho-mint/40 sm:flex-1 sm:gap-3 sm:rounded-2xl sm:px-4 sm:py-3.5',
+                ]"
             >
                 <component :is="tab.icon" class="h-4 w-4" aria-hidden="true" />
                 {{ tab.name }}
@@ -264,6 +283,8 @@
                         rows="6"
                     />
 
+                    <ProductScheduleFields v-model="form.schedule" :errors="form.errors" />
+
                     <!-- ANIMALS -->
                     <div>
                         <label
@@ -331,12 +352,14 @@
 
                 <FeaturesSection
                     v-if="activeTab === 'features'"
-                    v-model:features="form.attributes"
+                    :errors="form.errors"
+                    v-model:attributes="form.attributes"
                 />
 
                 <SEOSection
                     v-if="activeTab === 'seo'"
                     v-model="form.seo"
+                    :page-name="form.name"
                     :disabled="form.processing"
                 />
             </div>
@@ -380,6 +403,7 @@
                                 <BaseSmartTime
                                     v-if="product?.data.created_at"
                                     :date="product?.data.created_at"
+                                    theme="dark"
                                 />
                             </div>
 

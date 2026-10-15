@@ -140,7 +140,7 @@
     >
         <!-- HEADER -->
         <header class="mb-10 flex items-center justify-between gap-4">
-            <h2 id="comments-title" class="text-2xl font-black text-rancho-forest sm:text-4xl">
+            <h2 id="comments-title" class="text-lg font-black text-rancho-forest sm:text-2xl">
                 {{ title }}
             </h2>
 

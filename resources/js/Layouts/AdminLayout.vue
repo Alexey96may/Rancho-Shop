@@ -5,13 +5,13 @@
     import { Link, usePage } from '@inertiajs/vue3';
 
     import {
-        AcademicCapIcon,
         AdjustmentsHorizontalIcon,
         Bars3Icon,
         ChartBarIcon,
         ChatBubbleBottomCenterTextIcon,
         Cog6ToothIcon,
         DocumentTextIcon,
+        EyeIcon,
         HomeIcon,
         InboxIcon,
         QuestionMarkCircleIcon,
@@ -185,7 +185,7 @@
                         <AdminSidebarLink
                             :href="route('admin.animals.index')"
                             :active="route().current('admin.animals.*')"
-                            :icon="AcademicCapIcon"
+                            :icon="EyeIcon"
                             label="Животные"
                         />
                     </li>

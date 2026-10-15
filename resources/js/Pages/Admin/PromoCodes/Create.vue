@@ -40,7 +40,9 @@
         <AdminPageHeader title="Новый промокод" />
     </Teleport>
 
-    <BaseCancelButton :href="backUrl" label="Назад" />
+    <div class="space-y-10">
+        <BaseCancelButton :href="backUrl" label="Назад" />
 
-    <PromoCodeForm :type-options="typeOptions" @submit="handleSubmit" :return-page="backUrl" />
+        <PromoCodeForm :type-options="typeOptions" @submit="handleSubmit" :return-page="backUrl" />
+    </div>
 </template>

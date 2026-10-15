@@ -109,7 +109,6 @@
             <BaseCreateButton
                 @click="openModal(form)"
                 label="Добавить"
-                theme="dark"
                 class="self-end sm:self-auto"
             />
         </div>

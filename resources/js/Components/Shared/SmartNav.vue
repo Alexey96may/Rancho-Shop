@@ -16,20 +16,25 @@
     interface Props {
         items: NavItem[];
         theme?: Theme;
-        /** Отступ между пунктами в px — должен совпадать с классом gap-* */
         gap?: number;
-        /** Приблизительная ширина кнопки «Ещё», px */
         moreButtonWidth?: number;
     }
 
     const props = withDefaults(defineProps<Props>(), {
         theme: 'light',
-        gap: 24, // = gap-6
+        gap: 24,
         moreButtonWidth: 96,
     });
 
     const page = usePage();
     const isDark = computed(() => props.theme === 'dark');
+
+    /* ===== Единый focus для всех интерактивных элементов ===== */
+    const focusClass = computed(() =>
+        isDark.value
+            ? 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400/60 rounded-md'
+            : 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rancho-pine/40 rounded-md',
+    );
 
     /* ===== Измерения ===== */
     const containerRef = ref<HTMLElement | null>(null);
@@ -48,7 +53,6 @@
     }
 
     onMounted(async () => {
-        // Дожидаемся шрифтов — иначе замер по fallback-шрифту
         if (typeof document !== 'undefined' && 'fonts' in document) {
             await document.fonts.ready.catch(() => {});
         }
@@ -83,7 +87,7 @@
         const n = props.items.length;
         if (!measured.value || !availableWidth.value) return n;
 
-        const available = Math.max(0, availableWidth.value - 8); // ← буфер
+        const available = Math.max(0, availableWidth.value - 8);
         const widths = itemWidths.value;
         const gap = props.gap;
 
@@ -132,7 +136,6 @@
         isDropdownOpen.value = false;
     }
 
-    // Закрытие по клику вне
     function onClickOutside(e: MouseEvent) {
         if (!containerRef.value) return;
         if (!containerRef.value.contains(e.target as Node)) {
@@ -149,15 +152,12 @@
         document.removeEventListener('click', onClickOutside);
     });
 
-    // Закрытие при навигации
     watch(() => page.url, closeDropdown);
 
     function isActive(item: NavItem): boolean {
         const normalize = (url: string): string => {
-            // Убираем query и hash
             let path = url.split('?')[0].split('#')[0];
 
-            // Убираем домен, если он есть
             if (typeof window === 'object') {
                 try {
                     path = new URL(path, window.location.origin).pathname;
@@ -166,18 +166,14 @@
                 }
             }
 
-            // Убираем trailing slash
             return path.replace(/\/+$/, '') || '/';
         };
 
         const currentUrl = normalize(page.url);
         const targetUrl = normalize(item.href);
 
-        // 1. Точное совпадение
         if (currentUrl === targetUrl) return true;
 
-        // 2. Вложенный путь: /catalog/milk подсветит «Каталог»
-        //    НО исключаем корень, чтобы '/' не подсвечивал всё
         if (targetUrl !== '/' && currentUrl.startsWith(targetUrl + '/')) {
             return true;
         }
@@ -185,10 +181,10 @@
         return false;
     }
 
-    /* ===== Классы ссылок ===== */
+    /* ===== Классы ===== */
     function linkClasses(active: boolean): string[] {
         return [
-            'relative whitespace-nowrap font-sans text-sm font-semibold transition-colors lg:text-base',
+            'group relative whitespace-nowrap px-1 py-1 font-sans text-sm font-semibold transition-colors lg:text-base',
             active
                 ? isDark.value
                     ? 'text-orange-400'
@@ -201,9 +197,23 @@
 
     function underlineClasses(active: boolean): string[] {
         return [
-            'absolute -bottom-1 left-0 h-0.5 transition-all',
-            active ? 'w-full' : 'w-0 group-hover:w-full',
+            'pointer-events-none absolute -bottom-0.5 left-1 right-1 h-0.5 transition-all',
+            active ? 'opacity-100' : 'opacity-0 group-hover:opacity-100',
             isDark.value ? 'bg-orange-400' : 'bg-rancho-buttercup',
+        ];
+    }
+
+    /* ===== Классы для ссылок в дропдауне ===== */
+    function dropdownItemClasses(active: boolean): string[] {
+        return [
+            'flex items-center justify-between rounded-xl px-4 py-2.5 text-sm font-semibold transition-colors',
+            active
+                ? isDark.value
+                    ? 'bg-orange-600/10 text-orange-400'
+                    : 'bg-rancho-pine/10 text-rancho-pine'
+                : isDark.value
+                  ? 'text-slate-200 hover:bg-slate-900'
+                  : 'text-rancho-forest hover:bg-rancho-olive/5',
         ];
     }
 </script>
@@ -215,7 +225,7 @@
         :style="{ gap: `${gap}px` }"
         aria-label="Главное меню"
     >
-        <!-- Скрытый слой для измерения ширины пунктов -->
+        <!-- Скрытый слой для измерения -->
         <div
             ref="measureRef"
             class="pointer-events-none absolute -top-[9999px] left-0 flex opacity-0"
@@ -226,7 +236,7 @@
                 v-for="item in items"
                 :key="`measure-${item.href}`"
                 data-measure
-                class="whitespace-nowrap font-sans text-sm font-semibold lg:text-base"
+                class="whitespace-nowrap px-1 font-sans text-sm font-semibold lg:text-base"
             >
                 {{ item.name }}
             </span>
@@ -237,19 +247,18 @@
             v-for="item in visibleItems"
             :key="item.href"
             :href="item.href"
-            class="group"
-            :class="linkClasses(isActive(item))"
+            :class="[...linkClasses(isActive(item)), focusClass]"
             :aria-current="isActive(item) ? 'page' : undefined"
         >
             {{ item.name }}
-            <span :class="underlineClasses(isActive(item))" />
+            <span :class="underlineClasses(isActive(item))" aria-hidden="true" />
         </Link>
 
         <!-- Дропдаун «Ещё» -->
         <div v-if="overflowItems.length" class="relative">
             <button
                 type="button"
-                class="group flex items-center gap-1 whitespace-nowrap font-sans text-sm font-semibold transition-colors lg:text-base"
+                class="group flex items-center gap-1 whitespace-nowrap px-1 py-1 font-sans text-sm font-semibold transition-colors lg:text-base"
                 :class="[
                     overflowItems.some((item) => isActive(item))
                         ? isDark
@@ -258,6 +267,7 @@
                         : isDark
                           ? 'text-slate-200 hover:text-orange-400'
                           : 'text-rancho-forest hover:text-rancho-pine',
+                    focusClass,
                 ]"
                 :aria-expanded="isDropdownOpen"
                 aria-haspopup="menu"
@@ -267,6 +277,7 @@
                 <ChevronDownIcon
                     class="h-4 w-4 transition-transform"
                     :class="{ 'rotate-180': isDropdownOpen }"
+                    aria-hidden="true"
                 />
             </button>
 
@@ -285,16 +296,7 @@
                         v-for="item in overflowItems"
                         :key="item.href"
                         :href="item.href"
-                        class="flex items-center justify-between rounded-xl px-4 py-2.5 text-sm font-semibold transition-colors"
-                        :class="
-                            isActive(item)
-                                ? isDark
-                                    ? 'bg-orange-600/10 text-orange-400'
-                                    : 'bg-rancho-pine/10 text-rancho-pine'
-                                : isDark
-                                  ? 'text-slate-200 hover:bg-slate-900'
-                                  : 'text-rancho-forest hover:bg-rancho-olive/5'
-                        "
+                        :class="[...dropdownItemClasses(isActive(item)), focusClass]"
                         role="menuitem"
                     >
                         <span>{{ item.name }}</span>
@@ -302,6 +304,7 @@
                             v-if="isActive(item)"
                             class="h-1.5 w-1.5 rounded-full"
                             :class="isDark ? 'bg-orange-400' : 'bg-rancho-pine'"
+                            aria-hidden="true"
                         />
                     </Link>
                 </div>

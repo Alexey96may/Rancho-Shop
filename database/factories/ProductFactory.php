@@ -2,12 +2,12 @@
 
 namespace Database\Factories;
 
-use App\Models\Product;
-use App\Models\Category;
-use App\Models\Animal;
-use App\Models\Unit;
-use App\Models\ProductVariant;
 use App\Enums\AvailabilityType;
+use App\Models\Animal;
+use App\Models\Category;
+use App\Models\Product;
+use App\Models\ProductVariant;
+use App\Models\Unit;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
@@ -33,21 +33,23 @@ class ProductFactory extends Factory
             'name' => ucfirst($name),
             'slug' => Str::slug($name),
             'description' => $this->faker->paragraph(),
-            'availability_type' => $this->faker->randomElement(AvailabilityType::cases()),
             'attributes' => [
-                'organic' => true,
-                'shelf_life' => $this->faker->numberBetween(3, 14) . ' дней'
+                ['label' => 'Вес', 'value' => '500 г'],
+                ['label' => 'Жирность', 'value' => '3.2%'],
+                ['label' => 'Срок хранения', 'value' => '7 дней'],
+                ['label' => 'Органический', 'value' => 'Да'],
             ],
+            'availability_type' => $this->faker->randomElement(AvailabilityType::cases()),
             'is_active' => true,
         ];
     }
 
-    //Variants
+    // Variants
     public function configure()
     {
         return $this->afterCreating(function (Product $product) {
             $units = Unit::all();
-            
+
             for ($i = 0; $i < rand(1, 2); $i++) {
                 $unit = $units->random();
                 ProductVariant::create([

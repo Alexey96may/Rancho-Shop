@@ -1,5 +1,5 @@
 <script setup lang="ts">
-    import { ref } from 'vue';
+    import { computed, ref, watch } from 'vue';
 
     import { useForm } from '@inertiajs/vue3';
 
@@ -18,18 +18,27 @@
     import { useAdminTabs } from '@/composables/config/useAdminTabs';
     import { useAdminForm } from '@/composables/crud/useAdminForm';
     import { useSingleImagePreview } from '@/composables/features/useMediaUpload';
-    import type { AdminAnimal, Category, Media } from '@/types';
+    import type { AdminAnimal, AnimalFeature, Category, Media } from '@/types';
 
     const props = defineProps<{
         animal: AdminAnimal | null;
         categories: Category[];
+        parents: Array<{ id: number; name: string; category_id: number }>;
         backUrl: string;
     }>();
+
+    const availableParents = computed(() => {
+        if (!form.category_id) return props.parents;
+
+        return props.parents.filter((p) => p.category_id === form.category_id && p.id !== form.id);
+    });
 
     const { tabs } = useAdminTabs();
     const activeTab = ref('general');
 
     const { submitForm } = useAdminForm();
+    let attrCounter = 0;
+    const makeAttrId = () => `attr-${++attrCounter}`;
 
     const form = useForm({
         id: props.animal?.id ?? null,
@@ -40,7 +49,10 @@
         is_active: props.animal?.is_active ?? false,
         is_commentable: props.animal?.is_commentable ?? true,
         bio: props.animal?.bio ?? '',
-        features: props.animal?.features ?? {},
+        features: (props.animal?.features ?? []).map((a) => ({
+            ...a,
+            id: a.id ?? makeAttrId(),
+        })) as AnimalFeature[],
         avatar: props.animal?.avatars ? [...props.animal.avatars] : ([] as Array<Media | File>),
         voice: null as File | null,
         gallery: props.animal?.gallery ?? [],
@@ -67,6 +79,18 @@
     const handleMainPhotoUpdate = (file: File | null) => {
         form.avatar = file ? [file] : (null as any);
     };
+
+    watch(
+        () => form.category_id,
+        (newCategory) => {
+            if (!form.parent_id) return;
+
+            const currentParent = props.parents.find((p) => p.id === form.parent_id);
+            if (!currentParent || currentParent.category_id !== newCategory) {
+                form.parent_id = null;
+            }
+        },
+    );
 </script>
 
 <template>
@@ -93,7 +117,7 @@
                         activeTab === tab.id
                             ? 'shadow-lg bg-rancho-mint text-rancho-ink-950 shadow-rancho-mint/20'
                             : 'text-rancho-ink-400 hover:bg-rancho-ink-900 hover:text-rancho-ink-100',
-                        'flex shrink-0 items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-rancho-mint/40 sm:flex-1 sm:gap-3 sm:rounded-2xl sm:px-4 sm:py-3.5',
+                        'flex shrink-0 items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-[10px] font-black uppercase tracking-widest outline-none transition-all focus-visible:ring-2 focus-visible:ring-rancho-mint/40 sm:flex-1 sm:gap-3 sm:rounded-2xl sm:px-4 sm:py-3.5',
                     ]"
                 >
                     <component
@@ -150,10 +174,23 @@
 
                                     <BaseSelect
                                         v-model="form.category_id"
+                                        v-model:error="form.errors.category_id"
                                         :options="categories"
-                                        placeholder="Все категории"
+                                        placeholder="Выберите категорию"
                                         label="Категория"
                                         variant="admin"
+                                    />
+
+                                    <BaseSelect
+                                        v-model="form.parent_id"
+                                        v-model:error="form.errors.parent_id"
+                                        :options="availableParents"
+                                        placeholder="Без родителя"
+                                        label="Родитель"
+                                        variant="admin"
+                                        :disabled="
+                                            !form.category_id || availableParents.length === 0
+                                        "
                                     />
                                 </div>
 
@@ -199,13 +236,15 @@
                     <!-- FEATURES -->
                     <FeaturesSection
                         v-if="activeTab === 'features'"
-                        v-model:features="form.features"
+                        :errors="form.errors"
+                        v-model:attributes="form.features"
                     />
 
                     <!-- SEO -->
                     <SEOSection
                         v-if="activeTab === 'seo'"
                         v-model="form.seo"
+                        :page-name="form.name"
                         :disabled="form.processing"
                     />
                 </TransitionGroup>

@@ -244,4 +244,27 @@ class Product extends Model implements HasMedia
             && !$this->trashed()
             && $this->isInStock($quantity);
     }
+
+    /**
+     * The nearest delivery date from the JSON schedule.
+     * Returns null if no date is available or if it is in the past.
+     */
+    public function getNextDeliveryDateAttribute(): ?Carbon
+    {
+        $date = $this->schedule['next_delivery'] ?? null;
+        if (!$date) {
+            return null;
+        }
+
+        $next = Carbon::parse($date);
+        // If the date is in the past, shift it by the interval
+        if ($next->isPast() && $interval = $this->schedule['interval_days'] ?? null) {
+            $next = $next->addDays($interval);
+            while ($next->isPast()) {
+                $next = $next->addDays($interval);
+            }
+        }
+
+        return $next->isFuture() ? $next : null;
+    }
 }

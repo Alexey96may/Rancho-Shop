@@ -27,7 +27,7 @@ class ProductVariantResource extends JsonResource
 
             'attributes' => $this->attributes,
 
-            'unit' => $this->whenLoaded('unit', function() {
+            'unit' => $this->whenLoaded('unit', function () {
                 return [
                     'short' => $this->unit->short,
                     'slug' => $this->unit->slug,

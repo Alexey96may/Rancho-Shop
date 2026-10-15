@@ -15,14 +15,8 @@
     /** Сколько фич максимум показываем в карточке */
     const MAX_FEATURES = 3;
 
-    const visibleFeatures = computed<Array<[string, unknown]>>(() => {
-        if (!props.animal.features) return [];
-        return Object.entries(props.animal.features).slice(0, MAX_FEATURES);
-    });
-
-    const hiddenFeaturesCount = computed(() => {
-        if (!props.animal.features) return 0;
-        return Math.max(0, Object.keys(props.animal.features).length - MAX_FEATURES);
+    const visibleFeatures = computed(() => {
+        return (props.animal.features ?? []).slice(0, MAX_FEATURES);
     });
 
     const toggleVoice = () => {
@@ -34,10 +28,10 @@
 
 <template>
     <article
-        class="border-rancho-ink-200 hover:border-rancho-ink-300 hover:shadow-xl group relative flex flex-col overflow-hidden rounded-3xl border bg-white transition-all focus-within:ring-2 focus-within:ring-rancho-pine/40 hover:-translate-y-0.5"
+        class="hover:shadow-xl group relative flex flex-col overflow-hidden rounded-3xl border border-rancho-ink-200 bg-white transition-all focus-within:ring-2 focus-within:ring-rancho-pine/40 hover:-translate-y-0.5 hover:border-rancho-ink-300"
         :aria-labelledby="`animal-name-${animal.id}`"
     >
-        <div class="bg-rancho-ink-50 relative aspect-[4/5] max-h-48 overflow-hidden sm:max-h-64">
+        <div class="relative aspect-[4/5] max-h-48 overflow-hidden bg-rancho-ink-50 sm:max-h-64">
             <AppImage
                 :src="props.animal?.avatars[0] || ''"
                 :alt="`Фотография нашего жителя по имени ${animal.name}`"
@@ -47,7 +41,7 @@
 
             <div class="absolute left-4 top-4">
                 <span
-                    class="bg-rancho-ink-50/90 shadow-sm ring-rancho-ink-200 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-rancho-forest ring-1 ring-inset backdrop-blur-md"
+                    class="shadow-sm inline-flex items-center gap-1.5 rounded-full bg-rancho-ink-50/90 px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-rancho-forest ring-1 ring-inset ring-rancho-ink-200 backdrop-blur-md"
                     role="status"
                 >
                     {{ animal.status }}
@@ -64,7 +58,7 @@
                         ? `Остановить голос ${animal.name}`
                         : `Включить звук животного ${animal.name}`
                 "
-                class="shadow-lg hover:text-rancho-ink-950 absolute bottom-4 right-4 z-20 flex h-12 w-12 items-center justify-center rounded-full bg-white/95 text-rancho-forest transition-all hover:bg-rancho-buttercup focus:outline-none focus-visible:ring-2 focus-visible:ring-rancho-pine"
+                class="shadow-lg absolute bottom-4 right-4 z-20 flex h-12 w-12 items-center justify-center rounded-full bg-white/95 text-rancho-forest transition-all hover:bg-rancho-buttercup hover:text-rancho-ink-950 focus:outline-none focus-visible:ring-2 focus-visible:ring-rancho-pine"
             >
                 <component :is="isPlaying ? VolumeX : Volume2" :size="24" aria-hidden="true" />
                 <span class="sr-only" aria-live="polite">
@@ -92,22 +86,22 @@
 
             <p
                 v-if="animal.bio"
-                class="text-rancho-ink-600 line-clamp-3 text-xs leading-relaxed sm:text-sm"
+                class="line-clamp-3 text-xs leading-relaxed text-rancho-ink-600 sm:text-sm"
             >
                 {{ animal.bio }}
             </p>
 
             <dl
                 v-if="visibleFeatures.length"
-                class="border-rancho-ink-100 mt-auto flex flex-col gap-2 border-t pt-4"
+                class="mt-auto flex flex-col gap-2 border-t border-rancho-ink-100 pt-4"
             >
                 <div
-                    v-for="[key, value] in visibleFeatures"
-                    :key="key"
-                    class="bg-rancho-ink-50 text-rancho-ink-600 line-clamp-1 flex items-center gap-1 rounded-lg px-3 py-2 text-[10px] font-semibold uppercase tracking-tighter"
+                    v-for="(feature, i) in visibleFeatures"
+                    :key="i"
+                    class="line-clamp-1 flex items-center gap-1 rounded-lg bg-rancho-ink-50 px-3 py-2 text-[10px] font-semibold uppercase tracking-tighter text-rancho-ink-600"
                 >
-                    <dt>{{ key }}:</dt>
-                    <dd>{{ value }}</dd>
+                    <dt>{{ feature.label }}:</dt>
+                    <dd>{{ feature.value }}</dd>
                 </div>
             </dl>
         </div>

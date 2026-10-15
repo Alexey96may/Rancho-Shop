@@ -1,13 +1,4 @@
-import type {
-    Animal,
-    Category,
-    Comment,
-    Media,
-    ProductVariant,
-    ProductVariantDTO,
-    SeoData,
-    Unit,
-} from './';
+import type { Animal, Attribute, Category, Media, ProductVariantDTO, SeoData, Unit } from './';
 
 export type AvailabilityType = 'stock' | 'daily' | 'weekly' | 'preorder';
 
@@ -16,11 +7,12 @@ export interface Availability {
     label: string;
 }
 
-export interface ProductAttributes {
-    fat_content?: string;
-    shelf_life?: string;
-    storage_temp?: string;
-    [key: string]: any;
+export type ProductAttribute = Attribute;
+
+export interface ProductSchedule {
+    next_delivery: string | null; // YYYY-MM-DD
+    interval_days: number | null; // 1..365
+    note: string | null; // «Каждую вторую среду»
 }
 
 export interface Product {
@@ -33,9 +25,10 @@ export interface Product {
     is_commentable: boolean;
 
     availability: Availability;
-    next_delivery_date: string | null; // "2024-05-20"
 
-    attributes: ProductAttributes;
+    attributes: ProductAttribute[];
+    schedule: ProductSchedule;
+    next_delivery_date: string | null;
 
     // with())
     main_photo: Media[];

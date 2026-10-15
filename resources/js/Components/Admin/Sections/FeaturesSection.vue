@@ -1,37 +1,52 @@
 <script setup lang="ts">
+    import { computed } from 'vue';
+
+    import type { Errors } from '@inertiajs/core';
+
     import { PlusIcon } from '@heroicons/vue/24/outline';
 
     import AdminDeleteButton from '@/Components/Admin/UI/AdminDeleteButton.vue';
+    import type { Attribute } from '@/types';
 
     const props = defineProps<{
-        features: Record<string, string>;
+        attributes: Attribute[];
+        errors?: Errors;
     }>();
 
     const emit = defineEmits<{
-        (e: 'update:features', features: Record<string, string>): void;
+        (e: 'update:attributes', attributes: Attribute[]): void;
     }>();
 
-    const addFeature = () => {
-        const newFeatures = { ...props.features };
-        const newKey = `Параметр ${Object.keys(newFeatures).length + 1}`;
-        newFeatures[newKey] = '';
-        emit('update:features', newFeatures);
+    const uid = () => `attr_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+
+    const addAttribute = () => {
+        emit('update:attributes', [
+            ...props.attributes,
+            {
+                id: uid(),
+                label: '',
+                value: '',
+            },
+        ]);
     };
 
-    const removeFeature = (key: string) => {
-        const newFeatures = { ...props.features };
-        delete newFeatures[key];
-        emit('update:features', newFeatures);
+    const removeAttribute = (index: number) => {
+        const next = [...props.attributes];
+        next.splice(index, 1);
+        emit('update:attributes', next);
     };
 
-    const renameKey = (oldKey: string, newKey: string) => {
-        if (oldKey === newKey || !newKey) return;
-        const newFeatures = { ...props.features };
-        const value = newFeatures[oldKey];
-        delete newFeatures[oldKey];
-        newFeatures[newKey] = value;
-        emit('update:features', newFeatures);
+    const updateField = (index: number, field: keyof Attribute, value: string) => {
+        const next = [...props.attributes];
+        next[index] = { ...next[index], [field]: value };
+        emit('update:attributes', next);
     };
+
+    const errorMessage = computed(() => {
+        if (!props.errors) return null;
+
+        return Object.values(props.errors)[0];
+    });
 </script>
 
 <template>
@@ -41,13 +56,13 @@
             <h3
                 class="text-[10px] font-black uppercase tracking-[0.15em] text-rancho-ink-400 sm:text-xs"
             >
-                Доп. параметры
+                Характеристики
             </h3>
 
             <button
                 type="button"
-                @click="addFeature"
                 class="inline-flex items-center gap-2 rounded-xl border border-rancho-ink-700 bg-rancho-ink-800 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-rancho-mint transition-all hover:border-rancho-mint/40 hover:bg-rancho-ink-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-rancho-mint/40 active:scale-95 sm:px-4"
+                @click="addAttribute"
             >
                 <PlusIcon class="h-3.5 w-3.5" aria-hidden="true" />
                 <span class="hidden sm:inline">Добавить</span>
@@ -56,18 +71,16 @@
 
         <!-- EMPTY / LIST -->
         <Transition name="feature-swap" mode="out-in">
-            <!-- EMPTY -->
             <div
-                v-if="!Object.keys(features).length"
+                v-if="!attributes.length"
                 key="empty"
                 class="rounded-2xl border border-dashed border-rancho-ink-700 bg-rancho-ink-900/20 px-4 py-8 text-center"
             >
                 <p class="text-xs text-rancho-ink-400 sm:text-sm">
-                    Пока нет параметров. Добавьте первый — например, «Вес» или «Порода».
+                    Пока нет характеристик. Добавьте первую — например, «Вес» или «Жирность».
                 </p>
             </div>
 
-            <!-- LIST -->
             <TransitionGroup
                 v-else
                 key="list"
@@ -76,48 +89,61 @@
                 class="relative grid grid-cols-1 gap-4 sm:gap-3"
             >
                 <div
-                    v-for="(value, key) in features"
-                    :key="key"
+                    v-for="(attr, index) in attributes"
+                    :key="attr.id"
                     class="group flex flex-col gap-3 rounded-2xl border border-rancho-ink-800 bg-rancho-ink-950 p-4 transition-colors focus-within:border-rancho-mint/40 sm:flex-row sm:items-center sm:gap-4 sm:p-2 sm:pl-4"
                 >
-                    <!-- Ключ -->
                     <input
+                        :value="attr.label"
                         type="text"
-                        :value="key"
-                        @change="
-                            (e) => renameKey(String(key), (e.target as HTMLInputElement).value)
-                        "
                         placeholder="Название"
-                        class="w-full rounded-lg border-none bg-rancho-ink-700 px-2 py-2 text-xs font-black uppercase leading-3 tracking-wider text-rancho-mint placeholder:text-rancho-ink-600 focus:outline-none focus:ring-0 sm:w-1/3 sm:bg-transparent"
-                        aria-label="Название параметра"
+                        class="w-full rounded-lg border-none bg-rancho-ink-900 px-2 py-2 text-xs text-rancho-mint placeholder:text-rancho-ink-600 focus:outline-none focus:ring-0 sm:w-1/3 sm:bg-transparent sm:text-sm"
+                        aria-label="Название характеристики"
+                        @input="
+                            updateField(index, 'label', ($event.target as HTMLInputElement).value)
+                        "
                     />
 
-                    <!-- Разделитель -->
-                    <div
-                        class="hidden h-6 w-px bg-rancho-ink-800 sm:block"
-                        aria-hidden="true"
-                    ></div>
+                    <div class="hidden h-6 w-px bg-rancho-ink-800 sm:block" aria-hidden="true" />
 
-                    <!-- Значение -->
                     <input
-                        v-model="features[key]"
+                        :value="attr.value"
                         type="text"
                         placeholder="Значение"
-                        class="w-full flex-1 rounded-lg border-none bg-rancho-ink-700 px-2 py-2 text-xs leading-3 text-white placeholder:text-rancho-ink-600 focus:outline-none focus:ring-0 sm:bg-transparent sm:text-sm"
-                        aria-label="Значение параметра"
+                        class="w-full flex-1 rounded-lg border-none bg-rancho-ink-900 px-2 py-2 text-xs leading-3 text-white placeholder:text-rancho-ink-600 focus:outline-none focus:ring-0 sm:bg-transparent sm:text-sm"
+                        aria-label="Значение характеристики"
+                        @input="
+                            updateField(index, 'value', ($event.target as HTMLInputElement).value)
+                        "
                     />
 
-                    <!-- Удаление -->
                     <AdminDeleteButton
-                        @click="removeFeature(String(key))"
-                        title="Удалить параметр"
                         class="self-end opacity-50 transition-opacity focus-visible:opacity-100 group-hover:opacity-100 sm:self-auto"
+                        title="Удалить характеристику"
+                        @click="removeAttribute(index)"
                     />
                 </div>
             </TransitionGroup>
         </Transition>
+
+        <Transition
+            enter-active-class="transition duration-200 ease-out"
+            enter-from-class="transform -translate-y-2 opacity-0"
+            enter-to-class="transform translate-y-0 opacity-100"
+            leave-active-class="transition duration-150 ease-in"
+            leave-from-class="opacity-100"
+            leave-to-class="opacity-0"
+        >
+            <p v-if="errorMessage" class="text-xs font-medium text-rancho-ember" role="alert">
+                Ошибка: {{ errorMessage }}
+            </p>
+        </Transition>
     </div>
 </template>
+
+<style scoped>
+    /* ... стили как были ... */
+</style>
 
 <style scoped>
     /* Смена empty ↔ list */

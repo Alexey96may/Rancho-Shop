@@ -56,13 +56,15 @@
         <AdminPageHeader title="Редактирование промокода" :subtitle="promo.data.code" />
     </Teleport>
 
-    <BaseCancelButton :href="backUrl" label="Назад" />
+    <div class="space-y-10">
+        <BaseCancelButton :href="backUrl" label="Назад" />
 
-    <PromoCodeForm
-        :promo="promo.data"
-        :is-edit="true"
-        :type-options="typeOptions"
-        :return-page="backUrl"
-        @submit="handleSubmit"
-    />
+        <PromoCodeForm
+            :promo="promo.data"
+            :is-edit="true"
+            :type-options="typeOptions"
+            :return-page="backUrl"
+            @submit="handleSubmit"
+        />
+    </div>
 </template>

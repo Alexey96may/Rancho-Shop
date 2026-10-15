@@ -40,8 +40,11 @@ class ProductDataDTO
             is_commentable: (bool) ($validated['is_commentable'] ?? true),
             is_active: (bool) ($validated['is_active'] ?? false),
             description: $validated['description'] ?? null,
-            attributes: $validated['attributes'] ?? [],
-            schedule: $validated['schedule'] ?? [],
+            attributes: array_values(array_filter(
+                $validated['attributes'] ?? [],
+                fn ($a) => !empty($a['label'])
+            )),
+            schedule: self::normalizeSchedule($validated['schedule'] ?? []),
             animal_ids: $validated['animal_ids'] ?? [],
             seoData: $validated['seo'] ?? []
         );
@@ -62,6 +65,15 @@ class ProductDataDTO
             'description' => $this->description,
             'attributes' => $this->attributes,
             'schedule' => $this->schedule,
+        ];
+    }
+
+    private static function normalizeSchedule(array $schedule): array
+    {
+        return [
+            'next_delivery' => $schedule['next_delivery'] ?? null,
+            'interval_days' => isset($schedule['interval_days']) ? (int) $schedule['interval_days'] : null,
+            'note' => $schedule['note'] ?? null,
         ];
     }
 }

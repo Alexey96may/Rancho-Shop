@@ -50,19 +50,19 @@
 </script>
 
 <template>
-    <div class="space-y-6">
+    <div class="space-y-8">
         <section class="space-y-6">
-            <h3 class="text-rancho-ink-300 text-sm font-black uppercase tracking-wider">
+            <h3 class="text-sm font-black uppercase tracking-wider text-rancho-ink-300">
                 История ваших отзывов
             </h3>
 
             <!-- EMPTY -->
             <div
                 v-if="comments.data.length === 0"
-                class="border-rancho-ink-700 bg-rancho-ink-900/20 rounded-2xl border border-dashed py-12 text-center"
+                class="rounded-2xl border border-dashed border-rancho-ink-700 bg-rancho-ink-900/20 py-12 text-center"
                 role="status"
             >
-                <p class="text-rancho-ink-300 text-sm">Вы ещё не оставляли отзывов на сайте.</p>
+                <p class="text-sm text-rancho-ink-300">Вы ещё не оставляли отзывов на сайте.</p>
             </div>
 
             <!-- LIST -->

@@ -36,7 +36,7 @@
             'shadow-sm relative flex flex-col gap-3 rounded-2xl border bg-white p-3 transition-all sm:gap-4 sm:p-4',
             item.valid === false
                 ? 'border-rose-300 bg-rose-50/40'
-                : 'border-rancho-ink-200 hover:border-rancho-ink-300 hover:shadow-md',
+                : 'hover:shadow-md border-rancho-ink-200 hover:border-rancho-ink-300',
         ]"
     >
         <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -60,7 +60,7 @@
                             {{ item.name }}
                         </Link>
 
-                        <p class="text-rancho-ink-500 mt-0.5 text-xs sm:text-sm">
+                        <p class="mt-0.5 text-xs text-rancho-ink-500 sm:text-sm">
                             {{ unitPriceFormatted }} / {{ item.unit.short }}
                         </p>
                     </div>
@@ -71,7 +71,7 @@
             <button
                 type="button"
                 @click="cart.destroy(item.variant_id)"
-                class="text-rancho-ink-400 absolute right-2.5 top-2.5 flex h-8 w-8 items-center justify-center rounded-full transition-colors hover:bg-rose-50 hover:text-rose-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/40 sm:hidden"
+                class="absolute right-2.5 top-2.5 flex h-8 w-8 items-center justify-center rounded-full text-rancho-ink-400 transition-colors hover:bg-rose-50 hover:text-rose-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/40 sm:hidden"
                 title="Удалить из корзины"
                 aria-label="Удалить из корзины"
             >
@@ -80,11 +80,11 @@
 
             <!-- ПРАВАЯ / НИЖНЯЯ ЧАСТЬ -->
             <div
-                class="border-rancho-ink-100 flex items-center justify-between gap-3 border-t pt-2 sm:justify-end sm:gap-4 sm:border-t-0 sm:pt-0"
+                class="flex items-center justify-between gap-3 border-t border-rancho-ink-100 pt-2 sm:justify-end sm:gap-4 sm:border-t-0 sm:pt-0"
             >
                 <!-- Блок с выбором количества -->
                 <div class="w-24 shrink-0 sm:w-32">
-                    <QuantityControl v-if="item" :item="item" />
+                    <QuantityControl v-if="item" :has-undo="true" :item="item" />
                 </div>
 
                 <!-- Итоговая стоимость -->
@@ -98,7 +98,7 @@
                 <button
                     type="button"
                     @click="cart.destroy(item.variant_id)"
-                    class="text-rancho-ink-400 hidden h-9 w-9 items-center justify-center rounded-full transition-colors hover:bg-rose-50 hover:text-rose-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/40 sm:flex"
+                    class="hidden h-9 w-9 items-center justify-center rounded-full text-rancho-ink-400 transition-colors hover:bg-rose-50 hover:text-rose-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/40 sm:flex"
                     title="Удалить из корзины"
                     aria-label="Удалить из корзины"
                 >
@@ -110,7 +110,7 @@
         <!-- Сообщение об ошибке (если невалиден) -->
         <div
             v-if="item.valid === false"
-            class="text-rancho-ember mt-1.5 line-clamp-1 inline-flex max-w-full flex-1 items-center gap-1 text-ellipsis rounded-md bg-rose-100/80 p-2 text-xs font-medium"
+            class="mt-1.5 line-clamp-1 inline-flex max-w-full flex-1 items-center gap-1 text-ellipsis rounded-md bg-rose-100/80 p-2 text-xs font-medium text-rancho-ember"
             role="alert"
         >
             <ExclamationTriangleIcon class="h-3.5 w-3.5 shrink-0" aria-hidden="true" />

@@ -1,3 +1,4 @@
+import type { Attribute } from './';
 import type { Media } from './Media';
 import type { SeoData } from './Seo';
 
@@ -8,13 +9,15 @@ interface Timestamps {
     updated_at: string;
 }
 
+export type AnimalFeature = Attribute;
+
 export interface Animal {
     id: number;
     name: string;
     slug: string;
     status: string;
     bio: string | null;
-    features: Record<string, any> | null;
+    features: AnimalFeature[];
     voice_url: string | null;
     avatars: Media[];
     gallery: Media[] | null;

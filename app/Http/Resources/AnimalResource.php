@@ -45,9 +45,7 @@ class AnimalResource extends JsonResource
                 ),
             ],
 
-            'products' => ProductResource::collection(
-                $this->whenLoaded('products')
-            ),
+            'products' => ProductResource::collection($this->whenLoaded('products')),
 
             'seo' => new SeoResource($this->whenLoaded('seo')),
         ];

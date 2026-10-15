@@ -18,10 +18,6 @@
         Bold,
         Code2,
         Eye,
-        Heading1,
-        Heading2,
-        Heading3,
-        Heading4,
         Image as ImageIcon,
         Italic,
         Link as LinkIcon,
@@ -31,7 +27,6 @@
         Minus,
         Quote,
         Redo,
-        Type,
         Underline as UnderlineIcon,
         Undo,
         Unlink,
@@ -221,10 +216,10 @@
 
 <template>
     <div
-        class="border-rancho-ink-800 bg-rancho-ink-900/30 rounded-2xl border p-3 sm:rounded-3xl sm:p-4"
+        class="rounded-2xl border border-rancho-ink-800 bg-rancho-ink-900/30 p-3 sm:rounded-3xl sm:p-4"
     >
         <!-- TOOLBAR -->
-        <div class="border-rancho-ink-800 mb-4 space-y-2 border-b pb-4">
+        <div class="mb-4 space-y-2 border-b border-rancho-ink-800 pb-4">
             <!-- MODE TOGGLE -->
             <button
                 type="button"
@@ -261,13 +256,13 @@
                         </button>
                     </div>
 
-                    <div class="bg-rancho-ink-700 mx-1 h-5 w-px sm:mx-2" aria-hidden="true"></div>
+                    <div class="mx-1 h-5 w-px bg-rancho-ink-700 sm:mx-2" aria-hidden="true"></div>
 
                     <!-- HEADING SELECT -->
                     <select
                         :value="currentHeadingLevel"
                         @change="onHeadingChange"
-                        class="border-rancho-ink-800 bg-rancho-ink-950 text-rancho-ink-300 focus:border-rancho-mint focus:ring-rancho-mint/20 h-8 cursor-pointer rounded-lg border pl-2 pr-7 text-xs font-bold transition-colors focus:outline-none focus:ring-2"
+                        class="h-8 cursor-pointer rounded-lg border border-rancho-ink-800 bg-rancho-ink-950 pl-2 pr-7 text-xs font-bold text-rancho-ink-300 transition-colors focus:border-rancho-mint focus:outline-none focus:ring-2 focus:ring-rancho-mint/20"
                         title="Стиль текста"
                         aria-label="Стиль текста"
                     >
@@ -280,7 +275,7 @@
                         <option value="6">H6</option>
                     </select>
 
-                    <div class="bg-rancho-ink-700 mx-1 h-5 w-px sm:mx-2" aria-hidden="true"></div>
+                    <div class="mx-1 h-5 w-px bg-rancho-ink-700 sm:mx-2" aria-hidden="true"></div>
 
                     <!-- TEXT STYLES -->
                     <div class="flex items-center justify-center gap-0.5">
@@ -315,7 +310,7 @@
                         </button>
                     </div>
 
-                    <div class="bg-rancho-ink-700 mx-1 h-5 w-px sm:mx-2" aria-hidden="true"></div>
+                    <div class="mx-1 h-5 w-px bg-rancho-ink-700 sm:mx-2" aria-hidden="true"></div>
 
                     <!-- COLOR -->
                     <input
@@ -328,7 +323,7 @@
                                 .run()
                         "
                         :value="editor.getAttributes('textStyle').color || '#b5ac96'"
-                        class="border-rancho-ink-800 h-8 w-8 cursor-pointer rounded-lg border bg-transparent p-0.5"
+                        class="h-8 w-8 cursor-pointer rounded-lg border border-rancho-ink-800 bg-transparent p-0.5"
                         title="Цвет текста"
                     />
                 </template>
@@ -370,7 +365,7 @@
                         </button>
                     </div>
 
-                    <div class="bg-rancho-ink-700 mx-1 h-5 w-px sm:mx-2" aria-hidden="true"></div>
+                    <div class="mx-1 h-5 w-px bg-rancho-ink-700 sm:mx-2" aria-hidden="true"></div>
 
                     <!-- BLOCKS -->
                     <div class="flex items-center gap-0.5">
@@ -393,7 +388,7 @@
                         </button>
                     </div>
 
-                    <div class="bg-rancho-ink-700 mx-1 h-5 w-px sm:mx-2" aria-hidden="true"></div>
+                    <div class="mx-1 h-5 w-px bg-rancho-ink-700 sm:mx-2" aria-hidden="true"></div>
 
                     <!-- LINK / IMAGE -->
                     <div class="flex items-center gap-0.5">
@@ -464,7 +459,7 @@
             <div>
                 <label
                     for="urllink"
-                    class="text-rancho-ink-500 mb-2 block text-xs font-bold uppercase tracking-wider"
+                    class="mb-2 block text-xs font-bold uppercase tracking-wider text-rancho-ink-500"
                 >
                     URL адрес
                 </label>
@@ -473,7 +468,7 @@
                     id="urllink"
                     type="url"
                     placeholder="https://example.com"
-                    class="border-rancho-ink-800 bg-rancho-ink-950 focus:border-rancho-mint focus:ring-rancho-mint/20 w-full rounded-2xl border p-4 text-white outline-none transition-colors focus:ring-2"
+                    class="w-full rounded-2xl border border-rancho-ink-800 bg-rancho-ink-950 p-4 text-white outline-none transition-colors focus:border-rancho-mint focus:ring-2 focus:ring-rancho-mint/20"
                     @keydown.enter="saveLink"
                 />
             </div>
@@ -481,7 +476,7 @@
             <div class="flex gap-3">
                 <button
                     @click="saveLink"
-                    class="bg-rancho-mint text-rancho-ink-950 hover:bg-rancho-mint/90 flex-1 rounded-2xl py-4 text-xs font-black uppercase tracking-widest transition-all active:scale-95"
+                    class="flex-1 rounded-2xl bg-rancho-mint py-4 text-xs font-black uppercase tracking-widest text-rancho-ink-950 transition-all hover:bg-rancho-mint/90 active:scale-95"
                 >
                     Применить
                 </button>
@@ -504,7 +499,7 @@
 
 <style scoped>
     .toolbar-btn {
-        @apply text-rancho-ink-500 hover:bg-rancho-ink-800 rounded-lg p-2 transition-all hover:text-white disabled:opacity-20;
+        @apply rounded-lg p-2 text-rancho-ink-500 transition-all hover:bg-rancho-ink-800 hover:text-white disabled:opacity-20;
     }
 
     .active-btn {
@@ -512,15 +507,15 @@
     }
 
     .mode-toggle-btn {
-        @apply border-rancho-ink-800 bg-rancho-ink-950 text-rancho-ink-400 hover:border-rancho-mint flex items-center gap-2 rounded-xl border px-4 py-2 text-[10px] font-black uppercase tracking-wider transition-all hover:text-white;
+        @apply flex items-center gap-2 rounded-xl border border-rancho-ink-800 bg-rancho-ink-950 px-4 py-2 text-[10px] font-black uppercase tracking-wider text-rancho-ink-400 transition-all hover:border-rancho-mint hover:text-white;
     }
 
     .editor-container {
-        @apply border-rancho-ink-800 bg-rancho-ink-950 focus-within:border-rancho-mint w-full overflow-hidden rounded-2xl border transition-all sm:rounded-3xl;
+        @apply w-full overflow-hidden rounded-2xl border border-rancho-ink-800 bg-rancho-ink-950 transition-all focus-within:border-rancho-mint sm:rounded-3xl;
     }
 
     .html-textarea {
-        @apply text-rancho-mint/90 min-h-[350px] w-full resize-none bg-transparent p-4 font-mono text-sm leading-relaxed outline-none sm:p-8;
+        @apply min-h-[350px] w-full resize-none bg-transparent p-4 font-mono text-sm leading-relaxed text-rancho-mint/90 outline-none sm:p-8;
     }
 
     :deep(.tiptap) {
