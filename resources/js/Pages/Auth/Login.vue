@@ -1,7 +1,7 @@
 <script setup lang="ts">
     import { Head, Link, useForm } from '@inertiajs/vue3';
 
-    import { CheckCircleIcon } from '@heroicons/vue/24/outline';
+    import { ArrowRightEndOnRectangleIcon, CheckCircleIcon } from '@heroicons/vue/24/outline';
 
     import BaseInput from '@/Components/UI/BaseInput.vue';
     import BaseSubmitButton from '@/Components/UI/BaseSubmitButton.vue';
@@ -34,7 +34,7 @@
 
     <header v-scroll-reveal class="mb-6">
         <h1 class="text-2xl font-black text-rancho-forest sm:text-3xl">Вход</h1>
-        <p class="text-rancho-ink-600 mt-2 text-sm leading-relaxed">
+        <p class="mt-2 text-sm leading-relaxed text-rancho-ink-600">
             Введите email и пароль, чтобы продолжить.
         </p>
     </header>
@@ -86,9 +86,9 @@
             <input
                 type="checkbox"
                 v-model="form.remember"
-                class="border-rancho-ink-300 h-4 w-4 cursor-pointer rounded text-rancho-pine transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-rancho-pine/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+                class="h-4 w-4 cursor-pointer rounded border-rancho-ink-300 text-rancho-pine transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-rancho-pine/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
             />
-            <span class="text-rancho-ink-700 text-sm">Запомнить меня</span>
+            <span class="text-sm text-rancho-ink-700">Запомнить меня</span>
         </label>
 
         <!-- Actions -->
@@ -98,7 +98,7 @@
             <BaseSubmitButton
                 :processing="form.processing"
                 label="Войти"
-                :with-icon="false"
+                :icon="ArrowRightEndOnRectangleIcon"
                 class="sm:w-auto"
             />
         </div>
@@ -107,7 +107,7 @@
     <!-- Регистрация -->
     <div
         v-scroll-reveal
-        class="border-rancho-ink-200 text-rancho-ink-600 mt-6 border-t pt-6 text-center text-sm"
+        class="mt-6 border-t border-rancho-ink-200 pt-6 text-center text-sm text-rancho-ink-600"
     >
         Нет аккаунта?
         <Link

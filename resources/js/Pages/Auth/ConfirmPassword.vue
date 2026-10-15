@@ -25,7 +25,7 @@
 
     <header v-scroll-reveal class="mb-6">
         <h1 class="text-2xl font-black text-rancho-forest sm:text-3xl">Подтверждение пароля</h1>
-        <p class="text-rancho-ink-600 mt-2 text-sm leading-relaxed">
+        <p class="mt-2 text-sm leading-relaxed text-rancho-ink-600">
             Это защищённая зона приложения. Введите пароль, чтобы продолжить.
         </p>
     </header>
@@ -45,11 +45,7 @@
         />
 
         <div class="flex justify-end pt-2">
-            <BaseSubmitButton
-                :processing="form.processing"
-                label="Подтвердить"
-                :with-icon="false"
-            />
+            <BaseSubmitButton :processing="form.processing" label="Подтвердить" />
         </div>
     </form>
 </template>

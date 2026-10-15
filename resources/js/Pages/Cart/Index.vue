@@ -138,9 +138,9 @@
                         type="button"
                         :processing="isValidating"
                         :disabled="isCartEmpty || hasInvalidItems"
-                        :label="'Оформить заказ'"
-                        :with-icon="false"
-                        class="!text-rancho-ink-950 disabled:!bg-rancho-ink-200 disabled:!text-rancho-ink-500 w-full !bg-rancho-buttercup hover:!bg-rancho-buttercup/90"
+                        label="Оформить заказ"
+                        :icon="ShoppingCartIcon"
+                        class="w-full !bg-rancho-buttercup !text-rancho-ink-950 hover:!bg-rancho-buttercup/90 disabled:!bg-rancho-ink-200 disabled:!text-rancho-ink-500"
                         @click="goToCheckout"
                     />
                 </aside>
@@ -153,7 +153,7 @@
                 class="flex flex-col items-center justify-center py-20 text-center"
                 role="status"
             >
-                <div class="bg-rancho-ink-100 text-rancho-ink-400 mb-6 rounded-full p-6 sm:p-8">
+                <div class="mb-6 rounded-full bg-rancho-ink-100 p-6 text-rancho-ink-400 sm:p-8">
                     <ShoppingCartIcon class="h-12 w-12 sm:h-16 sm:w-16" aria-hidden="true" />
                 </div>
 
@@ -161,7 +161,7 @@
                     В корзине пока пусто
                 </h2>
 
-                <p class="text-rancho-ink-600 mb-6 max-w-sm text-sm">
+                <p class="mb-6 max-w-sm text-sm text-rancho-ink-600">
                     Загляните в каталог — там свежие продукты с нашей фермы.
                 </p>
 

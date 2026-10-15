@@ -208,11 +208,6 @@
                             </Link>
                         </div>
                     </div>
-
-                    <!-- SEO NOTE -->
-                    <p v-if="animal.seo?.description" class="mt-10 text-xs text-rancho-ink-500">
-                        {{ animal.seo.description }}
-                    </p>
                 </section>
             </div>
 

@@ -84,22 +84,28 @@
                 v-for="n in stars.full"
                 :key="'full-' + n"
                 :stroke-width="1"
-                class="fill-rancho-ember/70 text-rancho-ember h-3 w-3 sm:h-4 sm:w-4"
+                class="h-3 w-3 fill-rancho-ember text-rancho-ember sm:h-4 sm:w-4"
                 aria-hidden="true"
             />
 
-            <StarHalf
-                v-if="stars.half"
-                :stroke-width="1"
-                class="fill-rancho-ember/70 text-rancho-ember h-3 w-3 sm:h-4 sm:w-4"
-                aria-hidden="true"
-            />
+            <div v-if="stars.half" class="relative h-3 w-3 sm:h-4 sm:w-4">
+                <Star
+                    :stroke-width="1"
+                    class="absolute inset-0 h-3 w-3 text-rancho-ink-300 sm:h-4 sm:w-4"
+                    aria-hidden="true"
+                />
+                <StarHalf
+                    :stroke-width="1"
+                    class="h-3 w-3 fill-rancho-ember text-rancho-ember sm:h-4 sm:w-4"
+                    aria-hidden="true"
+                />
+            </div>
 
             <Star
                 v-for="n in stars.empty"
                 :key="'empty-' + n"
                 :stroke-width="1"
-                class="text-rancho-ink-300 h-3 w-3 sm:h-4 sm:w-4"
+                class="h-3 w-3 text-rancho-ink-300 sm:h-4 sm:w-4"
                 aria-hidden="true"
             />
         </template>
@@ -119,12 +125,22 @@
                         class="h-5 w-5 transition-colors duration-150"
                         :class="activeStarColorClass"
                     />
-                    <StarHalf
-                        v-else-if="activeRating >= index - 0.5"
-                        :stroke-width="1"
-                        class="h-5 w-5 transition-colors duration-150"
-                        :class="activeStarColorClass"
-                    />
+
+                    <div v-else-if="activeRating >= index - 0.5" class="relative h-5 w-5">
+                        <Star
+                            :stroke-width="1"
+                            class="absolute inset-0 h-5 w-5 transition-colors duration-150"
+                            aria-hidden="true"
+                            :class="emptyStarColorClass"
+                        />
+                        <StarHalf
+                            :stroke-width="1"
+                            class="h-5 w-5 transition-colors duration-150"
+                            aria-hidden="true"
+                            :class="activeStarColorClass"
+                        />
+                    </div>
+
                     <Star
                         v-else
                         :stroke-width="1"

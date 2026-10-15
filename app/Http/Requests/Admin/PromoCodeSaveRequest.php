@@ -2,11 +2,12 @@
 
 namespace App\Http\Requests\Admin;
 
-use Illuminate\Contracts\Validation\ValidationRule;
-use App\Enums\PromoCodeType;
-use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rules\Enum;
 use App\DTO\PromoCodeDataDTO;
+use App\Enums\PromoCodeType;
+use Illuminate\Contracts\Validation\ValidationRule;
+use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Enum;
 
 class PromoCodeSaveRequest extends FormRequest
 {
@@ -28,18 +29,24 @@ class PromoCodeSaveRequest extends FormRequest
         $promocode = $this->route('promocode');
         $promocodeId = $promocode ? $promocode->id : null;
 
+        $uniqueRule = Rule::unique('promo_codes', 'code');
+
+        if ($promocodeId) {
+            $uniqueRule->ignore($promocodeId);
+        }
+
         return [
-            'code'             => "required|string|max:50|unique:promo_codes,code,{$promocodeId}",
-            'description'      => 'nullable|string|max:1000',
-            'type'             => ['required', new Enum(PromoCodeType::class)],
-            'value'            => 'required|integer|min:1',
+            'code' => ['required', 'string', 'max:50', $uniqueRule],
+            'description' => 'nullable|string|max:1000',
+            'type' => ['required', new Enum(PromoCodeType::class)],
+            'value' => 'required|integer|min:1',
             'min_order_amount' => 'nullable|integer|min:0',
-            'max_discount'     => 'nullable|integer|min:0',
-            'usage_limit'      => 'nullable|integer|min:1',
-            'expires_at'       => 'nullable|date',
-            'is_active'        => 'boolean',
-            'create_another'   => 'boolean',
-            'return_page'      => 'nullable',
+            'max_discount' => 'nullable|integer|min:0',
+            'usage_limit' => 'nullable|integer|min:1',
+            'expires_at' => 'nullable|date',
+            'is_active' => 'boolean',
+            'create_another' => 'boolean',
+            'return_page' => 'nullable',
         ];
     }
 

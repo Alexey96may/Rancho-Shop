@@ -27,7 +27,7 @@
 
     <header v-scroll-reveal class="mb-6">
         <h1 class="text-2xl font-black text-rancho-forest sm:text-3xl">Восстановление пароля</h1>
-        <p class="text-rancho-ink-600 mt-2 text-sm leading-relaxed">
+        <p class="mt-2 text-sm leading-relaxed text-rancho-ink-600">
             Забыли пароль? Ничего страшного. Укажите email — мы отправим ссылку для сброса пароля.
         </p>
     </header>
@@ -63,11 +63,7 @@
         />
 
         <div class="flex items-center justify-end pt-2">
-            <BaseSubmitButton
-                :processing="form.processing"
-                label="Отправить ссылку"
-                :with-icon="false"
-            />
+            <BaseSubmitButton :processing="form.processing" label="Отправить ссылку" />
         </div>
     </form>
 </template>

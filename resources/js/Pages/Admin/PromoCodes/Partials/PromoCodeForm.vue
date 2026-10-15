@@ -111,7 +111,7 @@
                 :is-money="true"
                 zero-value="—"
                 :min="0"
-                label="Мин. сумма заказа (в копейках)"
+                label="Мин. сумма заказа"
             />
 
             <AdminNumberInput
@@ -120,7 +120,7 @@
                 :is-money="true"
                 zero-value="—"
                 :min="0"
-                label="Макс. сумма скидки (в копейках)"
+                label="Макс. сумма скидки"
             />
 
             <BaseDatePicker

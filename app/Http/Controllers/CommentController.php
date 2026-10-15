@@ -54,8 +54,12 @@ class CommentController extends Controller
             'guest_name' => [Rule::requiredIf(!$user), 'nullable', 'string', 'max:50'],
         ]);
 
+        $type = isset($data['commentable_type'])
+            ? CommentableType::from($data['commentable_type'])
+            : null;
+
         $ensureCommentable->handle(
-            $data['commentable_type'] ?? null,
+            $type,
             $data['commentable_id'] ?? null,
         );
 
@@ -65,7 +69,7 @@ class CommentController extends Controller
 
         Comment::create([
             'commentable_id' => $data['commentable_id'] ?? null,
-            'commentable_type' => $data['commentable_type'] ?? null,
+            'commentable_type' => $type,
             'content' => $data['content'],
             'rating' => $data['rating'] ?? null,
             'user_id' => $user?->id,

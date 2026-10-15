@@ -58,7 +58,7 @@
     ]);
 
     const fieldClasses = computed(() => [
-        'w-full border text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-0 disabled:cursor-not-allowed',
+        'w-full border text-sm font-medium transition-all duration-200 outline-none focus:ring-0 disabled:cursor-not-allowed',
         // Скругление
         isSearch.value ? 'rounded-full' : 'rounded-2xl',
         // Padding: для search — слева и справа больше (под иконки)
@@ -69,10 +69,10 @@
         isDark.value ? 'bg-rancho-ink-950' : 'bg-white',
         // Границы
         error.value
-            ? 'border-rose-500/60 focus:border-rose-500'
+            ? 'border-rose-500/60 focus-visible:border-rose-500'
             : isDark.value
-              ? 'border-rancho-ink-800 focus:border-rancho-buttercup'
-              : 'border-rancho-ink-300 focus:border-rancho-pine',
+              ? 'border-rancho-ink-800 focus-visible:border-rancho-buttercup'
+              : 'border-rancho-ink-300 focus-visible:border-rancho-pine',
         // Текст и placeholder
         isDark.value
             ? 'text-white placeholder:text-rancho-ink-600'

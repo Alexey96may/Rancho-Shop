@@ -143,123 +143,125 @@
 </script>
 
 <template>
-    <AppContainer class="min-h-screen bg-rancho-paper">
-        <div class="grid gap-12 py-12 sm:py-20 lg:grid-cols-2">
-            <!-- IMAGES -->
-            <div v-scroll-reveal class="space-y-4">
-                <div
-                    class="aspect-square overflow-hidden rounded-3xl border border-rancho-ink-200 bg-rancho-ink-50"
-                >
-                    <AppImage
-                        :src="productData.main_photo?.[0] || ''"
-                        :alt="productData.name"
-                        class-name="h-full w-full object-cover"
+    <main>
+        <AppContainer class="min-h-screen bg-rancho-paper">
+            <section class="grid gap-12 py-12 sm:py-20 lg:grid-cols-2">
+                <!-- IMAGES -->
+                <div v-scroll-reveal class="space-y-4">
+                    <div
+                        class="aspect-square overflow-hidden rounded-3xl border border-rancho-ink-200 bg-rancho-ink-50"
+                    >
+                        <AppImage
+                            :src="productData.main_photo?.[0] || ''"
+                            :alt="productData.name"
+                            class-name="h-full w-full object-cover"
+                        />
+                    </div>
+
+                    <MediaGallery
+                        v-model="product.data.gallery"
+                        @preview="openImage"
+                        :is-view-mode="true"
                     />
                 </div>
 
-                <MediaGallery
-                    v-model="product.data.gallery"
-                    @preview="openImage"
-                    :is-view-mode="true"
-                />
-            </div>
-
-            <!-- INFO -->
-            <div v-scroll-reveal class="flex flex-col">
-                <!-- Категория -->
-                <span
-                    v-if="productData.category?.name"
-                    class="text-[10px] font-black uppercase tracking-widest text-rancho-ember"
-                >
-                    {{ productData.category.name }}
-                </span>
-
-                <!-- Название -->
-                <h1 class="mt-3 text-3xl font-black text-rancho-forest sm:text-4xl">
-                    {{ productData.name }}
-                </h1>
-
-                <!-- PRICE -->
-                <div v-if="price" class="mt-6 flex flex-wrap items-baseline gap-x-4 gap-y-2">
-                    <span class="text-3xl font-black text-rancho-forest sm:text-4xl">
-                        {{ price }}
-                    </span>
-
+                <!-- INFO -->
+                <div v-scroll-reveal class="flex flex-col">
+                    <!-- Категория -->
                     <span
-                        v-if="discount"
-                        class="text-lg text-rancho-ink-400 line-through sm:text-xl"
+                        v-if="productData.category?.name"
+                        class="text-[10px] font-black uppercase tracking-widest text-rancho-ember"
                     >
-                        {{ oldPrice }}
+                        {{ productData.category.name }}
                     </span>
 
-                    <span
-                        v-if="discount"
-                        class="rounded-lg bg-rancho-ember px-2 py-1 text-xs font-black uppercase tracking-wider text-white"
-                    >
-                        −{{ discount }}%
-                    </span>
+                    <!-- Название -->
+                    <h1 class="mt-3 text-3xl font-black text-rancho-forest sm:text-4xl">
+                        {{ productData.name }}
+                    </h1>
 
-                    <span class="text-sm text-rancho-ink-500">
-                        / {{ productData.default_variant?.unit?.short ?? 'шт' }}
-                    </span>
-                </div>
-
-                <!-- META -->
-                <div class="mt-8 space-y-3 border-y border-rancho-ink-200 py-6 text-sm">
-                    <div class="flex items-center justify-between">
-                        <span class="text-rancho-ink-500">Статус</span>
-                        <span class="font-bold text-rancho-forest">
-                            {{ productData.availability.label }}
+                    <!-- PRICE -->
+                    <div v-if="price" class="mt-6 flex flex-wrap items-baseline gap-x-4 gap-y-2">
+                        <span class="text-3xl font-black text-rancho-forest sm:text-4xl">
+                            {{ price }}
                         </span>
-                    </div>
 
-                    <div class="flex items-center justify-between">
-                        <span class="text-rancho-ink-500">Наличие</span>
                         <span
-                            class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wider ring-1 ring-inset"
-                            :class="stockBadgeClass"
+                            v-if="discount"
+                            class="text-lg text-rancho-ink-400 line-through sm:text-xl"
                         >
-                            <span
-                                class="h-1.5 w-1.5 rounded-full"
-                                :class="{
-                                    'bg-rancho-ink-400': stockState === 'out',
-                                    'bg-rancho-ember': stockState === 'low',
-                                    'bg-rancho-pine': stockState === 'in',
-                                }"
-                                aria-hidden="true"
-                            />
-                            {{ stockLabel }}
+                            {{ oldPrice }}
+                        </span>
+
+                        <span
+                            v-if="discount"
+                            class="rounded-lg bg-rancho-ember px-2 py-1 text-xs font-black uppercase tracking-wider text-white"
+                        >
+                            −{{ discount }}%
+                        </span>
+
+                        <span class="text-sm text-rancho-ink-500">
+                            / {{ productData.default_variant?.unit?.short ?? 'шт' }}
                         </span>
                     </div>
+
+                    <!-- META -->
+                    <div class="mt-8 space-y-3 border-y border-rancho-ink-200 py-6 text-sm">
+                        <div class="flex items-center justify-between">
+                            <span class="text-rancho-ink-500">Статус</span>
+                            <span class="font-bold text-rancho-forest">
+                                {{ productData.availability.label }}
+                            </span>
+                        </div>
+
+                        <div class="flex items-center justify-between">
+                            <span class="text-rancho-ink-500">Наличие</span>
+                            <span
+                                class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wider ring-1 ring-inset"
+                                :class="stockBadgeClass"
+                            >
+                                <span
+                                    class="h-1.5 w-1.5 rounded-full"
+                                    :class="{
+                                        'bg-rancho-ink-400': stockState === 'out',
+                                        'bg-rancho-ember': stockState === 'low',
+                                        'bg-rancho-pine': stockState === 'in',
+                                    }"
+                                    aria-hidden="true"
+                                />
+                                {{ stockLabel }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- DESCRIPTION -->
+                    <p class="mt-6 text-sm leading-relaxed text-rancho-ink-600 sm:text-base">
+                        {{ productData.description || 'Описание пока отсутствует' }}
+                    </p>
+
+                    <!-- BUY -->
+                    <div class="mt-auto pt-10">
+                        <BuyButton v-if="productData.default_variant" :product="productData" />
+                    </div>
                 </div>
+            </section>
 
-                <!-- DESCRIPTION -->
-                <p class="mt-6 text-sm leading-relaxed text-rancho-ink-600 sm:text-base">
-                    {{ productData.description || 'Описание пока отсутствует' }}
-                </p>
+            <!-- COMMENTS -->
+            <section v-if="productData.is_commentable" v-scroll-reveal class="mt-16 pb-12 sm:pb-20">
+                <CommentsSection
+                    :comments="comments"
+                    @submit="submitComment"
+                    :is-authenticated="isAuthenticated"
+                />
+            </section>
+        </AppContainer>
 
-                <!-- BUY -->
-                <div class="mt-auto pt-10">
-                    <BuyButton v-if="productData.default_variant" :product="productData" />
-                </div>
-            </div>
-        </div>
-
-        <!-- COMMENTS -->
-        <div v-if="productData.is_commentable" v-scroll-reveal class="mt-16 pb-12 sm:pb-20">
-            <CommentsSection
-                :comments="comments"
-                @submit="submitComment"
-                :is-authenticated="isAuthenticated"
+        <BaseModal :show="isModalOpen" variant="lightbox" @close="selectedImage = null">
+            <AppImage
+                v-if="selectedImage"
+                :src="selectedImage"
+                alt="Полноэкранный просмотр изображения"
             />
-        </div>
-    </AppContainer>
-
-    <BaseModal :show="isModalOpen" variant="lightbox" @close="selectedImage = null">
-        <AppImage
-            v-if="selectedImage"
-            :src="selectedImage"
-            alt="Полноэкранный просмотр изображения"
-        />
-    </BaseModal>
+        </BaseModal>
+    </main>
 </template>

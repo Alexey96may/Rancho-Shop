@@ -1,10 +1,12 @@
 <script setup lang="ts">
-    import { computed, ref, watch } from 'vue';
+    import { computed, onBeforeUnmount, ref, watch } from 'vue';
 
     import { router, useForm, usePage } from '@inertiajs/vue3';
 
     import CommentCard from '@/Components/Cards/ReviewsPageCard.vue';
     import MainPagination from '@/Components/Shared/MainPagination.vue';
+    import CommentCardSkeleton from '@/Components/Skeletons/ReviewsPageCardSkeleton.vue';
+    import AppCaptcha from '@/Components/UI/AppCaptcha.vue';
     import AppRating from '@/Components/UI/AppRating.vue';
     import BaseInput from '@/Components/UI/BaseInput.vue';
     import BaseSelect from '@/Components/UI/BaseSelect.vue';
@@ -39,6 +41,21 @@
     };
 
     const selectedSort = ref<string>(parseSortFromProps());
+    const isLoading = ref(false);
+
+    // --- Inertia-переходы: показываем скелетоны на время загрузки ---
+    const offStart = router.on('start', () => {
+        isLoading.value = true;
+    });
+
+    const offFinish = router.on('finish', () => {
+        isLoading.value = false;
+    });
+
+    onBeforeUnmount(() => {
+        offStart();
+        offFinish();
+    });
 
     watch(
         () => props.filters,
@@ -72,19 +89,38 @@
         content: '',
         rating: 5,
         guest_name: '',
+        captcha: '',
+    });
+
+    const isCaptchaValid = ref(false);
+    const captchaRef = ref<InstanceType<typeof AppCaptcha> | null>(null);
+
+    const isAuthenticated = computed(() => !!page.props.auth?.user);
+
+    const canSubmit = computed(() => {
+        if (form.processing) return false;
+        if (isAuthenticated.value) return true;
+        return isCaptchaValid.value;
     });
 
     const submitReview = () => {
+        if (!canSubmit.value) return;
+
         form.post(route('comments.store'), {
             preserveScroll: true,
             onSuccess: () => {
-                form.reset('content', 'rating');
+                form.reset('content', 'rating', 'captcha');
+                isCaptchaValid.value = false;
+                captchaRef.value?.reset();
                 isFormVisible.value = false;
+            },
+            onError: () => {
+                if (!isAuthenticated.value) {
+                    captchaRef.value?.reset();
+                }
             },
         });
     };
-
-    const isAuthenticated = computed(() => !!page.props.auth?.user);
 </script>
 
 <template>
@@ -93,13 +129,13 @@
             <!-- HEADER -->
             <header
                 v-scroll-reveal
-                class="mb-8 flex flex-col justify-between gap-4 sm:mb-12 md:flex-row md:items-end"
+                class="mb-8 flex flex-col justify-between gap-4 sm:mb-12 md:flex-row md:items-center"
             >
                 <div>
                     <h1 class="text-2xl font-black text-rancho-forest sm:text-4xl">
                         Отзывы о сайте
                     </h1>
-                    <p class="text-rancho-ink-600 mt-2 text-xs sm:text-sm">
+                    <p class="mt-2 text-xs text-rancho-ink-600 sm:text-sm">
                         Впечатления и оценки наших посетителей
                     </p>
                 </div>
@@ -109,7 +145,7 @@
                     class="inline-flex items-center justify-center rounded-xl px-5 py-3 text-xs font-black uppercase tracking-widest transition-all focus:outline-none focus-visible:ring-4 focus-visible:ring-rancho-pine/30 active:scale-95"
                     :class="
                         isFormVisible
-                            ? 'border-rancho-ink-300 hover:bg-rancho-ink-50 border-2 bg-white text-rancho-forest hover:border-rancho-forest'
+                            ? 'border-2 border-rancho-ink-300 bg-white text-rancho-forest hover:border-rancho-forest hover:bg-rancho-ink-50'
                             : 'shadow-md hover:shadow-lg bg-rancho-pine text-white hover:bg-rancho-forest'
                     "
                     @click="isFormVisible = !isFormVisible"
@@ -119,15 +155,14 @@
             </header>
 
             <!-- FORM SECTION -->
-            <Transition name="fade">
+            <Transition name="fade-slide">
                 <section
-                    v-scroll-reveal
                     v-if="isFormVisible"
-                    class="border-rancho-ink-200 shadow-sm mb-12 rounded-2xl border bg-white p-6"
+                    class="shadow-sm mb-12 rounded-2xl border border-rancho-ink-200 bg-white p-6"
                 >
                     <h2 class="mb-6 text-lg font-black text-rancho-forest">Ваш отзыв</h2>
 
-                    <form class="space-y-5" @submit.prevent="submitReview">
+                    <form class="space-y-8" @submit.prevent="submitReview">
                         <BaseInput
                             v-if="!isAuthenticated"
                             v-model="form.guest_name"
@@ -139,7 +174,7 @@
                         />
 
                         <div class="flex flex-wrap items-center gap-3">
-                            <span class="text-rancho-ink-600 text-xs font-medium md:text-sm">
+                            <span class="text-xs font-medium text-rancho-ink-600 md:text-sm">
                                 Ваша оценка:
                             </span>
                             <AppRating v-model:rating="form.rating" :readonly="false" :max="5" />
@@ -154,10 +189,28 @@
                             placeholder="Расскажите о вашем опыте работы с сайтом..."
                         />
 
+                        <Transition name="fade-slide" appear>
+                            <AppCaptcha
+                                v-if="!isAuthenticated"
+                                ref="captchaRef"
+                                v-model="form.captcha"
+                                v-model:valid="isCaptchaValid"
+                                :count="5"
+                                chars-preset="alphanumeric"
+                                distortion="lines"
+                                theme="light"
+                            />
+                        </Transition>
+
+                        <p v-if="form.errors.captcha" class="text-xs font-medium text-red-600">
+                            {{ form.errors.captcha }}
+                        </p>
+
                         <div class="flex justify-end pt-2">
                             <button
                                 type="submit"
-                                :disabled="form.processing"
+                                :disabled="!canSubmit"
+                                :aria-disabled="!canSubmit"
                                 class="shadow-md hover:shadow-lg disabled:hover:shadow-md rounded-xl bg-rancho-pine px-6 py-3 text-sm font-bold text-white transition-all hover:bg-rancho-forest focus:outline-none focus-visible:ring-4 focus-visible:ring-rancho-pine/30 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-rancho-pine"
                             >
                                 {{ form.processing ? 'Отправка...' : 'Опубликовать' }}
@@ -170,9 +223,9 @@
             <!-- SORTING BAR -->
             <div
                 v-scroll-reveal
-                class="border-rancho-ink-200 mb-6 flex flex-col justify-between gap-4 border-b pb-6 sm:flex-row sm:items-end"
+                class="mb-6 flex flex-col justify-between gap-4 border-b border-rancho-ink-200 pb-6 sm:flex-row sm:items-end"
             >
-                <span class="text-rancho-ink-600 text-sm font-medium">
+                <span class="text-sm font-medium text-rancho-ink-600">
                     Всего отзывов:
                     <span class="font-black text-rancho-forest">
                         {{ comments.meta?.total ?? comments.data.length }}
@@ -190,22 +243,32 @@
             </div>
 
             <!-- REVIEWS LIST / EMPTY STATE -->
-            <EmptyState
-                v-scroll-reveal
-                v-if="!comments.data.length"
-                title="Отзывов пока нет"
-                description="Станьте первым, кто поделится мнением о нашей работе!"
-                action-label="Написать отзыв"
-                @action="isFormVisible = true"
-            />
-
-            <section v-else v-scroll-reveal aria-label="Список отзывов" class="space-y-4">
-                <CommentCard
-                    v-for="comment in comments.data"
-                    :key="comment.id"
-                    :comment="comment"
+            <Transition name="fade-slide" mode="out-in">
+                <!-- EMPTY -->
+                <EmptyState
+                    v-if="!isLoading && !comments.data.length"
+                    key="empty"
+                    title="Отзывов пока нет"
+                    description="Станьте первым, кто поделится мнением о нашей работе!"
+                    action-label="Написать отзыв"
+                    @action="isFormVisible = true"
                 />
-            </section>
+
+                <!-- SKELETONS -->
+                <div v-else-if="isLoading" key="skeletons" class="space-y-4">
+                    <CommentCardSkeleton v-for="i in 3" :key="`skeleton-${i}`" />
+                </div>
+
+                <!-- CONTENT -->
+                <TransitionGroup v-else key="content" name="stagger" tag="div" class="space-y-4">
+                    <CommentCard
+                        v-for="(comment, index) in comments.data"
+                        :key="comment.id"
+                        :comment="comment"
+                        :style="{ '--i': index }"
+                    />
+                </TransitionGroup>
+            </Transition>
 
             <!-- PAGINATION -->
             <div v-scroll-reveal class="mt-8">

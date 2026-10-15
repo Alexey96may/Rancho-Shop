@@ -33,7 +33,7 @@
 
     <header v-scroll-reveal class="mb-6">
         <h1 class="text-2xl font-black text-rancho-forest sm:text-3xl">Новый пароль</h1>
-        <p class="text-rancho-ink-600 mt-2 text-sm leading-relaxed">
+        <p class="mt-2 text-sm leading-relaxed text-rancho-ink-600">
             Придумайте новый пароль для вашего аккаунта.
         </p>
     </header>
@@ -77,11 +77,7 @@
         />
 
         <div class="flex justify-end pt-2">
-            <BaseSubmitButton
-                :processing="form.processing"
-                label="Сохранить пароль"
-                :with-icon="false"
-            />
+            <BaseSubmitButton :processing="form.processing" label="Сохранить пароль" />
         </div>
     </form>
 </template>

@@ -5,6 +5,7 @@
 
     import { VueClientRecaptcha } from 'vue-client-recaptcha';
 
+    import AppCaptcha from '@/Components/UI/AppCaptcha.vue';
     import AppRating from '@/Components/UI/AppRating.vue';
     import BaseInput from '@/Components/UI/BaseInput.vue';
     import BaseSmartTime from '@/Components/UI/BaseSmartTime.vue';
@@ -54,7 +55,7 @@
     // Капча (только для гостей)
     const captchaInput = ref('');
     const isCaptchaValid = ref(false);
-    const captchaKey = ref(0);
+    const captchaRef = ref<InstanceType<typeof AppCaptcha> | null>(null);
 
     // Валидация: капча нужна только гостям
     const canSubmit = computed(() => {
@@ -85,10 +86,7 @@
         guestName.value = '';
         rating.value = 5;
 
-        // Сброс капчи
-        captchaInput.value = '';
-        isCaptchaValid.value = false;
-        captchaKey.value++; // новый код при следующей отправке
+        captchaRef.value?.reset();
     };
 
     const loadMore = () => {
@@ -192,12 +190,10 @@
                 :max-height="150"
             />
 
-            <div
-                v-if="!isAuthenticated"
-                class="flex flex-col items-center justify-center gap-4 sm:flex-row"
-            >
-                <VueClientRecaptcha
-                    :key="captchaKey"
+            <Transition name="captcha-fade" appear>
+                <AppCaptcha
+                    v-if="!isAuthenticated"
+                    ref="captchaRef"
                     v-model="captchaInput"
                     v-model:valid="isCaptchaValid"
                     :count="5"
@@ -205,16 +201,7 @@
                     distortion="lines"
                     theme="light"
                 />
-
-                <BaseInput
-                    v-model="guestName"
-                    placeholder="Введите капчу"
-                    type="text"
-                    class="max-w-60"
-                    theme="light"
-                    required
-                />
-            </div>
+            </Transition>
 
             <div
                 class="flex flex-col-reverse items-stretch gap-4 sm:flex-row sm:items-center sm:justify-between"
@@ -308,3 +295,59 @@
         </div>
     </section>
 </template>
+
+<style scoped>
+    /* Скрываем sr-only элемент */
+    :deep(.vue_client_recaptcha_sr_only) {
+        position: absolute !important;
+        width: 1px !important;
+        height: 1px !important;
+        padding: 0 !important;
+        margin: -1px !important;
+        overflow: hidden !important;
+        clip: rect(0, 0, 0, 0) !important;
+        white-space: nowrap !important;
+        border: 0 !important;
+        pointer-events: none !important;
+    }
+
+    /* Анимация появления */
+    .captcha-fade-enter-active,
+    .captcha-fade-leave-active {
+        transition:
+            opacity 0.5s ease,
+            transform 0.5s ease;
+    }
+
+    .captcha-fade-enter-from,
+    .captcha-fade-leave-to {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    /* Стилизация контейнера капчи */
+    .styled-captcha {
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    /* Иконка обновления — пробой через :deep() */
+    .styled-captcha :deep(.vue_client_recaptcha_icon_svg) {
+        color: #597d5b;
+        transition:
+            color 0.3s ease,
+            transform 0.3s ease;
+    }
+
+    .styled-captcha :deep(.vue_client_recaptcha_icon_svg):hover {
+        color: #1c3f34;
+        transform: rotate(15deg);
+    }
+
+    /* Канвас капчи — пробой через :deep() */
+    .styled-captcha :deep(canvas) {
+        border-radius: 8px;
+        background-color: #f9fafb;
+    }
+</style>

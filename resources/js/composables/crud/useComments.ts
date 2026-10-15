@@ -30,7 +30,7 @@ export function useComments(
                 preserveScroll: true,
                 onError: (errors: Record<string, string>) => {
                     console.error(errors);
-                    notify.error('Ошибка валидации');
+                    notify.error('Ошибка валидации!');
                 },
             },
         );

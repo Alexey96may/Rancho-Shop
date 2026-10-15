@@ -28,7 +28,7 @@
 
     <header v-scroll-reveal class="mb-6">
         <h1 class="text-2xl font-black text-rancho-forest sm:text-3xl">Подтверждение email</h1>
-        <p class="text-rancho-ink-600 mt-2 text-sm leading-relaxed">
+        <p class="mt-2 text-sm leading-relaxed text-rancho-ink-600">
             Спасибо за регистрацию! Прежде чем начать, подтвердите, пожалуйста, ваш email — мы
             отправили вам письмо со ссылкой. Если письмо не пришло, мы отправим его снова.
         </p>
@@ -57,7 +57,6 @@
             <BaseSubmitButton
                 :processing="form.processing"
                 label="Отправить письмо снова"
-                :with-icon="false"
                 class="sm:w-auto"
             />
 
@@ -65,7 +64,7 @@
                 :href="route('logout')"
                 method="post"
                 as="button"
-                class="text-rancho-ink-500 text-center text-sm font-medium underline-offset-2 transition-colors hover:text-rancho-forest hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-rancho-pine/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white sm:text-right"
+                class="text-center text-sm font-medium text-rancho-ink-500 underline-offset-2 transition-colors hover:text-rancho-forest hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-rancho-pine/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white sm:text-right"
             >
                 Выйти
             </Link>
