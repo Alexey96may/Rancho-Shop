@@ -21,6 +21,8 @@
 
     const toggleVoice = () => {
         if (!audioRef.value) return;
+        if (typeof window === 'undefined') return;
+
         isPlaying.value ? audioRef.value.pause() : audioRef.value.play();
         isPlaying.value = !isPlaying.value;
     };

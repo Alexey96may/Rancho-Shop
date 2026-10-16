@@ -146,6 +146,7 @@
                     v-model="filterForm.product_id"
                     :options="products"
                     placeholder="Все товары"
+                    @input-start="filterForm.clearErrors('product_id')"
                     label="Товар"
                     value-key="id"
                     label-key="name"
@@ -178,7 +179,7 @@
 
             <!-- TABLE HEADER (desktop only) -->
             <div
-                class="border-rancho-ink-800 text-rancho-ink-500 hidden grid-cols-12 gap-4 border-b px-6 pb-2 text-[9px] font-black uppercase tracking-[0.3em] lg:grid"
+                class="hidden grid-cols-12 gap-4 border-b border-rancho-ink-800 px-6 pb-2 text-[9px] font-black uppercase tracking-[0.3em] text-rancho-ink-500 lg:grid"
             >
                 <div class="col-span-4">Товар / Характеристики</div>
                 <div class="col-span-2 text-center">Цена за ед.</div>

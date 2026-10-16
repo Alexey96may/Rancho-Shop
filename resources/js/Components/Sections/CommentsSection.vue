@@ -3,8 +3,6 @@
 
     import { router } from '@inertiajs/vue3';
 
-    import { VueClientRecaptcha } from 'vue-client-recaptcha';
-
     import AppCaptcha from '@/Components/UI/AppCaptcha.vue';
     import AppRating from '@/Components/UI/AppRating.vue';
     import BaseInput from '@/Components/UI/BaseInput.vue';
@@ -130,6 +128,15 @@
 
     onBeforeUnmount(() => {
         observer?.disconnect();
+    });
+
+    watch([page, lastPage, sentinel], ([p, lp, s]) => {
+        if (!observer) return;
+        observer.disconnect();
+
+        if (p < lp && s) {
+            observer.observe(s);
+        }
     });
 </script>
 

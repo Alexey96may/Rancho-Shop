@@ -1,12 +1,16 @@
 <script setup lang="ts">
-    import { computed, nextTick, ref } from 'vue';
+    import { type Ref, computed, nextTick, ref } from 'vue';
+    import type { ComponentPublicInstance } from 'vue';
 
     import { Head, router, useForm, usePage } from '@inertiajs/vue3';
+
+    import { ShoppingCartIcon } from '@heroicons/vue/24/outline';
 
     import BaseInput from '@/Components/UI/BaseInput.vue';
     import BaseSubmitButton from '@/Components/UI/BaseSubmitButton.vue';
     import BaseSwitch from '@/Components/UI/BaseSwitch.vue';
     import BaseTextarea from '@/Components/UI/BaseTextarea.vue';
+    import PhoneInput from '@/Components/UI/PhoneInput.vue';
     import MainLayout from '@/Layouts/MainLayout.vue';
     import { useCartStore } from '@/stores/cart';
     import { useNotificationsStore } from '@/stores/notifications';
@@ -83,9 +87,11 @@
     const delivery = computed(() => props.delivery_draft ?? page.props.delivery_draft ?? null);
     const deliveryResult = computed(() => props.delivery_result ?? null);
 
-    const nameRef = ref<InstanceType<typeof BaseInput> | HTMLInputElement | null>(null);
-    const phoneRef = ref<InstanceType<typeof BaseInput> | HTMLInputElement | null>(null);
-    const commentRef = ref<InstanceType<typeof BaseTextarea> | HTMLTextAreaElement | null>(null);
+    const nameRef = ref<ComponentPublicInstance<typeof BaseInput> | HTMLInputElement | null>(null);
+    const phoneRef = ref<ComponentPublicInstance<typeof BaseInput> | HTMLInputElement | null>(null);
+    const commentRef = ref<
+        ComponentPublicInstance<typeof BaseTextarea> | HTMLTextAreaElement | null
+    >(null);
 
     type CheckoutForm = {
         customer_name: string;
@@ -188,12 +194,22 @@
         return errors.value[field];
     }
 
-    function focusElement(el: any) {
+    function focusElement(el: HTMLElement | ComponentPublicInstance | null | undefined): void {
         if (!el) return;
-        const target = el.$el ?? el;
-        target.focus?.();
-        target.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
+
+        const target = (el as ComponentPublicInstance).$el ?? el;
+
+        if (!(target instanceof HTMLElement)) return;
+
+        target.focus();
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
+
+    const fieldRefs: Record<string, Ref<HTMLElement | ComponentPublicInstance | null>> = {
+        customer_name: nameRef,
+        customer_phone: phoneRef,
+        customer_comment: commentRef,
+    };
 
     function submit() {
         if (cart.items.length === 0) return;
@@ -215,17 +231,11 @@
                     notify.error(globalMsg);
                 }
 
-                // 2. Фокус на поле формы
-                const fieldOrder: (keyof CheckoutForm)[] = [
-                    'customer_name',
-                    'customer_phone',
-                    'customer_comment',
-                ];
-                const firstField = fieldOrder.find((f) => errs[f]);
-
-                if (firstField === 'customer_name') focusElement(nameRef.value);
-                if (firstField === 'customer_phone') focusElement(phoneRef.value);
-                if (firstField === 'customer_comment') focusElement(commentRef.value);
+                // 2. Фокус на первое поле с ошибкой
+                const firstField = Object.keys(fieldRefs).find((f) => errs[f]);
+                if (firstField) {
+                    focusElement(fieldRefs[firstField].value);
+                }
             },
         });
     }
@@ -253,19 +263,20 @@
                         :required="true"
                         placeholder="Введите своё имя"
                         v-model="form.customer_name"
+                        @input-start="form.clearErrors('customer_name')"
                         :error="errors.customer_name"
                         theme="light"
+                        :disabled="form.processing"
                     />
 
-                    <BaseInput
-                        ref="phoneRef"
-                        type="tel"
-                        :required="true"
-                        label="Телефон"
-                        placeholder="Введите номер телефона"
+                    <PhoneInput
                         v-model="form.customer_phone"
-                        :error="errors.customer_phone"
+                        label="Телефон"
+                        placeholder="+7 (___) ___-__-__"
+                        :error="form.errors.customer_phone"
                         theme="light"
+                        @input-start="form.clearErrors('customer_phone')"
+                        :disabled="form.processing"
                     />
 
                     <BaseSwitch
@@ -276,6 +287,7 @@
                         active-text="Аккаунт будет создан автоматически"
                         inactive-text="Аккаунт не будет создан автоматически"
                         theme="light"
+                        :disabled="form.processing"
                     />
 
                     <!-- DELIVERY BLOCK -->
@@ -448,6 +460,8 @@
                         ref="commentRef"
                         v-model="form.customer_comment"
                         :error="errors.customer_comment"
+                        @input-start="form.clearErrors('customer_comment')"
+                        :disabled="form.processing"
                         label="Комментарий к заказу"
                         placeholder="Ваш комментарий для модератора или доставщика"
                         :max-height="500"
@@ -515,8 +529,8 @@
                                     label="Промокод"
                                     placeholder="Введите код"
                                     theme="light"
-                                    :error="page.props.errors.promo_code as string | undefined"
-                                    :disabled="isChecking"
+                                    :error="page.props.errors.promo_code"
+                                    :disabled="isChecking || form.processing"
                                 />
 
                                 <button
@@ -545,6 +559,7 @@
                                 <button
                                     type="button"
                                     @click="removePromo"
+                                    :disabled="form.processing"
                                     class="text-xs font-bold text-rancho-ember hover:underline"
                                 >
                                     Убрать
@@ -576,7 +591,9 @@
                         :processing="form.processing"
                         :disabled="cart.items.length === 0 || (!isPickup && !isDeliveryValid)"
                         :label="form.processing ? 'Оформление...' : 'Оформить заказ'"
-                        class="mt-6 w-full"
+                        class="mt-10 w-full"
+                        :icon="ShoppingCartIcon"
+                        theme="dark"
                     />
 
                     <!-- CART ERROR -->

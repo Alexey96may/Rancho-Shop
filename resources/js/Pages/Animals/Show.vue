@@ -3,14 +3,15 @@
 
     import { Link, usePage } from '@inertiajs/vue3';
 
+    import { TagIcon } from '@heroicons/vue/24/outline';
     import { Volume2, VolumeX } from 'lucide-vue-next';
 
+    import ProductCard from '@/Components/Cards/ProductCard.vue';
     import CommentsSection from '@/Components/Sections/CommentsSection.vue';
+    import ImageLightbox from '@/Components/Shared/ImageLightbox.vue';
     import AnimalGallery from '@/Components/Shared/UIGallery.vue';
-    import BaseModal from '@/Components/UI/BaseModal.vue';
     import MainLayout from '@/Layouts/MainLayout.vue';
     import { useComments } from '@/composables/crud/useComments';
-    import type { GalleryItem } from '@/composables/features/useMediaUpload';
     import type { Animal, Comment, Paginated, ResourceSingle, SharedData } from '@/types';
     import { formatMoney } from '@/utils/format';
 
@@ -46,18 +47,28 @@
     };
 
     // gallery
-    const selectedImage = ref<string | null>(null);
 
-    const openImage = (item: string) => {
-        if (item) selectedImage.value = item;
-    };
+    const openImageIndex = ref<number | null>(null);
 
-    const isModalOpen = computed({
-        get: () => !!selectedImage.value,
-        set: (value) => {
-            if (!value) selectedImage.value = null;
-        },
+    const allImages = computed<string[]>(() => {
+        const list: string[] = [];
+
+        const main = animal.value.avatars?.[0];
+        const mainUrl = typeof main === 'string' ? main : main?.url;
+        if (mainUrl) list.push(mainUrl);
+
+        animal.value.gallery?.forEach((g) => {
+            const url = typeof g === 'string' ? g : g?.url;
+            if (url) list.push(url);
+        });
+
+        return list;
     });
+
+    const openImage = (url: string) => {
+        const idx = allImages.value.indexOf(url);
+        if (idx >= 0) openImageIndex.value = idx;
+    };
 
     const { submitComment } = useComments('animal', animal.value.id);
 
@@ -87,6 +98,7 @@
                         :gallery="animal.gallery"
                         :alt="animal.name"
                         @preview="openImage"
+                        class="w-full"
                     />
 
                     <span
@@ -100,25 +112,18 @@
                 <!-- INFO -->
                 <section v-scroll-reveal class="flex flex-col gap-4">
                     <!-- Статус + Категория -->
-                    <div class="flex items-center gap-2 sm:flex-col sm:items-start">
-                        <div class="flex flex-wrap items-center gap-2">
-                            <!-- Разделитель -->
-                            <span
-                                v-if="animal.status && animal.category?.name"
-                                class="h-3 w-px bg-rancho-ink-200"
-                                aria-hidden="true"
-                            ></span>
-
-                            <span
-                                v-if="animal.category?.name"
-                                class="inline-flex items-center rounded-full bg-rancho-ember/10 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-rancho-ember ring-1 ring-inset ring-rancho-ember/20"
-                            >
-                                {{ animal.category.name }}
-                            </span>
+                    <div class="flex flex-col gap-2 sm:items-start">
+                        <!-- Категория -->
+                        <div
+                            v-if="animal.category?.name"
+                            class="inline-flex items-center gap-1.5 self-start rounded-full bg-rancho-ember/10 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-rancho-ember ring-1 ring-inset ring-rancho-ember/20 transition-all hover:bg-rancho-ember/20"
+                        >
+                            <TagIcon class="h-3 w-3" aria-hidden="true" />
+                            {{ animal.category.name }}
                         </div>
 
                         <!-- Имя + голос -->
-                        <div class="mt-4 flex items-start gap-3">
+                        <div class="flex items-start gap-3">
                             <h1 class="text-3xl font-black text-rancho-forest sm:text-4xl">
                                 {{ animal.name }}
                             </h1>
@@ -157,7 +162,10 @@
                     </p>
 
                     <!-- Характеристики -->
-                    <div v-if="animal.features?.length" class="mt-8">
+                    <div
+                        v-if="animal.features?.length"
+                        class="mt-8 overflow-hidden rounded-2xl border border-rancho-ink-100 bg-white p-4"
+                    >
                         <h2
                             class="text-xs font-black uppercase tracking-widest text-rancho-ink-500"
                         >
@@ -230,10 +238,10 @@
             >
                 <header class="mb-6 flex items-end justify-between gap-4">
                     <div>
-                        <h2 class="text-2xl font-black text-rancho-forest sm:text-3xl">Продукты</h2>
-                        <p class="mt-2 text-xs text-rancho-ink-500 sm:text-sm">
-                            Что производит {{ animal.name }}
-                        </p>
+                        <h2 class="text-2xl font-black text-rancho-forest sm:text-3xl">
+                            Чем радует {{ animal.name }}
+                        </h2>
+                        <p class="mt-2 text-xs text-rancho-ink-500 sm:text-sm">Спасибо за это</p>
                     </div>
 
                     <Link
@@ -244,48 +252,14 @@
                     </Link>
                 </header>
 
-                <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-6 lg:grid-cols-4">
-                    <Link
+                <div
+                    class="grid grid-cols-1 justify-items-center gap-x-4 gap-y-8 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
+                >
+                    <ProductCard
                         v-for="product in animal.products"
                         :key="product.id"
-                        :href="route('catalog.show', product.slug)"
-                        class="hover:shadow-md group flex flex-col overflow-hidden rounded-2xl border border-rancho-ink-200 bg-white transition-all hover:-translate-y-0.5 hover:border-rancho-pine"
-                    >
-                        <div class="aspect-square overflow-hidden bg-rancho-ink-50">
-                            <AppImage
-                                v-if="product.main_photo?.[0]"
-                                :src="product.main_photo[0]"
-                                :alt="product.name"
-                                class-name="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                            />
-                            <div
-                                v-else
-                                class="flex h-full w-full items-center justify-center text-xs text-rancho-ink-400"
-                            >
-                                Нет фото
-                            </div>
-                        </div>
-
-                        <div class="flex flex-1 flex-col gap-2 p-3 sm:p-4">
-                            <h3
-                                class="line-clamp-2 text-sm font-bold text-rancho-forest group-hover:text-rancho-pine"
-                            >
-                                {{ product.name }}
-                            </h3>
-
-                            <div class="mt-auto">
-                                <span
-                                    v-if="product.default_variant?.price"
-                                    class="text-base font-black text-rancho-forest sm:text-lg"
-                                >
-                                    {{ formatMoney(product.default_variant.price) }}
-                                </span>
-                                <span v-else class="text-xs italic text-rancho-ink-400">
-                                    Цена не указана
-                                </span>
-                            </div>
-                        </div>
-                    </Link>
+                        :product="product"
+                    />
                 </div>
 
                 <div class="mt-6 sm:hidden">
@@ -308,12 +282,10 @@
             </section>
         </div>
 
-        <BaseModal :show="isModalOpen" variant="ui" @close="selectedImage = null">
-            <AppImage
-                v-if="selectedImage"
-                :src="selectedImage"
-                alt="Полноэкранный просмотр изображения"
-            />
-        </BaseModal>
+        <ImageLightbox
+            v-model="openImageIndex"
+            :images="allImages"
+            :alt="`Фото животного ${animal.name}`"
+        />
     </AppContainer>
 </template>

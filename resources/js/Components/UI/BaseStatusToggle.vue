@@ -11,11 +11,13 @@
 
     const emit = defineEmits<{
         (e: 'update:modelValue', value: boolean): void;
+        (e: 'input-start'): void;
     }>();
 
     const toggle = () => {
         if (!props.disabled) {
             emit('update:modelValue', !props.modelValue);
+            emit('input-start');
         }
     };
 </script>

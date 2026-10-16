@@ -250,6 +250,7 @@
                             <BaseSwitch
                                 v-model="form.is_active"
                                 label="Статус страницы"
+                                @input-start="form.clearErrors('is_active')"
                                 :active-text="isEdit ? 'Опубликовано' : 'Опубликовать сразу'"
                                 :inactive-text="isEdit ? 'В архиве' : 'В черновик'"
                                 :disabled="form.processing"

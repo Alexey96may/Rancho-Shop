@@ -130,7 +130,7 @@
         <div class="flex flex-wrap items-center justify-between gap-4 sm:gap-8">
             <BaseCancelButton :route-name="'admin.features.index'" label="Назад" theme="dark" />
 
-            <p class="text-rancho-ink-400 text-[11px] italic sm:text-xs">
+            <p class="text-[11px] italic text-rancho-ink-400 sm:text-xs">
                 *Здесь можно использовать HTML-разметку
             </p>
         </div>
@@ -139,9 +139,9 @@
         <form @submit.prevent="submit" class="max-w-5xl space-y-12 pb-20 sm:space-y-8">
             <!-- ОБЩИЕ ПАРАМЕТРЫ -->
             <section
-                class="border-rancho-ink-800 bg-rancho-ink-900/40 space-y-6 rounded-2xl border px-4 py-6 sm:rounded-3xl sm:p-6 md:p-8"
+                class="space-y-6 rounded-2xl border border-rancho-ink-800 bg-rancho-ink-900/40 px-4 py-6 sm:rounded-3xl sm:p-6 md:p-8"
             >
-                <div class="text-rancho-mint mb-4 flex items-center gap-2">
+                <div class="mb-4 flex items-center gap-2 text-rancho-mint">
                     <LayoutIcon class="h-5 w-5 sm:h-3 sm:w-3" aria-hidden="true" />
                     <h2 class="text-xs font-black">Общие параметры</h2>
                 </div>
@@ -151,6 +151,7 @@
                         v-model="form.title"
                         v-model:error="form.errors.title"
                         label="Заголовок"
+                        @input-start="form.clearErrors('title')"
                         placeholder="Напишите заголовок..."
                         :disabled="form.processing"
                         theme="dark"
@@ -159,6 +160,7 @@
                     <BaseInput
                         v-model="form.subtitle"
                         v-model:error="form.errors.subtitle"
+                        @input-start="form.clearErrors('subtitle')"
                         label="Подзаголовок"
                         placeholder="Напишите подзаголовок, если он предусмотрен..."
                         :disabled="form.processing"
@@ -170,6 +172,7 @@
                     v-model="form.is_visible"
                     label="Отображать на сайте"
                     active-text="Будет виден на сайте"
+                    @input-start="form.clearErrors('is_visible')"
                     inactive-text="В черновик"
                     :disabled="form.processing"
                     theme="dark"
@@ -181,14 +184,14 @@
                 <div
                     class="flex flex-col items-center justify-between gap-4 px-2 sm:flex-row sm:items-center sm:px-4"
                 >
-                    <h2 class="text-rancho-mint text-xs font-black uppercase tracking-widest">
+                    <h2 class="text-xs font-black uppercase tracking-widest text-rancho-mint">
                         Состав контента
                     </h2>
 
                     <button
                         type="button"
                         @click="addContentItem"
-                        class="border-rancho-ink-700 bg-rancho-ink-800 text-rancho-mint hover:border-rancho-mint/40 hover:bg-rancho-ink-700 focus-visible:ring-rancho-mint/40 inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-[10px] font-black transition-all focus:outline-none focus-visible:ring-2 active:scale-95 sm:px-4"
+                        class="inline-flex items-center gap-2 rounded-xl border border-rancho-ink-700 bg-rancho-ink-800 px-3 py-2 text-[10px] font-black text-rancho-mint transition-all hover:border-rancho-mint/40 hover:bg-rancho-ink-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-rancho-mint/40 active:scale-95 sm:px-4"
                     >
                         <PlusIcon class="h-4 w-4" aria-hidden="true" />
                         Добавить элемент
@@ -216,7 +219,7 @@
 
             <!-- STICKY ACTIONS -->
             <div
-                class="border-rancho-ink-800 bg-rancho-ink-900/95 sticky bottom-2 flex justify-end gap-3 rounded-2xl border p-3 backdrop-blur-md sm:bottom-4 sm:gap-4 sm:p-4"
+                class="sticky bottom-2 flex justify-end gap-3 rounded-2xl border border-rancho-ink-800 bg-rancho-ink-900/95 p-3 backdrop-blur-md sm:bottom-4 sm:gap-4 sm:p-4"
             >
                 <BaseCancelButton :route-name="'admin.features.index'" theme="dark" />
 

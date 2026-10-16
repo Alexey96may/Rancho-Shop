@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
-use App\Http\Resources\Admin\AdminUserResource;
-use App\Http\Requests\Admin\UserSaveRequest;
-use App\Models\User;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Http\Request;
-use Inertia\Inertia;
 use App\Enums\UserRole;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\UserSaveRequest;
+use App\Http\Resources\Admin\AdminUserResource;
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 use Inertia\Response;
 
 class UserController extends Controller
@@ -18,14 +18,10 @@ class UserController extends Controller
     {
         $filters = $request->only(['search', 'role']);
 
-        $direction = in_array(strtolower((string) $request->query('direction')), ['asc', 'desc'], true) 
-            ? (string) $request->query('direction') 
-            : 'asc';
-
         $users = User::query()
             ->withCount(['orders', 'comments'])
             ->filter($filters)
-            ->orderBy('name', $direction)
+            ->latest()
             ->paginate(setting('admin_per_page', 10))
             ->withQueryString();
 
@@ -33,7 +29,7 @@ class UserController extends Controller
             'users' => AdminUserResource::collection($users),
             'filters' => $filters,
             'roles' => $this->getRolesOptions(),
-            'seo' => $this->seo('Панель управления: Пользователи', robots: 'noindex, nofollow')
+            'seo' => $this->seo('Панель управления: Пользователи', robots: 'noindex, nofollow'),
         ]);
     }
 
@@ -50,7 +46,7 @@ class UserController extends Controller
     public function update(UserSaveRequest $request, User $user)
     {
         $dto = $request->toDto();
-        
+
         $user->update($dto->toArray());
 
         return back()->with('success', 'Данные пользователя обновлены!');
@@ -69,7 +65,7 @@ class UserController extends Controller
 
     private function getRolesOptions(): array
     {
-        return collect(UserRole::cases())->map(fn($role) => [
+        return collect(UserRole::cases())->map(fn ($role) => [
             'value' => $role->value,
             'label' => $role->label(),
             'color' => $role->color(),

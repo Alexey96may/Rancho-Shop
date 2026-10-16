@@ -10,7 +10,12 @@
 
     const emit = defineEmits<{
         (e: 'blur'): void;
+        (e: 'input-start'): void;
     }>();
+
+    watch(model, () => {
+        emit('input-start');
+    });
 
     interface Props {
         label?: string;

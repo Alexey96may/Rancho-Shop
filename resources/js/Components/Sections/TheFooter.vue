@@ -6,6 +6,7 @@
     import { EnvelopeIcon, MapPinIcon, PhoneIcon } from '@heroicons/vue/24/outline';
 
     import CowIcon from '@/Components/Icons/CowIcon.vue';
+    import CowIconDark from '@/Components/Icons/CowIconDark.vue';
     import type { SharedData } from '@/types';
 
     interface Props {
@@ -51,6 +52,8 @@
         'hover:text-rancho-buttercup hover:underline hover:decoration-2 hover:underline-offset-4',
         focusClass.value,
     ]);
+
+    const CowLogo = computed(() => (isDark.value ? CowIconDark : CowIcon));
 </script>
 
 <template>
@@ -67,9 +70,11 @@
                 <!-- BRAND -->
                 <div class="flex flex-col items-center gap-4">
                     <div class="flex items-center gap-3">
-                        <CowIcon
-                            class="h-8 w-8 shrink-0 rounded-full bg-rancho-buttercup p-1 text-rancho-ink-950 sm:h-12 sm:w-12"
+                        <component
+                            :is="CowLogo"
+                            class="h-8 w-8 shrink-0 rounded-full p-1 text-rancho-ink-950 sm:h-12 sm:w-12"
                         />
+
                         <span
                             class="font-header text-xl tracking-wide text-rancho-paper sm:text-2xl"
                         >
@@ -134,7 +139,7 @@
                     <h4 class="mb-6 font-header text-lg text-rancho-buttercup sm:text-xl">
                         Разделы
                     </h4>
-                    <ul class="space-y-4 font-sans text-sm opacity-90">
+                    <ul class="space-y-4 text-center font-sans text-sm opacity-90">
                         <li v-for="section in sectionsItems" :key="section.pathName">
                             <Link :href="route(section.pathName)" :class="linkClass">
                                 {{ section.name }}
@@ -149,7 +154,11 @@
                         Продукция
                     </h4>
                     <ul class="space-y-4 font-sans text-sm opacity-90">
-                        <li v-for="production in productionItems" :key="production.params">
+                        <li
+                            class="text-center"
+                            v-for="production in productionItems"
+                            :key="production.params"
+                        >
                             <Link
                                 :href="route(production.pathName, { category: production.params })"
                                 :class="linkClass"

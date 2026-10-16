@@ -75,6 +75,7 @@
             <div class="flex flex-col-reverse gap-4 sm:flex-row sm:items-end sm:justify-between">
                 <AdminSearchInput
                     v-model="filterForm.search"
+                    @input-start="filterForm.clearErrors('search')"
                     placeholder="Поиск страниц по названию..."
                     class="w-full sm:max-w-md"
                 />
@@ -92,7 +93,7 @@
 
             <!-- TABLE HEADER (desktop) -->
             <div
-                class="border-rancho-ink-800 text-rancho-ink-500 hidden grid-cols-12 gap-4 border-b px-6 pb-2 text-[10px] font-black uppercase tracking-[0.2em] md:grid"
+                class="hidden grid-cols-12 gap-4 border-b border-rancho-ink-800 px-6 pb-2 text-[10px] font-black uppercase tracking-[0.2em] text-rancho-ink-500 md:grid"
             >
                 <div class="col-span-5">Заголовок / Slug</div>
                 <div class="col-span-3 text-center">Тип и Шаблон</div>

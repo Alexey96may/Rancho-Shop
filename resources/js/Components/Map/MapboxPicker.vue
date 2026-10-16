@@ -250,7 +250,7 @@
                     'line-cap': 'round',
                 },
                 paint: {
-                    'line-color': '#994000',
+                    'line-color': '#D97706',
                     'line-width': 4,
                 },
             });

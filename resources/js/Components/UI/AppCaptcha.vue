@@ -70,7 +70,7 @@
 </script>
 
 <template>
-    <div class="flex flex-col items-center justify-center gap-4 sm:flex-row">
+    <div class="flex flex-col items-center justify-center gap-4 pt-3 sm:flex-row">
         <VueClientRecaptcha
             :key="captchaKey"
             v-model="input"
@@ -111,12 +111,17 @@
 
     .styled-captcha {
         border-radius: 12px;
-        overflow: hidden;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        flex-shrink: 0;
+        width: auto !important;
+        position: relative;
     }
 
     .styled-captcha :deep(.vue_client_recaptcha_icon_svg) {
         color: #597d5b;
+        position: absolute;
+        top: 0;
+        left: 0;
+        transform: translateY(-75%);
         transition:
             color 0.3s ease,
             transform 0.3s ease;
@@ -124,11 +129,9 @@
 
     .styled-captcha :deep(.vue_client_recaptcha_icon_svg):hover {
         color: #1c3f34;
-        transform: rotate(15deg);
     }
 
     .styled-captcha :deep(canvas) {
         border-radius: 8px;
-        background-color: #f9fafb;
     }
 </style>

@@ -16,7 +16,6 @@
         mainPhoto: null,
         gallery: () => [],
         alt: '',
-        maxPreview: 5,
     });
 
     const emit = defineEmits<{
@@ -24,7 +23,6 @@
         (e: 'update:gallery', value: Array<Media | File>): void;
     }>();
 
-    /** Универсальное извлечение URL из Media | string */
     const resolveUrl = (item: Media | string | null | undefined): string => {
         if (!item) return '';
         if (typeof item === 'string') return item;

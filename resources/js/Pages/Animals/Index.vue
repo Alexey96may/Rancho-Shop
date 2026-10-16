@@ -137,29 +137,27 @@
             <!-- HEADER & SEARCH -->
             <header
                 v-scroll-reveal
-                class="mb-8 flex flex-col justify-between gap-6 sm:mb-20 md:flex-row md:items-end"
+                class="mb-8 flex flex-col gap-6 sm:mb-20 sm:flex-row sm:items-center sm:justify-between"
             >
                 <div>
-                    <h1 class="text-2xl font-black text-rancho-forest sm:text-4xl">
-                        Наши жители фермы
-                    </h1>
+                    <h1 class="text-2xl font-black text-rancho-forest sm:text-4xl">Наши жители</h1>
                     <p class="mt-2 text-xs text-rancho-olive sm:text-sm">
                         Найдено: {{ animals.meta.total }}
                     </p>
                 </div>
-
-                <BaseInput
-                    v-model="search"
-                    placeholder="Найти животное..."
-                    theme="light"
-                    variant="search"
-                    class="w-full md:w-72"
-                />
             </header>
 
             <div class="grid grid-cols-1 gap-8 lg:grid-cols-[260px_1fr]">
                 <!-- ФИЛЬТРЫ -->
-                <aside class="lg:sticky lg:top-24 lg:self-start">
+                <aside class="space-y-8 lg:sticky lg:top-24 lg:self-start">
+                    <BaseInput
+                        v-model="search"
+                        placeholder="Найти животное..."
+                        theme="light"
+                        variant="search"
+                        class="w-full"
+                    />
+
                     <div v-scroll-reveal class="rounded-2xl bg-white px-4 py-6 shadow-rancho-sm">
                         <div class="mb-8 flex items-center justify-between gap-2">
                             <h2 class="text-sm font-bold text-rancho-forest">Фильтры</h2>

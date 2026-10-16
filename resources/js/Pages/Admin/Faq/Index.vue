@@ -139,6 +139,7 @@
             <AdminSearchInput
                 v-model="filterForm.search"
                 placeholder="Поиск вопроса..."
+                @input-start="filterForm.clearErrors('search')"
                 class="w-full sm:max-w-md"
             />
 

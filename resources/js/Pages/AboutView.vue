@@ -3,6 +3,16 @@
 
     import { Link } from '@inertiajs/vue3';
 
+    import {
+        ClockIcon,
+        HeartIcon,
+        ShoppingBagIcon,
+        SparklesIcon,
+        SunIcon,
+    } from '@heroicons/vue/24/outline';
+
+    import CowIcon from '@/Components/Icons/CowIcon.vue';
+    import CowIconDark from '@/Components/Icons/CowIconDark.vue';
     import CommentsSection from '@/Components/Sections/CommentsSection.vue';
     import MainLayout from '@/Layouts/MainLayout.vue';
     import type { Comment, Page, Paginated, ResourceSingle } from '@/types';
@@ -13,64 +23,54 @@
         page: {
             type: Object as PropType<ResourceSingle<Page>>,
             required: true,
-            validator: (value: ResourceSingle<Page>) => {
-                return Boolean(
-                    value &&
-                    typeof value === 'object' &&
-                    value.data &&
-                    typeof value.data.id !== 'undefined' &&
-                    value.data.title,
-                );
-            },
         },
         comments: {
             type: Object as PropType<Paginated<Comment>>,
             required: true,
-            validator: (value: Paginated<Comment>) => {
-                return Boolean(value && Array.isArray(value.data));
-            },
         },
     });
 
     const pageData = computed(() => props.page.data);
 
+    /** Преимущества */
     const farmHighlights = [
         {
-            icon: '🌿',
-            title: 'Экологичность',
-            desc: 'Натуральное производство без химикатов, антибиотиков и гормонов роста.',
+            icon: SparklesIcon,
+            title: 'Натурально',
+            desc: 'Без антибиотиков, гормонов роста и лишней химии — только то, что даёт сама природа.',
         },
         {
-            icon: '🐄',
+            icon: HeartIcon,
             title: 'Своё стадо',
-            desc: 'Свободный выпас, забота о каждом животном и собственные корма.',
+            desc: 'Свободный выпас, собственные корма и забота о каждом животном.',
         },
         {
-            icon: '🚜',
+            icon: ClockIcon,
             title: 'Свежесть',
-            desc: 'Быстрая локальная доставка — от фермы до вашего стола за считанные часы.',
+            desc: 'Доставляем по графику — молоко и сыры приезжают к вам в день производства.',
         },
     ];
 
+    /** Разделы — только те, что есть */
     const sections = [
         {
-            icon: '🐐',
+            icon: CowIcon,
             title: 'Животные',
-            desc: 'Козы, коровы, овцы, птица и другие обитатели фермы — с фотографиями, именами и историями.',
+            desc: 'Познакомьтесь с обитателями фермы — у каждого есть имя, характер и своя история.',
             route: 'animals.index',
             cta: 'Познакомиться',
         },
         {
-            icon: '🧀',
+            icon: ShoppingBagIcon,
             title: 'Продукция',
-            desc: 'Сыры, молоко, масло, творог, мясо и яйца — всё собственного производства, без посредников.',
+            desc: 'Молоко, сыры, масло, творог и другие продукты собственного производства — без посредников.',
             route: 'catalog.index',
             cta: 'Смотреть каталог',
         },
         {
-            icon: '🌾',
+            icon: SunIcon,
             title: 'Растениеводство',
-            desc: 'Зерновые, овощи, травы и кормовые культуры, выращенные на собственных полях.',
+            desc: 'Зерновые, овощи и травы, выращенные на собственных полях.',
             route: 'catalog.index',
             cta: 'Узнать больше',
         },
@@ -79,19 +79,19 @@
 
 <template>
     <AppContainer class="min-h-screen bg-rancho-paper">
-        <div class="py-12">
+        <div class="space-y-12 pt-12">
             <!-- MAIN CONTENT -->
             <section
                 v-if="pageData.content"
                 v-scroll-reveal
-                class="prose-p:text-rancho-ink-700 prose-blockquote:bg-rancho-ink-50 prose-blockquote:text-rancho-ink-700 prose-code:bg-rancho-ink-100 prose prose-stone max-w-none prose-headings:font-black prose-headings:text-rancho-forest prose-p:leading-relaxed prose-a:text-rancho-pine prose-a:no-underline hover:prose-a:underline prose-blockquote:border-l-4 prose-blockquote:border-rancho-buttercup prose-blockquote:py-1 prose-blockquote:pl-4 prose-blockquote:not-italic prose-strong:text-rancho-forest prose-code:rounded prose-code:px-1.5 prose-code:py-0.5 prose-code:text-rancho-forest prose-code:before:content-none prose-code:after:content-none"
+                class="prose prose-stone max-w-none prose-headings:font-black prose-headings:text-rancho-forest prose-p:leading-relaxed prose-p:text-rancho-ink-700 prose-a:text-rancho-pine prose-a:no-underline hover:prose-a:underline prose-blockquote:border-l-4 prose-blockquote:border-rancho-buttercup prose-blockquote:bg-rancho-ink-50 prose-blockquote:py-1 prose-blockquote:pl-4 prose-blockquote:not-italic prose-blockquote:text-rancho-ink-700 prose-strong:text-rancho-forest prose-code:rounded prose-code:bg-rancho-ink-100 prose-code:px-1.5 prose-code:py-0.5 prose-code:text-rancho-forest prose-code:before:content-none prose-code:after:content-none"
                 aria-label="Описание фермы"
             >
                 <div v-html="pageData.content"></div>
             </section>
 
             <!-- HIGHLIGHTS -->
-            <section v-scroll-reveal aria-label="Преимущества фермы">
+            <section v-scroll-reveal aria-label="Преимущества фермы" class="space-y-10">
                 <h2 class="mb-5 text-xl font-black text-rancho-forest sm:mb-6 sm:text-2xl">
                     Почему именно наше ранчо
                 </h2>
@@ -100,18 +100,20 @@
                     <div
                         v-for="item in farmHighlights"
                         :key="item.title"
-                        class="border-rancho-ink-200 shadow-sm hover:border-rancho-ink-300 hover:shadow-md group rounded-2xl border bg-white p-5 transition-all hover:-translate-y-0.5 sm:rounded-3xl sm:p-6"
+                        class="shadow-sm hover:shadow-md group rounded-2xl border border-rancho-ink-200 bg-white p-5 transition-all hover:-translate-y-0.5 hover:border-rancho-ink-300 sm:rounded-3xl sm:p-6"
                     >
                         <div
-                            class="mb-3 text-3xl transition-transform duration-300 group-hover:scale-110"
+                            class="mb-3 inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-rancho-pine/10 text-rancho-pine transition-transform duration-300 group-hover:scale-110"
                             aria-hidden="true"
                         >
-                            {{ item.icon }}
+                            <component :is="item.icon" class="h-6 w-6" />
                         </div>
+
                         <h3 class="text-base font-bold text-rancho-forest sm:text-lg">
                             {{ item.title }}
                         </h3>
-                        <p class="text-rancho-ink-600 mt-1.5 text-sm leading-relaxed">
+
+                        <p class="mt-1.5 text-sm leading-relaxed text-rancho-ink-600">
                             {{ item.desc }}
                         </p>
                     </div>
@@ -125,7 +127,7 @@
                         Что у нас есть
                     </h2>
                     <p
-                        class="text-rancho-ink-600 mt-2 max-w-2xl text-sm leading-relaxed sm:text-base"
+                        class="mt-2 max-w-2xl text-sm leading-relaxed text-rancho-ink-600 sm:text-base"
                     >
                         Загляните в каждый раздел — там подробно о животных, продукции, растениях и
                         о том, как к нам попасть.
@@ -137,21 +139,21 @@
                         v-for="section in sections"
                         :key="section.title"
                         :href="route(section.route)"
-                        class="border-rancho-ink-200 shadow-sm hover:border-rancho-ink-300 hover:shadow-md group flex flex-col rounded-2xl border bg-white p-5 transition-all hover:-translate-y-0.5 sm:rounded-3xl sm:p-6"
+                        class="shadow-sm hover:shadow-md group flex flex-col rounded-2xl border border-rancho-ink-200 bg-white p-5 transition-all hover:-translate-y-0.5 hover:border-rancho-ink-300 sm:rounded-3xl sm:p-6"
                     >
                         <div class="mb-3 flex items-center gap-3">
                             <span
-                                class="bg-rancho-ink-50 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-2xl transition-transform duration-300 group-hover:scale-110"
+                                class="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-rancho-pine/10 text-rancho-pine transition-transform duration-300 group-hover:scale-110"
                                 aria-hidden="true"
                             >
-                                {{ section.icon }}
+                                <component :is="section.icon" class="h-6 w-6" />
                             </span>
                             <h3 class="text-lg font-bold text-rancho-forest">
                                 {{ section.title }}
                             </h3>
                         </div>
 
-                        <p class="text-rancho-ink-600 text-sm leading-relaxed sm:text-base">
+                        <p class="text-sm leading-relaxed text-rancho-ink-600 sm:text-base">
                             {{ section.desc }}
                         </p>
 
@@ -172,22 +174,26 @@
                 aria-label="Призыв к действию"
             >
                 <div class="mx-auto max-w-2xl">
-                    <span class="mb-3 block text-3xl sm:text-4xl" aria-hidden="true">🌾</span>
+                    <div
+                        class="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-rancho-buttercup/20 text-rancho-buttercup"
+                        aria-hidden="true"
+                    >
+                        <CowIconDark class="h-8 w-8" />
+                    </div>
 
-                    <h2 class="text-xl font-black sm:text-3xl md:text-4xl">
-                        Познакомьтесь с обитателями
-                    </h2>
+                    <h2 class="text-xl font-black sm:text-3xl md:text-4xl">Загляните в гости</h2>
 
                     <p class="mt-3 text-sm leading-relaxed text-rancho-paper/80 sm:text-base">
-                        Узнайте больше о наших животных, их рационе и жизни на свежем воздухе.
+                        Познакомьтесь с нашими животными — у каждого есть имя, характер и своя
+                        история.
                     </p>
 
                     <div class="mt-6 sm:mt-8">
                         <Link
                             :href="route('animals.index')"
-                            class="text-rancho-ink-950 shadow-md hover:shadow-lg inline-flex items-center gap-2 rounded-xl bg-rancho-buttercup px-5 py-3 text-sm font-bold transition-all hover:-translate-y-0.5 hover:bg-rancho-buttercup/90 focus:outline-none focus-visible:ring-4 focus-visible:ring-rancho-buttercup/40 active:scale-95 sm:px-7 sm:py-3.5 sm:text-base"
+                            class="shadow-md hover:shadow-lg inline-flex items-center gap-2 rounded-xl bg-rancho-buttercup px-5 py-3 text-sm font-bold text-rancho-ink-950 transition-all hover:-translate-y-0.5 hover:bg-rancho-buttercup/90 focus:outline-none focus-visible:ring-4 focus-visible:ring-rancho-buttercup/40 active:scale-95 sm:px-7 sm:py-3.5 sm:text-base"
                         >
-                            <span>Перейти к жителям фермы</span>
+                            <span>К нашим животным</span>
                             <span aria-hidden="true">→</span>
                         </Link>
                     </div>

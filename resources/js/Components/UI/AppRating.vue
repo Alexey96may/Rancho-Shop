@@ -1,5 +1,5 @@
 <script setup lang="ts">
-    import { computed, ref } from 'vue';
+    import { computed, onMounted, onUnmounted, ref } from 'vue';
 
     import { Star, StarHalf } from 'lucide-vue-next';
 
@@ -26,6 +26,13 @@
 
     const hoverRating = ref<number | null>(null);
 
+    const canHover = ref(true); // на SSR — true, потом уточним
+
+    onMounted(() => {
+        if (typeof window === 'undefined') return;
+        canHover.value = window.matchMedia('(hover: hover)').matches;
+    });
+
     // Флаг: находится ли пользователь прямо сейчас в состоянии ховера
     const isHovering = computed(() => hoverRating.value !== null);
 
@@ -44,7 +51,7 @@
      * - фиксированный рейтинг — ember (тёплый кирпичный)
      */
     const activeStarColorClass = computed(() => {
-        if (isHovering.value) {
+        if (isHovering.value && Number(props.rating) < (hoverRating.value ?? 0)) {
             return 'fill-rancho-buttercup text-rancho-buttercup';
         }
         return 'fill-rancho-ember text-rancho-ember';
@@ -55,6 +62,7 @@
 
     const setHover = (value: number) => {
         if (props.readonly || props.disabled) return;
+        if (!canHover.value) return;
         hoverRating.value = value;
     };
 
@@ -78,7 +86,7 @@
         :aria-label="`Рейтинг: ${rating || 0} из ${max}`"
         @mouseleave="clearHover"
     >
-        <!-- РЕЖИМ ТОЛЬКО ДЛЯ ЧТЕНИЯ -->
+        <!-- readonly -->
         <template v-if="readonly">
             <Star
                 v-for="n in stars.full"
@@ -110,7 +118,7 @@
             />
         </template>
 
-        <!-- ИНТЕРАКТИВНЫЙ РЕЖИМ -->
+        <!-- ineractive -->
         <template v-else>
             <div
                 v-for="index in max"

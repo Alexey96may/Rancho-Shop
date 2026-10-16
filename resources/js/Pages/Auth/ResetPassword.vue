@@ -21,7 +21,7 @@
 
     const submit = () => {
         form.post(route('password.store'), {
-            onFinish: () => {
+            onSuccess: () => {
                 form.reset('password', 'password_confirmation');
             },
         });
@@ -38,42 +38,45 @@
         </p>
     </header>
 
-    <form v-scroll-reveal @submit.prevent="submit" class="space-y-5">
+    <form v-scroll-reveal class="space-y-5" @submit.prevent="submit">
         <BaseInput
             id="email"
+            v-model="form.email"
             type="email"
             label="Email"
             placeholder="you@example.com"
-            v-model="form.email"
             :error="form.errors.email"
             required
             autofocus
             autocomplete="username"
             theme="light"
+            @input-start="form.clearErrors('email')"
         />
 
         <BaseInput
             id="password"
+            v-model="form.password"
             type="password"
             label="Пароль"
             placeholder="Придумайте пароль"
-            v-model="form.password"
             :error="form.errors.password"
             required
             autocomplete="new-password"
             theme="light"
+            @input-start="form.clearErrors('password', 'password_confirmation')"
         />
 
         <BaseInput
             id="password_confirmation"
+            v-model="form.password_confirmation"
             type="password"
             label="Подтверждение пароля"
             placeholder="Повторите пароль"
-            v-model="form.password_confirmation"
             :error="form.errors.password_confirmation"
             required
             autocomplete="new-password"
             theme="light"
+            @input-start="form.clearErrors('password', 'password_confirmation')"
         />
 
         <div class="flex justify-end pt-2">

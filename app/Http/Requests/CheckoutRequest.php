@@ -26,7 +26,11 @@ class CheckoutRequest extends FormRequest
     {
         return [
             'customer_name' => ['required', 'string', 'max:255'],
-            'customer_phone' => ['required', 'string', 'max:50'],
+            'customer_phone' => [
+                'required',
+                'string',
+                'regex:/^\+7 \(\d{3}\) \d{3}-\d{2}-\d{2}$/',
+            ],
             'delivery_address' => ['nullable', 'string'],
             'customer_comment' => ['nullable', 'string'],
             'create_account' => ['sometimes', 'boolean'],
@@ -61,5 +65,44 @@ class CheckoutRequest extends FormRequest
                     variantId: $item['variant_id'],
                 )),
         );
+    }
+
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'customer_phone' => $this->normalizePhone($this->input('customer_phone')),
+        ]);
+    }
+
+    private function normalizePhone(?string $phone): ?string
+    {
+        if (!$phone) {
+            return null;
+        }
+
+        $digits = preg_replace('/\D/', '', $phone);
+
+        // 10 цифр без префикса → 7XXXXXXXXXX
+        if (strlen($digits) === 10) {
+            $digits = '7' . $digits;
+        }
+
+        // 8XXXXXXXXXX → 7XXXXXXXXXX
+        if (strlen($digits) === 11 && $digits[0] === '8') {
+            $digits = '7' . substr($digits, 1);
+        }
+
+        // 11 цифр, начинается с 7 → форматируем
+        if (strlen($digits) === 11 && $digits[0] === '7') {
+            return sprintf(
+                '+7 (%s) %s-%s-%s',
+                substr($digits, 1, 3),
+                substr($digits, 4, 3),
+                substr($digits, 7, 2),
+                substr($digits, 9, 2),
+            );
+        }
+
+        return $phone;
     }
 }

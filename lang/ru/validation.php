@@ -70,18 +70,6 @@ return [
         'numeric' => 'Поле :attribute должно быть больше или равно :value.',
         'string' => 'Поле :attribute должно быть больше меньше или равно :значение символов.',
     ],
-    'hex_color' => 'The :attribute field must be a valid hexadecimal color.',
-    'image' => 'The :attribute field must be an image.',
-    'in' => 'The selected :attribute is invalid.',
-    'in_array' => 'The :attribute field must exist in :other.',
-    'in_array_keys' => 'The :attribute field must contain at least one of the following keys: :values.',
-    'integer' => 'The :attribute field must be an integer.',
-    'ip' => 'The :attribute field must be a valid IP address.',
-    'ipv4' => 'The :attribute field must be a valid IPv4 address.',
-    'ipv6' => 'The :attribute field must be a valid IPv6 address.',
-    'json' => 'The :attribute field must be a valid JSON string.',
-    'list' => 'The :attribute field must be a list.',
-    'lowercase' => 'The :attribute field must be lowercase.',
     'hex_color' => 'Поле :attribute должно быть допустимым шестнадцатеричным цветом.',
     'image' => 'Поле :attribute должно быть изображением.',
     'in' => 'Выбранный :attribute недействителен.',
@@ -94,7 +82,7 @@ return [
     'json' => 'Поле :attribute должно быть допустимой строкой JSON.',
     'list' => 'Поле :attribute должно быть списком.',
     'lowercase' => 'Поле :attribute должно быть написано строчными буквами.',
-    
+
     'lt' => [
         'array' => 'Поле :attribute должно содержать меньше :value элементов.',
         'file' => 'Поле :attribute должно содержать меньше :value килобайт.',
@@ -207,6 +195,68 @@ return [
     |
     */
 
-    'attributes' => [],
+    'attributes' => [
+        // Пользователи
+        'name' => 'имя',
+        'first_name' => 'имя',
+        'last_name' => 'фамилия',
+        'middle_name' => 'отчество',
+        'full_name' => 'ФИО',
+        'email' => 'email',
+        'phone' => 'телефон',
+        'password' => 'пароль',
+        'password_confirmation' => 'подтверждение пароля',
+        'current_password' => 'текущий пароль',
+        'role' => 'роль',
+
+        // Отзывы и комментарии
+        'content' => 'комментарий',
+        'guest_name' => 'имя',
+        'customer_name' => 'имя',
+        'rating' => 'оценка',
+        'captcha' => 'капча',
+
+        // Товары
+        'title' => 'название',
+        'slug' => 'URL',
+        'description' => 'описание',
+        'price' => 'цена',
+        'old_price' => 'старая цена',
+        'stock' => 'количество',
+        'category_id' => 'категория',
+        'animal_ids' => 'животные',
+        'attributes' => 'характеристики',
+        'schedule' => 'расписание',
+        'schedule.next_delivery' => 'дата поставки',
+        'schedule.interval_days' => 'интервал поставки',
+        'schedule.note' => 'примечание к поставке',
+
+        // Медиа
+        'main_photo' => 'главное фото',
+        'gallery' => 'галерея',
+        'gallery.*' => 'фото в галерее',
+        'avatar' => 'аватар',
+        'voice' => 'голос',
+        'remove_media' => 'удаляемые медиа',
+
+        // SEO
+        'seo.title' => 'SEO-заголовок',
+        'seo.description' => 'SEO-описание',
+        'seo.keywords' => 'SEO-ключевые слова',
+        'seo.canonical' => 'канонический URL',
+        'seo.is_noindex' => 'индексация',
+
+        // Заказы
+        'address' => 'адрес',
+        'customer_phone' => 'телефон',
+        'delivery_method' => 'способ доставки',
+        'payment_method' => 'способ оплаты',
+        'comment' => 'комментарий',
+
+        // Общие
+        'is_active' => 'активность',
+        'is_commentable' => 'комментируемость',
+        'status' => 'статус',
+    ],
 
 ];

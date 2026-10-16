@@ -121,6 +121,7 @@
             <AdminSearchInput
                 v-model="filterForm.search"
                 placeholder="Поиск по имени или ID"
+                @input-start="filterForm.clearErrors('search')"
                 label="Поиск заказов"
                 class="w-full sm:max-w-md"
             />
@@ -137,6 +138,7 @@
                 value-key="name"
                 label-key="label"
                 label="Статус"
+                @input-start="filterForm.clearErrors('status')"
                 placeholder="Все статусы"
                 variant="admin"
                 class="w-full sm:w-56 lg:w-64"

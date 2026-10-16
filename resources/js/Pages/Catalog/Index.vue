@@ -148,19 +148,19 @@
                         Найдено: {{ products.meta.total }}
                     </p>
                 </div>
-
-                <BaseInput
-                    v-model="search"
-                    placeholder="Найти продукт..."
-                    theme="light"
-                    variant="search"
-                    class="w-full md:w-72"
-                />
             </header>
 
             <div class="grid grid-cols-1 gap-8 lg:grid-cols-[260px_1fr]">
                 <!-- ФИЛЬТРЫ -->
-                <aside class="lg:sticky lg:top-24 lg:self-start">
+                <aside class="space-y-8 lg:sticky lg:top-24 lg:self-start">
+                    <BaseInput
+                        v-model="search"
+                        placeholder="Найти продукт..."
+                        theme="light"
+                        variant="search"
+                        class="w-full"
+                    />
+
                     <div v-scroll-reveal class="rounded-2xl bg-white px-4 py-6 shadow-rancho-sm">
                         <div class="mb-8 flex items-center justify-between gap-2">
                             <h2 class="text-sm font-bold text-rancho-forest">Фильтры</h2>

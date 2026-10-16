@@ -116,6 +116,7 @@
                     :options="typeOptions"
                     placeholder="Все типы"
                     label="Тип"
+                    @input-start="filterForm.clearErrors('type')"
                     value-key="value"
                     label-key="label"
                     variant="admin"

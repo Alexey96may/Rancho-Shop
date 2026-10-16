@@ -177,6 +177,7 @@
                 <BaseInput
                     v-model="form.name"
                     v-model:error="form.errors.name"
+                    @input-start="form.clearErrors('name')"
                     label="Название"
                     placeholder="Например: Молочные продукты"
                     theme="dark"
@@ -185,6 +186,7 @@
                 <BaseInput
                     v-model="form.description"
                     v-model:error="form.errors.description"
+                    @input-start="form.clearErrors('description')"
                     label="Описание (необязательно)"
                     placeholder="Категория для..."
                     theme="dark"
@@ -193,6 +195,7 @@
                 <BaseInput
                     v-model="form.icon"
                     v-model:error="form.errors.icon"
+                    @input-start="form.clearErrors('icon')"
                     label="Иконка (lucide)"
                     placeholder="Egg"
                     theme="dark"
@@ -206,12 +209,14 @@
                         label-key="name"
                         variant="admin"
                         :options="modalTypeOptions"
+                        @input-start="form.clearErrors('type')"
                         width-class="w-full"
                     />
 
                     <AdminNumberInput
                         label="Сортировка"
                         v-model="form.sort_order"
+                        @input-start="form.clearErrors('sort_order')"
                         :min="0"
                         :max="999"
                     />
@@ -220,6 +225,7 @@
                 <BaseStatusToggle
                     v-model="form.is_active"
                     label="Доступность"
+                    @input-start="form.clearErrors('is_active')"
                     :disabled="form.processing"
                 />
 

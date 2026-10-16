@@ -31,14 +31,6 @@
         () => isValidating.value || isCartEmpty.value || hasInvalidItems.value,
     );
 
-    /** Причина блокировки */
-    const blockReason = computed<string | null>(() => {
-        if (isValidating.value) return 'Проверяем наличие товаров...';
-        if (isCartEmpty.value) return 'Корзина пуста';
-        if (hasInvalidItems.value) return 'Удалите недоступные товары';
-        return null;
-    });
-
     async function validateCart() {
         if (cart.items.length === 0) return;
 
@@ -72,18 +64,19 @@
 </script>
 
 <template>
-    <AppContainer class="min-h-screen bg-rancho-paper">
+    <AppContainer class="bg-rancho-paper">
         <h1
             class="my-10 text-lg font-black uppercase tracking-tight text-rancho-forest sm:text-2xl"
         >
             Ваша корзина
         </h1>
 
-        <Transition name="fade-up" appear>
-            <div v-if="cart.items.length > 0" class="grid gap-8 lg:grid-cols-3">
+        <Transition name="fade-up" mode="out-in" appear>
+            <!-- КОРЗИНА -->
+            <div v-if="cart.items.length > 0" key="cart" class="grid gap-8 lg:grid-cols-3">
                 <!-- ЛЕВАЯ КОЛОНКА: товары -->
-                <div v-scroll-reveal class="space-y-4 lg:col-span-2">
-                    <TransitionGroup name="cart-item" tag="div" class="space-y-4">
+                <div class="space-y-4 lg:col-span-2">
+                    <TransitionGroup name="cart-item" tag="div" class="relative space-y-4">
                         <CartItemCard
                             v-for="item in cart.items"
                             :key="item.variant_id"
@@ -94,7 +87,6 @@
 
                 <!-- ПРАВАЯ КОЛОНКА: итог -->
                 <aside
-                    v-scroll-reveal
                     class="shadow-xl h-fit space-y-6 rounded-2xl bg-rancho-forest p-6 text-white sm:space-y-8 sm:pb-10"
                     aria-label="Итог заказа"
                 >
@@ -102,27 +94,21 @@
                         Итог заказа
                     </h2>
 
-                    <!-- Оповещение о невалидных товарах -->
-                    <div
-                        v-if="hasInvalidItems"
-                        class="rounded-xl border border-rose-400/30 bg-rose-500/15 p-3 text-xs font-medium text-rose-200"
-                        role="alert"
-                    >
-                        Удалите недоступные товары из корзины, чтобы продолжить оформление.
-                    </div>
+                    <Transition name="fade-up" appear>
+                        <div
+                            v-if="hasInvalidItems"
+                            key="invalid"
+                            class="rounded-xl border border-rose-400/30 bg-rose-500/15 p-3 text-xs font-medium text-rose-200"
+                            role="alert"
+                        >
+                            Удалите недоступные товары из корзины, чтобы продолжить оформление.
+                        </div>
+                    </Transition>
 
                     <dl class="space-y-2 border-b border-white/10 pb-4 text-sm text-white/70">
                         <div class="flex justify-between">
                             <dt>Позиций:</dt>
                             <dd>{{ cart.totalCleanItems }}</dd>
-                        </div>
-                        <div class="flex justify-between">
-                            <dt>Доставка:</dt>
-                            <dd
-                                class="text-[10px] font-black uppercase tracking-widest text-rancho-buttercup"
-                            >
-                                Бесплатно
-                            </dd>
                         </div>
                     </dl>
 
@@ -149,8 +135,8 @@
             <!-- ПУСТАЯ КОРЗИНА -->
             <div
                 v-else
-                v-scroll-reveal
-                class="flex flex-col items-center justify-center py-20 text-center"
+                key="empty"
+                class="flex flex-col items-center justify-center pt-16 text-center"
                 role="status"
             >
                 <div class="mb-6 rounded-full bg-rancho-ink-100 p-6 text-rancho-ink-400 sm:p-8">
@@ -177,7 +163,25 @@
 </template>
 
 <style scoped>
-    /* Enter / leave */
+    /* ===== Корзина ↔ Пусто ===== */
+    .fade-up-enter-active,
+    .fade-up-leave-active {
+        transition:
+            opacity 0.3s ease,
+            transform 0.3s ease;
+    }
+
+    .fade-up-enter-from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    .fade-up-leave-to {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    /* ===== Карточки в списке ===== */
     .cart-item-enter-active,
     .cart-item-leave-active {
         transition:
@@ -197,6 +201,7 @@
 
     /* Уходящая карточка вырывается из потока — соседи съезжают плавно */
     .cart-item-leave-active {
+        position: absolute;
         width: 100%;
     }
 
@@ -205,7 +210,10 @@
         transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
+    /* ===== Reduce motion ===== */
     @media (prefers-reduced-motion: reduce) {
+        .fade-up-enter-active,
+        .fade-up-leave-active,
         .cart-item-enter-active,
         .cart-item-leave-active,
         .cart-item-move {

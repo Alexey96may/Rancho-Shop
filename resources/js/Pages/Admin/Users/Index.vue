@@ -18,6 +18,7 @@
     import BaseModal from '@/Components/UI/BaseModal.vue';
     import BaseSelect from '@/Components/UI/BaseSelect.vue';
     import BaseSubmitButton from '@/Components/UI/BaseSubmitButton.vue';
+    import PhoneInput from '@/Components/UI/PhoneInput.vue';
     import AdminLayout from '@/Layouts/AdminLayout.vue';
     import { useAdminCrud } from '@/composables/crud/useAdminCrud';
     import { useAdminForm } from '@/composables/crud/useAdminForm';
@@ -200,6 +201,7 @@
                     v-model:error="form.errors.name"
                     label="ФИО Пользователя"
                     placeholder="Вася Пупкин"
+                    @input-start="form.clearErrors('name')"
                     :disabled="form.processing"
                     theme="dark"
                 />
@@ -209,35 +211,39 @@
                     v-model:error="form.errors.email"
                     label="Электронная почта"
                     type="email"
+                    @input-start="form.clearErrors('email')"
                     placeholder="example@gmail.ru"
                     :disabled="form.processing"
                     theme="dark"
                 />
 
-                <BaseInput
+                <PhoneInput
                     v-model="form.phone"
-                    v-model:error="form.errors.phone"
-                    type="tel"
-                    label="Телефонный номер"
+                    label="Номер телефона"
                     placeholder="+7 (___) ___-__-__"
-                    :disabled="form.processing"
+                    :error="form.errors.phone"
                     theme="dark"
+                    @input-start="form.clearErrors('phone')"
+                    :disabled="form.processing"
                 />
             </div>
 
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <BaseSelect
                     v-model="form.role"
+                    @input-start="form.clearErrors('role')"
                     v-model:error="form.errors.role"
                     :options="roles"
                     variant="admin"
                     label="Назначить роль"
                     label-key="label"
                     value-key="value"
+                    theme="dark"
                 />
 
                 <BaseInput
                     v-model="form.password"
+                    @input-start="form.clearErrors('password')"
                     v-model:error="form.errors.password"
                     label="Пароль (8 и более символов)"
                     type="password"

@@ -9,6 +9,21 @@
     const model = defineModel<string | number | null | undefined>({ default: '' });
     const error = defineModel<string | undefined>('error');
 
+    defineOptions({
+        inheritAttrs: false,
+    });
+
+    const emit = defineEmits<{
+        (e: 'input-start'): void;
+    }>();
+
+    watch(
+        () => model.value,
+        () => {
+            emit('input-start');
+        },
+    );
+
     interface Props {
         label?: string;
         type?: string;
@@ -38,10 +53,6 @@
 
     const inputId = useId();
     const errorId = useId();
-
-    watch(model, () => {
-        if (error.value) error.value = undefined;
-    });
 
     const hasValue = computed(() => {
         const v = model.value;
@@ -105,6 +116,7 @@
             <MagnifyingGlassIcon v-if="isSearch" :class="iconClasses" aria-hidden="true" />
 
             <input
+                v-bind="$attrs"
                 :id="inputId"
                 v-model="model"
                 :type="isSearch ? 'search' : type"

@@ -8,6 +8,7 @@
 
     import MapboxPicker from '@/Components/Map/MapboxPicker.vue';
     import CommentsSection from '@/Components/Sections/CommentsSection.vue';
+    import DeliveryMapLegend from '@/Components/Shared/DeliveryMapLegend.vue';
     import MainLayout from '@/Layouts/MainLayout.vue';
     import { useComments } from '@/composables/crud/useComments';
     import { useYandexGeocoder } from '@/composables/features/useYandexGeocoder';
@@ -269,44 +270,36 @@
 <template>
     <AppContainer class="min-h-screen bg-rancho-paper">
         <!-- HEADER -->
-        <header v-scroll-reveal class="mx-auto max-w-3xl pt-10 sm:pt-14">
-            <h1 class="text-2xl font-black text-rancho-forest sm:text-4xl">
+        <header v-scroll-reveal class="pt-10 sm:pt-14">
+            <h1 class="mb-5 text-xl font-black text-rancho-forest sm:mb-6 sm:text-2xl">
                 {{ page.data.title }}
             </h1>
         </header>
-
-        <!-- CONTENT -->
-        <section
-            v-if="page.data.content"
-            v-scroll-reveal
-            class="prose-p:text-rancho-ink-700 prose prose-stone mx-auto mt-6 max-w-3xl prose-headings:font-black prose-headings:text-rancho-forest prose-a:text-rancho-pine"
-            v-html="page.data.content"
-        />
 
         <!-- MAIN -->
         <section v-scroll-reveal class="mx-auto mt-10 grid max-w-5xl gap-6 md:grid-cols-2">
             <!-- LEFT -->
             <div
-                class="border-rancho-ink-200 shadow-sm space-y-5 rounded-2xl border bg-white p-5 sm:p-6"
+                class="shadow-sm space-y-5 rounded-2xl border border-rancho-ink-200 bg-white p-5 sm:p-6"
             >
                 <!-- ADDRESS INPUT -->
                 <div>
                     <label
-                        class="text-rancho-ink-600 block text-xs font-black uppercase tracking-widest"
+                        class="block text-xs font-black uppercase tracking-widest text-rancho-ink-600"
                     >
                         Адрес доставки
                     </label>
 
                     <div class="relative mt-2">
                         <MapPin
-                            class="text-rancho-ink-500 pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2"
+                            class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-rancho-ink-500"
                             aria-hidden="true"
                         />
 
                         <input
                             v-model="address"
                             @input="onAddressInput"
-                            class="border-rancho-ink-300 placeholder:text-rancho-ink-500 w-full rounded-xl border bg-white py-2.5 pl-9 pr-3 text-sm font-medium text-rancho-forest transition-all focus:border-rancho-pine focus:outline-none focus:ring-4 focus:ring-rancho-pine/10"
+                            class="w-full rounded-xl border border-rancho-ink-300 bg-white py-2.5 pl-9 pr-3 text-sm font-medium text-rancho-forest transition-all placeholder:text-rancho-ink-500 focus:border-rancho-pine focus:outline-none focus:ring-4 focus:ring-rancho-pine/10"
                             placeholder="Введите адрес..."
                         />
                     </div>
@@ -314,13 +307,13 @@
                     <!-- SUGGESTIONS -->
                     <ul
                         v-if="suggestions.length"
-                        class="border-rancho-ink-200 shadow-lg mt-2 overflow-hidden rounded-xl border bg-white"
+                        class="shadow-lg mt-2 overflow-hidden rounded-xl border border-rancho-ink-200 bg-white"
                     >
                         <li
                             v-for="(item, i) in suggestions"
                             :key="i"
                             @click="select(item)"
-                            class="border-rancho-ink-100 text-rancho-ink-700 hover:bg-rancho-ink-50 cursor-pointer border-b px-4 py-2.5 text-sm transition-colors last:border-b-0 hover:text-rancho-forest"
+                            class="cursor-pointer border-b border-rancho-ink-100 px-4 py-2.5 text-sm text-rancho-ink-700 transition-colors last:border-b-0 hover:bg-rancho-ink-50 hover:text-rancho-forest"
                         >
                             {{ item.name }}
                         </li>
@@ -332,7 +325,7 @@
                     type="button"
                     @click="useMyLocation"
                     :disabled="isLocating"
-                    class="border-rancho-ink-300 hover:bg-rancho-ink-50 flex w-full items-center justify-center gap-2 rounded-xl border-2 bg-white px-4 py-2.5 text-xs font-black uppercase tracking-widest text-rancho-forest transition-all hover:border-rancho-forest focus:outline-none focus-visible:ring-4 focus-visible:ring-rancho-pine/30 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+                    class="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-rancho-ink-300 bg-white px-4 py-2.5 text-xs font-black uppercase tracking-widest text-rancho-forest transition-all hover:border-rancho-forest hover:bg-rancho-ink-50 focus:outline-none focus-visible:ring-4 focus-visible:ring-rancho-pine/30 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                     <MapPinned class="h-4 w-4" aria-hidden="true" />
                     {{ isLocating ? 'Определяем...' : 'Моё местоположение' }}
@@ -343,7 +336,7 @@
                     type="button"
                     @click="confirmDeliveryPoint"
                     :disabled="!selectedPoint || isConfirmed || !isDeliveryAllowed"
-                    class="shadow-md hover:shadow-lg disabled:bg-rancho-ink-200 disabled:text-rancho-ink-500 disabled:shadow-none disabled:hover:bg-rancho-ink-200 flex w-full items-center justify-center gap-2 rounded-xl bg-rancho-pine px-4 py-3 text-sm font-bold text-white transition-all hover:bg-rancho-forest focus:outline-none focus-visible:ring-4 focus-visible:ring-rancho-pine/30 active:scale-95 disabled:cursor-not-allowed"
+                    class="shadow-md hover:shadow-lg disabled:shadow-none flex w-full items-center justify-center gap-2 rounded-xl bg-rancho-pine px-4 py-3 text-sm font-bold text-white transition-all hover:bg-rancho-forest focus:outline-none focus-visible:ring-4 focus-visible:ring-rancho-pine/30 active:scale-95 disabled:cursor-not-allowed disabled:bg-rancho-ink-200 disabled:text-rancho-ink-500 disabled:hover:bg-rancho-ink-200"
                 >
                     <Check v-if="isConfirmed" class="h-4 w-4" aria-hidden="true" />
                     {{ isConfirmed ? 'Сохранено' : 'Подтвердить' }}
@@ -351,7 +344,7 @@
 
                 <!-- DELIVERY INFO -->
                 <div
-                    class="border-rancho-ink-100 text-rancho-ink-600 space-y-2 border-t pt-4 text-sm"
+                    class="space-y-2 border-t border-rancho-ink-100 pt-4 text-sm text-rancho-ink-600"
                 >
                     <p v-if="delivery.delivery_info">{{ delivery.delivery_info }}</p>
                     <p v-if="delivery.delivery_schedule">🕒 {{ delivery.delivery_schedule }}</p>
@@ -400,7 +393,7 @@
 
             <!-- MAP -->
             <div
-                class="border-rancho-ink-200 shadow-sm h-[400px] overflow-hidden rounded-2xl border"
+                class="shadow-sm relative h-full min-h-[400px] overflow-hidden rounded-2xl border border-rancho-ink-200"
             >
                 <MapboxPicker
                     v-model="selectedPoint"
@@ -412,7 +405,20 @@
                     :zones="delivery.delivery_zones"
                     @delivery-valid="(v: boolean) => (isDeliveryAllowed = v)"
                 />
+
+                <!-- Легенда -->
+                <DeliveryMapLegend position="bottom-left" />
             </div>
+        </section>
+
+        <!-- MAIN CONTENT -->
+        <section
+            v-if="page.data.content"
+            v-scroll-reveal
+            class="prose prose-stone max-w-none prose-headings:font-black prose-headings:text-rancho-forest prose-p:leading-relaxed prose-p:text-rancho-ink-700 prose-a:text-rancho-pine prose-a:no-underline hover:prose-a:underline prose-blockquote:border-l-4 prose-blockquote:border-rancho-buttercup prose-blockquote:bg-rancho-ink-50 prose-blockquote:py-1 prose-blockquote:pl-4 prose-blockquote:not-italic prose-blockquote:text-rancho-ink-700 prose-strong:text-rancho-forest prose-code:rounded prose-code:bg-rancho-ink-100 prose-code:px-1.5 prose-code:py-0.5 prose-code:text-rancho-forest prose-code:before:content-none prose-code:after:content-none"
+            aria-label="Описание фермы"
+        >
+            <div v-html="page.data.content"></div>
         </section>
 
         <!-- COMMENTS -->

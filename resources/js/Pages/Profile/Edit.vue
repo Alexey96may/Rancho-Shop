@@ -8,6 +8,7 @@
     import BaseInput from '@/Components/UI/BaseInput.vue';
     import BaseSmartTime from '@/Components/UI/BaseSmartTime.vue';
     import BaseSubmitButton from '@/Components/UI/BaseSubmitButton.vue';
+    import PhoneInput from '@/Components/UI/PhoneInput.vue';
     import StatCard from '@/Components/UI/StatCard.vue';
     import ProfileLayout from '@/Layouts/ProfileLayout.vue';
     import type { Order, ResourceSingle, SharedData } from '@/types';
@@ -50,16 +51,6 @@
         password_confirmation: '',
     });
 
-    /** Цвета ролей — в тёплой палитре */
-    const roleColors: Record<string, string> = {
-        emerald: 'border-rancho-pine/30 bg-rancho-pine/15 text-rancho-pine',
-        orange: 'border-rancho-ember/30 bg-rancho-ember/15 text-rancho-ember',
-        blue: 'border-rancho-sky/40 bg-rancho-sky/15 text-rancho-forest',
-        rose: 'border-rose-500/30 bg-rose-500/15 text-rose-300',
-        slate: 'border-rancho-ink-700 bg-rancho-ink-800 text-rancho-ink-300',
-        buttercup: 'border-rancho-buttercup/40 bg-rancho-buttercup/15 text-rancho-buttercup',
-    };
-
     const submit = () => {
         form.patch(route('profile.update'), {
             preserveScroll: true,
@@ -76,19 +67,7 @@
 </script>
 
 <template>
-    <div class="min-h-screen space-y-8">
-        <!-- ROLE -->
-        <div v-scroll-reveal class="flex items-center justify-between gap-2">
-            <span class="block text-xs font-medium text-rancho-ink-500"> Ваша роль на сайте: </span>
-            <span
-                v-if="user?.role"
-                class="inline-block rounded-xl border px-3 py-1 text-xs font-black uppercase tracking-wider"
-                :class="roleColors[user.role.color] || roleColors.slate"
-            >
-                {{ user.role.label }}
-            </span>
-        </div>
-
+    <div class="min-h-screen space-y-10">
         <!-- STATS -->
         <div v-scroll-reveal class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <StatCard
@@ -157,14 +136,14 @@
                     theme="dark"
                 />
 
-                <BaseInput
+                <PhoneInput
                     v-model="form.phone"
-                    v-model:error="form.errors.phone"
                     label="Номер телефона"
                     placeholder="+7 (___) ___-__-__"
-                    :disabled="form.processing"
-                    type="tel"
+                    :error="form.errors.phone"
                     theme="dark"
+                    :disabled="form.processing"
+                    @input-start="form.clearErrors('phone')"
                 />
             </div>
 

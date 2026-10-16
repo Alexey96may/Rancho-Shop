@@ -36,6 +36,16 @@
                 : 'text-rancho-ink-400 hover:bg-rancho-ink-900 hover:text-white',
         ].join(' ');
     }
+
+    /** Цвета ролей — в тёплой палитре */
+    const roleColors: Record<string, string> = {
+        emerald: 'border-rancho-pine/30 bg-rancho-pine/15 text-rancho-pine',
+        orange: 'border-rancho-ember/30 bg-rancho-ember/15 text-rancho-ember',
+        blue: 'border-rancho-sky/40 bg-rancho-sky/15 text-rancho-forest',
+        rose: 'border-rose-500/30 bg-rose-500/15 text-rose-300',
+        slate: 'border-rancho-ink-700 bg-rancho-ink-800 text-rancho-ink-300',
+        buttercup: 'border-rancho-buttercup/40 bg-rancho-buttercup/15 text-rancho-buttercup',
+    };
 </script>
 
 <template>
@@ -47,9 +57,25 @@
 
         <div class="min-h-screen py-12 sm:py-20">
             <AppContainer>
-                <h1 class="mb-12 text-center text-xl font-black sm:text-left sm:text-2xl">
-                    Личный кабинет
-                </h1>
+                <div class="mb-16 flex flex-col items-center gap-4 sm:flex-row sm:justify-between">
+                    <div class="flex flex-col items-center sm:items-start">
+                        <h1 class="text-xl font-black text-rancho-buttercup sm:text-2xl">
+                            Личный кабинет
+                        </h1>
+
+                        <p v-if="user?.name" class="mt-1 text-center text-sm text-rancho-ink-500">
+                            Добро пожаловать, {{ user.name }}
+                        </p>
+                    </div>
+
+                    <span
+                        v-if="user?.role"
+                        class="inline-flex w-fit items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-black uppercase tracking-wider"
+                        :class="roleColors[user.role.color] || roleColors.slate"
+                    >
+                        {{ user.role.label }}
+                    </span>
+                </div>
 
                 <div class="grid grid-cols-1 gap-8 md:grid-cols-4">
                     <!-- SIDEBAR / MOBILE TABS -->
@@ -120,7 +146,7 @@
                                 :href="route('logout')"
                                 method="post"
                                 as="button"
-                                class="flex shrink-0 items-center gap-2 whitespace-nowrap rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-600 outline-none transition-all hover:border-rose-300 hover:bg-rose-100 hover:text-rose-700 focus-visible:ring-2 focus-visible:ring-rose-500/40 active:scale-95 md:hidden"
+                                class="focus-visible:ring--rancho-ember/40 flex shrink-0 items-center gap-2 whitespace-nowrap rounded-2xl px-4 py-3 text-sm font-bold text-rancho-ember outline-none transition-all hover:border-rancho-ember hover:bg-rose-100 hover:text-rancho-ember focus-visible:ring-2 active:scale-95 md:hidden"
                             >
                                 <ArrowRightStartOnRectangleIcon
                                     class="h-4 w-4"
@@ -137,7 +163,7 @@
                             :href="route('logout')"
                             method="post"
                             as="button"
-                            class="hidden w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-bold text-rancho-ink-500 outline-none transition-all hover:bg-rose-500/10 hover:text-rose-400 focus-visible:ring-2 focus-visible:ring-rose-500/40 md:flex"
+                            class="hidden w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-bold text-rancho-ink-500 outline-none transition-all hover:bg-rancho-ember/10 hover:text-rancho-ember focus-visible:ring-2 focus-visible:ring-rancho-ember/40 md:flex"
                         >
                             <ArrowRightStartOnRectangleIcon class="h-5 w-5" aria-hidden="true" />
                             Выйти из профиля

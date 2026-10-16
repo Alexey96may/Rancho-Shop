@@ -261,6 +261,7 @@
                         <BaseTextarea
                             v-model="form.admin_note"
                             @blur="submit"
+                            @input-start="form.clearErrors('admin_note')"
                             :error="form.errors.admin_note"
                             placeholder="Напишите что-нибудь о заказе..."
                             :max-height="400"

@@ -10,7 +10,6 @@
     defineOptions({ layout: GuestLayout });
 
     defineProps<{
-        canResetPassword?: boolean;
         status?: string;
     }>();
 
@@ -22,7 +21,7 @@
 
     const submit = () => {
         form.post(route('login'), {
-            onFinish: () => {
+            onSuccess: () => {
                 form.reset('password');
             },
         });
@@ -55,37 +54,39 @@
         </div>
     </Transition>
 
-    <form v-scroll-reveal @submit.prevent="submit" class="space-y-5">
+    <form v-scroll-reveal class="space-y-5" @submit.prevent="submit">
         <BaseInput
             id="email"
+            v-model="form.email"
             type="email"
             label="Email"
             placeholder="you@example.com"
-            v-model="form.email"
             :error="form.errors.email"
             required
             autofocus
             autocomplete="username"
             theme="light"
+            @input-start="form.clearErrors('email')"
         />
 
         <BaseInput
             id="password"
+            v-model="form.password"
             type="password"
             label="Пароль"
             placeholder="Введите пароль"
-            v-model="form.password"
             :error="form.errors.password"
             required
             autocomplete="current-password"
             theme="light"
+            @input-start="form.clearErrors('password')"
         />
 
         <!-- Remember me -->
         <label class="flex cursor-pointer select-none items-center gap-2.5">
             <input
-                type="checkbox"
                 v-model="form.remember"
+                type="checkbox"
                 class="h-4 w-4 cursor-pointer rounded border-rancho-ink-300 text-rancho-pine transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-rancho-pine/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
             />
             <span class="text-sm text-rancho-ink-700">Запомнить меня</span>

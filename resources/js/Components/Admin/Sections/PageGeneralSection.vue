@@ -29,7 +29,7 @@
 
 <template>
     <div
-        class="border-rancho-ink-800 bg-rancho-ink-900/30 space-y-6 rounded-2xl border p-4 sm:rounded-3xl sm:p-6 md:p-8"
+        class="space-y-6 rounded-2xl border border-rancho-ink-800 bg-rancho-ink-900/30 p-4 sm:rounded-3xl sm:p-6 md:p-8"
     >
         <!-- Основное -->
         <div class="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2">
@@ -113,7 +113,7 @@
                         :disabled="disabled"
                     />
 
-                    <p class="text-rancho-ink-500 mt-1.5 px-1 text-[10px]">
+                    <p class="mt-1.5 px-1 text-[10px] text-rancho-ink-500">
                         Меньше число — выше пункт. Одинаковые значения сортируются по алфавиту.
                     </p>
                 </div>

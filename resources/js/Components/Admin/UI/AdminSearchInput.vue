@@ -20,6 +20,7 @@
     const emit = defineEmits<{
         (e: 'update:modelValue', value: string): void;
         (e: 'search', value: string): void;
+        (e: 'input-start'): void;
     }>();
 
     const inputId = useId();
@@ -29,6 +30,7 @@
         () => props.modelValue,
         (newVal) => {
             innerValue.value = newVal;
+            emit('input-start');
         },
     );
 

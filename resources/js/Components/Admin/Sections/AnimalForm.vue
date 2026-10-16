@@ -156,6 +156,7 @@
                             <div class="space-y-4 sm:space-y-6">
                                 <BaseInput
                                     v-model="form.name"
+                                    @input-start="form.clearErrors('name')"
                                     :error="form.errors.name"
                                     label="Имя / Кличка"
                                     placeholder="Напишите имя животного..."
@@ -167,6 +168,7 @@
                                         v-model="form.status"
                                         :error="form.errors.status"
                                         label="Статус"
+                                        @input-start="form.clearErrors('status')"
                                         placeholder="Создайте статус..."
                                         title="Статус корректируется программно"
                                         theme="dark"
@@ -175,6 +177,7 @@
                                     <BaseSelect
                                         v-model="form.category_id"
                                         v-model:error="form.errors.category_id"
+                                        @input-start="form.clearErrors('category_id')"
                                         :options="categories"
                                         placeholder="Выберите категорию"
                                         label="Категория"
@@ -185,6 +188,7 @@
                                         v-model="form.parent_id"
                                         v-model:error="form.errors.parent_id"
                                         :options="availableParents"
+                                        @input-start="form.clearErrors('parent_id')"
                                         placeholder="Без родителя"
                                         label="Родитель"
                                         variant="admin"
@@ -219,6 +223,7 @@
                         <AdminBaseTextarea
                             v-model="form.bio"
                             id="bio"
+                            @input-start="form.clearErrors('bio')"
                             label="Биография"
                             :error="form.errors.bio"
                             :disabled="form.processing"

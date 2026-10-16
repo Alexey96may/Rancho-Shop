@@ -107,12 +107,14 @@
                 <AdminSearchInput
                     v-model="filterForm.search"
                     class="order-2 sm:-order-none"
+                    @input-start="filterForm.clearErrors('search')"
                     placeholder="Поиск по имени..."
                 />
 
                 <BaseSelect
                     v-model="filterForm.category_id"
                     :options="categories"
+                    @input-start="filterForm.clearErrors('category_id')"
                     placeholder="Все категории"
                     variant="admin"
                     class="order-3 sm:-order-none lg:w-64"

@@ -219,7 +219,7 @@
         </nav>
 
         <!-- FORM -->
-        <form @submit.prevent="submit" class="grid grid-cols-1 gap-6 xl:grid-cols-12">
+        <form @submit.prevent="submit" class="grid grid-cols-1 gap-x-6 gap-y-10 xl:grid-cols-12">
             <!-- LEFT COLUMN -->
             <div class="xl:col-span-8">
                 <!-- GENERAL TAB -->
@@ -240,6 +240,7 @@
                             <BaseInput
                                 v-model="form.name"
                                 v-model:error="form.errors.name"
+                                @input-start="form.clearErrors('name')"
                                 label="Название товара"
                                 placeholder="Напр: Молоко козье пастеризованное"
                                 required
@@ -249,6 +250,7 @@
                             <BaseInput
                                 v-model="form.slug"
                                 v-model:error="form.errors.slug"
+                                @input-start="form.clearErrors('slug')"
                                 label="URL Slug (оставьте пустым для авто)"
                                 placeholder="moloko-kozie"
                                 theme="dark"
@@ -256,6 +258,7 @@
 
                             <BaseSelect
                                 v-model="form.category_id"
+                                @input-start="form.clearErrors('category_id')"
                                 v-model:error="form.errors.category_id"
                                 :options="categories.data"
                                 label="Категория"
@@ -268,6 +271,7 @@
                                 v-model:error="form.errors.availability_type"
                                 :options="availabilityOptions"
                                 value-key="value"
+                                @input-start="form.clearErrors('availability_type')"
                                 label-key="label"
                                 label="Тип доступности"
                                 variant="admin"
@@ -277,6 +281,7 @@
 
                     <AdminBaseTextarea
                         v-model="form.description"
+                        @input-start="form.clearErrors('description')"
                         v-model:error="form.errors.description"
                         label="Описание товара"
                         placeholder="Опишите преимущества, вкус и особенности..."
@@ -324,6 +329,7 @@
                     v-model="form.gallery"
                     theme="dark"
                     @remove="removeGalleryItem"
+                    variant="edit"
                     @preview="openImage"
                 >
                     <label
@@ -441,7 +447,7 @@
         </form>
 
         <!-- LIGHTBOX -->
-        <BaseModal :show="isModalOpen" variant="lightbox" @close="selectedImage = null">
+        <BaseModal :show="isModalOpen" variant="ui" @close="selectedImage = null">
             <AppImage
                 v-if="selectedImage"
                 :src="selectedImage"

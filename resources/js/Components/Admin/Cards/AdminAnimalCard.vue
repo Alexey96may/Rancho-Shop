@@ -21,6 +21,8 @@
     }>();
 
     const playVoice = (url: string) => {
+        if (typeof window === 'undefined') return;
+
         const audio = new Audio(url);
         audio.play().catch((error) => {
             if (console) {
@@ -36,14 +38,14 @@
 <template>
     <div
         role="listitem"
-        class="border-rancho-ink-800 bg-rancho-ink-900/30 hover:border-rancho-mint/40 hover:bg-rancho-ink-900/60 group relative flex flex-col overflow-hidden rounded-3xl border p-5 transition-all"
+        class="group relative flex flex-col overflow-hidden rounded-3xl border border-rancho-ink-800 bg-rancho-ink-900/30 p-5 transition-all hover:border-rancho-mint/40 hover:bg-rancho-ink-900/60"
         :class="{ 'border-rose-500/20 bg-rose-950/5 opacity-75': animal.is_trashed }"
     >
         <!-- IMAGE -->
-        <div class="bg-rancho-ink-800 relative h-48 w-full overflow-hidden rounded-2xl">
+        <div class="relative h-48 w-full overflow-hidden rounded-2xl bg-rancho-ink-800">
             <AppImage
                 :src="animal?.avatars?.[0] || ''"
-                :type="'thumbnails'"
+                type="previews"
                 :alt="animal.name"
                 :context="'animal'"
                 class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
@@ -53,11 +55,11 @@
             <!-- Бейдж статуса -->
             <div class="absolute right-3 top-3 flex gap-2">
                 <span
-                    class="bg-rancho-ink-950/70 rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-widest text-white backdrop-blur-md"
+                    class="rounded-full bg-rancho-ink-950/70 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-white backdrop-blur-md"
                     :class="
                         animal.is_trashed
                             ? 'border border-rose-500/40 text-rose-300'
-                            : 'border-rancho-ink-700 border'
+                            : 'border border-rancho-ink-700'
                     "
                 >
                     {{ animal.is_trashed ? 'В КОРЗИНЕ' : animal.status }}
@@ -69,7 +71,7 @@
         <div class="mt-8 flex-1 px-2">
             <div class="mb-2 flex items-center justify-between gap-3">
                 <span
-                    class="text-rancho-mint truncate text-[10px] font-black uppercase tracking-[0.2em]"
+                    class="truncate text-[10px] font-black uppercase tracking-[0.2em] text-rancho-mint"
                 >
                     {{ animal.category?.name || 'Без категории' }}
                 </span>
@@ -97,8 +99,8 @@
 
             <!-- Родитель -->
             <div v-if="animal.family?.parent" class="mt-2 flex items-center gap-1.5 text-xs">
-                <span class="text-rancho-ink-500 font-bold tracking-tighter"> Родитель: </span>
-                <span class="text-rancho-ink-300 truncate">
+                <span class="font-bold tracking-tighter text-rancho-ink-500"> Родитель: </span>
+                <span class="truncate text-rancho-ink-300">
                     {{ animal.family?.parent?.name }}
                 </span>
             </div>
@@ -106,14 +108,14 @@
 
         <!-- FOOTER -->
         <div
-            class="border-rancho-ink-800/70 mt-6 flex items-center justify-between border-t px-2 pt-4"
+            class="mt-6 flex items-center justify-between border-t border-rancho-ink-800/70 px-2 pt-4"
         >
             <div class="flex gap-2">
                 <button
                     v-if="animal.voice_url && !animal.is_trashed"
                     type="button"
                     @click="playVoice(animal.voice_url)"
-                    class="bg-rancho-ink-800 text-rancho-ink-400 hover:bg-rancho-ink-700 hover:text-rancho-mint focus-visible:ring-rancho-mint/40 flex h-9 w-9 items-center justify-center rounded-xl transition-colors focus:outline-none focus-visible:ring-2"
+                    class="flex h-9 w-9 items-center justify-center rounded-xl bg-rancho-ink-800 text-rancho-ink-400 transition-colors hover:bg-rancho-ink-700 hover:text-rancho-mint focus:outline-none focus-visible:ring-2 focus-visible:ring-rancho-mint/40"
                     title="Прослушать голос"
                     aria-label="Прослушать голос животного"
                 >

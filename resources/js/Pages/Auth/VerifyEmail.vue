@@ -1,5 +1,5 @@
 <script setup lang="ts">
-    import { computed } from 'vue';
+    import { computed, onMounted, onUnmounted, ref } from 'vue';
 
     import { Head, Link, useForm } from '@inertiajs/vue3';
 
@@ -16,11 +16,57 @@
 
     const form = useForm({});
 
-    const submit = () => {
-        form.post(route('verification.send'));
+    const justSent = ref(false);
+    const cooldown = ref(0);
+    let timer: ReturnType<typeof setInterval> | null = null;
+
+    const COOLDOWN_SECONDS = 60;
+    const STORAGE_KEY = 'verification-cooldown-until';
+
+    const startCooldown = (seconds = COOLDOWN_SECONDS) => {
+        cooldown.value = seconds;
+        justSent.value = true;
+
+        sessionStorage.setItem(STORAGE_KEY, String(Date.now() + seconds * 1000));
+
+        if (timer) clearInterval(timer);
+        timer = setInterval(() => {
+            cooldown.value--;
+            if (cooldown.value <= 0 && timer) {
+                clearInterval(timer);
+                timer = null;
+                sessionStorage.removeItem(STORAGE_KEY);
+            }
+        }, 1000);
     };
 
-    const verificationLinkSent = computed(() => props.status === 'verification-link-sent');
+    onMounted(() => {
+        const until = sessionStorage.getItem(STORAGE_KEY);
+        if (!until) return;
+
+        const seconds = Math.max(0, Math.floor((Number(until) - Date.now()) / 1000));
+        if (seconds > 0) {
+            startCooldown(seconds);
+        } else {
+            sessionStorage.removeItem(STORAGE_KEY);
+        }
+    });
+
+    onUnmounted(() => {
+        if (timer) clearInterval(timer);
+    });
+
+    const submit = () => {
+        if (cooldown.value > 0 || form.processing) return;
+
+        form.post(route('verification.send'), {
+            onSuccess: () => startCooldown(COOLDOWN_SECONDS),
+        });
+    };
+
+    const verificationLinkSent = computed(
+        () => props.status === 'verification-link-sent' || justSent.value,
+    );
 </script>
 
 <template>
@@ -50,13 +96,14 @@
         </div>
     </Transition>
 
-    <form v-scroll-reveal @submit.prevent="submit" class="space-y-4">
+    <form v-scroll-reveal class="space-y-4" @submit.prevent="submit">
         <div
             class="flex flex-col-reverse items-stretch gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between"
         >
             <BaseSubmitButton
                 :processing="form.processing"
-                label="Отправить письмо снова"
+                :disabled="cooldown > 0"
+                :label="cooldown > 0 ? `Повторить через ${cooldown} с` : 'Отправить письмо снова'"
                 class="sm:w-auto"
             />
 

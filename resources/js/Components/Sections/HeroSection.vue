@@ -1,5 +1,4 @@
 <script setup lang="ts">
-    import { MoveRight } from 'lucide-vue-next';
     import 'swiper/css';
     import 'swiper/css/effect-fade';
     import 'swiper/css/navigation';
@@ -16,7 +15,7 @@
             id: 1,
             title: 'Свежесть фермерского утра',
             description:
-                'Натуральное молоко, крафтовые сыры и домашнее масло прямо с нашего пастбища в ваше лукошко.',
+                'Натуральное молоко, крафтовые сыры и домашнее масло с нашего пастбища — к вашему столу.',
             buttonText: 'В магазин',
             route: 'catalog.index',
             image: '/images/hero/slide1.jpg',
@@ -26,7 +25,7 @@
             id: 2,
             title: 'Познакомьтесь с нашими жителями',
             description:
-                'У каждой нашей коровы есть имя и своя история. Послушайте, как поет Зорька или резвится Лучик.',
+                'У каждого животного здесь есть имя, характер и своя история. Давайте знакомиться!',
             buttonText: 'К животным',
             route: 'animals.index',
             image: '/images/hero/slide2.jpg',

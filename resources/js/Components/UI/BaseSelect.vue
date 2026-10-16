@@ -111,10 +111,12 @@
         return label || (props.placeholder ?? '');
     });
 
+    const emit = defineEmits<{
+        (e: 'input-start'): void;
+    }>();
+
     watch(model, () => {
-        if (error.value) {
-            error.value = undefined;
-        }
+        emit('input-start');
     });
 
     const styles = computed(() => {

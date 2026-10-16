@@ -72,6 +72,7 @@
                 v-model:error="form.errors.code"
                 label="Код купона"
                 placeholder="SUMMER2026"
+                @input-start="form.clearErrors('code')"
                 uppercase
                 :disabled="form.processing"
                 theme="dark"
@@ -80,6 +81,7 @@
             <BaseInput
                 v-model="form.description"
                 v-model:error="form.errors.description"
+                @input-start="form.clearErrors('description')"
                 label="Описание (необязательно)"
                 placeholder="Скидка для постоянных клиентов"
                 theme="dark"
@@ -87,6 +89,7 @@
 
             <BaseSelect
                 v-model="form.type"
+                @input-start="form.clearErrors('type')"
                 v-model:error="form.errors.type"
                 :options="typeOptions"
                 variant="admin"
@@ -102,6 +105,7 @@
                 :min="0"
                 :label="'Значение (' + (form.type === 'percent' ? '%' : 'в рублях') + ')'"
                 :is-money="form.type === 'fixed'"
+                :max="form.type === 'percent' ? 100 : undefined"
                 :disabled="form.processing"
             />
 
@@ -125,6 +129,7 @@
 
             <BaseDatePicker
                 v-model="form.expires_at"
+                @input-start="form.clearErrors('expires_at')"
                 v-model:error="form.errors.expires_at"
                 label="Срок действия"
                 mode="datetime-local"
@@ -144,6 +149,7 @@
                 <BaseSwitch
                     v-model="form.is_active"
                     label="Статус промокода"
+                    @input-start="form.clearErrors('is_active')"
                     active-text="Промокод активен"
                     inactive-text="В черновик"
                     :disabled="form.processing"

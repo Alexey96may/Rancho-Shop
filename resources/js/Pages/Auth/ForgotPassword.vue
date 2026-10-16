@@ -1,8 +1,11 @@
 <script setup lang="ts">
+    import { computed, ref } from 'vue';
+
     import { Head, useForm } from '@inertiajs/vue3';
 
     import { CheckCircleIcon } from '@heroicons/vue/24/outline';
 
+    import AppCaptcha from '@/Components/UI/AppCaptcha.vue';
     import BaseInput from '@/Components/UI/BaseInput.vue';
     import BaseSubmitButton from '@/Components/UI/BaseSubmitButton.vue';
     import GuestLayout from '@/Layouts/GuestLayout.vue';
@@ -15,10 +18,30 @@
 
     const form = useForm({
         email: '',
+        captcha: '',
+    });
+
+    const isCaptchaValid = ref(false);
+    const captchaRef = ref<InstanceType<typeof AppCaptcha> | null>(null);
+
+    const canSubmit = computed(() => {
+        return form.email.trim().length > 0 && isCaptchaValid.value && !form.processing;
     });
 
     const submit = () => {
-        form.post(route('password.email'));
+        if (!canSubmit.value) return;
+
+        form.post(route('password.email'), {
+            onSuccess: () => {
+                form.reset('captcha');
+                isCaptchaValid.value = false;
+                captchaRef.value?.reset();
+            },
+            onError: () => {
+                captchaRef.value?.reset();
+                isCaptchaValid.value = false;
+            },
+        });
     };
 </script>
 
@@ -48,22 +71,43 @@
         </div>
     </Transition>
 
-    <form v-scroll-reveal @submit.prevent="submit" class="space-y-5">
+    <form v-scroll-reveal class="space-y-5" @submit.prevent="submit">
         <BaseInput
             id="email"
+            v-model="form.email"
             type="email"
             label="Email"
             placeholder="you@example.com"
-            v-model="form.email"
             :error="form.errors.email"
             required
             autofocus
             autocomplete="username"
             theme="light"
+            @input-start="form.clearErrors('email')"
         />
 
+        <Transition name="fade-slide" appear>
+            <AppCaptcha
+                ref="captchaRef"
+                v-model="form.captcha"
+                v-model:valid="isCaptchaValid"
+                :count="5"
+                chars-preset="alphanumeric"
+                distortion="lines"
+                theme="light"
+            />
+        </Transition>
+
+        <p v-if="form.errors.captcha" class="text-xs font-medium text-rose-500">
+            {{ form.errors.captcha }}
+        </p>
+
         <div class="flex items-center justify-end pt-2">
-            <BaseSubmitButton :processing="form.processing" label="Отправить ссылку" />
+            <BaseSubmitButton
+                :processing="form.processing"
+                :disabled="!canSubmit"
+                label="Отправить ссылку"
+            />
         </div>
     </form>
 </template>

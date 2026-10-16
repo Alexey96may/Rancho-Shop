@@ -124,6 +124,7 @@
                     placeholder="Все категории"
                     label="Категория"
                     class="w-full sm:w-56 lg:w-64"
+                    @input-start="filterForm.clearErrors('category')"
                     variant="admin"
                     aria-label="Фильтр по категориям"
                 />
@@ -131,6 +132,7 @@
                 <BaseSelect
                     v-model="filterForm.animal"
                     :options="animals"
+                    @input-start="filterForm.clearErrors('animal')"
                     placeholder="Все товары"
                     label="Связанное животное"
                     class="w-full sm:w-56 lg:w-64"

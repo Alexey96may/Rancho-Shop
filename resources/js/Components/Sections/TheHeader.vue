@@ -6,9 +6,11 @@
     import { Bars3Icon, ShoppingBagIcon, UserIcon, XMarkIcon } from '@heroicons/vue/24/outline';
 
     import CowIcon from '@/Components/Icons/CowIcon.vue';
+    import CowIconDark from '@/Components/Icons/CowIconDark.vue';
     import SmartNav from '@/Components/Shared/SmartNav.vue';
     import { useCartStore } from '@/stores/cart';
     import type { SharedData } from '@/types';
+    import { getInitials } from '@/utils/user';
 
     interface NavItem {
         name: string;
@@ -86,13 +88,6 @@
         document.body.style.overflow = '';
     });
 
-    const userInitial = computed(() => {
-        const name = user.value?.name?.trim() ?? '';
-        return name ? name.charAt(0).toUpperCase() : '?';
-    });
-
-    const firstName = computed(() => user.value?.name?.split(' ')[0] ?? '');
-
     const focusClass = computed(() =>
         isDark
             ? 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rancho-buttercup/60'
@@ -106,6 +101,28 @@
         if (count > MAX_CART_BADGE) return `${MAX_CART_BADGE}+`;
         return String(count);
     });
+
+    const firstName = computed(() => {
+        const name = user.value?.name?.trim() ?? '';
+        if (!name) return '';
+        return name.split(' ')[0];
+    });
+
+    const displayName = computed(() => {
+        const fullName = user.value?.name?.trim() ?? '';
+        if (!fullName) return '?';
+
+        // 1. Full Name ≤ 9
+        if (fullName.length <= 9) return fullName;
+
+        // 2. First Name ≤ 9
+        if (firstName.value.length <= 9) return firstName.value;
+
+        // 3. First Name Initials
+        return getInitials(fullName);
+    });
+
+    const CowLogo = computed(() => (isDark.value ? CowIconDark : CowIcon));
 </script>
 
 <template>
@@ -124,10 +141,8 @@
                 class="group flex min-w-0 shrink items-center gap-2 sm:gap-3"
                 :class="focusClass"
             >
-                <CowIcon
-                    class="h-7 w-7 shrink-0 transition-colors sm:h-8 sm:w-8"
-                    :class="isDark ? 'text-rancho-buttercup' : 'text-rancho-pine'"
-                />
+                <component :is="CowLogo" class="h-7 w-7 shrink-0 transition-colors sm:h-8 sm:w-8" />
+
                 <div class="flex min-w-0 flex-col">
                     <div
                         class="flex flex-col truncate font-header text-lg leading-none transition-colors sm:flex-row sm:gap-2 sm:text-xl md:text-2xl"
@@ -174,7 +189,7 @@
                         aria-hidden="true"
                     />
                     <span class="font-sans text-xs font-bold">
-                        {{ firstName }}
+                        {{ displayName }}
                     </span>
                 </Link>
 
@@ -182,7 +197,7 @@
                 <Link
                     v-else
                     :href="route('login')"
-                    class="flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-bold uppercase tracking-wider transition-colors"
+                    class="shadow-md relative hidden items-center gap-2 rounded-xl px-3 py-2 text-white transition-all focus:outline-none focus-visible:ring-4 focus-visible:ring-rancho-pine/30 active:scale-95 sm:px-4 md:flex"
                     :class="[
                         isDark
                             ? 'bg-rancho-buttercup text-rancho-ink-950 hover:bg-rancho-buttercup/90'
@@ -190,8 +205,11 @@
                         focusClass,
                     ]"
                 >
-                    <UserIcon class="h-5 w-5" aria-hidden="true" />
-                    <span>Войти</span>
+                    <UserIcon
+                        class="h-5 w-5 shrink-0 stroke-2"
+                        :class="isDark ? 'text-rancho-ink-950' : 'text-white'"
+                        aria-hidden="true"
+                    />
                 </Link>
 
                 <!-- DIVIDER (md+) -->
@@ -269,7 +287,7 @@
             <aside
                 v-if="isMenuOpen"
                 id="mobile-menu"
-                class="shadow-2xl fixed inset-y-0 right-0 z-[70] flex w-full max-w-sm flex-col overflow-y-auto border-l transition-colors md:hidden"
+                class="shadow-2xl fixed inset-y-0 right-0 z-[70] flex h-dvh w-full max-w-sm flex-col overflow-y-auto overscroll-contain border-l transition-colors md:hidden"
                 :class="
                     isDark
                         ? 'border-rancho-ink-800 bg-rancho-ink-950 text-rancho-paper'
@@ -281,7 +299,7 @@
             >
                 <!-- Drawer header -->
                 <div
-                    class="flex h-16 shrink-0 items-center justify-between border-b px-4 sm:px-6"
+                    class="flex shrink-0 items-center justify-between gap-3 border-b px-4 py-3 sm:px-6"
                     :class="isDark ? 'border-rancho-ink-800' : 'border-rancho-ink-200'"
                 >
                     <div class="flex items-center gap-2">
@@ -310,7 +328,7 @@
                 <!-- User block -->
                 <div
                     v-if="user"
-                    class="border-b px-4 py-4 sm:px-6"
+                    class="border-b px-2 py-4 sm:px-6"
                     :class="isDark ? 'border-rancho-ink-800' : 'border-rancho-ink-200'"
                 >
                     <Link
@@ -326,7 +344,7 @@
                                     : 'bg-rancho-pine text-white'
                             "
                         >
-                            {{ userInitial }}
+                            {{ getInitials(user.name) }}
                         </div>
                         <div class="flex min-w-0 flex-col">
                             <span class="truncate text-sm font-bold">{{ user.name }}</span>
@@ -376,14 +394,14 @@
                     <Link
                         v-if="!user"
                         :href="route('login')"
-                        class="flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-bold uppercase tracking-wider transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-rancho-buttercup/40"
+                        class="flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3 text-xs font-bold uppercase tracking-wider outline-none transition-colors focus-visible:ring-2 focus-visible:ring-rancho-buttercup/40 sm:text-sm"
                         :class="
                             isDark
                                 ? 'bg-rancho-buttercup text-rancho-ink-950 hover:bg-rancho-buttercup/90'
                                 : 'bg-rancho-pine text-white hover:bg-rancho-forest'
                         "
                     >
-                        <UserIcon class="h-5 w-5" aria-hidden="true" />
+                        <UserIcon class="h-4 w-4 sm:h-5 sm:w-5" aria-hidden="true" />
                         Войти
                     </Link>
                 </div>

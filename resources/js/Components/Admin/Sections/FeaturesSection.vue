@@ -142,10 +142,6 @@
 </template>
 
 <style scoped>
-    /* ... стили как были ... */
-</style>
-
-<style scoped>
     /* Смена empty ↔ list */
     .feature-swap-enter-active,
     .feature-swap-leave-active {

@@ -68,7 +68,11 @@
 
     <div class="space-y-10">
         <!-- SEARCH -->
-        <AdminSearchInput v-model="filterForm.search" placeholder="Поиск по названию или тегу..." />
+        <AdminSearchInput
+            v-model="filterForm.search"
+            @input-start="filterForm.clearErrors('search')"
+            placeholder="Поиск по названию или тегу..."
+        />
 
         <!-- LIST -->
         <Transition name="fade-slide">

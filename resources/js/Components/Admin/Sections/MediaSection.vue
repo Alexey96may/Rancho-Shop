@@ -66,6 +66,7 @@
                 v-model="modelValue.gallery"
                 @remove="removeGalleryItem"
                 @preview="openImage"
+                variant="edit"
             >
                 <label
                     class="border-ranko-ink-700 bg-ranko-ink-950/50 hover:border-ranko-mint/50 hover:bg-ranko-ink-900 focus-within:border-ranko-mint focus-within:ring-ranko-mint/20 group relative flex aspect-square cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed transition-all focus-within:ring-4 sm:rounded-3xl"
@@ -108,7 +109,7 @@
         </div>
 
         <!-- МОДАЛКА ПРОСМОТРА -->
-        <BaseModal :show="isModalOpen" variant="lightbox" @close="selectedImage = null">
+        <BaseModal :show="isModalOpen" variant="ui" @close="selectedImage = null">
             <AppImage
                 v-if="selectedImage"
                 :src="selectedImage"

@@ -110,7 +110,7 @@
 
         <form @submit.prevent="submit" class="space-y-6">
             <div
-                class="border-rancho-ink-800 bg-rancho-ink-900/40 grid grid-cols-1 gap-4 rounded-2xl border p-4 sm:gap-5 sm:p-6 md:grid-cols-12 md:p-8"
+                class="grid grid-cols-1 gap-4 rounded-2xl border border-rancho-ink-800 bg-rancho-ink-900/40 p-4 sm:gap-5 sm:p-6 md:grid-cols-12 md:p-8"
             >
                 <BaseSelect
                     v-model="form.product_id"
@@ -118,6 +118,7 @@
                     :options="products"
                     label="Основной товар"
                     label-key="name"
+                    @input-start="form.clearErrors('product_id')"
                     value-key="id"
                     placeholder="Выберите товар"
                     class="md:col-span-8"
@@ -128,6 +129,7 @@
                 <BaseSelect
                     v-model="form.unit_id"
                     v-model:error="form.errors.unit_id"
+                    @input-start="form.clearErrors('unit_id')"
                     :options="units"
                     label="Ед. измерения"
                     placeholder="Выберите единицу"
@@ -141,6 +143,7 @@
                     v-model="form.name"
                     v-model:error="form.errors.name"
                     label="Название варианта"
+                    @input-start="form.clearErrors('name')"
                     placeholder="Например: 500 мл, XL, Красный"
                     class="md:col-span-12"
                     :disabled="form.processing"
@@ -183,6 +186,7 @@
                 <div class="flex items-end pb-2 md:col-span-8">
                     <BaseSwitch
                         v-model="form.is_default"
+                        @input-start="form.clearErrors('is_default')"
                         label="Вариант по умолчанию"
                         active-text="Главный вариант"
                         inactive-text="Обычный вариант"
@@ -192,11 +196,12 @@
             </div>
 
             <div
-                class="border-rancho-ink-800 flex flex-col-reverse items-stretch gap-4 border-t pt-6 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:pt-8"
+                class="flex flex-col-reverse items-stretch gap-4 border-t border-rancho-ink-800 pt-6 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:pt-8"
             >
                 <BaseStatusToggle
                     v-if="!isEdit"
                     v-model="form.create_another"
+                    @input-start="form.clearErrors('create_another')"
                     label="После создания не выходить из формы"
                 />
 

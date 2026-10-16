@@ -15,7 +15,6 @@
 
     const props = withDefaults(defineProps<Props>(), {
         variant: 'edit',
-        maxPreview: 4,
     });
 
     const emit = defineEmits<{
@@ -60,6 +59,7 @@
             :key="'id' in file ? file.id : index"
             class="shadow-lg group relative aspect-square overflow-hidden rounded-2xl border border-rancho-ink-800 bg-rancho-ink-900"
             role="listitem"
+            @click="preview(file)"
         >
             <AppImage
                 :src="file"
@@ -98,7 +98,7 @@
     <!-- РЕЖИМ PREVIEW: компактная линия миниатюр -->
     <div
         v-else
-        class="flex w-full items-center gap-3 px-1 pb-4 sm:gap-4 sm:py-4 sm:pt-2"
+        class="flex w-full items-start gap-3 overflow-x-auto px-1 pb-4 sm:gap-4 sm:py-4 sm:pt-2"
         role="list"
         aria-label="Миниатюры изображений товара"
     >

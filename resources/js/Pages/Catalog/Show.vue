@@ -10,9 +10,10 @@
         TruckIcon,
     } from '@heroicons/vue/24/outline';
 
+    import AnimalCard from '@/Components/Cards/AnimalCard.vue';
     import CommentsSection from '@/Components/Sections/CommentsSection.vue';
+    import ImageLightbox from '@/Components/Shared/ImageLightbox.vue';
     import ProductGallery from '@/Components/Shared/UIGallery.vue';
-    import BaseModal from '@/Components/UI/BaseModal.vue';
     import BuyButton from '@/Components/UI/BuyButton.vue';
     import MainLayout from '@/Layouts/MainLayout.vue';
     import { useComments } from '@/composables/crud/useComments';
@@ -79,32 +80,29 @@
         );
     });
 
-    const selectedImage = ref<string | null>(null);
+    // gallery
 
-    const openImage = (item: string) => {
-        const previewUrl = getPreview(item);
+    const openImageIndex = ref<number | null>(null);
 
-        if (previewUrl) {
-            selectedImage.value = previewUrl;
-        }
-    };
+    const allImages = computed<string[]>(() => {
+        const list: string[] = [];
 
-    const getPreview = (item: string | null | undefined): string => {
-        if (!item) return '';
+        const main = productData.value.main_photo?.[0];
+        const mainUrl = typeof main === 'string' ? main : main?.url;
+        if (mainUrl) list.push(mainUrl);
 
-        if (typeof item === 'string') {
-            return item;
-        }
+        productData.value.gallery?.forEach((g) => {
+            const url = typeof g === 'string' ? g : g?.url;
+            if (url) list.push(url);
+        });
 
-        return '';
-    };
-
-    const isModalOpen = computed({
-        get: () => !!selectedImage.value,
-        set: (value) => {
-            if (!value) selectedImage.value = null;
-        },
+        return list;
     });
+
+    const openImage = (url: string) => {
+        const idx = allImages.value.indexOf(url);
+        if (idx >= 0) openImageIndex.value = idx;
+    };
 
     const { submitComment } = useComments('product', productData.value.id);
 
@@ -170,7 +168,6 @@
                 <!-- INFO -->
                 <div v-scroll-reveal class="flex flex-col">
                     <!-- Категория -->
-
                     <span
                         v-if="productData.category?.name"
                         class="inline-flex items-center gap-1.5 self-start rounded-full bg-rancho-ember/10 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-rancho-ember ring-1 ring-inset ring-rancho-ember/20 transition-all hover:bg-rancho-ember/20"
@@ -317,9 +314,12 @@
                     </div>
 
                     <!-- ATTRIBUTES -->
-                    <div v-if="productData.attributes?.length" class="mt-8">
+                    <div
+                        v-if="productData.attributes?.length"
+                        class="mt-8 overflow-hidden rounded-2xl border border-rancho-ink-100 bg-white p-4"
+                    >
                         <h2
-                            class="text-xs font-black uppercase tracking-widest text-rancho-ink-500"
+                            class="text-center text-xs font-black uppercase tracking-widest text-rancho-ink-500"
                         >
                             Характеристики
                         </h2>
@@ -337,29 +337,6 @@
                             </div>
                         </dl>
                     </div>
-
-                    <!-- ANIMALS -->
-                    <div
-                        v-if="productData.animals?.length"
-                        class="mt-8 rounded-2xl border border-rancho-ink-200 bg-white p-4"
-                    >
-                        <h2
-                            class="text-xs font-black uppercase tracking-widest text-rancho-ink-500"
-                        >
-                            Кого благодарим
-                        </h2>
-
-                        <div class="mt-3 flex flex-wrap gap-2">
-                            <Link
-                                v-for="animal in productData.animals"
-                                :key="animal.id"
-                                :href="route('animals.show', animal.slug)"
-                                class="inline-flex items-center rounded-full border border-rancho-ink-200 bg-white px-3 py-1.5 text-xs font-bold text-rancho-forest transition-colors hover:border-rancho-pine hover:bg-rancho-ink-50"
-                            >
-                                {{ animal.name }}
-                            </Link>
-                        </div>
-                    </div>
                 </div>
             </section>
 
@@ -367,14 +344,62 @@
             <section
                 v-if="productData.description"
                 v-scroll-reveal
-                class="mt-16 space-y-6 sm:mt-20"
+                class="mt-10 space-y-10 sm:mt-20"
             >
-                <h2 class="text-text-xs font-black uppercase tracking-widest text-rancho-ink-500">
+                <h2
+                    class="text-text-xs text-center font-black uppercase tracking-widest text-rancho-ink-500"
+                >
                     О товаре
                 </h2>
-                <p class="max-w-3xl text-sm leading-relaxed text-rancho-ink-600 sm:text-base">
+                <p class="text-sm leading-relaxed text-rancho-ink-600 sm:text-base">
                     {{ productData.description }}
                 </p>
+            </section>
+
+            <!-- PRODUCTS -->
+            <section
+                v-if="product.data.animals?.length"
+                v-scroll-reveal
+                class="mt-8 border-t border-rancho-ink-200 pt-8 sm:mt-20"
+                aria-label="Животные"
+            >
+                <header class="mb-6 flex items-end justify-between gap-4">
+                    <div>
+                        <h2 class="text-2xl font-black text-rancho-forest sm:text-3xl">
+                            Кого благодарим
+                        </h2>
+                        <p class="mt-2 text-xs text-rancho-ink-500 sm:text-sm">
+                            Без них не было бы этого продукта
+                        </p>
+                    </div>
+
+                    <Link
+                        :href="route('catalog.index')"
+                        class="hidden text-xs font-bold text-rancho-pine transition-colors hover:text-rancho-forest sm:inline-flex"
+                    >
+                        Все животные →
+                    </Link>
+                </header>
+
+                <div
+                    class="grid grid-cols-1 justify-items-center gap-x-4 gap-y-8 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
+                >
+                    <AnimalCard
+                        v-for="animal in product.data.animals"
+                        :key="animal.id"
+                        :animal="animal"
+                        class="w-full"
+                    />
+                </div>
+
+                <div class="mt-6 sm:hidden">
+                    <Link
+                        :href="route('animals.index')"
+                        class="inline-flex w-full items-center justify-center rounded-xl border border-rancho-ink-200 bg-white px-4 py-3 text-xs font-bold text-rancho-forest transition-colors hover:border-rancho-pine hover:bg-rancho-ink-50"
+                    >
+                        Все животные →
+                    </Link>
+                </div>
             </section>
 
             <!-- COMMENTS -->
@@ -387,12 +412,10 @@
             </section>
         </AppContainer>
 
-        <BaseModal :show="isModalOpen" variant="ui" @close="selectedImage = null">
-            <AppImage
-                v-if="selectedImage"
-                :src="selectedImage"
-                alt="Полноэкранный просмотр изображения"
-            />
-        </BaseModal>
+        <ImageLightbox
+            v-model="openImageIndex"
+            :images="allImages"
+            :alt="`Фото продукта ${productData.name}`"
+        />
     </main>
 </template>

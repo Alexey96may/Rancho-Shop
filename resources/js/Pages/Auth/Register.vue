@@ -1,8 +1,11 @@
 <script setup lang="ts">
+    import { computed, ref } from 'vue';
+
     import { Head, Link, useForm } from '@inertiajs/vue3';
 
     import { ArrowRightEndOnRectangleIcon } from '@heroicons/vue/24/outline';
 
+    import AppCaptcha from '@/Components/UI/AppCaptcha.vue';
     import BaseInput from '@/Components/UI/BaseInput.vue';
     import BaseSubmitButton from '@/Components/UI/BaseSubmitButton.vue';
     import GuestLayout from '@/Layouts/GuestLayout.vue';
@@ -14,12 +17,34 @@
         email: '',
         password: '',
         password_confirmation: '',
+        captcha: '',
+    });
+
+    const isCaptchaValid = ref(false);
+    const captchaRef = ref<InstanceType<typeof AppCaptcha> | null>(null);
+
+    const canSubmit = computed(() => {
+        const hasFields =
+            form.name.trim().length > 0 &&
+            form.email.trim().length > 0 &&
+            form.password.length > 0 &&
+            form.password_confirmation.length > 0;
+
+        return hasFields && isCaptchaValid.value && !form.processing;
     });
 
     const submit = () => {
+        if (!canSubmit.value) return;
+
         form.post(route('register'), {
-            onFinish: () => {
-                form.reset('password', 'password_confirmation');
+            onSuccess: () => {
+                form.reset('password', 'password_confirmation', 'captcha');
+                isCaptchaValid.value = false;
+                captchaRef.value?.reset();
+            },
+            onError: () => {
+                captchaRef.value?.reset();
+                isCaptchaValid.value = false;
             },
         });
     };
@@ -35,60 +60,80 @@
         </p>
     </header>
 
-    <form v-scroll-reveal @submit.prevent="submit" class="space-y-5">
+    <form v-scroll-reveal class="space-y-5" @submit.prevent="submit">
         <BaseInput
             id="name"
+            v-model="form.name"
             type="text"
             label="Имя"
             placeholder="Как к вам обращаться?"
-            v-model="form.name"
             :error="form.errors.name"
             required
             autofocus
             autocomplete="name"
             theme="light"
+            @input-start="form.clearErrors('name')"
         />
 
         <BaseInput
             id="email"
+            v-model="form.email"
             type="email"
             label="Email"
             placeholder="you@example.com"
-            v-model="form.email"
             :error="form.errors.email"
             required
             autocomplete="username"
             theme="light"
+            @input-start="form.clearErrors('email')"
         />
 
         <BaseInput
             id="password"
+            v-model="form.password"
             type="password"
             label="Пароль"
             placeholder="Придумайте пароль"
-            v-model="form.password"
             :error="form.errors.password"
             required
             autocomplete="new-password"
             theme="light"
+            @input-start="form.clearErrors('password')"
         />
 
         <BaseInput
             id="password_confirmation"
+            v-model="form.password_confirmation"
             type="password"
             label="Подтверждение пароля"
             placeholder="Повторите пароль"
-            v-model="form.password_confirmation"
             :error="form.errors.password_confirmation"
             required
             autocomplete="new-password"
             theme="light"
+            @input-start="form.clearErrors('password_confirmation')"
         />
 
-        <!-- Actions -->
+        <Transition name="fade-slide" appear>
+            <AppCaptcha
+                ref="captchaRef"
+                v-model="form.captcha"
+                v-model:valid="isCaptchaValid"
+                :count="5"
+                chars-preset="alphanumeric"
+                distortion="lines"
+                theme="light"
+            />
+        </Transition>
+
+        <p v-if="form.errors.captcha" class="text-xs font-medium text-rose-500">
+            {{ form.errors.captcha }}
+        </p>
+
         <div class="flex flex-col items-stretch gap-4 pt-2 sm:items-center sm:justify-between">
             <BaseSubmitButton
                 :processing="form.processing"
+                :disabled="!canSubmit"
                 label="Зарегистрироваться"
                 :icon="ArrowRightEndOnRectangleIcon"
                 class="sm:w-auto"
