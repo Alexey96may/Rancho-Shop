@@ -6,7 +6,7 @@ class CartItemDTO
 {
     public function __construct(
         public int $variantId,
-        public int $quantity,
+        public float $quantity,
     ) {}
 
     public static function fromArray(array $data): self
