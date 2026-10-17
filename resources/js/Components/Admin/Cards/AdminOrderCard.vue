@@ -31,11 +31,11 @@
 
 <template>
     <div
-        class="border-rancho-ink-800 bg-rancho-ink-900 hover:border-rancho-mint/40 hover:shadow-2xl group relative flex flex-col gap-4 rounded-3xl border p-5 transition-all hover:shadow-black/20"
+        class="hover:shadow-2xl group relative flex flex-col gap-4 rounded-3xl border border-rancho-ink-800 bg-rancho-ink-900 p-5 transition-all hover:border-rancho-mint/40 hover:shadow-black/20"
     >
         <!-- HEADER -->
         <div class="flex items-center justify-between">
-            <span class="text-rancho-ink-500 text-xs font-black uppercase tracking-widest">
+            <span class="text-xs font-black uppercase tracking-widest text-rancho-ink-500">
                 #{{ order.id }}
             </span>
 
@@ -51,16 +51,16 @@
         <div class="space-y-3">
             <div class="flex items-center gap-3">
                 <div
-                    class="bg-rancho-ink-800 h-12 w-12 shrink-0 overflow-hidden rounded-2xl ring-1 ring-rancho-forest transition-transform group-hover:scale-110"
+                    class="h-12 w-12 shrink-0 overflow-hidden rounded-2xl bg-rancho-ink-800 ring-1 ring-rancho-forest transition-transform group-hover:scale-110"
                     aria-hidden="true"
                 >
                     <AppImage v-if="order.user?.avatar" :src="order.user.avatar" alt="Аватар" />
 
                     <div
                         v-else
-                        class="from-rancho-ink-700 to-rancho-ink-800 text-rancho-ink-400 flex h-full w-full items-center justify-center bg-gradient-to-br text-lg font-black uppercase"
+                        class="flex h-full w-full items-center justify-center bg-gradient-to-br from-rancho-ink-700 to-rancho-ink-800 text-lg font-black uppercase text-rancho-ink-400"
                     >
-                        {{ getInitials(order?.user?.name ?? '') }}
+                        {{ getInitials(order.customer_name ?? '?') }}
                     </div>
                 </div>
 
@@ -75,7 +75,7 @@
             <a
                 :href="`tel:${order.customer_phone}`"
                 @click.stop
-                class="bg-rancho-ink-800/50 text-rancho-ink-300 hover:text-rancho-mint flex items-center gap-2 rounded-xl px-3 py-1.5 text-[11px] transition-colors"
+                class="flex items-center gap-2 rounded-xl bg-rancho-ink-800/50 px-3 py-1.5 text-[11px] text-rancho-ink-300 transition-colors hover:text-rancho-mint"
             >
                 <PhoneIcon class="h-3.5 w-3.5" aria-hidden="true" />
                 {{ order.customer_phone }}
@@ -86,16 +86,16 @@
         <div class="flex flex-col gap-2">
             <div
                 v-if="order.promo_code"
-                class="text-rancho-ember flex items-center gap-2 text-[10px]"
+                class="flex items-center gap-2 text-[10px] text-rancho-ember"
             >
                 <TicketIcon class="h-3.5 w-3.5" aria-hidden="true" />
                 <span>Промо: {{ order.promo_code.code }}</span>
             </div>
 
-            <div class="bg-rancho-ink-950/50 flex items-center gap-3 rounded-2xl p-3">
-                <TruckIcon class="text-rancho-mint h-4 w-4 shrink-0" aria-hidden="true" />
-                <div class="text-rancho-ink-300 text-[10px] leading-tight">
-                    <span v-if="order.is_pickup" class="text-rancho-mint font-bold">
+            <div class="flex items-center gap-3 rounded-2xl bg-rancho-ink-950/50 p-3">
+                <TruckIcon class="h-4 w-4 shrink-0 text-rancho-mint" aria-hidden="true" />
+                <div class="text-[10px] leading-tight text-rancho-ink-300">
+                    <span v-if="order.is_pickup" class="font-bold text-rancho-mint">
                         Самовывоз
                     </span>
                     <span v-else class="line-clamp-2">
@@ -106,9 +106,9 @@
         </div>
 
         <!-- FOOTER -->
-        <div class="border-rancho-ink-800 mt-auto flex items-center justify-between border-t pt-4">
+        <div class="mt-auto flex items-center justify-between border-t border-rancho-ink-800 pt-4">
             <div class="flex flex-col">
-                <span class="text-rancho-ink-500 text-[9px] font-black uppercase"> Итого </span>
+                <span class="text-[9px] font-black uppercase text-rancho-ink-500"> Итого </span>
                 <span class="text-lg font-black text-white">
                     {{ computedFormatMoney }}
                 </span>
@@ -117,7 +117,7 @@
             <button
                 type="button"
                 @click="$emit('open', order)"
-                class="bg-rancho-mint text-rancho-ink-950 focus-visible:ring-rancho-mint/40 flex h-8 w-8 items-center justify-center rounded-xl transition-transform hover:scale-105 focus:outline-none focus-visible:ring-2 active:scale-95 sm:h-10 sm:w-10"
+                class="flex h-8 w-8 items-center justify-center rounded-xl bg-rancho-mint text-rancho-ink-950 transition-transform hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-rancho-mint/40 active:scale-95 sm:h-10 sm:w-10"
                 aria-label="Открыть заказ"
             >
                 <ChevronRightIcon class="h-4 w-4 sm:h-5 sm:w-5" aria-hidden="true" />

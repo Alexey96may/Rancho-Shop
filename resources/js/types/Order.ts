@@ -1,4 +1,4 @@
-import { BaseUnit, DeliveryDraft, Media, PromoCode, User } from './';
+import { BaseUnit, DeliveryMetaOrder, Media, PromoCode, User } from './';
 
 export type OrderStatus = 'new' | 'confirmed' | 'delivering' | 'completed' | 'cancelled';
 export type OrderStatusLabel = 'Новый' | 'Подтвержден' | 'Доставка' | 'Завершен' | 'Отменен';
@@ -34,7 +34,7 @@ export interface Order {
 
 export interface AdminOrder extends Order {
     admin_note: string | null;
-    delivery_meta: DeliveryDraft | null;
+    delivery_meta: DeliveryMetaOrder | null;
 }
 
 export interface OrderItem {

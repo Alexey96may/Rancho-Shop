@@ -24,7 +24,7 @@ class ValidateDeliveryAction
             ];
         }
 
-        if ((is_null($delivery->lat) || is_null($delivery->lng)) && !$delivery->is_pickup ) {
+        if ((is_null($delivery->lat) || is_null($delivery->lng)) && !$delivery->is_pickup) {
             throw ValidationException::withMessages([
                 'delivery' => 'Укажите адрес доставки на карте',
             ]);
@@ -49,7 +49,9 @@ class ValidateDeliveryAction
 
             foreach ($zones as $zone) {
 
-                if (!$zone['enabled']) continue;
+                if (!$zone['enabled']) {
+                    continue;
+                }
 
                 $distanceToRoute = $this->checkPointInPolylineZoneDistance(
                     $delivery->lat,
@@ -57,7 +59,7 @@ class ValidateDeliveryAction
                     $zone['path']
                 );
 
-                if ($distanceToRoute <= ($zone['radius'] * 2)) {
+                if ($distanceToRoute <= ($zone['radius'] * 3)) {
 
                     $deliveryPrice = $zone['delivery_price'];
 
@@ -100,7 +102,9 @@ class ValidateDeliveryAction
         $minDistance = INF;
 
         foreach ($path as $i => $point) {
-            if (!isset($path[$i + 1])) continue;
+            if (!isset($path[$i + 1])) {
+                continue;
+            }
 
             [$lat1, $lng1] = $point;
             [$lat2, $lng2] = $path[$i + 1];
@@ -159,7 +163,7 @@ class ValidateDeliveryAction
     ): float {
         $earthRadius = 6371000;
 
-        $toRad = fn($deg) => $deg * pi() / 180;
+        $toRad = fn ($deg) => $deg * pi() / 180;
 
         $px = $toRad($px);
         $py = $toRad($py);

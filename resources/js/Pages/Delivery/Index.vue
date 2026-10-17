@@ -12,11 +12,14 @@
     import MainLayout from '@/Layouts/MainLayout.vue';
     import { useComments } from '@/composables/crud/useComments';
     import { useYandexGeocoder } from '@/composables/features/useYandexGeocoder';
+    import { useCartStore } from '@/stores/cart';
     import { useNotificationsStore } from '@/stores/notifications';
     import type {
         Comment,
         DeliveryDraft,
         DeliveryInfo,
+        DeliveryZone,
+        GeoPoint,
         Page,
         Paginated,
         ResourceSingle,
@@ -46,14 +49,6 @@
     const serverDraft = computed(() => pageInertia.props.deliveryDraft);
 
     /**
-     * TYPES
-     */
-    type GeoPoint = {
-        lat: number;
-        lng: number;
-    };
-
-    /**
      * GEO
      */
     const { suggestions, search, reverse } = useYandexGeocoder();
@@ -76,6 +71,8 @@
         lng: null as number | null,
         is_valid: false,
     });
+
+    const cart = useCartStore();
 
     /**
      * HELPERS
@@ -106,6 +103,7 @@
      */
     function onAddressInput() {
         isConfirmed.value = false;
+        cart.clearDelivery();
         search(address.value);
     }
 
@@ -227,6 +225,7 @@
 
     const distance = ref<number | null>(null);
     const price = ref<number | null>(null);
+    const zone = ref<DeliveryZone | null>(null);
 
     const debouncedCalculateDelivert = debounce(calculateDelivery, 500);
 
@@ -251,9 +250,19 @@
             const data = await res.json();
 
             isDeliveryAllowed.value = data.is_valid;
-
             distance.value = data.distance_to_farm;
-            price.value = data.delivery_price;
+            price.value = data.zone.delivery_price;
+            zone.value = data.zone;
+
+            cart.setDelivery({
+                address: address.value,
+                lat: selectedPoint.value.lat,
+                lng: selectedPoint.value.lng,
+                distance: data.distance_to_farm,
+                price: data.zone.delivery_price,
+                is_valid: data.is_valid,
+                zone: data.zone,
+            });
         } catch (e) {
             console.error(e);
             notify.error('Ошибка выбора адресса.');
@@ -285,7 +294,8 @@
                 <!-- ADDRESS INPUT -->
                 <div>
                     <label
-                        class="block text-xs font-black uppercase tracking-widest text-rancho-ink-600"
+                        for="mapboxDel"
+                        class="mb-4 block text-center text-xs font-black uppercase tracking-widest text-rancho-ink-600"
                     >
                         Адрес доставки
                     </label>
@@ -298,6 +308,7 @@
 
                         <input
                             v-model="address"
+                            id="mapboxDel"
                             @input="onAddressInput"
                             class="w-full rounded-xl border border-rancho-ink-300 bg-white py-2.5 pl-9 pr-3 text-sm font-medium text-rancho-forest transition-all placeholder:text-rancho-ink-500 focus:border-rancho-pine focus:outline-none focus:ring-4 focus:ring-rancho-pine/10"
                             placeholder="Введите адрес..."
@@ -375,17 +386,24 @@
                         </dd>
                     </div>
 
-                    <div v-if="price" class="flex justify-between gap-3">
-                        <dt class="text-rancho-ink-500">Цена доставки:</dt>
-                        <dd class="text-right font-black text-rancho-forest">
-                            {{ formatMoney(price) }}
-                        </dd>
-                    </div>
-
                     <div v-if="distance" class="flex justify-between gap-3">
                         <dt class="text-rancho-ink-500">Расстояние до нас:</dt>
                         <dd class="text-right font-bold text-rancho-forest">
                             ~{{ formatDistance(distance) }}
+                        </dd>
+                    </div>
+
+                    <div v-if="price" class="flex justify-between gap-3">
+                        <dt class="text-rancho-ink-500">Цена доставки:</dt>
+                        <dd class="text-right font-black text-rancho-ember">
+                            {{ formatMoney(price) }}
+                        </dd>
+                    </div>
+
+                    <div v-if="zone?.free_from" class="flex items-center justify-between gap-3">
+                        <dt class="text-rancho-ink-500">Бесплатно при заказе от:</dt>
+                        <dd class="text-right font-black text-rancho-forest">
+                            {{ formatMoney(zone.free_from) }}
                         </dd>
                     </div>
                 </dl>

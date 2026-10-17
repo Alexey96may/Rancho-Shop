@@ -69,14 +69,14 @@
             <div class="mb-16 grid grid-cols-1 gap-14 sm:grid-cols-2 sm:gap-9 lg:grid-cols-4">
                 <!-- BRAND -->
                 <div class="flex flex-col items-center gap-4">
-                    <div class="flex items-center gap-3">
+                    <div class="flex flex-col items-center justify-start gap-2">
                         <component
                             :is="CowLogo"
-                            class="h-8 w-8 shrink-0 rounded-full p-1 text-rancho-ink-950 sm:h-12 sm:w-12"
+                            class="h-11 w-11 shrink-0 rounded-full p-1 text-rancho-ink-950 sm:h-12 sm:w-12"
                         />
 
                         <span
-                            class="font-header text-xl tracking-wide text-rancho-paper sm:text-2xl"
+                            class="text-center font-header text-xl tracking-wide text-rancho-paper sm:max-w-none sm:text-2xl"
                         >
                             {{ footer.site_name || 'Молочная Долина' }}
                         </span>
@@ -89,7 +89,7 @@
                         {{ footer.site_description }}
                     </p>
 
-                    <div class="flex gap-3">
+                    <div class="flex gap-3 sm:mt-2">
                         <a
                             v-if="footer.contact_telegram"
                             :href="footer.contact_telegram"
@@ -180,7 +180,12 @@
                                 class="h-5 w-5 shrink-0 text-rancho-buttercup"
                                 aria-hidden="true"
                             />
-                            <span>{{ footer.address_farm }}</span>
+                            <Link
+                                :href="route('delivery')"
+                                class="text-left transition-colors hover:text-rancho-buttercup hover:underline hover:decoration-2 hover:underline-offset-4"
+                            >
+                                {{ footer.address_farm }}
+                            </Link>
                         </li>
 
                         <li v-if="footer.contact_phone" class="flex items-center gap-3">

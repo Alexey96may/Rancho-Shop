@@ -24,7 +24,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('slug')->unique();
             $table->boolean('is_active')->default(true);
-            $table->string('status')->default('home');
+            $table->string('status')->nullable();
             $table->text('bio')->nullable();
 
             $table->boolean('is_commentable')->default(true);

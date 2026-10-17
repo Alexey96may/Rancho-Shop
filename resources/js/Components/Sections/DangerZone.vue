@@ -70,7 +70,7 @@
 
         <slot name="action">
             <AdminDeleteButton
-                class="self-end"
+                class="self-end sm:self-auto"
                 @click="handleConfirm"
                 :title="buttonTitle"
                 :disabled="disabled"

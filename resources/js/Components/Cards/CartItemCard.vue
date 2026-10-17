@@ -80,14 +80,19 @@
                 <div
                     class="flex items-center justify-between gap-3 border-t border-rancho-ink-100 pt-2 sm:justify-end sm:gap-4 sm:border-t-0 sm:pt-0"
                 >
-                    <div class="w-24 shrink-0 sm:w-32">
+                    <div class="min-w-32 shrink-0 sm:min-w-36">
                         <QuantityControl v-if="item" :has-undo="true" :item="item" />
                     </div>
 
                     <div class="min-w-[70px] text-right sm:min-w-[90px]">
-                        <p class="text-sm font-black text-rancho-forest sm:text-lg">
-                            {{ totalPriceFormatted }}
-                        </p>
+                        <Transition name="fade" mode="out-in">
+                            <p
+                                :key="totalPriceFormatted"
+                                class="text-sm font-black text-rancho-forest sm:text-lg"
+                            >
+                                {{ totalPriceFormatted }}
+                            </p>
+                        </Transition>
                     </div>
                 </div>
             </div>
@@ -148,9 +153,14 @@
                 </div>
 
                 <div class="min-w-[70px] text-right sm:min-w-[90px]">
-                    <p class="text-sm font-black text-rancho-forest sm:text-lg">
-                        {{ totalPriceFormatted }}
-                    </p>
+                    <Transition name="fade" mode="out-in">
+                        <p
+                            class="text-sm font-black text-rancho-forest sm:text-lg"
+                            :key="totalPriceFormatted"
+                        >
+                            {{ totalPriceFormatted }}
+                        </p>
+                    </Transition>
                 </div>
 
                 <!-- Кнопка удаления -->

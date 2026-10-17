@@ -245,7 +245,7 @@
                     </div>
 
                     <Link
-                        :href="route('catalog.index', { animal: animal.slug })"
+                        :href="route('catalog.index')"
                         class="hidden text-xs font-bold text-rancho-pine transition-colors hover:text-rancho-forest sm:inline-flex"
                     >
                         Все продукты →
@@ -259,12 +259,13 @@
                         v-for="product in animal.products"
                         :key="product.id"
                         :product="product"
+                        class="w-full"
                     />
                 </div>
 
                 <div class="mt-6 sm:hidden">
                     <Link
-                        :href="route('catalog.index', { animal: animal.slug })"
+                        :href="route('catalog.index')"
                         class="inline-flex w-full items-center justify-center rounded-xl border border-rancho-ink-200 bg-white px-4 py-3 text-xs font-bold text-rancho-forest transition-colors hover:border-rancho-pine hover:bg-rancho-ink-50"
                     >
                         Все продукты →

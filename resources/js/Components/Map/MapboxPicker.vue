@@ -12,10 +12,14 @@
         modelValue?: { lat: number; lng: number } | null;
         farmCoords?: { lat: number; lng: number } | null;
         userCoords?: { lat: number; lng: number } | null;
+        points?: Array<{ lat: number; lng: number; id?: number | string }>;
         zones?: DeliveryZone[];
+        draggable?: boolean;
     }
 
-    const props = defineProps<Props>();
+    const props = withDefaults(defineProps<Props>(), {
+        draggable: true,
+    });
     const emit = defineEmits(['update:modelValue', 'delivery-valid']);
 
     const mapContainer = ref<HTMLDivElement | null>(null);
@@ -209,7 +213,7 @@
         marker = new mapboxgl.Marker({
             element: createUserMarkerEl(),
             anchor: 'bottom',
-            draggable: true,
+            draggable: props.draggable,
         })
             .setLngLat([center.lng, center.lat])
             .addTo(map);
@@ -301,10 +305,49 @@
             emit('delivery-valid', allowed);
         });
 
+        // --------------------------
+        // ORDER POINTS (для админки)
+        // --------------------------
+        if (props.points?.length) {
+            const bounds = new mapboxgl.LngLatBounds();
+
+            props.points.forEach((point) => {
+                const el = document.createElement('div');
+                el.className = 'map-marker-order';
+                el.style.cursor = 'pointer';
+                el.innerHTML = `
+            <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 2px 4px rgba(217, 119, 6, 0.5));">
+                <circle cx="12" cy="12" r="8" fill="#D97706" stroke="#FCFAF5" stroke-width="2"/>
+            </svg>
+        `;
+
+                new mapboxgl.Marker({ element: el, anchor: 'center' })
+                    .setLngLat([point.lng, point.lat])
+                    .setPopup(
+                        new mapboxgl.Popup({ offset: 12 }).setHTML(
+                            `<strong>Заказ #${point.id ?? '—'}</strong>`,
+                        ),
+                    )
+                    .addTo(map);
+
+                bounds.extend([point.lng, point.lat]);
+            });
+
+            // Ферма — тоже в кадр
+            bounds.extend([centerFarm.lng, centerFarm.lat]);
+
+            // Если draggable=false — центрируем на всех точках
+            if (!props.draggable && props.points.length > 0) {
+                map.fitBounds(bounds, { padding: 60, maxZoom: 13 });
+            }
+        }
+
         // ==========================
         // MARKER EVENTS
         // ==========================
         marker.on('dragend', () => {
+            if (!props.draggable) return;
+
             const lngLat = marker.getLngLat();
 
             const allowed = checkDeliveryAvailability(lngLat.lat, lngLat.lng);
@@ -329,6 +372,8 @@
         });
 
         map.on('click', (e) => {
+            if (!props.draggable) return;
+
             isInternalUpdate = true;
 
             const allowed = checkDeliveryAvailability(e.lngLat.lat, e.lngLat.lng);
@@ -383,7 +428,12 @@
 </script>
 
 <template>
-    <div ref="mapContainer" class="h-full w-full rounded-xl" aria-label="Delivery route map" />
+    <div
+        ref="mapContainer"
+        class="h-full w-full rounded-xl"
+        :class="!draggable && 'cursor-default'"
+        aria-label="Карта доставки"
+    />
 </template>
 
 <style>
@@ -391,6 +441,10 @@
     .map-marker-user {
         width: 42px;
         height: 42px;
+    }
+
+    /* Курсор — только если draggable */
+    .map-marker-user:not([data-draggable='false']) {
         cursor: pointer;
     }
 </style>

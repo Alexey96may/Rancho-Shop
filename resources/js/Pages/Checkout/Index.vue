@@ -407,7 +407,7 @@
                                     <button
                                         type="button"
                                         @click="goToDeliveryPage"
-                                        class="flex-1 rounded-xl border-2 border-rancho-ink-300 bg-white px-4 py-2.5 text-xs font-black uppercase tracking-widest text-rancho-forest transition-all hover:border-rancho-forest hover:bg-rancho-ink-50 focus:outline-none focus-visible:ring-4 focus-visible:ring-rancho-pine/30 active:scale-95"
+                                        class="flex-1 rounded-xl border-2 border-rancho-ink-300 bg-white px-4 py-2.5 text-xs font-black uppercase tracking-widest text-rancho-forest outline-none transition-all hover:border-rancho-forest hover:bg-rancho-ink-50 focus-visible:ring-4 focus-visible:ring-rancho-pine/30 active:scale-95"
                                     >
                                         Изменить
                                     </button>
@@ -415,7 +415,7 @@
                                     <button
                                         type="button"
                                         @click="togglePickup"
-                                        class="flex-1 rounded-xl border-2 border-rose-300 bg-white px-4 py-2.5 text-xs font-black uppercase tracking-widest text-rose-600 transition-all hover:border-rose-400 hover:bg-rose-50 focus:outline-none focus-visible:ring-4 focus-visible:ring-rose-500/30 active:scale-95"
+                                        class="hover:rancho-ember/40 flex-1 rounded-xl border-2 border-rancho-ember bg-white px-4 py-2.5 text-xs font-black uppercase tracking-widest text-rancho-ember outline-none transition-all hover:bg-rancho-ember/30 focus-visible:ring-4 focus-visible:ring-rose-500/30 active:scale-95"
                                     >
                                         Самовывоз
                                     </button>

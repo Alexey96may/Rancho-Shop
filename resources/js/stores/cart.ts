@@ -3,13 +3,37 @@ import { computed, ref } from 'vue';
 import { defineStore } from 'pinia';
 
 import { useNotificationsStore } from '@/stores/notifications';
-import type { CartItem, Media, Product, ProductVariantDTO, ServerCartItem } from '@/types';
+import type {
+    CartItem,
+    DeliveryZone,
+    Media,
+    Product,
+    ProductVariantDTO,
+    ServerCartItem,
+} from '@/types';
+import { formatMoney } from '@/utils/format';
+
+/** Расчёт доставки */
+export interface DeliveryCalculation {
+    address: string;
+    lat: number | null;
+    lng: number | null;
+    distance: number | null;
+    price: number | null;
+    is_valid: boolean;
+    zone: DeliveryZone | null;
+    calculated_at: number | null;
+}
+
+/** Вход для setDelivery — без calculated_at */
+export type DeliveryCalculationInput = Omit<DeliveryCalculation, 'calculated_at'>;
 
 export const useCartStore = defineStore(
     'cart',
     () => {
         const items = ref<CartItem[]>([]);
         const lastValidatedAt = ref<number | null>(null);
+        const delivery = ref<DeliveryCalculation | null>(null);
 
         const pendingDestroyIds = ref<Set<number>>(new Set());
 
@@ -32,21 +56,67 @@ export const useCartStore = defineStore(
             items.value.reduce((acc, item) => acc + item.price * item.quantity, 0),
         );
 
-        const totalPriceFormatted = computed(() => (totalPrice.value / 100).toFixed(2));
+        const totalPriceFormatted = computed(() => formatMoney(totalPrice.value));
 
         const hasInvalidItems = computed(() => items.value.some((i) => !i.valid));
 
-        //grouping of variants of a single product
+        // ======================
+        // DELIVERY GETTERS
+        // ======================
+        const deliveryPrice = computed<number | null>(() => {
+            const calc = delivery.value;
+            if (!calc || !calc.is_valid) return null;
+            if (calc.price === null) return null;
+
+            if (calc.zone?.free_from && totalPrice.value >= calc.zone.free_from) {
+                return 0;
+            }
+
+            return calc.price;
+        });
+
+        const deliveryPriceFormatted = computed<string | null>(() => {
+            if (deliveryPrice.value === null) return null;
+            return formatMoney(deliveryPrice.value);
+        });
+
+        const isFreeDelivery = computed(
+            () => deliveryPrice.value === 0 && delivery.value?.is_valid === true,
+        );
+
+        const hasDelivery = computed(() => delivery.value !== null && delivery.value.is_valid);
+
+        const grandTotal = computed(() => totalPrice.value + (deliveryPrice.value ?? 0));
+
+        const grandTotalFormatted = computed(() => formatMoney(grandTotal.value));
+
+        const freeDeliveryGap = computed<number | null>(() => {
+            const freeFrom = delivery.value?.zone?.free_from;
+            if (!freeFrom) return null;
+            const gap = freeFrom - totalPrice.value;
+            return gap > 0 ? gap : null;
+        });
+
+        const freeDeliveryGapFormatted = computed<string | null>(() => {
+            if (freeDeliveryGap.value === null) return null;
+            return formatMoney(freeDeliveryGap.value);
+        });
+
+        function isDeliveryStale(ttlMs: number = 5 * 60 * 1000): boolean {
+            const calc = delivery.value;
+            if (!calc || !calc.calculated_at) return true;
+            return Date.now() - calc.calculated_at > ttlMs;
+        }
+
+        // ======================
+        // GROUPED ITEMS
+        // ======================
         const groupedItems = computed(() => {
             return Object.values(
                 items.value.reduce(
                     (acc, item) => {
                         const key = item.product_id ?? item.variant_id;
-
-                        if (!acc[key]) {
-                            acc[key] = [];
-                        }
-
+                        if (!acc[key]) acc[key] = [];
                         acc[key].push(item);
                         return acc;
                     },
@@ -93,21 +163,15 @@ export const useCartStore = defineStore(
 
             items.value.push({
                 variant_id: variant.id,
-                product_id: product?.id ?? 0, // если ID нет, ставим 0
-
+                product_id: product?.id ?? 0,
                 name: product?.name ?? 'Товар',
                 variant_name: variant.name,
-
                 price: variant.price,
                 quantity: quantityFallback(variant.unit?.slug ?? '', variant.stock),
-
                 media: product?.main_photo?.[0] || fallbackMedia,
-
                 unit: variant.unit || { name: '', short: '', slug: '' },
-
                 slug: product?.slug ?? '',
                 stock: variant.stock,
-
                 valid: true,
                 reason: null,
             });
@@ -115,12 +179,10 @@ export const useCartStore = defineStore(
             notify.success(`«${product?.name ?? 'Товар'}» добавлен в корзину`);
         }
 
-        // Removing one unit or the entire product
         function destroy(variantId: number, hasUndo: boolean = false) {
             const index = items.value.findIndex((i) => i.variant_id === variantId);
             if (index === -1) return;
 
-            // запоминаем что удалили + куда вернуть
             const removed = { ...items.value[index] };
             items.value.splice(index, 1);
 
@@ -136,7 +198,7 @@ export const useCartStore = defineStore(
                         const insertAt = at === -1 ? items.value.length : at;
                         items.value.splice(insertAt, 0, removed);
                         pendingDestroyIds.value.delete(variantId);
-                    }, // Undo
+                    },
                     () => {
                         pendingDestroyIds.value.delete(variantId);
                     },
@@ -145,12 +207,19 @@ export const useCartStore = defineStore(
             }
         }
 
-        // Clearing the entire cart (after ordering)
-        function clear() {
-            items.value = [];
+        function setDelivery(payload: DeliveryCalculationInput) {
+            delivery.value = { ...payload, calculated_at: Date.now() };
         }
 
-        // Validate the cart
+        function clearDelivery() {
+            delivery.value = null;
+        }
+
+        function clear() {
+            items.value = [];
+            delivery.value = null;
+        }
+
         async function validate(force = false) {
             const now = Date.now();
 
@@ -181,7 +250,6 @@ export const useCartStore = defineStore(
                 }
 
                 const data: { items: ServerCartItem[] } = await response.json();
-
                 const serverItems = data.items ?? [];
 
                 items.value = items.value.map((localItem) => {
@@ -202,7 +270,7 @@ export const useCartStore = defineStore(
                     return {
                         ...localItem,
                         price: Number(serverItem.price ?? localItem.price),
-                        stock: stock,
+                        stock,
                         quantity: Math.min(Number(localItem.quantity), stock),
                         valid: true,
                         reason: null,
@@ -263,15 +331,27 @@ export const useCartStore = defineStore(
 
         return {
             items,
+            delivery,
             totalItems,
             totalCleanItems,
             totalPrice,
             totalPriceFormatted,
             hasInvalidItems,
             groupedItems,
+            deliveryPrice,
+            deliveryPriceFormatted,
+            isFreeDelivery,
+            hasDelivery,
+            grandTotal,
+            grandTotalFormatted,
+            freeDeliveryGap,
+            freeDeliveryGapFormatted,
+            isDeliveryStale,
             add,
             destroy,
             clear,
+            clearDelivery,
+            setDelivery,
             validate,
             increment,
             decrement,
@@ -281,7 +361,7 @@ export const useCartStore = defineStore(
     {
         persist: {
             key: 'cart',
-            pick: ['items'],
+            pick: ['items', 'delivery'],
         },
     },
 );

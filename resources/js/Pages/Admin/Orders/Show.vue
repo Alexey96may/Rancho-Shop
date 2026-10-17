@@ -1,12 +1,15 @@
 <script setup lang="ts">
-    import { type PropType, computed } from 'vue';
+    import { type PropType, computed, ref } from 'vue';
 
     import { Link, useForm, usePage } from '@inertiajs/vue3';
 
     import {
+        BanknotesIcon,
         ChatBubbleLeftEllipsisIcon,
         ChatBubbleLeftRightIcon,
         CubeIcon,
+        HomeModernIcon,
+        MapIcon,
         MapPinIcon,
         PhoneIcon,
         ShoppingBagIcon,
@@ -14,6 +17,7 @@
     } from '@heroicons/vue/24/outline';
 
     import AdminPageHeader from '@/Components/Admin/Shared/AdminPageHeader.vue';
+    import MapboxPicker from '@/Components/Map/MapboxPicker.vue';
     import DangerZone from '@/Components/Sections/DangerZone.vue';
     import AppImage from '@/Components/UI/AppImage.vue';
     import BaseCancelButton from '@/Components/UI/BaseCancelButton.vue';
@@ -22,8 +26,8 @@
     import AdminLayout from '@/Layouts/AdminLayout.vue';
     import { useAdminCrud } from '@/composables/crud/useAdminCrud';
     import { useAdminForm } from '@/composables/crud/useAdminForm';
-    import type { AdminOrder, ResourceSingle } from '@/types';
-    import { formatMoney } from '@/utils/format';
+    import type { AdminOrder, GeoPoint, ResourceSingle } from '@/types';
+    import { formatDistance, formatMoney } from '@/utils/format';
 
     defineOptions({ layout: AdminLayout });
 
@@ -90,6 +94,18 @@
     const computedOrderPrice = computed(() =>
         formatMoney(props.order.data.total_price - (props.order.data.delivery_price || 0)),
     );
+
+    const selectedPoint = ref<GeoPoint | null>(null);
+
+    /** Адрес без «Россия, Республика Крым, ...» — только город и ниже */
+    const addressRevers = computed<string>(() => {
+        const addr = props.order.data.delivery_address;
+        if (!addr) return '';
+
+        const rev = addr.split(',').reverse().join(', ');
+
+        return rev;
+    });
 </script>
 
 <template>
@@ -184,7 +200,6 @@
                         </div>
 
                         <div
-                            v-if="order.data.delivery_price"
                             class="flex justify-between text-xs font-bold uppercase text-rancho-ink-500"
                         >
                             <span>Доставка:</span>
@@ -215,28 +230,158 @@
                 <!-- ТЕХИНФОРМАЦИЯ ДОСТАВКИ -->
                 <section
                     v-if="order.data.delivery_meta"
-                    class="rounded-2xl border border-rancho-ink-800 bg-rancho-ink-900/50 p-4 py-6 sm:rounded-3xl sm:p-6"
+                    class="space-y-8 rounded-2xl border border-rancho-ink-800 bg-rancho-ink-900/50 p-4 py-6 sm:rounded-3xl sm:p-6"
                 >
-                    <h3
-                        class="mb-4 text-[10px] font-black uppercase tracking-widest text-rancho-ink-500"
-                    >
-                        Техническая информация доставки
-                    </h3>
-
-                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-4 sm:gap-4">
-                        <div
-                            v-for="(value, key) in order.data.delivery_meta"
-                            :key="key"
-                            class="rounded-2xl border border-rancho-ink-800 bg-rancho-ink-950 p-3 sm:p-4"
+                    <div class="flex items-center justify-between gap-2">
+                        <h3
+                            class="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-rancho-ink-500"
                         >
-                            <p
-                                class="mb-1 text-[9px] font-black uppercase text-rancho-ink-400 opacity-60"
+                            <TruckIcon class="h-4 w-4 text-rancho-mint" aria-hidden="true" />
+                            Техническая информация доставки
+                        </h3>
+
+                        <!-- Статус доставки -->
+                        <span
+                            class="inline-flex items-center gap-2 rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wider ring-1 ring-inset"
+                            :class="
+                                order.data.delivery_meta.is_valid
+                                    ? 'bg-rancho-mint/10 text-rancho-mint ring-rancho-mint/30'
+                                    : 'bg-rose-500/10 text-rose-400 ring-rose-500/30'
+                            "
+                        >
+                            <span
+                                class="h-1.5 w-1.5 rounded-full"
+                                :class="
+                                    order.data.delivery_meta.is_valid
+                                        ? 'bg-rancho-mint'
+                                        : 'bg-rose-400'
+                                "
+                                aria-hidden="true"
+                            />
+                            {{
+                                order.data.delivery_meta.is_valid
+                                    ? 'В зоне доставки'
+                                    : 'Вне зоны доставки'
+                            }}
+                        </span>
+                    </div>
+
+                    <!-- Параметры -->
+                    <dl class="grid grid-cols-1 justify-center gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                        <!-- Зона -->
+                        <div
+                            class="flex flex-col items-center gap-2 rounded-2xl border border-rancho-ink-800 bg-rancho-ink-950 p-4 sm:items-start"
+                        >
+                            <dt
+                                class="flex gap-2 text-[9px] font-black uppercase tracking-wider text-rancho-ink-500"
                             >
-                                {{ key }}
+                                <MapPinIcon class="h-3 w-3 shrink-0" aria-hidden="true" />
+                                Зона
+                            </dt>
+
+                            <dd class="text-sm font-bold text-white">
+                                {{ order.data.delivery_meta.zone?.name || '—' }}
+                            </dd>
+
+                            <p
+                                v-if="order.data.delivery_meta.zone?.free_from"
+                                class="mt-1 text-[10px] text-rancho-ink-400"
+                            >
+                                Бесплатно от
+                                {{ formatMoney(order.data.delivery_meta.zone.free_from) }}
                             </p>
-                            <p class="break-words text-xs font-bold text-white">
-                                {{ value || '—' }}
-                            </p>
+                        </div>
+
+                        <!-- Цена доставки -->
+                        <div
+                            class="flex flex-col items-center gap-2 rounded-2xl border border-rancho-ink-800 bg-rancho-ink-950 p-4 sm:items-start"
+                        >
+                            <dt
+                                class="flex gap-2 text-[9px] font-black uppercase tracking-wider text-rancho-ink-500"
+                            >
+                                <BanknotesIcon class="h-3 w-3 shrink-0" aria-hidden="true" />
+                                Стоимость доставки
+                            </dt>
+                            <dd
+                                class="text-sm font-bold"
+                                :class="
+                                    order.data.delivery_meta.delivery_price > 0
+                                        ? 'text-rancho-ink-200'
+                                        : 'text-rancho-buttercup'
+                                "
+                            >
+                                {{
+                                    order.data.delivery_meta.delivery_price > 0
+                                        ? formatMoney(order.data.delivery_meta.delivery_price)
+                                        : 'Бесплатно'
+                                }}
+                            </dd>
+                        </div>
+
+                        <!-- До маршрута -->
+                        <div
+                            class="flex flex-col items-center gap-2 rounded-2xl border border-rancho-ink-800 bg-rancho-ink-950 p-4 sm:items-start"
+                        >
+                            <dt
+                                class="flex gap-2 text-[9px] font-black uppercase tracking-wider text-rancho-ink-500"
+                            >
+                                <MapIcon class="h-3 w-3 shrink-0" aria-hidden="true" />
+                                До маршрута
+                            </dt>
+                            <dd class="text-sm font-bold text-white">
+                                {{
+                                    order.data.delivery_meta.distance_to_route !== null
+                                        ? formatDistance(order.data.delivery_meta.distance_to_route)
+                                        : '—'
+                                }}
+                            </dd>
+                        </div>
+
+                        <!-- До фермы -->
+                        <div
+                            class="flex flex-col items-center gap-2 rounded-2xl border border-rancho-ink-800 bg-rancho-ink-950 p-4 sm:items-start"
+                        >
+                            <dt
+                                class="flex gap-2 text-[9px] font-black uppercase tracking-wider text-rancho-ink-500"
+                            >
+                                <HomeModernIcon class="h-3 w-3 shrink-0" aria-hidden="true" />
+                                До фермы
+                            </dt>
+                            <dd class="text-sm font-bold text-white">
+                                {{
+                                    order.data.delivery_meta.distance_to_farm !== null
+                                        ? formatDistance(order.data.delivery_meta.distance_to_farm)
+                                        : '—'
+                                }}
+                            </dd>
+                        </div>
+                    </dl>
+
+                    <!-- Карта -->
+                    <div class="space-y-2">
+                        <div
+                            class="shadow-sm relative h-[400px] overflow-hidden rounded-2xl border border-rancho-ink-800"
+                        >
+                            <MapboxPicker
+                                v-model="selectedPoint"
+                                :user-coords="{
+                                    lng: order.data.delivery_lng || 34.30457,
+                                    lat: order.data.delivery_lat || 44.85014,
+                                }"
+                                @delivery-valid="
+                                    (v: boolean) => (order.data.delivery_validated = v)
+                                "
+                                :draggable="false"
+                            />
+                        </div>
+
+                        <div class="flex w-full items-center gap-2 p-2 sm:items-baseline">
+                            <span class="text-xs font-black uppercase text-rancho-ink-200">
+                                Адрес:
+                            </span>
+                            <span class="text-xs font-bold text-rancho-ink-50">
+                                {{ addressRevers }}
+                            </span>
                         </div>
                     </div>
                 </section>

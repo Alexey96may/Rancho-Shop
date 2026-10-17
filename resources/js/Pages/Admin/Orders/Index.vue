@@ -1,22 +1,29 @@
 <script setup lang="ts">
-    import { type PropType, computed, watch } from 'vue';
+    import { type PropType, computed, ref, watch } from 'vue';
 
     import { useForm } from '@inertiajs/vue3';
 
-    import { ClockIcon, CurrencyDollarIcon, ShoppingBagIcon } from '@heroicons/vue/24/outline';
+    import {
+        ClockIcon,
+        CurrencyDollarIcon,
+        MapIcon,
+        ShoppingBagIcon,
+    } from '@heroicons/vue/24/outline';
 
     import AdminOrderCard from '@/Components/Admin/Cards/AdminOrderCard.vue';
     import AdminEmptyState from '@/Components/Admin/Shared/AdminEmptyState.vue';
     import AdminPageHeader from '@/Components/Admin/Shared/AdminPageHeader.vue';
     import AdminLoader from '@/Components/Admin/UI/AdminLoader.vue';
     import AdminSearchInput from '@/Components/Admin/UI/AdminSearchInput.vue';
+    import MapboxPicker from '@/Components/Map/MapboxPicker.vue';
     import AdminPagination from '@/Components/Shared/MainPagination.vue';
+    import BaseModal from '@/Components/UI/BaseModal.vue';
     import BaseSelect from '@/Components/UI/BaseSelect.vue';
     import StatCard from '@/Components/UI/StatCard.vue';
     import AdminLayout from '@/Layouts/AdminLayout.vue';
     import { useAdminFilters } from '@/composables/routing/useAdminFilters';
     import { useAdminNavigation } from '@/composables/routing/useAdminNavigation';
-    import type { AdminOrder, Paginated } from '@/types';
+    import type { AdminOrder, GeoPoint, Paginated } from '@/types';
     import { formatMoney } from '@/utils/format';
 
     defineOptions({ layout: AdminLayout });
@@ -65,6 +72,8 @@
         status: props.filters.status || '',
     });
 
+    const isMapModalOpen = ref(false);
+
     const { navigateWithContext } = useAdminNavigation();
     const { isFiltering, submitFilters, clearFilters } = useAdminFilters();
 
@@ -79,6 +88,18 @@
         () => {
             submitFilters(filterForm, 'admin.orders.index');
         },
+    );
+
+    const selectedPoint = ref<GeoPoint | null>(null);
+
+    const orderPoints = computed(() =>
+        props.orders.data
+            .filter((order) => order.delivery_lat && order.delivery_lng && !order.is_pickup)
+            .map((order) => ({
+                id: order.id,
+                lat: order.delivery_lat!,
+                lng: order.delivery_lng!,
+            })),
     );
 </script>
 
@@ -146,6 +167,29 @@
         </div>
     </div>
 
+    <!-- Карта -->
+    <aside class="mb-8">
+        <button
+            type="button"
+            class="flex w-full items-center justify-between gap-3 rounded-2xl border border-rancho-ink-800 bg-rancho-ink-900/50 px-4 py-3 text-left transition-colors hover:bg-rancho-ink-900 sm:px-6"
+            @click="isMapModalOpen = true"
+        >
+            <span
+                class="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-rancho-ink-300"
+            >
+                <MapIcon class="h-4 w-4 text-rancho-mint" aria-hidden="true" />
+                Показать карту заказов
+                <span
+                    v-if="orderPoints.length"
+                    class="rounded-full bg-rancho-mint/10 px-2 py-0.5 text-rancho-mint ring-1 ring-inset ring-rancho-mint/20"
+                >
+                    {{ orderPoints.length }}
+                </span>
+            </span>
+            <span class="text-xs font-bold text-rancho-mint">Открыть →</span>
+        </button>
+    </aside>
+
     <!-- LIST -->
     <main aria-label="Список заказов">
         <Transition name="fade-slide" mode="out-in">
@@ -180,6 +224,13 @@
         <Transition name="fade-slide" mode="out-in">
             <AdminPagination v-if="!isFiltering" :links="orders.meta.links" theme="dark" />
         </Transition>
+
+        <!-- Модалка с картой -->
+        <BaseModal :show="isMapModalOpen" title="Карта заказов" @close="isMapModalOpen = false">
+            <div class="h-[70vh] w-full">
+                <MapboxPicker v-model="selectedPoint" :points="orderPoints" :draggable="false" />
+            </div>
+        </BaseModal>
     </main>
 </template>
 

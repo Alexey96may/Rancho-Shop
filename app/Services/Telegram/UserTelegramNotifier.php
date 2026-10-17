@@ -36,7 +36,9 @@ class UserTelegramNotifier
         }
 
         $lines[] = '<b>ID:</b> ' . $user->id;
-        $lines[] = '<b>Зарегистрирован:</b> ' . $user->created_at?->format('d.m.Y H:i');
+        $lines[] = '<b>Зарегистрирован:</b> '
+            . $user->created_at?->timezone(config('app.timezone_display', 'Europe/Moscow'))
+                ->format('d.m.Y H:i');
 
         return implode("\n", $lines);
     }

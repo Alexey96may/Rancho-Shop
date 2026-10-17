@@ -13,6 +13,15 @@ class OrderTelegramNotifier
     public function notifyNewOrder(Order $order): void
     {
         $this->telegram->sendToAdmin($this->formatMessage($order));
+
+        $mapUrl = $this->mapImageUrl($order);
+        if ($mapUrl) {
+            $this->telegram->sendPhoto(
+                config('services.telegram.admin_chat_id'),
+                $mapUrl,
+                "Карта доставки для заказа #{$order->id}"
+            );
+        }
     }
 
     private function formatMessage(Order $order): string
@@ -93,5 +102,29 @@ class OrderTelegramNotifier
     private function money(float|int|string|null $value): string
     {
         return number_format((float) $value / 100, 2, '.', ' ') . ' ₽';
+    }
+
+    private function mapImageUrl(Order $order): ?string
+    {
+        $lat = $order->delivery_lat;
+        $lng = $order->delivery_lng;
+
+        if (!$lat || !$lng) {
+            return null;
+        }
+
+        $apiKey = config('services.yandex.static_key');
+
+        // Параметры: центр карты, размер, зум, метка (красная, большая)
+        $params = http_build_query([
+            'll' => "{$lng},{$lat}",   // долгота,широта
+            'z' => 16,
+            'size' => '600,400',
+            'pt' => "{$lng},{$lat},pm2rdl", // pm2 = стиль, rd = красный, l = большой
+            'lang' => 'ru_RU',
+            'apikey' => $apiKey,
+        ]);
+
+        return "https://static-maps.yandex.ru/v1?{$params}";
     }
 }

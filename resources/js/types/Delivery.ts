@@ -1,4 +1,20 @@
 //From Frontend: use it in checkout, order table, admin panel
+/**
+ * TYPES
+ */
+export type GeoPoint = {
+    lat: number;
+    lng: number;
+};
+
+export interface DeliveryMetaOrder {
+    is_valid: boolean;
+    delivery_price: number;
+    zone: DeliveryZone;
+    distance_to_route: number | null;
+    distance_to_farm: number | null;
+}
+
 export interface DeliveryDraft {
     address: string;
     lat: number | null;

@@ -30,7 +30,7 @@ class StoreAnimalRequest extends FormRequest
             'name' => 'required|string|max:255',
             'category_id' => 'required|exists:categories,id',
             'parent_id' => 'nullable|exists:animals,id',
-            'status' => 'required|string',
+            'status' => 'nullable|string',
             'bio' => 'nullable|string',
             'features' => 'nullable|array',
             'features.*.label' => 'required|string|max:255',

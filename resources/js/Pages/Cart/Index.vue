@@ -9,27 +9,15 @@
     import BaseSubmitButton from '@/Components/UI/BaseSubmitButton.vue';
     import MainLayout from '@/Layouts/MainLayout.vue';
     import { useCartStore } from '@/stores/cart';
-    import { formatMoney } from '@/utils/format';
 
     defineOptions({ layout: MainLayout });
 
     const cart = useCartStore();
 
-    const computedTotalPrice = computed(() => formatMoney(cart.totalPrice));
-
-    /** Идёт проверка корзины */
     const isValidating = ref(false);
 
-    /** Есть невалидные товары */
     const hasInvalidItems = computed(() => cart.items.some((item) => item.valid === false));
-
-    /** Корзина пуста */
     const isCartEmpty = computed(() => cart.items.length === 0);
-
-    /** Кнопка заблокирована */
-    const isCheckoutBlocked = computed(
-        () => isValidating.value || isCartEmpty.value || hasInvalidItems.value,
-    );
 
     async function validateCart() {
         if (cart.items.length === 0) return;
@@ -46,19 +34,15 @@
 
     onMounted(validateCart);
 
-    /** Перепроверка при изменении состава корзины */
     watch(
         () => cart.items.map((i) => i.variant_id).join('|'),
         () => {
-            if (cart.items.length > 0) {
-                validateCart();
-            }
+            if (cart.items.length > 0) validateCart();
         },
     );
 
-    /** Переход к оформлению */
     function goToCheckout() {
-        if (isCheckoutBlocked.value) return;
+        if (cart.items.length === 0 || hasInvalidItems.value) return;
         router.visit(route('checkout.index'));
     }
 </script>
@@ -94,10 +78,10 @@
                         Итог заказа
                     </h2>
 
-                    <Transition name="fade-up" appear>
+                    <!-- 🔥 Алерт — плавная высота -->
+                    <Transition name="collapse">
                         <div
                             v-if="hasInvalidItems"
-                            key="invalid"
                             class="rounded-xl border border-rose-400/30 bg-rose-500/15 p-3 text-xs font-medium text-rose-200"
                             role="alert"
                         >
@@ -107,19 +91,52 @@
 
                     <dl class="space-y-2 border-b border-white/10 pb-4 text-sm text-white/70">
                         <div class="flex justify-between">
-                            <dt>Позиций:</dt>
-                            <dd>{{ cart.totalCleanItems }}</dd>
+                            <dt>Товары ({{ cart.totalCleanItems }}):</dt>
+                            <Transition name="fade" mode="out-in">
+                                <dd :key="cart.totalPriceFormatted">
+                                    {{ cart.totalPriceFormatted }}
+                                </dd>
+                            </Transition>
+                        </div>
+
+                        <div class="flex justify-between">
+                            <dt>Доставка:</dt>
+                            <dd>
+                                <Transition name="fade" mode="out-in">
+                                    <span
+                                        v-if="!cart.hasDelivery"
+                                        key="unknown"
+                                        class="text-xs italic text-rancho-ink-400"
+                                    >
+                                        Не рассчитана
+                                    </span>
+                                    <span
+                                        v-else-if="cart.isFreeDelivery"
+                                        key="free"
+                                        class="text-[10px] font-black uppercase tracking-widest text-rancho-buttercup"
+                                    >
+                                        Бесплатно
+                                    </span>
+                                    <span v-else key="paid">
+                                        {{ cart.deliveryPriceFormatted }}
+                                    </span>
+                                </Transition>
+                            </dd>
                         </div>
                     </dl>
 
                     <div class="flex items-baseline justify-between py-2">
-                        <span class="text-sm font-bold text-white/80">Всего:</span>
-                        <span class="text-xl font-black text-white sm:text-2xl">
-                            {{ computedTotalPrice }}
-                        </span>
+                        <span class="text-sm font-bold text-white/80">Итого:</span>
+                        <Transition name="fade" mode="out-in">
+                            <span
+                                :key="cart.grandTotalFormatted"
+                                class="text-xl font-black text-white sm:text-2xl"
+                            >
+                                {{ cart.grandTotalFormatted }}
+                            </span>
+                        </Transition>
                     </div>
 
-                    <!-- КНОПКА ОФОРМЛЕНИЯ -->
                     <BaseSubmitButton
                         type="button"
                         :processing="isValidating"
@@ -129,6 +146,16 @@
                         class="w-full !bg-rancho-buttercup !text-rancho-ink-950 hover:!bg-rancho-buttercup/90 disabled:!bg-rancho-ink-200 disabled:!text-rancho-ink-500"
                         @click="goToCheckout"
                     />
+
+                    <!-- 🔥 Free gap -->
+                    <Transition name="collapse">
+                        <p
+                            v-if="cart.freeDeliveryGapFormatted"
+                            class="text-center text-xs text-rancho-ember"
+                        >
+                            До бесплатной доставки: {{ cart.freeDeliveryGapFormatted }}
+                        </p>
+                    </Transition>
                 </aside>
             </div>
 
@@ -163,22 +190,52 @@
 </template>
 
 <style scoped>
-    /* ===== Корзина ↔ Пусто ===== */
+    /* ===== Смена Корзина ↔ Пусто ===== */
     .fade-up-enter-active,
     .fade-up-leave-active {
         transition:
             opacity 0.3s ease,
             transform 0.3s ease;
     }
-
     .fade-up-enter-from {
         opacity: 0;
-        transform: translateY(10px);
+        transform: translateY(8px);
     }
-
     .fade-up-leave-to {
         opacity: 0;
-        transform: translateY(-10px);
+        transform: translateY(-8px);
+    }
+
+    /* ===== Плавная высота (алерт, gap) ===== */
+    .collapse-enter-active,
+    .collapse-leave-active {
+        transition:
+            opacity 0.25s ease,
+            max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+            margin 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        overflow: hidden;
+    }
+    .collapse-enter-from,
+    .collapse-leave-to {
+        opacity: 0;
+        max-height: 0;
+        margin-top: 0;
+        margin-bottom: 0;
+    }
+    .collapse-enter-to,
+    .collapse-leave-from {
+        opacity: 1;
+        max-height: 200px;
+    }
+
+    /* ===== Плавная смена значений (цена/итог) ===== */
+    .fade-enter-active,
+    .fade-leave-active {
+        transition: opacity 0.2s ease;
+    }
+    .fade-enter-from,
+    .fade-leave-to {
+        opacity: 0;
     }
 
     /* ===== Карточки в списке ===== */
@@ -188,32 +245,29 @@
             opacity 0.3s ease,
             transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
-
     .cart-item-enter-from {
         opacity: 0;
         transform: translateX(-20px) scale(0.98);
     }
-
     .cart-item-leave-to {
         opacity: 0;
         transform: translateX(20px) scale(0.98);
     }
-
-    /* Уходящая карточка вырывается из потока — соседи съезжают плавно */
     .cart-item-leave-active {
         position: absolute;
         width: 100%;
     }
-
-    /* Перемещение оставшихся карточек */
     .cart-item-move {
         transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    /* ===== Reduce motion ===== */
     @media (prefers-reduced-motion: reduce) {
         .fade-up-enter-active,
         .fade-up-leave-active,
+        .collapse-enter-active,
+        .collapse-leave-active,
+        .fade-enter-active,
+        .fade-leave-active,
         .cart-item-enter-active,
         .cart-item-leave-active,
         .cart-item-move {

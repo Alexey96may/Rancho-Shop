@@ -80,13 +80,13 @@
     }));
 
     const iconStyle = computed(() => {
-        // Сдвиг иконки: 0% → -100% по мере прогресса
-        const shift = -progress.value * 100;
-        // Скейл: 1 → 1.5
-        const scale = 1 + progress.value * 0.5;
+        // Сдвиг иконки:
+        const shift = offset.value / 3;
+        // Скейл:
+        const scale = 0.5 + progress.value * 1.5;
 
         return {
-            transform: `translateX(${shift}%) scale(${scale})`,
+            transform: `translateX(${shift}px) scale(${scale})`,
         };
     });
 </script>
@@ -95,7 +95,7 @@
     <div class="relative">
         <!-- Красная зона -->
         <div
-            class="pointer-events-none absolute inset-0 flex items-center justify-end overflow-hidden rounded-2xl bg-rancho-ember pr-[7%] text-white"
+            class="pointer-events-none absolute inset-0 flex items-center justify-end overflow-hidden rounded-2xl bg-rancho-ember text-white"
             :style="backgroundStyle"
             aria-hidden="true"
         >

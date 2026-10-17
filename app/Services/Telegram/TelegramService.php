@@ -61,4 +61,44 @@ class TelegramService
             return false;
         }
     }
+
+    public function sendPhoto(string|int $chatId, string $photoUrl, string $caption = ''): bool
+    {
+        $token = $this->botToken ?? config('services.telegram.bot_token');
+
+        if (!$token) {
+            Log::warning('Telegram bot token is not configured');
+
+            return false;
+        }
+
+        try {
+            $response = Http::timeout(10)->post(
+                "https://api.telegram.org/bot{$token}/sendPhoto",
+                [
+                    'chat_id' => $chatId,
+                    'photo' => $photoUrl,
+                    'caption' => $caption,
+                    'parse_mode' => 'HTML',
+                ]
+            );
+
+            if ($response->failed()) {
+                Log::warning('Telegram sendPhoto failed', [
+                    'status' => $response->status(),
+                    'body' => $response->body(),
+                ]);
+
+                return false;
+            }
+
+            return true;
+        } catch (Throwable $e) {
+            Log::error('Telegram sendPhoto exception', [
+                'message' => $e->getMessage(),
+            ]);
+
+            return false;
+        }
+    }
 }
