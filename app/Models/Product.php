@@ -149,7 +149,11 @@ class Product extends Model implements HasMedia
             })
             ->when($filters['animal'] ?? null, function ($query, $animal) {
                 $query->whereHas('animals', function ($q) use ($animal) {
-                    $q->where('animals.id', $animal);
+                    if (is_numeric($animal)) {
+                        $q->where('animals.id', $animal);
+                    } else {
+                        $q->where('animals.slug', $animal);
+                    }
                 });
             })
             ->when(
