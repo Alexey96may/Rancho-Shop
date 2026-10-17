@@ -43,7 +43,7 @@ class CheckoutRequest extends FormRequest
 
             'items' => ['required', 'array', 'min:1'],
             'items.*.variant_id' => ['required', 'integer', 'exists:product_variants,id'],
-            'items.*.quantity' => ['required', 'integer', 'min:1'],
+            'items.*.quantity' => ['required', 'numeric', 'min:0.1'],
         ];
     }
 

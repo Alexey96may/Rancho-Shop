@@ -13,7 +13,7 @@ class CartItemDTO
     {
         return new self(
             variantId: (int) $data['variant_id'],
-            quantity: (int) $data['quantity'],
+            quantity: (float) $data['quantity'],
         );
     }
 }

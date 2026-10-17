@@ -36,6 +36,9 @@ class OrderTelegramNotifier
 
         if ($order->delivery_address) {
             $lines[] = '<b>Адрес:</b> ' . e($order->delivery_address);
+            if ($mapUrl = $this->mapLink($order)) {
+                $lines[] = '<a href="' . e($mapUrl) . '">📍 Открыть на Яндекс.Картах</a>';
+            }
         } else {
             $lines[] = '<b>Самовывоз</b>';
         }
@@ -126,5 +129,19 @@ class OrderTelegramNotifier
         ]);
 
         return "https://static-maps.yandex.ru/v1?{$params}";
+    }
+
+    private function mapLink(Order $order): ?string
+    {
+        $lat = $order->delivery_lat;
+        $lng = $order->delivery_lng;
+
+        if (!$lat || !$lng) {
+            return null;
+        }
+
+        // Открыть карту с меткой в точке
+        return 'https://yandex.ru/maps/?pt=' . rawurlencode("{$lng},{$lat}")
+            . '&z=16&l=map';
     }
 }
