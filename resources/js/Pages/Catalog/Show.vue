@@ -15,6 +15,7 @@
     import ImageLightbox from '@/Components/Shared/ImageLightbox.vue';
     import ProductGallery from '@/Components/Shared/UIGallery.vue';
     import BuyButton from '@/Components/UI/BuyButton.vue';
+    import ShareButton from '@/Components/UI/ShareButton.vue';
     import MainLayout from '@/Layouts/MainLayout.vue';
     import { useComments } from '@/composables/crud/useComments';
     import type { Comment, Paginated, Product, ResourceSingle, SharedData } from '@/types';
@@ -166,20 +167,36 @@
                 />
 
                 <!-- INFO -->
-                <div v-scroll-reveal class="flex flex-col">
+                <div v-scroll-reveal class="flex flex-col gap-4">
                     <!-- Категория -->
-                    <span
-                        v-if="productData.category?.name"
-                        class="inline-flex items-center gap-1.5 self-start rounded-full bg-rancho-ember/10 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-rancho-ember ring-1 ring-inset ring-rancho-ember/20 transition-all hover:bg-rancho-ember/20"
-                    >
-                        <TagIcon class="h-3 w-3" aria-hidden="true" />
-                        {{ productData.category.name }}
-                    </span>
+                    <div class="flex flex-col gap-4 sm:items-start">
+                        <span
+                            v-if="productData.category?.name"
+                            class="inline-flex items-center gap-1.5 self-start rounded-full bg-rancho-ember/10 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-rancho-ember ring-1 ring-inset ring-rancho-ember/20 transition-all hover:bg-rancho-ember/20"
+                        >
+                            <TagIcon class="h-3 w-3" aria-hidden="true" />
+                            {{ productData.category.name }}
+                        </span>
 
-                    <!-- Название -->
-                    <h1 class="mt-3 text-3xl font-black text-rancho-forest sm:text-4xl">
-                        {{ productData.name }}
-                    </h1>
+                        <div
+                            class="flex items-center justify-between gap-4 sm:flex-col sm:items-start"
+                        >
+                            <!-- Название -->
+                            <h1 class="text-3xl font-black text-rancho-forest sm:text-4xl">
+                                {{ productData.name }}
+                            </h1>
+
+                            <ShareButton
+                                v-if="productData.seo"
+                                :seo="productData.seo"
+                                :title="
+                                    productData.name ? `Купить ${product.data.name}` : undefined
+                                "
+                                :text="productData.description ?? undefined"
+                                :image="allImages[0]"
+                            />
+                        </div>
+                    </div>
 
                     <!-- PRICE -->
                     <div v-if="price" class="mt-6 flex flex-col gap-1">
@@ -316,10 +333,10 @@
                     <!-- ATTRIBUTES -->
                     <div
                         v-if="productData.attributes?.length"
-                        class="mt-8 overflow-hidden rounded-2xl border border-rancho-ink-100 bg-white p-4"
+                        class="mt-8 grow overflow-hidden rounded-2xl border border-rancho-ink-100 bg-white px-4 py-8"
                     >
                         <h2
-                            class="text-center text-xs font-black uppercase tracking-widest text-rancho-ink-500"
+                            class="mb-4 text-center text-xs font-black uppercase tracking-widest text-rancho-ink-500"
                         >
                             Характеристики
                         </h2>
@@ -403,7 +420,7 @@
             </section>
 
             <!-- COMMENTS -->
-            <section v-if="productData.is_commentable" v-scroll-reveal class="pb-12 sm:pb-20">
+            <section v-if="productData.is_commentable" v-scroll-reveal class="pb-6 sm:pb-16">
                 <CommentsSection
                     :comments="comments"
                     @submit="submitComment"

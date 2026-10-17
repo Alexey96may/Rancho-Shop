@@ -4,7 +4,7 @@
 
     import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 
-    import { ShoppingCartIcon } from '@heroicons/vue/24/outline';
+    import { ShoppingCartIcon, TruckIcon } from '@heroicons/vue/24/outline';
 
     import BaseInput from '@/Components/UI/BaseInput.vue';
     import BaseSubmitButton from '@/Components/UI/BaseSubmitButton.vue';
@@ -15,7 +15,7 @@
     import { useCartStore } from '@/stores/cart';
     import { useNotificationsStore } from '@/stores/notifications';
     import { DeliveryDraft, SharedData } from '@/types';
-    import { formatMoney } from '@/utils/format';
+    import { formatDistance, formatMoney } from '@/utils/format';
 
     defineOptions({ layout: MainLayout });
 
@@ -88,6 +88,15 @@
     const deliveryResult = computed(() => props.delivery_result ?? null);
 
     const nameRef = ref<ComponentPublicInstance<typeof BaseInput> | HTMLInputElement | null>(null);
+
+    const computedDistanceToRoute = computed(() => {
+        return formatDistance(deliveryResult.value?.distance_to_route) ?? '';
+    });
+
+    const computedDistanceToFarm = computed(() => {
+        return formatDistance(deliveryResult.value?.distance_to_farm) ?? '';
+    });
+
     const phoneRef = ref<ComponentPublicInstance<typeof BaseInput> | HTMLInputElement | null>(null);
     const commentRef = ref<
         ComponentPublicInstance<typeof BaseTextarea> | HTMLTextAreaElement | null
@@ -274,6 +283,7 @@
                         label="Телефон"
                         placeholder="+7 (___) ___-__-__"
                         :error="form.errors.customer_phone"
+                        required
                         theme="light"
                         @input-start="form.clearErrors('customer_phone')"
                         :disabled="form.processing"
@@ -313,8 +323,10 @@
 
                             <!-- CASE: DELIVERY -->
                             <div v-else key="delivery">
-                                <div class="text-sm font-bold text-rancho-pine">
-                                    🚚 Доставка выбрана
+                                <div
+                                    class="flex items-center gap-2 text-sm font-bold text-rancho-pine"
+                                >
+                                    <TruckIcon class="h-4 w-4" /> Доставка выбрана
                                 </div>
 
                                 <p class="mt-1 text-sm text-rancho-ink-700">
@@ -365,10 +377,7 @@
                                             >
                                                 <span>До маршрута</span>
                                                 <span>
-                                                    {{
-                                                        Math.round(deliveryResult.distance_to_route)
-                                                    }}
-                                                    м
+                                                    {{ computedDistanceToRoute }}
                                                 </span>
                                             </div>
 
@@ -378,10 +387,7 @@
                                             >
                                                 <span>От фермы</span>
                                                 <span>
-                                                    {{
-                                                        Math.round(deliveryResult.distance_to_farm)
-                                                    }}
-                                                    м
+                                                    {{ computedDistanceToFarm }}
                                                 </span>
                                             </div>
 

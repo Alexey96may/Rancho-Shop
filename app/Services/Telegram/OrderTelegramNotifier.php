@@ -51,7 +51,7 @@ class OrderTelegramNotifier
                 ?? $item->variant?->product?->name
                 ?? 'Товар';
 
-            $price = (float) $item->unit_price * (int) $item->quantity;
+            $price = (float) $item->unit_price * (float) $item->quantity;
 
             $lines[] = sprintf(
                 '• %s × %d — %s',
@@ -64,7 +64,7 @@ class OrderTelegramNotifier
         $lines[] = '';
 
         // ────── Подытог (без доставки и скидки) ──────
-        $subtotal = $order->items->sum(fn ($i) => (float) $i->unit_price * (int) $i->quantity);
+        $subtotal = $order->items->sum(fn ($i) => (float) $i->unit_price * (float) $i->quantity);
         $lines[] = '<b>Подытог:</b> ' . $this->money($subtotal);
 
         // ────── Промокод ──────

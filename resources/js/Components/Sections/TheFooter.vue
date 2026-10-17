@@ -7,6 +7,7 @@
 
     import CowIcon from '@/Components/Icons/CowIcon.vue';
     import CowIconDark from '@/Components/Icons/CowIconDark.vue';
+    import ShareButton from '@/Components/UI/ShareButton.vue';
     import type { SharedData } from '@/types';
 
     interface Props {
@@ -95,7 +96,7 @@
                             :href="footer.contact_telegram"
                             target="_blank"
                             rel="noopener noreferrer"
-                            class="rounded-md transition-colors"
+                            class="rounded-md transition-colors active:scale-95"
                             :class="[
                                 isDark
                                     ? 'text-rancho-ink-200 hover:text-rancho-buttercup'
@@ -116,7 +117,7 @@
                             :href="footer.contact_vk"
                             target="_blank"
                             rel="noopener noreferrer"
-                            class="rounded-md transition-colors"
+                            class="rounded-md transition-colors active:scale-95"
                             :class="[
                                 isDark
                                     ? 'text-rancho-ink-200 hover:text-rancho-buttercup'
@@ -131,6 +132,12 @@
                                 />
                             </svg>
                         </a>
+
+                        <ShareButton
+                            :seo="page.props.seo"
+                            title="Молочная Долина — натуральные продукты с фермы"
+                            variant="icon"
+                        />
                     </div>
                 </div>
 

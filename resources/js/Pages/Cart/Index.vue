@@ -71,66 +71,76 @@
 
                 <!-- ПРАВАЯ КОЛОНКА: итог -->
                 <aside
-                    class="shadow-xl h-fit space-y-6 rounded-2xl bg-rancho-forest p-6 text-white sm:space-y-8 sm:pb-10"
+                    class="shadow-xl h-fit space-y-5 rounded-2xl bg-rancho-forest p-5 text-rancho-paper sm:space-y-6 sm:p-6 sm:pb-8"
                     aria-label="Итог заказа"
                 >
-                    <h2 class="text-lg font-black uppercase tracking-wider sm:text-xl">
+                    <h2
+                        class="text-base font-black uppercase tracking-[0.15em] text-rancho-paper/90 sm:text-lg"
+                    >
                         Итог заказа
                     </h2>
 
-                    <!-- 🔥 Алерт — плавная высота -->
                     <Transition name="collapse">
                         <div
                             v-if="hasInvalidItems"
-                            class="rounded-xl border border-rose-400/30 bg-rose-500/15 p-3 text-xs font-medium text-rose-200"
+                            class="rounded-xl border border-rose-300/25 bg-rose-500/10 p-3 text-xs font-medium leading-relaxed text-rose-100"
                             role="alert"
                         >
                             Удалите недоступные товары из корзины, чтобы продолжить оформление.
                         </div>
                     </Transition>
 
-                    <dl class="space-y-2 border-b border-white/10 pb-4 text-sm text-white/70">
-                        <div class="flex justify-between">
-                            <dt>Товары ({{ cart.totalCleanItems }}):</dt>
+                    <dl class="space-y-2.5 border-b border-white/10 pb-4 text-sm">
+                        <div class="flex items-baseline justify-between gap-3">
+                            <dt class="font-medium text-rancho-paper/65">Позиций</dt>
                             <Transition name="fade" mode="out-in">
-                                <dd :key="cart.totalPriceFormatted">
+                                <dd
+                                    :key="cart.totalCleanItems"
+                                    class="font-semibold text-rancho-paper"
+                                >
+                                    {{ cart.totalCleanItems }}
+                                </dd>
+                            </Transition>
+                        </div>
+
+                        <div class="flex items-baseline justify-between gap-3">
+                            <dt class="font-medium text-rancho-paper/65">Сумма</dt>
+                            <Transition name="fade" mode="out-in">
+                                <dd
+                                    :key="cart.totalPriceFormatted"
+                                    class="font-semibold text-rancho-paper"
+                                >
                                     {{ cart.totalPriceFormatted }}
                                 </dd>
                             </Transition>
                         </div>
 
-                        <div class="flex justify-between">
-                            <dt>Доставка:</dt>
-                            <dd>
-                                <Transition name="fade" mode="out-in">
-                                    <span
-                                        v-if="!cart.hasDelivery"
-                                        key="unknown"
-                                        class="text-xs italic text-rancho-ink-400"
-                                    >
-                                        Не рассчитана
-                                    </span>
-                                    <span
-                                        v-else-if="cart.isFreeDelivery"
-                                        key="free"
-                                        class="text-[10px] font-black uppercase tracking-widest text-rancho-buttercup"
-                                    >
-                                        Бесплатно
-                                    </span>
-                                    <span v-else key="paid">
-                                        {{ cart.deliveryPriceFormatted }}
-                                    </span>
-                                </Transition>
-                            </dd>
+                        <div
+                            v-if="cart.hasDelivery"
+                            class="flex items-baseline justify-between gap-3"
+                        >
+                            <dt class="font-medium text-rancho-paper/65">Доставка</dt>
+                            <Transition name="fade" mode="out-in" key="delivery">
+                                <dd
+                                    :key="cart.deliveryPriceFormatted ?? undefined"
+                                    class="font-semibold text-rancho-paper"
+                                >
+                                    {{ cart.deliveryPriceFormatted }}
+                                </dd>
+                            </Transition>
                         </div>
                     </dl>
 
-                    <div class="flex items-baseline justify-between py-2">
-                        <span class="text-sm font-bold text-white/80">Итого:</span>
+                    <div class="flex items-baseline justify-between gap-3">
+                        <span
+                            class="text-sm font-black uppercase tracking-[0.15em] text-rancho-buttercup"
+                        >
+                            Итого
+                        </span>
                         <Transition name="fade" mode="out-in">
                             <span
                                 :key="cart.grandTotalFormatted"
-                                class="text-xl font-black text-white sm:text-2xl"
+                                class="text-xl font-black text-rancho-buttercup sm:text-2xl"
                             >
                                 {{ cart.grandTotalFormatted }}
                             </span>
@@ -143,17 +153,19 @@
                         :disabled="isCartEmpty || hasInvalidItems"
                         label="Оформить заказ"
                         :icon="ShoppingCartIcon"
-                        class="w-full !bg-rancho-buttercup !text-rancho-ink-950 hover:!bg-rancho-buttercup/90 disabled:!bg-rancho-ink-200 disabled:!text-rancho-ink-500"
+                        class="shadow-md hover:shadow-lg disabled:!shadow-none w-full !bg-rancho-buttercup !text-rancho-forest hover:!bg-rancho-buttercup/90 focus-visible:!ring-4 focus-visible:!ring-rancho-buttercup/30 active:!scale-[0.98] disabled:!bg-rancho-buttercup/70 disabled:!text-rancho-paper/40"
                         @click="goToCheckout"
                     />
 
-                    <!-- 🔥 Free gap -->
                     <Transition name="collapse">
                         <p
-                            v-if="cart.freeDeliveryGapFormatted"
-                            class="text-center text-xs text-rancho-ember"
+                            v-if="cart.freeDeliveryGapFormatted && cart.hasDelivery"
+                            class="text-center text-[11px] font-medium leading-relaxed text-rancho-paper/40"
                         >
-                            До бесплатной доставки: {{ cart.freeDeliveryGapFormatted }}
+                            До бесплатной доставки:
+                            <span class="font-bold text-rancho-ember">{{
+                                cart.freeDeliveryGapFormatted
+                            }}</span>
                         </p>
                     </Transition>
                 </aside>
