@@ -227,7 +227,6 @@
             ...data,
             items: cart.items,
         })).post(route('checkout.store'), {
-            preserveScroll: true,
             onSuccess: () => {
                 cart.clear();
             },
@@ -254,7 +253,7 @@
     <AppContainer class="min-h-screen bg-rancho-paper">
         <Head title="Оформление заказа" />
 
-        <div class="py-10 sm:py-12">
+        <div class="pt-10 sm:pt-12">
             <!-- HEADER -->
             <header class="mb-8 sm:mb-10">
                 <h1 class="text-2xl font-black text-rancho-forest sm:text-4xl">

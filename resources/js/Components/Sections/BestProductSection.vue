@@ -16,8 +16,8 @@
                 <h2 id="products-title" class="text-xl font-bold text-rancho-forest sm:text-4xl">
                     Наши свежие продукты
                 </h2>
-                <p class="mx-auto max-w-2xl text-sm text-rancho-olive/70 sm:text-lg">
-                    Собрано сегодня утром, чтобы быть на вашем столе к вечеру.
+                <p class="max-w-2xl text-sm text-rancho-olive/70 sm:text-lg">
+                    То, что едим сами — и советуем вам.
                 </p>
             </div>
 

@@ -5,7 +5,6 @@ namespace App\Actions\Checkout;
 use App\DTO\CheckoutDTO;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class ResolveCheckoutUserAction
@@ -39,13 +38,6 @@ class ResolveCheckoutUserAction
             'name'     => $dto->customerName,
             'phone'    => $dto->customerPhone,
             'password' => Hash::make($password),
-        ]);
-
-        // SMS пока просто в лог — заменить на  SmsService позже
-        Log::info('New user from checkout', [
-            'user_id' => $user->id,
-            'phone'   => $user->phone,
-            'password'=> $password,
         ]);
 
         return ['user' => $user, 'justCreated' => true];

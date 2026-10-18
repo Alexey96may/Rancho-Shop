@@ -71,6 +71,7 @@
     ]);
 
     async function nativeShare() {
+        // На мобильных — только нативный share, без fallback-меню
         if (typeof navigator !== 'undefined' && navigator.share) {
             try {
                 await navigator.share({
@@ -78,11 +79,14 @@
                     text: shareText.value,
                     url: shareUrl.value,
                 });
-                open.value = false;
-                return;
-            } catch {
-                // пользователь отменил — покажем fallback
+            } catch (e) {
+                if ((e as Error)?.name !== 'AbortError') {
+                    open.value = true;
+                    return;
+                }
             }
+            open.value = false;
+            return;
         }
         open.value = !open.value;
     }
@@ -143,7 +147,7 @@
             @click.stop="nativeShare"
         >
             <Share2
-                class="text-pine h-3 w-3 transition-transform group-hover:scale-110"
+                class="h-3 w-3 text-rancho-pine transition-transform group-hover:scale-110"
                 aria-hidden="true"
             />
             <span class="hidden sm:inline">{{ label }}</span>
@@ -173,7 +177,7 @@
             <div
                 v-if="open"
                 role="menu"
-                class="bg-rancho-white shadow-xl absolute right-0 z-50 mt-2 w-56 overflow-hidden rounded-2xl border border-rancho-olive/15 p-1.5"
+                class="shadow-xl absolute right-0 z-50 mt-2 w-56 overflow-hidden rounded-2xl border border-rancho-olive/15 bg-white p-1.5"
             >
                 <div class="px-3 py-2">
                     <p
@@ -210,7 +214,7 @@
                     <component
                         :is="copied ? Check : Link2"
                         class="h-4 w-4"
-                        :class="copied ? 'text-emerald-500' : 'text-olive'"
+                        :class="copied ? 'text-emerald-500' : 'text-rancho-olive'"
                         aria-hidden="true"
                     />
                     {{ copied ? 'Скопировано' : 'Скопировать ссылку' }}

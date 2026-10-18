@@ -32,14 +32,14 @@
 </script>
 
 <template>
-    <AppContainer class="min-h-screen bg-rancho-paper">
+    <AppContainer class="min-h-screen bg-rancho-paper pt-12 sm:pt-16">
         <Head title="Заказ успешно оформлен" />
 
-        <div class="mx-auto max-w-3xl py-12 sm:py-16">
+        <div>
             <!-- Карточка подтверждения -->
             <div
                 v-scroll-reveal
-                class="border-rancho-ink-200 shadow-sm mb-8 rounded-2xl border bg-white p-6 text-center sm:p-10"
+                class="shadow-sm mb-8 rounded-2xl border border-rancho-ink-200 bg-white p-6 text-center sm:p-10"
             >
                 <div
                     class="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-rancho-pine/10 text-rancho-pine ring-1 ring-inset ring-rancho-pine/20"
@@ -52,7 +52,7 @@
                     Спасибо за заказ!
                 </h1>
 
-                <p class="text-rancho-ink-600 text-sm leading-relaxed sm:text-base">
+                <p class="text-sm leading-relaxed text-rancho-ink-600 sm:text-base">
                     Мы получили ваш заказ
                     <span class="font-black text-rancho-forest">#{{ order.id }}</span>
                     и уже начали его обработку.
@@ -62,16 +62,16 @@
             <!-- Детали заказа -->
             <div
                 v-scroll-reveal
-                class="border-rancho-ink-200 shadow-sm mb-8 rounded-2xl border bg-white p-6 sm:p-8"
+                class="shadow-sm mb-8 rounded-2xl border border-rancho-ink-200 bg-white p-6 sm:p-8"
             >
                 <h2
-                    class="border-rancho-ink-100 mb-4 border-b pb-3 text-base font-black uppercase tracking-wider text-rancho-forest sm:text-lg"
+                    class="mb-4 border-b border-rancho-ink-100 pb-3 text-base font-black uppercase tracking-wider text-rancho-forest sm:text-lg"
                 >
                     Состав заказа
                 </h2>
 
                 <!-- Список товаров -->
-                <div v-if="order.items?.length" class="divide-rancho-ink-100 divide-y">
+                <div v-if="order.items?.length" class="divide-y divide-rancho-ink-100">
                     <div
                         v-for="item in order.items"
                         :key="item.id"
@@ -81,7 +81,7 @@
                             <!-- Превью -->
                             <div
                                 v-if="item.images && item.images.length > 0"
-                                class="border-rancho-ink-200 bg-rancho-ink-50 h-12 w-12 shrink-0 overflow-hidden rounded-lg border"
+                                class="h-12 w-12 shrink-0 overflow-hidden rounded-lg border border-rancho-ink-200 bg-rancho-ink-50"
                             >
                                 <AppImage
                                     :src="item.images[0]"
@@ -94,7 +94,7 @@
                                 <p class="truncate font-bold text-rancho-forest">
                                     {{ item.product_name }}
                                 </p>
-                                <p class="text-rancho-ink-500 text-sm">
+                                <p class="text-sm text-rancho-ink-500">
                                     {{ item.quantity }} {{ item.unit?.name || 'шт.' }} ×
                                     {{ formatMoney(item.unit_price) }}
                                 </p>
@@ -108,8 +108,8 @@
                 </div>
 
                 <!-- Итоговая сумма -->
-                <div class="border-rancho-ink-100 mt-4 space-y-2 border-t pt-4">
-                    <div class="text-rancho-ink-600 flex justify-between text-sm">
+                <div class="mt-4 space-y-2 border-t border-rancho-ink-100 pt-4">
+                    <div class="flex justify-between text-sm text-rancho-ink-600">
                         <span>Доставка</span>
                         <span class="font-bold text-rancho-forest">
                             {{ order.delivery_price > 0 ? computedDeliveryPrice : 'Бесплатно' }}
@@ -118,16 +118,16 @@
 
                     <div
                         v-if="order.discount_total > 0"
-                        class="text-rancho-ember flex justify-between text-sm"
+                        class="flex justify-between text-sm text-rancho-ember"
                     >
                         <span>Скидка</span>
                         <span class="font-bold"> −{{ formatMoney(order.discount_total) }} </span>
                     </div>
 
                     <div
-                        class="border-rancho-ink-100 flex items-baseline justify-between border-t pt-3 text-lg"
+                        class="flex items-baseline justify-between border-t border-rancho-ink-100 pt-3 text-lg"
                     >
-                        <span class="text-rancho-ink-600 font-bold">Итого</span>
+                        <span class="font-bold text-rancho-ink-600">Итого</span>
                         <span class="text-xl font-black text-rancho-forest sm:text-2xl">
                             {{ computedTotalPrice }}
                         </span>

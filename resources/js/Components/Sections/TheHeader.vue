@@ -90,8 +90,8 @@
 
     const focusClass = computed(() =>
         isDark
-            ? 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rancho-buttercup/60'
-            : 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rancho-pine/40',
+            ? 'focus-visible:ring-2 focus-visible:ring-rancho-buttercup/60'
+            : 'focus-visible:ring-2 focus-visible:ring-rancho-pine/40',
     );
 
     const MAX_CART_BADGE = 99;
@@ -197,7 +197,7 @@
                 <Link
                     v-else
                     :href="route('login')"
-                    class="shadow-md relative hidden items-center gap-2 rounded-xl px-3 py-2 text-white transition-all focus:outline-none focus-visible:ring-4 focus-visible:ring-rancho-pine/30 active:scale-95 sm:px-4 md:flex"
+                    class="shadow-md relative hidden items-center gap-2 rounded-xl px-3 py-2 text-white transition-all focus-visible:ring-4 focus-visible:ring-rancho-pine/30 active:scale-95 sm:px-4 md:flex"
                     :class="[
                         isDark
                             ? 'bg-rancho-buttercup text-rancho-ink-950 hover:bg-rancho-buttercup/90'

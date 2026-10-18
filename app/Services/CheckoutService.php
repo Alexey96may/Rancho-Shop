@@ -42,10 +42,6 @@ class CheckoutService
             $products = $this->getProducts->handle($dto);
             $variants = $products->pluck('variants')->flatten()->keyBy('id');
 
-            Log::info('Checkout started', [
-                'items_count' => $dto->items->count(),
-            ]);
-
             $this->validateCart->handle($dto, $variants);
 
             $deliveryResult = $this->validateDelivery->handle($delivery);
@@ -60,11 +56,6 @@ class CheckoutService
             $this->createItems->handle($order, $dto, $products);
 
             $this->decrementStock->handle($dto, $variants);
-
-            Log::info('Order created', [
-                'order_id' => $order->id,
-                'total' => $order->total_price,
-            ]);
 
             return $order->load('items');
         });

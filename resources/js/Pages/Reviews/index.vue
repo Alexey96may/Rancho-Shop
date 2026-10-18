@@ -125,7 +125,7 @@
 
 <template>
     <AppContainer class="min-h-screen bg-rancho-paper">
-        <div class="py-12">
+        <div class="pt-12">
             <!-- HEADER -->
             <header
                 v-scroll-reveal

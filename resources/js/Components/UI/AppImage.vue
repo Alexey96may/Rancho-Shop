@@ -1,26 +1,32 @@
 <script setup lang="ts">
     /**
      * AppImage Component
-     * * A robust image handler that supports multiple input formats:
+     *
+     * A robust image handler that supports multiple input formats:
      * - Remote URLs (strings)
      * - Media Resource Objects (from Laravel Spatie Media Library)
      * - Raw Browser File Objects (for instant upload previews)
-     * * Key Features:
-     * - Smart Fallbacks: Automatically switches to context-specific placeholders on error.
-     * - Modern Formats: Renders <picture> with AVIF/WebP support for Media objects.
-     * - Zero Latency: Handles URL.createObjectURL for immediate local file previews.
-     * - Accessible: Supports decorative images and ARIA-compliant alt text.
-     * @props {string | Media | File} src - The image source (URL, Media object, or File).
-     * @props {'thumbnails' | 'previews'} [type='previews'] - The Media object collection type.
-     * @props {'product' | 'animal' | 'general'} [context='general'] - Used to determine the error placeholder.
-     * @props {string} [alt=''] - Alt text for the image.
-     * @props {string} [className] - Additional CSS classes for the <img> tag.
-     * @props {boolean} [isDecorative=false] - If true, alt will be empty for screen readers.
-     * * @emits {Event} load - Fired when the image successfully loads.
+     *
+     * Key Features:
+     * - Smart Fallbacks: switches to context-specific placeholders on error.
+     * - Modern Formats: renders <picture> with AVIF/WebP support for Media objects.
+     * - Blur-up: shows a low-quality blurred thumbnail while the full image loads.
+     * - Smooth reveal: fades in the image via <Transition> (no abrupt swap).
+     * - Zero Latency: uses URL.createObjectURL for local File previews (revoked on unmount).
+     * - Accessible: supports decorative images and ARIA-compliant alt text.
+     *
+     * @props {string | Media | File} src — image source (URL, Media object, or File).
+     * @props {'thumbnails' | 'previews'} [type='previews'] — Media collection used for full-size sources.
+     * @props {'product' | 'animal' | 'general'} [context='general'] — error placeholder kind.
+     * @props {string} [alt=''] — alt text for the image.
+     * @props {string} [className] — extra CSS classes for the <img> tag.
+     * @props {boolean} [isDecorative=false] — if true, alt is empty for screen readers.
+     *
+     * @emits {Event} load — fired when the image successfully loads.
      */
-    import { computed, ref } from 'vue';
+    import { computed, onBeforeUnmount, ref, watch } from 'vue';
 
-    import { Media } from '@/types';
+    import type { Media } from '@/types';
     import { handleImageError } from '@/utils';
 
     defineOptions({
@@ -45,24 +51,54 @@
         isDecorative: false,
     });
 
-    // Check if src is our MediaResource object
-    const isMediaObject = computed(() => {
-        return typeof props.src === 'object' && props.src !== null && 'url' in props.src;
-    });
+    const emit = defineEmits<{ (e: 'load', event: Event): void }>();
 
+    // ─────────────── Состояния (объявить до watch!) ───────────────
+    const isLoading = ref(true);
+    const isError = ref(false);
+
+    // ─────────────── Определение типа src ───────────────
+    const isMediaObject = computed(
+        () => typeof props.src === 'object' && props.src !== null && 'url' in props.src,
+    );
     const isFileObject = computed(() => props.src instanceof File);
 
-    // Extract formats for <source>
+    // ─────────────── Object URL для File ───────────────
+    const fileUrl = ref<string | null>(null);
+
+    watch(
+        () => props.src,
+        (src) => {
+            if (fileUrl.value) {
+                URL.revokeObjectURL(fileUrl.value);
+                fileUrl.value = null;
+            }
+            if (src instanceof File && typeof window !== 'undefined') {
+                fileUrl.value = URL.createObjectURL(src);
+            }
+            isLoading.value = true;
+            isError.value = false;
+        },
+        { immediate: true },
+    );
+
+    onBeforeUnmount(() => {
+        if (fileUrl.value) URL.revokeObjectURL(fileUrl.value);
+    });
+
+    // ─────────────── Производные ───────────────
+    const fallbackSrc = computed((): string => {
+        if (typeof props.src === 'string') return props.src;
+        if (isFileObject.value) return fileUrl.value ?? '';
+        if (isMediaObject.value) return (props.src as Media).url;
+        return '';
+    });
+
     const sources = computed(() => {
         if (!isMediaObject.value) return [];
-
         const media = props.src as Media;
-        const typeKey = props.type as 'thumbnails' | 'previews';
-        const data = media[typeKey];
-
+        const data = media[props.type];
         if (!data) return [];
-
-        // The order is important: the browser takes the first matching one. AVIF -> WebP -> Original
         return [
             { url: data.avif, type: 'image/avif' },
             { url: data.webp, type: 'image/webp' },
@@ -72,62 +108,109 @@
         });
     });
 
-    const fallbackSrc = computed((): string => {
-        if (typeof props.src === 'string') return props.src;
-
-        if (isFileObject.value) {
-            if (typeof window === 'undefined') return '';
-            return URL.createObjectURL(props.src as File);
-        }
-
-        if (isMediaObject.value) return (props.src as Media).url;
-
-        return '';
+    const blurSrc = computed((): string | null => {
+        if (!isMediaObject.value) return null;
+        const media = props.src as Media;
+        return (
+            media.thumbnails?.original ?? media.thumbnails?.webp ?? media.previews?.original ?? null
+        );
     });
 
-    const emit = defineEmits(['load']);
-    const isError = ref(false);
+    const showBlur = computed(() => !!blurSrc.value && !isError.value);
+    const showSkeleton = computed(() => !showBlur.value);
+    const shouldRenderPicture = computed(
+        () => isMediaObject.value && !isFileObject.value && !isError.value,
+    );
+    const errorSrc = computed(
+        () => `/images/no-${props.context === 'general' ? 'image' : props.context}.jpg`,
+    );
+    const imgAlt = computed(() => (props.isDecorative ? '' : props.alt || 'Молочная долина'));
 
-    const onImageLoad = (e: Event) => emit('load', e);
+    // ─────────────── Обработчики ───────────────
+    const onImageLoad = (e: Event) => {
+        // два rAF — гарантия, что opacity-0 отрисован до смены на opacity-100
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                isLoading.value = false;
+            });
+        });
+        emit('load', e);
+    };
 
     const onError = (e: Event) => {
+        isLoading.value = false;
         if (isError.value) return;
         isError.value = true;
         handleImageError(e, props.context);
     };
-
-    const shouldRenderPicture = computed(() => {
-        return isMediaObject.value && !isFileObject.value && !isError.value;
-    });
 </script>
 
 <template>
-    <picture v-if="shouldRenderPicture">
-        <source
-            v-for="source in sources"
-            :key="source.url + source.type"
-            :srcset="source.url"
-            :type="source.type"
-        />
-        <img
-            :src="fallbackSrc"
-            :alt="isDecorative ? '' : alt || 'Молочная долина'"
-            @error="onError"
-            @load="onImageLoad"
-            loading="lazy"
-            v-bind="$attrs"
-            :class="['h-full w-full object-cover', className]"
-        />
-    </picture>
+    <div class="relative h-full w-full overflow-hidden">
+        <!-- ─────────── Основная картинка: всегда в DOM, плавно проявляется ─────────── -->
+        <picture v-if="shouldRenderPicture">
+            <source
+                v-for="source in sources"
+                :key="source.url + source.type"
+                :srcset="source.url"
+                :type="source.type"
+            />
+            <img
+                :src="fallbackSrc"
+                :alt="imgAlt"
+                @error="onError"
+                @load="onImageLoad"
+                loading="lazy"
+                decoding="async"
+                v-bind="$attrs"
+                :class="[
+                    'h-full w-full object-cover transition-opacity duration-700 ease-out',
+                    isLoading ? 'opacity-0' : 'opacity-100',
+                    className,
+                ]"
+            />
+        </picture>
 
-    <img
-        v-else
-        :src="isError ? `/images/no-${context === 'general' ? 'image' : context}.jpg` : fallbackSrc"
-        :alt="isDecorative ? '' : alt || 'Молочная долина'"
-        @load="onImageLoad"
-        @error="onError"
-        loading="lazy"
-        v-bind="$attrs"
-        :class="['h-full w-full object-cover', className]"
-    />
+        <img
+            v-else
+            :src="isError ? errorSrc : fallbackSrc"
+            :alt="imgAlt"
+            @load="onImageLoad"
+            @error="onError"
+            loading="lazy"
+            decoding="async"
+            v-bind="$attrs"
+            :class="[
+                'h-full w-full object-cover transition-opacity duration-700 ease-out',
+                isLoading ? 'opacity-0' : 'opacity-100',
+                className,
+            ]"
+        />
+
+        <!-- ─────────── Плейсхолдер: blur или скелетон, поверх картинки ─────────── -->
+        <Transition
+            appear
+            enter-active-class="transition-opacity duration-500 ease-out"
+            enter-from-class="opacity-0"
+            enter-to-class="opacity-100"
+            leave-active-class="absolute inset-0 transition-opacity duration-500 ease-out"
+            leave-from-class="opacity-100"
+            leave-to-class="opacity-0"
+        >
+            <div
+                v-if="isLoading && !isError"
+                class="pointer-events-none absolute inset-0"
+                aria-hidden="true"
+            >
+                <img
+                    v-if="showBlur"
+                    :src="blurSrc!"
+                    class="h-full w-full scale-110 object-cover blur-xl"
+                    loading="eager"
+                    decoding="async"
+                />
+                <div v-else-if="showSkeleton" class="h-full w-full animate-pulse bg-rancho-paper" />
+            </div>
+        </Transition>
+    </div>
 </template>

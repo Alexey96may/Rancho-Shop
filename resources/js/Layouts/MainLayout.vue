@@ -1,6 +1,8 @@
 <script setup lang="ts">
     import { onMounted, onUnmounted, ref } from 'vue';
 
+    import { usePage } from '@inertiajs/vue3';
+
     import TheFooter from '@/Components/Sections/TheFooter.vue';
     import TheHeader from '@/Components/Sections/TheHeader.vue';
     import SeoMeta from '@/Components/Shared/SeoMeta.vue';
@@ -11,11 +13,6 @@
     useFlashToasts();
 
     const showScrollTop = ref(false);
-
-    const handleScroll = () => {
-        if (typeof window === 'undefined') return;
-        showScrollTop.value = window.scrollY > 500;
-    };
 
     const scrollToTop = () => {
         if (typeof window === 'undefined') return;
@@ -48,6 +45,8 @@
 
         document.removeEventListener('visibilitychange', handleVisibilityChange);
     });
+
+    const page = usePage();
 </script>
 
 <template>
@@ -61,7 +60,9 @@
 
         <main class="flex-grow">
             <transition name="fade" mode="out-in">
-                <slot />
+                <div :key="page.url">
+                    <slot />
+                </div>
             </transition>
         </main>
 

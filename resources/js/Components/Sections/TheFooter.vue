@@ -49,8 +49,8 @@
 
     /* ===== Единый стиль ссылок футера ===== */
     const linkClass = computed(() => [
-        'inline-block rounded-md px-1 py-0.5 transition-colors',
-        'hover:text-rancho-buttercup hover:underline hover:decoration-2 hover:underline-offset-4',
+        'inline-block rounded-md px-1 py-0.5 border-b-0 border-rancho-olive transition-colors',
+        'hover:text-rancho-buttercup hover:decoration-2 hover:border-b-[100%]',
         focusClass.value,
     ]);
 
@@ -59,7 +59,7 @@
 
 <template>
     <footer
-        class="rounded-t-2xl pb-8 pt-14 transition-colors sm:pt-16 md:rounded-t-[2rem]"
+        class="h-full rounded-t-2xl pb-8 pt-14 transition-colors sm:pt-16 md:rounded-t-[2rem]"
         :class="
             isDark
                 ? 'border-t border-rancho-ink-800 bg-rancho-ink-900 text-rancho-ink-200'
@@ -135,6 +135,7 @@
 
                         <ShareButton
                             :seo="page.props.seo"
+                            :url="route('home')"
                             title="Молочная Долина — натуральные продукты с фермы"
                             variant="icon"
                         />
@@ -189,7 +190,7 @@
                             />
                             <Link
                                 :href="route('delivery')"
-                                class="text-left transition-colors hover:text-rancho-buttercup hover:underline hover:decoration-2 hover:underline-offset-4"
+                                class="text-left transition-colors hover:text-rancho-buttercup hover:decoration-2"
                             >
                                 {{ footer.address_farm }}
                             </Link>
@@ -223,7 +224,7 @@
                 class="flex flex-col justify-between gap-6 border-t pt-8 sm:gap-4 md:flex-row md:items-center"
                 :class="isDark ? 'border-rancho-ink-800' : 'border-rancho-paper/10'"
             >
-                <p class="text-center font-sans text-xs opacity-60">
+                <p class="text-center font-sans text-xs opacity-80">
                     © {{ new Date().getFullYear() }} {{ footer.site_name || 'Молочная Долина' }}.
                     Сделано с любовью к природе.
                 </p>

@@ -84,11 +84,13 @@
                         <QuantityControl v-if="item" :has-undo="true" :item="item" />
                     </div>
 
-                    <div class="min-w-[70px] text-right sm:min-w-[90px]">
-                        <Transition name="fade" mode="out-in">
+                    <div
+                        class="relative inline-flex h-[1.5em] min-w-[90px] items-center justify-end sm:min-w-[110px]"
+                    >
+                        <Transition name="price-swap" mode="out-in">
                             <p
                                 :key="totalPriceFormatted"
-                                class="text-sm font-black text-rancho-forest sm:text-lg"
+                                class="absolute right-0 text-sm font-black text-rancho-forest sm:text-lg"
                             >
                                 {{ totalPriceFormatted }}
                             </p>
@@ -152,11 +154,13 @@
                     <QuantityControl v-if="item" :has-undo="true" :item="item" />
                 </div>
 
-                <div class="min-w-[70px] text-right sm:min-w-[90px]">
-                    <Transition name="fade" mode="out-in">
+                <div
+                    class="relative inline-flex h-[1.5em] min-w-[90px] items-center justify-end sm:min-w-[110px]"
+                >
+                    <Transition name="price-swap" mode="out-in">
                         <p
-                            class="text-sm font-black text-rancho-forest sm:text-lg"
                             :key="totalPriceFormatted"
+                            class="absolute right-0 text-sm font-black text-rancho-forest sm:text-lg"
                         >
                             {{ totalPriceFormatted }}
                         </p>

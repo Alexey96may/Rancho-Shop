@@ -197,8 +197,8 @@
 
     function underlineClasses(active: boolean): string[] {
         return [
-            'pointer-events-none absolute -bottom-0.5 left-1 right-1 h-0.5 transition-all',
-            active ? 'opacity-100' : 'opacity-0 group-hover:opacity-100',
+            'pointer-events-none absolute -bottom-0.5 left-0 right-0 h-0.5 origin-center transition-transform duration-300 ease-out',
+            active ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100',
             isDark.value ? 'bg-orange-400' : 'bg-rancho-buttercup',
         ];
     }

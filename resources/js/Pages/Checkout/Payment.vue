@@ -59,7 +59,7 @@
     <AppContainer class="min-h-screen bg-rancho-paper">
         <Head title="Оплата заказа" />
 
-        <div class="mx-auto max-w-2xl py-12">
+        <div class="mx-auto max-w-2xl pt-12">
             <div class="shadow-sm rounded-2xl border border-rancho-ink-200 bg-white p-6 sm:p-8">
                 <h1 v-scroll-reveal class="text-xl font-black text-rancho-forest sm:text-2xl">
                     Оплата заказа #{{ order.id }}

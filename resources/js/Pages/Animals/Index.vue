@@ -133,7 +133,7 @@
 
 <template>
     <AppContainer class="min-h-screen bg-rancho-paper">
-        <div class="py-12">
+        <div class="pt-12">
             <!-- HEADER & SEARCH -->
             <header
                 v-scroll-reveal

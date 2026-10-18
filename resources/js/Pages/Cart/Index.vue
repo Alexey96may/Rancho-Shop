@@ -52,7 +52,7 @@
         <h1
             class="my-10 text-lg font-black uppercase tracking-tight text-rancho-forest sm:text-2xl"
         >
-            Ваша корзина
+            Корзина
         </h1>
 
         <Transition name="fade-up" mode="out-in" appear>
@@ -77,7 +77,7 @@
                     <h2
                         class="text-base font-black uppercase tracking-[0.15em] text-rancho-paper/90 sm:text-lg"
                     >
-                        Итог заказа
+                        Заказ
                     </h2>
 
                     <Transition name="collapse">
@@ -91,60 +91,75 @@
                     </Transition>
 
                     <dl class="space-y-2.5 border-b border-white/10 pb-4 text-sm">
-                        <div class="flex items-baseline justify-between gap-3">
+                        <div class="flex items-center justify-between gap-3">
                             <dt class="font-medium text-rancho-paper/65">Позиций</dt>
-                            <Transition name="fade" mode="out-in">
-                                <dd
-                                    :key="cart.totalCleanItems"
-                                    class="font-semibold text-rancho-paper"
-                                >
-                                    {{ cart.totalCleanItems }}
-                                </dd>
-                            </Transition>
+                            <div
+                                class="relative inline-flex h-[1.25em] min-w-[2.5rem] items-center justify-end"
+                            >
+                                <Transition name="price-swap">
+                                    <dd
+                                        :key="cart.totalCleanItems"
+                                        class="absolute right-0 font-semibold text-rancho-paper"
+                                    >
+                                        {{ cart.totalCleanItems }}
+                                    </dd>
+                                </Transition>
+                            </div>
                         </div>
 
-                        <div class="flex items-baseline justify-between gap-3">
+                        <div class="flex items-center justify-between gap-3">
                             <dt class="font-medium text-rancho-paper/65">Сумма</dt>
-                            <Transition name="fade" mode="out-in">
-                                <dd
-                                    :key="cart.totalPriceFormatted"
-                                    class="font-semibold text-rancho-paper"
-                                >
-                                    {{ cart.totalPriceFormatted }}
-                                </dd>
-                            </Transition>
+                            <div
+                                class="relative inline-flex h-[1.25em] min-w-[6rem] items-center justify-end sm:min-w-[7rem]"
+                            >
+                                <Transition name="price-swap">
+                                    <dd
+                                        :key="cart.totalPriceFormatted"
+                                        class="absolute right-0 whitespace-nowrap font-semibold text-rancho-paper"
+                                    >
+                                        {{ cart.totalPriceFormatted }}
+                                    </dd>
+                                </Transition>
+                            </div>
                         </div>
 
                         <div
                             v-if="cart.hasDelivery"
-                            class="flex items-baseline justify-between gap-3"
+                            class="flex items-center justify-between gap-3"
                         >
                             <dt class="font-medium text-rancho-paper/65">Доставка</dt>
-                            <Transition name="fade" mode="out-in" key="delivery">
-                                <dd
-                                    :key="cart.deliveryPriceFormatted ?? undefined"
-                                    class="font-semibold text-rancho-paper"
-                                >
-                                    {{ cart.deliveryPriceFormatted }}
-                                </dd>
-                            </Transition>
+                            <div
+                                class="relative inline-flex h-[1.25em] min-w-[6rem] items-center justify-end sm:min-w-[7rem]"
+                            >
+                                <Transition name="price-swap">
+                                    <dd
+                                        :key="cart.deliveryPriceFormatted ?? 'none'"
+                                        class="absolute right-0 whitespace-nowrap font-semibold text-rancho-paper"
+                                    >
+                                        {{ cart.deliveryPriceFormatted }}
+                                    </dd>
+                                </Transition>
+                            </div>
                         </div>
                     </dl>
 
-                    <div class="flex items-baseline justify-between gap-3">
+                    <div class="flex items-center justify-between gap-3">
                         <span
-                            class="text-sm font-black uppercase tracking-[0.15em] text-rancho-buttercup"
+                            class="text-sm font-black uppercase tracking-[0.15em] text-rancho-paper"
+                            >Итого</span
                         >
-                            Итого
-                        </span>
-                        <Transition name="fade" mode="out-in">
-                            <span
-                                :key="cart.grandTotalFormatted"
-                                class="text-xl font-black text-rancho-buttercup sm:text-2xl"
-                            >
-                                {{ cart.grandTotalFormatted }}
-                            </span>
-                        </Transition>
+                        <div
+                            class="relative inline-flex h-[1.6em] min-w-[7rem] items-center justify-end sm:min-w-[8rem]"
+                        >
+                            <Transition name="price-swap">
+                                <span
+                                    :key="cart.grandTotalFormatted"
+                                    class="absolute right-0 whitespace-nowrap text-xl font-black text-rancho-paper sm:text-2xl"
+                                >
+                                    {{ cart.grandTotalFormatted }}
+                                </span>
+                            </Transition>
+                        </div>
                     </div>
 
                     <BaseSubmitButton
@@ -160,12 +175,21 @@
                     <Transition name="collapse">
                         <p
                             v-if="cart.freeDeliveryGapFormatted && cart.hasDelivery"
-                            class="text-center text-[11px] font-medium leading-relaxed text-rancho-paper/40"
+                            class="flex items-center gap-2 text-center text-[11px] font-medium leading-relaxed text-rancho-paper/40"
                         >
                             До бесплатной доставки:
-                            <span class="font-bold text-rancho-ember">{{
-                                cart.freeDeliveryGapFormatted
-                            }}</span>
+                            <span
+                                class="relative inline-flex h-[1.25em] min-w-[4.5rem] items-center justify-start"
+                            >
+                                <Transition name="price-swap">
+                                    <span
+                                        :key="cart.freeDeliveryGapFormatted"
+                                        class="absolute left-0 whitespace-nowrap font-bold text-rancho-ember"
+                                    >
+                                        {{ cart.freeDeliveryGapFormatted }}
+                                    </span>
+                                </Transition>
+                            </span>
                         </p>
                     </Transition>
                 </aside>

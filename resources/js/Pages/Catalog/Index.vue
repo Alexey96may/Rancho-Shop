@@ -134,7 +134,7 @@
 </script>
 
 <template>
-    <div class="py-12">
+    <div class="pt-12">
         <AppContainer>
             <header
                 v-scroll-reveal
