@@ -318,9 +318,15 @@
                 </div>
             </header>
 
-            <div id="main-content" class="min-w-0 flex-1 px-4 py-12 sm:p-6 lg:p-8 xl:p-10">
-                <slot v-if="isMounted" />
-            </div>
+            <Transition name="fade" mode="out-in">
+                <div
+                    id="main-content"
+                    :key="page.url"
+                    class="min-w-0 flex-1 px-4 py-12 sm:p-6 lg:p-8 xl:p-10"
+                >
+                    <slot v-if="isMounted" />
+                </div>
+            </Transition>
         </div>
     </div>
 </template>

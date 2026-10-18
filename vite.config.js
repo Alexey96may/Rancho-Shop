@@ -70,11 +70,10 @@ export default defineConfig(({ isSsrBuild }) => ({
         rollupOptions: {
             output: isSsrBuild
                 ? {
-                      // SSR — all the code in a single file, no changes
+                      entryFileNames: 'ssr.js',
                       codeSplitting: false,
                   }
                 : {
-                      // Client — standard breakdown
                       manualChunks(id) {
                           if (id.includes('node_modules')) {
                               return id.split('node_modules/')[1].split('/')[0];
@@ -100,5 +99,16 @@ export default defineConfig(({ isSsrBuild }) => ({
             '@css': path.resolve(__dirname, './resources/css'),
             '@img': path.resolve(__dirname, './resources/images'),
         },
+    },
+
+    ssr: {
+        noExternal: [
+            'vue',
+            '@vue/server-renderer',
+            '@vue/runtime-core',
+            '@vue/runtime-dom',
+            '@inertiajs/vue3',
+            'pinia',
+        ],
     },
 }));

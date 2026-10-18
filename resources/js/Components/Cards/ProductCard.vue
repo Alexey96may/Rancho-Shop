@@ -127,8 +127,9 @@
 
                 <button
                     v-else
+                    type="button"
                     disabled
-                    class="w-full cursor-not-allowed rounded-xl bg-rancho-ink-200 py-3 text-center text-xs font-bold text-rancho-ink-500 transition-colors"
+                    class="flex h-12 w-full cursor-not-allowed items-center justify-center rounded-xl bg-rancho-ink-200 px-3 text-xs font-bold text-rancho-ink-500 transition-colors sm:text-lg"
                 >
                     Нельзя заказать
                 </button>

@@ -2,7 +2,7 @@
     import { computed, onBeforeUnmount, ref, useId, watch } from 'vue';
 
     import { MinusIcon, PlusIcon } from '@heroicons/vue/24/outline';
-    import { toInteger } from 'lodash';
+    import { toInteger } from 'lodash-es';
 
     const model = defineModel<number | null | undefined>({ default: 0 });
     const error = defineModel<string | undefined>('error');

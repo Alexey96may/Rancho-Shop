@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('order_items', function (Blueprint $table) {
-            $table->decimal('quantity', 10, 1)->change();
+            $table->decimal('quantity', 10, 2)->change();
         });
     }
 

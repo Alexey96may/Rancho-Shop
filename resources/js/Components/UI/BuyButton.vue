@@ -77,7 +77,7 @@
                 key="button"
                 @click.stop="handleClick"
                 :disabled="isDisabled"
-                class="text:xs flex w-full items-center justify-center rounded-xl p-2 font-bold transition-all duration-300 active:scale-95 sm:text-lg"
+                class="flex h-12 w-full items-center justify-center rounded-xl p-1.5 text-xs font-bold transition-all duration-300 active:scale-95 sm:text-lg"
                 :class="[
                     !isDisabled
                         ? 'shadow-lg bg-rancho-pine text-white hover:bg-rancho-forest'

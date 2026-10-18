@@ -143,7 +143,7 @@
 
 <template>
     <div
-        class="flex w-full select-none items-center justify-between rounded-xl bg-rancho-forest p-1.5 text-white"
+        class="flex h-12 w-full select-none items-center justify-between rounded-xl bg-rancho-forest p-1.5 text-white"
         style="-webkit-touch-callout: none"
         @contextmenu.prevent
     >
