@@ -184,7 +184,7 @@
                                 <Transition name="price-swap">
                                     <span
                                         :key="cart.freeDeliveryGapFormatted"
-                                        class="absolute left-0 whitespace-nowrap font-bold text-rancho-ember"
+                                        class="absolute inset-y-0 left-0 flex items-center whitespace-nowrap font-bold text-rancho-ember"
                                     >
                                         {{ cart.freeDeliveryGapFormatted }}
                                     </span>

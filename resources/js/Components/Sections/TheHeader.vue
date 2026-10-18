@@ -303,9 +303,9 @@
                     :class="isDark ? 'border-rancho-ink-800' : 'border-rancho-ink-200'"
                 >
                     <div class="flex items-center gap-2">
-                        <CowIcon
-                            class="h-6 w-6"
-                            :class="isDark ? 'text-rancho-buttercup' : 'text-rancho-pine'"
+                        <component
+                            :is="CowLogo"
+                            class="h-7 w-7 shrink-0 transition-colors sm:h-8 sm:w-8"
                         />
                         <span class="font-header text-lg leading-none">Меню</span>
                     </div>

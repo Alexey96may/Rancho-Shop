@@ -289,7 +289,7 @@ export const useCartStore = defineStore(
 
             const next = item.quantity + step;
 
-            if (next < item.stock) {
+            if (next <= item.stock) {
                 item.quantity = round(next);
             }
         }

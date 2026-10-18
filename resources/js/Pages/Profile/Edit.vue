@@ -76,6 +76,7 @@
                 :icon="ShoppingBagIcon"
                 label-color="text-rancho-pine"
             />
+
             <StatCard
                 label="Сумма покупок"
                 :value="computedTotalSpent"
@@ -125,7 +126,6 @@
                     :disabled="form.processing"
                     theme="dark"
                 />
-
                 <BaseInput
                     v-model="form.email"
                     v-model:error="form.errors.email"
