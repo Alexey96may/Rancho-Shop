@@ -32,12 +32,10 @@ jobs:
               run: echo "Using port 2222 for SSH"
 
             - name: Execute deploy script via SSH
-              uses: appleboy/ssh-action@v1
-              with:
-                  host: ${{ secrets.SSH_HOST }}:2222
-                  username: ${{ secrets.SSH_USER }}
-                  key: ${{ secrets.SSH_PRIVATE_KEY }}
-                  script: |
-                      set -e
-                      cd /var/www/milkshop
-                      FRONTEND_CHANGED=${{ steps.changes.outputs.frontend }} bash deploy.sh
+              run: |
+                  mkdir -p ~/.ssh
+                  echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+                  chmod 600 ~/.ssh/id_ed25519
+                  ssh-keyscan -p 2222 -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+                  ssh -p 2222 -i ~/.ssh/id_ed25519 ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
+                    "cd /var/www/milkshop && FRONTEND_CHANGED=${{ steps.changes.outputs.frontend }} bash deploy.sh"
