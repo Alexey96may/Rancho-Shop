@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-echo "🚀 Деплой начат..."
+echo "🚀 Deployment started..."
 
 # 1. Git
 echo "📥 Git pull..."
@@ -11,48 +11,55 @@ git pull origin main
 echo "📦 Composer..."
 composer install --no-dev --optimize-autoloader
 
-# 3. NPM / Build / SSR
-# Раскомментируй, если в этом деплое менялся фронт или VITE_* переменные:
-# echo "📦 NPM..."
-# npm ci
-#
-# echo "🏗️  Build (client)..."
-# NODE_OPTIONS="--max-old-space-size=4096" npm run build
-#
-# echo "🏗️  Build (ssr)..."
-# rm -rf bootstrap/ssr
-# NODE_OPTIONS="--max-old-space-size=4096" npm run build:ssr
+# 3. NPM / Build / SSR — only if FRONTEND_CHANGED=true (set by CI)
+if [ "${FRONTEND_CHANGED:-false}" = "true" ]; then
+    echo "📦 NPM..."
+    npm ci
 
-# 4. Кэш
-echo "🧹 Очистка..."
+    echo "🏗️  Build (client)..."
+    NODE_OPTIONS="--max-old-space-size=4096" npm run build
+
+    echo "🏗️  Build (ssr)..."
+    rm -rf bootstrap/ssr
+    NODE_OPTIONS="--max-old-space-size=4096" npm run build:ssr
+else
+    echo "⏭️  Skipping frontend build (no frontend changes)."
+fi
+
+# 4. Cache
+echo "🧹 Clearing cache..."
 php artisan optimize:clear
 
-echo "📦 Кэширование..."
+echo "📦 Caching..."
 php artisan config:cache
 php artisan route:cache
 php artisan event:cache
 php artisan view:cache
 
-# 5. Миграции
-echo "🗄️  Миграции..."
+# 5. Migrations
+echo "🗄️  Migrations..."
 php artisan migrate --force
 
-# 6. Очередь
-echo "🔄 Очередь..."
+# 6. Queue
+echo "🔄 Queue..."
 sudo systemctl restart milkshop-queue
 
-# 7. SSR — перезапуск ТОЛЬКО если собирал фронт (см. блок 3)
-echo "🖥️  SSR..."
-sudo systemctl restart milkshop-ssr
-sleep 2
-curl -fsS http://127.0.0.1:13714/health >/dev/null && echo "   ✓ SSR отвечает" || {
-    echo "   ✗ SSR не отвечает, смотри: journalctl -u milkshop-ssr -n 50"
-    exit 1
-}
+# 7. SSR — restart ONLY if frontend was rebuilt
+if [ "${FRONTEND_CHANGED:-false}" = "true" ]; then
+    echo "🖥️  SSR..."
+    sudo systemctl restart milkshop-ssr
+    sleep 2
+    curl -fsS http://127.0.0.1:13714/health >/dev/null && echo "   ✓ SSR is responding" || {
+        echo "   ✗ SSR is not responding, check: journalctl -u milkshop-ssr -n 50"
+        exit 1
+    }
+else
+    echo "⏭️  Skipping SSR restart (no frontend changes)."
+fi
 
-# 8. Права
-echo "🔒 Права..."
+# 8. Permissions
+echo "🔒 Permissions..."
 sudo chown -R www-data:www-data storage bootstrap/cache
 sudo chmod -R 775 storage bootstrap/cache
 
-echo "✅ Деплой завершён!"
+echo "✅ Deployment complete!"

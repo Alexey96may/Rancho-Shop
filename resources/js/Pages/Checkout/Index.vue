@@ -496,7 +496,7 @@
                             class="flex justify-between gap-2 text-sm"
                         >
                             <span class="text-rancho-ink-700">
-                                {{ item.name }} × {{ item.quantity }}
+                                {{ item.name }} × {{ item.quantity }}{{ item.unit.short }}
                             </span>
                             <span class="font-bold text-rancho-forest">
                                 {{ formatMoney(item.price * item.quantity) }}

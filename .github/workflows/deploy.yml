@@ -1,0 +1,40 @@
+name: Deploy to VSD
+
+on:
+    workflow_dispatch:
+
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Detect frontend changes
+              uses: dorny/paths-filter@v3
+              id: changes
+              with:
+                  filters: |
+                      frontend:
+                        - 'resources/**'
+                        - 'package.json'
+                        - 'package-lock.json'
+                        - 'vite.config.js'
+                        - 'tailwind.config.js'
+                        - 'postcss.config.js'
+
+            - name: Show detection result
+              run: |
+                  echo "frontend changed: ${{ steps.changes.outputs.frontend }}"
+
+            - name: Execute deploy script via SSH
+              uses: appleboy/ssh-action@v1
+              with:
+                  host: ${{ secrets.SSH_HOST }}
+                  username: ${{ secrets.SSH_USER }}
+                  key: ${{ secrets.SSH_PRIVATE_KEY }}
+                  script: |
+                      set -e
+                      cd /var/www/milkshop
+                      FRONTEND_CHANGED=${{ steps.changes.outputs.frontend }} bash deploy.sh
