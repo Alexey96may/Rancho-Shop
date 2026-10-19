@@ -21,6 +21,7 @@ class ProductController extends Controller
         $filters = $request->only(['category', 'search', 'sort', 'animal', 'in_stock']);
 
         $products = Product::query()
+            ->active()
             ->with([
                 'category',
                 'media',
@@ -44,6 +45,8 @@ class ProductController extends Controller
 
     public function show(Product $product): Response
     {
+        abort_unless($product->is_active, 404);
+
         $product->load([
             'media',
             'seo',

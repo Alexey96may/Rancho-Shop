@@ -18,6 +18,7 @@ class AnimalController extends Controller
         $filters = $request->only(['search', 'category_id', 'status']);
 
         $animals = Animal::query()
+            ->active()
             ->with(['media', 'seo', 'category'])
             ->filter($filters)
             ->sortPublic()
@@ -25,10 +26,12 @@ class AnimalController extends Controller
             ->withQueryString();
 
         $categories = Category::query()
+            ->active()
             ->whereHas('animals')
             ->get();
 
         $statuses = Animal::query()
+            ->active()
             ->whereNotNull('status')
             ->distinct()
             ->pluck('status')
