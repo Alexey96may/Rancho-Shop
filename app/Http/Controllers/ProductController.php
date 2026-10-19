@@ -21,7 +21,7 @@ class ProductController extends Controller
         $filters = $request->only(['category', 'search', 'sort', 'animal', 'in_stock']);
 
         $products = Product::query()
-            ->active()
+            ->where('is_active', true)
             ->with([
                 'category',
                 'media',
