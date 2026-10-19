@@ -14,7 +14,7 @@ class AnimalDataDTO
         public string $slug,
         public int $category_id,
         public ?int $parent_id,
-        public string $status,
+        public ?string $status,
         public ?string $bio,
         public array $features,
         public bool $is_commentable,
@@ -29,7 +29,7 @@ class AnimalDataDTO
             slug: Str::slug($validated['name']),
             category_id: (int) $validated['category_id'],
             parent_id: !empty($validated['parent_id']) ? (int) $validated['parent_id'] : null,
-            status: $validated['status'],
+            status: $validated['status'] ?? null,
             bio: $validated['bio'] ?? null,
             features: array_values(array_filter(
                 $validated['features'] ?? [],
