@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class() extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -21,7 +21,7 @@ return new class() extends Migration
             $table->string('product_name'); // Например: "Молоко от Белки"
             $table->integer('unit_price'); // Цена, которая была В МОМЕНТ заказа
             $table->integer('old_unit_price')->nullable();
-            $table->integer('quantity'); // Сколько штук/литров взял
+            $table->decimal('quantity', 10, 2); // Сколько штук/литров взял
 
             // snapshot unit
             $table->string('unit_name')->nullable();

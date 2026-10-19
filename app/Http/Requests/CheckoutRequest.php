@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\DTO\CartItemDTO;
 use App\DTO\CheckoutDTO;
+use App\Models\ProductVariant;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -43,7 +44,53 @@ class CheckoutRequest extends FormRequest
 
             'items' => ['required', 'array', 'min:1'],
             'items.*.variant_id' => ['required', 'integer', 'exists:product_variants,id'],
-            'items.*.quantity' => ['required', 'numeric', 'min:0.1'],
+            'items.*.quantity' => [
+                'required',
+                'numeric',
+                'min:0.01',
+                function ($attribute, $value, $fail) {
+                    // Извлекаем индекс: items.0.quantity → 0
+                    $index = explode('.', $attribute)[1];
+                    $variantId = $this->input("items.{$index}.variant_id");
+
+                    if (!$variantId) {
+                        return;
+                    }
+
+                    $variant = ProductVariant::find($variantId);
+                    if (!$variant) {
+                        return; // exists-правило уже отработает
+                    }
+
+                    $step = (float) $variant->step;
+                    $stock = (float) $variant->stock;
+                    $qty = (float) $value;
+
+                    // 1. Остаток
+                    if ($qty > $stock) {
+                        $fail("Количество ({$qty}) превышает остаток ({$stock}).");
+
+                        return;
+                    }
+
+                    // 2. Кратность шагу
+                    if ($step > 0) {
+                        $remainder = fmod($qty, $step);
+                        // fmod(0.5, 0.1) может дать 0.0999999 — допуск
+                        $epsilon = 1e-9;
+                        if ($remainder > $epsilon && abs($remainder - $step) > $epsilon) {
+                            $fail("Количество ({$qty}) должно быть кратно шагу ({$step}).");
+
+                            return;
+                        }
+                    }
+
+                    // 3. (Опционально) quantity >= step
+                    if ($step > 0 && $qty < $step && $stock >= $step) {
+                        $fail("Минимальное количество — {$step}.");
+                    }
+                },
+            ],
         ];
     }
 

@@ -122,17 +122,10 @@
                     v-model="form.name"
                     v-model:error="form.errors.name"
                     label="Имя"
+                    required
+                    autocomplete="name"
                     placeholder="Ваше имя..."
                     :disabled="form.processing"
-                    theme="dark"
-                />
-                <BaseInput
-                    v-model="form.email"
-                    v-model:error="form.errors.email"
-                    label="Электронная почта"
-                    placeholder="Ваш email..."
-                    :disabled="form.processing"
-                    type="email"
                     theme="dark"
                 />
 
@@ -141,9 +134,22 @@
                     label="Номер телефона"
                     placeholder="+7 (___) ___-__-__"
                     :error="form.errors.phone"
+                    autocomplete="phone"
                     theme="dark"
+                    required
                     :disabled="form.processing"
                     @input-start="form.clearErrors('phone')"
+                />
+
+                <BaseInput
+                    v-model="form.email"
+                    v-model:error="form.errors.email"
+                    label="Электронная почта"
+                    autocomplete="email"
+                    placeholder="Ваш email..."
+                    :disabled="form.processing"
+                    type="email"
+                    theme="dark"
                 />
             </div>
 
@@ -161,6 +167,7 @@
                         v-model:error="form.errors.current_password"
                         label="Текущий пароль"
                         placeholder="Введите текущий пароль..."
+                        autocomplete="current-password"
                         :disabled="form.processing"
                         type="password"
                         theme="dark"

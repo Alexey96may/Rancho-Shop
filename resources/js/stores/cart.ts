@@ -40,6 +40,44 @@ export const useCartStore = defineStore(
         const notify = useNotificationsStore();
 
         // ======================
+        // HELPERS
+        // ======================
+        function round(value: number): number {
+            return Math.round(value * 100) / 100;
+        }
+
+        /** Округление вниз до ближайшего кратного step */
+        function snapDown(value: number, step: number): number {
+            if (step <= 0) return round(value);
+            return round(Math.floor(value / step) * step);
+        }
+
+        /** Округление вверх до ближайшего кратного step */
+        function snapUp(value: number, step: number): number {
+            if (step <= 0) return round(value);
+            return round(Math.ceil(value / step) * step);
+        }
+
+        function quantityFallback(slug: string, limit: number): number {
+            switch (slug) {
+                case 'kg':
+                case 'l':
+                    return limit >= 0.5 ? 0.5 : limit;
+                case 'g':
+                case 'ml':
+                    return limit >= 50 ? 50 : limit;
+                default:
+                    return limit >= 1 ? 1 : limit;
+            }
+        }
+
+        function getStep(variant: ProductVariantDTO): number {
+            const step = Number(variant.step ?? 0);
+            if (step > 0) return step;
+            return quantityFallback(variant.unit?.slug ?? '', Number(variant.stock));
+        }
+
+        // ======================
         // GETTERS
         // ======================
         const totalCleanItems = computed(() => items.value.length);
@@ -49,11 +87,11 @@ export const useCartStore = defineStore(
         }
 
         const totalItems = computed(() =>
-            items.value.reduce((acc, item) => acc + item.quantity, 0),
+            round(items.value.reduce((acc, item) => acc + item.quantity, 0)),
         );
 
         const totalPrice = computed(() =>
-            items.value.reduce((acc, item) => acc + item.price * item.quantity, 0),
+            Math.round(items.value.reduce((acc, item) => acc + item.price * item.quantity, 0)),
         );
 
         const totalPriceFormatted = computed(() => formatMoney(totalPrice.value));
@@ -67,11 +105,9 @@ export const useCartStore = defineStore(
             const calc = delivery.value;
             if (!calc || !calc.is_valid) return null;
             if (calc.price === null) return null;
-
             if (calc.zone?.free_from && totalPrice.value >= calc.zone.free_from) {
                 return 0;
             }
-
             return calc.price;
         });
 
@@ -129,24 +165,17 @@ export const useCartStore = defineStore(
         // ACTIONS
         // ======================
         function add(variant: ProductVariantDTO, product?: Product) {
-            if (variant.stock <= 0) {
+            const stock = Number(variant.stock ?? 0);
+            if (stock <= 0) {
                 notify.error(`«${product?.name ?? 'Товар'}» нет в наличии`);
                 return;
             }
 
+            const step = getStep(variant);
             const existingItem = items.value.find((i) => i.variant_id === variant.id);
 
             if (existingItem) {
-                const step = quantityFallback(variant.unit?.slug ?? '', variant.stock);
-                const next = existingItem.quantity + step;
-
-                if (next > existingItem.stock) {
-                    existingItem.valid = false;
-                    existingItem.reason = 'quantity_exceeded';
-                    return;
-                }
-
-                existingItem.quantity = round(next);
+                increment(variant.id, step);
                 return;
             }
 
@@ -161,17 +190,22 @@ export const useCartStore = defineStore(
                 order_column: 0,
             };
 
+            // Первое количество: шаг, но не больше остатка.
+            // Если остаток меньше шага — берём остаток (единственное возможное).
+            const initial = Math.min(step, round(stock));
+
             items.value.push({
                 variant_id: variant.id,
                 product_id: product?.id ?? 0,
                 name: product?.name ?? 'Товар',
                 variant_name: variant.name,
                 price: variant.price,
-                quantity: quantityFallback(variant.unit?.slug ?? '', variant.stock),
+                quantity: initial,
+                step,
                 media: product?.main_photo?.[0] || fallbackMedia,
                 unit: variant.unit || { name: '', short: '', slug: '' },
                 slug: product?.slug ?? '',
-                stock: variant.stock,
+                stock,
                 valid: true,
                 reason: null,
             });
@@ -262,16 +296,34 @@ export const useCartStore = defineStore(
                             ...localItem,
                             valid: false,
                             reason: serverItem?.reason ?? 'not_found',
+                            step: Number(serverItem?.step ?? localItem.step ?? 1),
                         };
                     }
 
                     const stock = Number(serverItem.stock ?? 0);
+                    const step = Number(serverItem.step ?? localItem.step ?? 1);
+
+                    if (stock <= 0) {
+                        return {
+                            ...localItem,
+                            valid: false,
+                            reason: 'out_of_stock',
+                            stock,
+                            step,
+                        };
+                    }
+
+                    // Приводим к кратному step, но не больше stock
+                    const capped = Math.min(Number(localItem.quantity), stock);
+                    const snapped = snapDown(capped, step);
+                    const quantity = snapped > 0 ? snapped : Math.min(step, round(stock));
 
                     return {
                         ...localItem,
                         price: Number(serverItem.price ?? localItem.price),
                         stock,
-                        quantity: Math.min(Number(localItem.quantity), stock),
+                        step,
+                        quantity,
                         valid: true,
                         reason: null,
                     };
@@ -283,23 +335,43 @@ export const useCartStore = defineStore(
             }
         }
 
-        function increment(variantId: number, step: number = 1) {
+        function increment(variantId: number, step?: number) {
             const item = items.value.find((i) => i.variant_id === variantId);
             if (!item) return;
 
-            const next = item.quantity + step;
+            const actualStep = step ?? item.step ?? 1;
+
+            // Уже максимум
+            if (item.quantity >= item.stock) return;
+
+            // Следующее кратное step
+            const next = snapUp(item.quantity + actualStep, actualStep);
 
             if (next <= item.stock) {
-                item.quantity = round(next);
+                // Влезает — берём кратное
+                item.quantity = next;
+            } else {
+                // Не влезает, но ещё есть остаток — дотягиваем до стока
+                // Например: quantity = 480, step = 80, stock = 500 → next = 560 > 500
+                // → quantity = 500 (весь остаток)
+                item.quantity = round(item.stock);
             }
         }
 
-        function decrement(variantId: number, step = 1, hasUndo?: boolean) {
+        function decrement(variantId: number, step?: number, hasUndo?: boolean) {
             const item = items.value.find((i) => i.variant_id === variantId);
             if (!item) return;
 
-            const next = round(item.quantity - step);
+            const actualStep = step ?? item.step ?? 1;
 
+            const snapped = snapDown(item.quantity, actualStep);
+            if (round(item.quantity) !== snapped) {
+                // quantity некратно (например, 500) — снимаем до кратного (480)
+                item.quantity = snapped;
+                return;
+            }
+
+            const next = round(snapped - actualStep);
             if (next > 0) {
                 item.quantity = next;
                 if (next <= item.stock) {
@@ -310,23 +382,6 @@ export const useCartStore = defineStore(
             }
 
             destroy(variantId, hasUndo);
-        }
-
-        function round(value: number) {
-            return Math.round(value * 100) / 100;
-        }
-
-        function quantityFallback(slug: string, limit: number) {
-            switch (slug) {
-                case 'kg':
-                case 'l':
-                    return limit >= 0.5 ? 0.5 : limit;
-                case 'g':
-                case 'ml':
-                    return limit >= 50 ? 50 : limit;
-                default:
-                    return limit >= 1 ? 1 : limit;
-            }
         }
 
         return {

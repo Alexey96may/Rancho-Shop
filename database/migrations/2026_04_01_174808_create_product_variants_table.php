@@ -23,6 +23,7 @@ return new class extends Migration
             $table->unsignedInteger('old_price')->nullable();
 
             $table->decimal('stock', 10, 2)->default(0);
+            $table->decimal('step', 10, 2)->default(1);
 
             $table->boolean('is_default')->default(false);
             $table->unsignedInteger('position')->default(0);

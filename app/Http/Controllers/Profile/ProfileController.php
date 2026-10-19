@@ -41,7 +41,11 @@ class ProfileController extends Controller
             unset($validated['password']);
         } else {
             $validated['password'] = Hash::make($validated['password']);
+            $validated['password_set_at'] = now(); // <-- добавить
         }
+
+        // email — nullable, если не заполнен, ставим null
+        $validated['email'] = $validated['email'] ?? null; // <-- добавить
 
         $user->update($validated);
 

@@ -23,6 +23,19 @@
 
     const localValue = ref<number>(props.isMoney ? (model.value ?? 0) / 100 : (model.value ?? 0));
 
+    /** Количество знаков после запятой */
+    const fractionDigits = computed(() => {
+        if (props.isMoney) return 2;
+        if (props.step === undefined || props.step >= 1) return 0;
+        return Math.max(0, Math.ceil(-Math.log10(props.step)));
+    });
+
+    /** Округление до нужного количества знаков */
+    function roundToStep(value: number): number {
+        const factor = Math.pow(10, fractionDigits.value);
+        return Math.round(value * factor) / factor;
+    }
+
     watch(
         () => model.value,
         (newVal) => {
@@ -34,23 +47,29 @@
     );
 
     const displayValue = computed(() => {
-        if (isFocused.value) return localValue.value.toString();
+        // При фокусе — показываем «чистое» число (для редактирования)
+        if (isFocused.value) {
+            return roundToStep(localValue.value).toString();
+        }
+
+        const digits = fractionDigits.value;
 
         const formatter = new Intl.NumberFormat('ru-RU', {
             style: props.isMoney ? 'currency' : 'decimal',
             currency: 'RUB',
             minimumFractionDigits: 0,
-            maximumFractionDigits: props.isMoney ? 2 : 0,
+            maximumFractionDigits: digits,
         });
 
         let res = formatter.format(localValue.value);
 
         if (props.zeroValue && toInteger(model.value) === 0) return props.zeroValue;
+
         return props.isMoney ? res.replace(',00', '') : res;
     });
 
     const commit = () => {
-        let val = localValue.value;
+        let val = roundToStep(localValue.value);
 
         if (props.max !== undefined && val > props.max) val = props.max;
         if (props.min !== undefined && val < props.min) val = props.min;
@@ -66,19 +85,31 @@
 
     const handleInput = (event: Event) => {
         const target = event.target as HTMLInputElement;
-        const val = parseFloat(target.value.replace(',', '.'));
+        let raw = target.value.replace(',', '.').replace(/[^\d.]/g, '');
+
+        const digits = fractionDigits.value;
+        if (digits === 0) {
+            raw = raw.replace(/\./g, '');
+        } else {
+            const dotIndex = raw.indexOf('.');
+            if (dotIndex !== -1) {
+                raw = raw.slice(0, dotIndex + 1 + digits);
+            }
+        }
+
+        const val = parseFloat(raw);
         if (!isNaN(val)) localValue.value = val;
     };
 
     const increment = () => {
         if (props.disabled) return;
-        localValue.value += props.step ?? 1;
+        localValue.value = roundToStep(localValue.value + (props.step ?? 1));
         commit();
     };
 
     const decrement = () => {
         if (props.disabled) return;
-        localValue.value -= props.step ?? 1;
+        localValue.value = roundToStep(localValue.value - (props.step ?? 1));
         commit();
     };
 

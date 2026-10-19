@@ -114,13 +114,15 @@
                             class="min-w-0 font-medium text-rancho-ink-200 transition-colors hover:text-rancho-buttercup hover:underline"
                         >
                             {{ item.product_name || 'Товар' }}
-                            <span class="ml-1 font-black text-white"> ×{{ item.quantity }} </span>
+                            <span class="ml-1 font-black text-white">
+                                ×{{ item.quantity }} {{ item.unit.short }}
+                            </span>
                         </Link>
 
                         <span v-else class="min-w-0 font-medium italic text-rancho-ink-400">
                             {{ item.product_name || 'Удалённый товар' }}
                             <span class="ml-1 font-black text-rancho-ink-200">
-                                ×{{ item.quantity }}
+                                ×{{ item.quantity }}{{ item.unit.short }}
                             </span>
                         </span>
 

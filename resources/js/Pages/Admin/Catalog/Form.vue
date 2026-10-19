@@ -77,6 +77,7 @@
         price: props.variant?.data.price ?? 0,
         old_price: props.variant?.data.old_price ?? null,
         stock: props.variant?.data.stock ?? 0,
+        step: props.variant?.data.step ?? 1,
         position: props.variant?.data.position ?? 999,
         is_default: props.variant?.data.is_default ?? false,
         attributes: props.variant?.data.attributes ?? {},
@@ -174,6 +175,15 @@
                     label="Текущий остаток"
                     class="md:col-span-6"
                     :min="0"
+                />
+
+                <AdminNumberInput
+                    v-model="form.step"
+                    v-model:error="form.errors.step"
+                    label="Шаг"
+                    class="md:col-span-6"
+                    :min="0"
+                    :step="0.01"
                 />
 
                 <AdminNumberInput

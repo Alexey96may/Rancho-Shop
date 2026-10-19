@@ -17,7 +17,8 @@ use Illuminate\Support\Carbon;
  * @property string $name
  * @property int $price
  * @property int|null $old_price
- * @property int $stock
+ * @property string $stock
+ * @property string $step
  * @property bool $is_default
  * @property int $position
  * @property array<array-key, mixed>|null $attributes
@@ -56,6 +57,7 @@ class ProductVariant extends Model
         'price',
         'old_price',
         'stock',
+        'step',
         'is_default',
         'position',
         'attributes',
@@ -65,7 +67,8 @@ class ProductVariant extends Model
         'attributes' => 'array',
         'price' => 'integer',
         'old_price' => 'integer',
-        'stock' => 'integer',
+        'stock' => 'decimal:2',
+        'step' => 'decimal:2',
         'is_default' => 'boolean',
     ];
 
@@ -95,12 +98,12 @@ class ProductVariant extends Model
         return $this->hasOne(ProductVariant::class)->where('is_default', true);
     }
 
-    public function isInStock(int $qty = 1): bool
+    public function isInStock(float $qty = 1): bool
     {
-        return $this->stock >= $qty;
+        return (float) $this->stock >= $qty;
     }
 
-    public function scopeInStock(Builder $query, int $qty = 1)
+    public function scopeInStock(Builder $query, float $qty = 1)
     {
         return $query->where('stock', '>=', $qty);
     }

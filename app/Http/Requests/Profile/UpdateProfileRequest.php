@@ -24,14 +24,26 @@ class UpdateProfileRequest extends FormRequest
      */
     public function rules(): array
     {
+        $user = $this->user();
+        $hasPassword = $user->password_set_at !== null;
+
         return [
-            'name'     => ['required', 'string', 'max:255'],
-            'email'    => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique('users')->ignore($this->user()->id)],
-            'phone'    => ['nullable', 'string', 'max:20'],
-            'address'  => ['nullable', 'string', 'max:500'],
-            
-            'current_password' => ['required_with:password', 'nullable', 'current_password'],
-            'password'         => ['nullable', 'string', 'confirmed', Password::defaults()],
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['nullable', 'string', 'lowercase', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
+            'phone' => ['required', 'string', 'max:20'],
+            'address' => ['nullable', 'string', 'max:500'],
+
+            'current_password' => [
+                Rule::requiredIf($hasPassword && $this->filled('password')),
+                'nullable',
+                'current_password',
+            ],
+            'password' => [
+                'nullable',
+                'string',
+                'confirmed',
+                Password::defaults(),
+            ],
         ];
     }
 }

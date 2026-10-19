@@ -5,6 +5,7 @@
 
     import BaseInput from '@/Components/UI/BaseInput.vue';
     import BaseSubmitButton from '@/Components/UI/BaseSubmitButton.vue';
+    import PhoneInput from '@/Components/UI/PhoneInput.vue';
     import GuestLayout from '@/Layouts/GuestLayout.vue';
 
     defineOptions({ layout: GuestLayout });
@@ -14,7 +15,7 @@
     }>();
 
     const form = useForm({
-        email: '',
+        phone: '',
         password: '',
         remember: false,
     });
@@ -55,18 +56,17 @@
     </Transition>
 
     <form v-scroll-reveal class="space-y-5" @submit.prevent="submit">
-        <BaseInput
-            id="email"
-            v-model="form.email"
-            type="email"
-            label="Email"
-            placeholder="you@example.com"
-            :error="form.errors.email"
-            required
-            autofocus
-            autocomplete="username"
+        <PhoneInput
+            id="phone"
+            v-model="form.phone"
+            label="Номер телефона"
+            placeholder="+7 (___) ___-__-__"
+            :error="form.errors.phone"
             theme="light"
-            @input-start="form.clearErrors('email')"
+            autofocus
+            required
+            :disabled="form.processing"
+            @input-start="form.clearErrors('phone')"
         />
 
         <BaseInput

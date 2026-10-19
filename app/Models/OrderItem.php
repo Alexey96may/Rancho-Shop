@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
@@ -12,17 +13,18 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $product_name
  * @property int $unit_price
  * @property int|null $old_unit_price
- * @property int $quantity
+ * @property string $quantity
  * @property string|null $unit_name
  * @property string|null $unit_code
  * @property string|null $unit_short
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
  * @property int|null $product_id
  * @property-read int $subtotal
- * @property-read \App\Models\Order $order
- * @property-read \App\Models\Product|null $product
- * @property-read \App\Models\ProductVariant $variant
+ * @property-read Order $order
+ * @property-read Product|null $product
+ * @property-read ProductVariant $variant
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|OrderItem newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|OrderItem newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|OrderItem query()
@@ -39,6 +41,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|OrderItem whereUnitPrice($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|OrderItem whereUnitShort($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|OrderItem whereUpdatedAt($value)
+ *
  * @mixin \Eloquent
  */
 class OrderItem extends Model
@@ -47,6 +50,12 @@ class OrderItem extends Model
         'order_id', 'product_id', 'product_variant_id', 'product_name',
         'unit_price', 'old_unit_price', 'quantity', 'unit_name', 'unit_short',
         'unit_code',
+    ];
+
+    protected $casts = [
+        'unit_price' => 'integer',
+        'old_unit_price' => 'integer',
+        'quantity' => 'decimal:2',
     ];
 
     public function order(): BelongsTo
@@ -66,6 +75,6 @@ class OrderItem extends Model
 
     public function getSubtotalAttribute(): int
     {
-        return $this->unit_price * $this->quantity;
+        return (int) ($this->unit_price * (float) $this->quantity);
     }
 }

@@ -9,6 +9,7 @@ export type ServerCartItem = {
     valid: boolean;
     price: number;
     stock: number;
+    step: number;
     reason?: CartItemReason | null;
 };
 
@@ -20,6 +21,7 @@ export interface CartItem {
 
     price: number;
     quantity: number;
+    step: number;
 
     media: Media;
     unit: BaseUnit;

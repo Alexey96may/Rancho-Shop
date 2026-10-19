@@ -21,11 +21,7 @@ class UserTelegramNotifier
         $lines[] = '👤 <b>Новый пользователь</b>';
         $lines[] = '';
         $lines[] = '<b>Имя:</b> ' . e($user->name ?? '—');
-        $lines[] = '<b>Email:</b> ' . e($user->email ?? '—');
-
-        if ($user->phone) {
-            $lines[] = '<b>Телефон:</b> ' . e($user->phone);
-        }
+        $lines[] = '<b>Телефон:</b> ' . e($user->phone);
 
         if ($user->role) {
             $label = method_exists($user->role, 'label')

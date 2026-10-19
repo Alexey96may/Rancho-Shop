@@ -32,6 +32,7 @@
         autofocus?: boolean;
         uppercase?: boolean;
         required?: boolean;
+        autocomplete?: string;
         theme?: Theme;
         variant?: Variant;
         /** Показать крестик очистки, когда есть значение */
@@ -121,10 +122,11 @@
                 v-model="model"
                 :type="isSearch ? 'search' : type"
                 :placeholder="placeholder"
+                :autocomplete="autocomplete"
                 :required="required"
                 :disabled="disabled"
                 :autofocus="autofocus"
-                :class="fieldClasses"
+                :class="[fieldClasses, isDark ? 'dark-autofill' : 'light-autofill']"
                 :aria-invalid="!!error"
                 :aria-describedby="error ? errorId : undefined"
             />
@@ -171,5 +173,27 @@
     input[type='search']::-webkit-search-decoration {
         -webkit-appearance: none;
         appearance: none;
+    }
+
+    /* Dark autofill */
+    .dark-autofill:-webkit-autofill,
+    .dark-autofill:-webkit-autofill:hover,
+    .dark-autofill:-webkit-autofill:focus {
+        -webkit-text-fill-color: #ffffff;
+        -webkit-box-shadow: 0 0 0 1000px #0b0b0b inset;
+        box-shadow: 0 0 0 1000px #0b0b0b inset;
+        caret-color: #ffffff;
+        transition: background-color 5000s ease-in-out 0s;
+    }
+
+    /* Light autofill */
+    .light-autofill:-webkit-autofill,
+    .light-autofill:-webkit-autofill:hover,
+    .light-autofill:-webkit-autofill:focus {
+        -webkit-text-fill-color: #1c3f34;
+        -webkit-box-shadow: 0 0 0 1000px #ffffff inset;
+        box-shadow: 0 0 0 1000px #ffffff inset;
+        caret-color: #1c3f34;
+        transition: background-color 5000s ease-in-out 0s;
     }
 </style>

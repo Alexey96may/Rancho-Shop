@@ -11,9 +11,6 @@ class UserSeeder extends Seeder
 {
     use WithoutModelEvents;
 
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
         if (app()->isProduction()) {
@@ -25,7 +22,7 @@ class UserSeeder extends Seeder
         User::factory()->create([
             'name' => 'Admin',
             'email' => 'admin@rancho.com',
-            'phone' => '+79991111111',
+            'phone' => '+7 (999) 111-11-11', // <-- маска
             'password' => Hash::make('admin'),
             'role' => 'admin',
         ]);
@@ -33,7 +30,7 @@ class UserSeeder extends Seeder
         User::factory()->create([
             'name' => 'Customer',
             'email' => 'customer@rancho.com',
-            'phone' => '+79992222222',
+            'phone' => '+7 (999) 222-22-22',
             'password' => Hash::make('customer'),
             'role' => 'customer',
         ]);
@@ -41,7 +38,7 @@ class UserSeeder extends Seeder
         User::factory()->create([
             'name' => 'Moderator',
             'email' => 'moderator@rancho.com',
-            'phone' => '+79993333333',
+            'phone' => '+7 (999) 333-33-33',
             'password' => Hash::make('moderator'),
             'role' => 'moderator',
         ]);
@@ -49,7 +46,7 @@ class UserSeeder extends Seeder
         User::factory()->create([
             'name' => 'Worker',
             'email' => 'worker@rancho.com',
-            'phone' => '+79994444444',
+            'phone' => '+7 (999) 444-44-44',
             'password' => Hash::make('worker'),
             'role' => 'worker',
         ]);

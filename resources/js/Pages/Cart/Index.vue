@@ -61,17 +61,15 @@
                 <!-- ЛЕВАЯ КОЛОНКА: товары -->
                 <div class="space-y-4 lg:col-span-2">
                     <TransitionGroup name="cart-item" tag="div" class="relative space-y-4">
-                        <CartItemCard
-                            v-for="item in cart.items"
-                            :key="item.variant_id"
-                            :item="item"
-                        />
+                        <div v-for="item in cart.items" :key="item.variant_id">
+                            <CartItemCard :key="item.variant_id" :item="item" />
+                        </div>
                     </TransitionGroup>
                 </div>
 
                 <!-- ПРАВАЯ КОЛОНКА: итог -->
                 <aside
-                    class="shadow-xl h-fit space-y-5 rounded-2xl bg-rancho-forest p-5 text-rancho-paper sm:space-y-6 sm:p-6 sm:pb-8"
+                    class="shadow-xl sticky left-0 top-24 h-fit space-y-5 rounded-2xl bg-rancho-forest p-5 text-rancho-paper sm:space-y-6 sm:p-6 sm:pb-8"
                     aria-label="Итог заказа"
                 >
                     <h2
@@ -281,18 +279,17 @@
             opacity 0.3s ease,
             transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
+
     .cart-item-enter-from {
         opacity: 0;
-        transform: translateX(-20px) scale(0.98);
+        transform: translateX(-40px) scale(0.98); /* приходит справа */
     }
+
     .cart-item-leave-to {
         opacity: 0;
-        transform: translateX(20px) scale(0.98);
+        transform: translateX(-40px) scale(0.98); /* уходит влево */
     }
-    .cart-item-leave-active {
-        position: absolute;
-        width: 100%;
-    }
+
     .cart-item-move {
         transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }

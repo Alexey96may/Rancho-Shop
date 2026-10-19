@@ -28,7 +28,20 @@
     const cartItem = computed(() => cart.items.find((i) => i.variant_id === variantId.value));
     const quantity = computed(() => cartItem.value?.quantity ?? 0);
 
+    /**
+     * Шаг изменения количества.
+     * Приоритет: CartItem.step → ProductVariantDTO.step → fallback по unit.slug.
+     * Fallback нужен только для старых вариантов, у которых step ещё не заполнен.
+     */
     const step = computed(() => {
+        const fromCart = Number(cartItem.value?.step ?? 0);
+        if (fromCart > 0) return fromCart;
+
+        if ('step' in props.item) {
+            const fromVariant = Number((props.item as ProductVariantDTO).step ?? 0);
+            if (fromVariant > 0) return fromVariant;
+        }
+
         switch (props.item.unit?.slug) {
             case 'kg':
             case 'l':
@@ -48,7 +61,7 @@
     const isPlusDisabled = computed(() => {
         if (!cartItem.value || isInvalid.value) return true;
         if (stock.value <= 0) return true;
-        return quantity.value + step.value > stock.value;
+        return quantity.value >= stock.value;
     });
 
     const isMinusDisabled = computed(() => {

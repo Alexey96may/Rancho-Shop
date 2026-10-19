@@ -8,13 +8,14 @@
     import AppCaptcha from '@/Components/UI/AppCaptcha.vue';
     import BaseInput from '@/Components/UI/BaseInput.vue';
     import BaseSubmitButton from '@/Components/UI/BaseSubmitButton.vue';
+    import PhoneInput from '@/Components/UI/PhoneInput.vue';
     import GuestLayout from '@/Layouts/GuestLayout.vue';
 
     defineOptions({ layout: GuestLayout });
 
     const form = useForm({
         name: '',
-        email: '',
+        phone: '',
         password: '',
         password_confirmation: '',
         captcha: '',
@@ -26,7 +27,7 @@
     const canSubmit = computed(() => {
         const hasFields =
             form.name.trim().length > 0 &&
-            form.email.trim().length > 0 &&
+            form.phone.trim().length > 0 &&
             form.password.length > 0 &&
             form.password_confirmation.length > 0;
 
@@ -75,17 +76,15 @@
             @input-start="form.clearErrors('name')"
         />
 
-        <BaseInput
-            id="email"
-            v-model="form.email"
-            type="email"
-            label="Email"
-            placeholder="you@example.com"
-            :error="form.errors.email"
+        <PhoneInput
+            id="phone"
+            v-model="form.phone"
+            label="Телефон"
+            placeholder="+7 (___) ___-__-__"
+            :error="form.errors.phone"
             required
-            autocomplete="username"
             theme="light"
-            @input-start="form.clearErrors('email')"
+            @input-start="form.clearErrors('phone')"
         />
 
         <BaseInput

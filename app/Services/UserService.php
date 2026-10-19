@@ -12,8 +12,10 @@ class UserService
     {
         return User::create([
             'name' => $data['name'],
-            'email' => $data['email'],
+            'phone' => $data['phone'],
+            'email' => $data['email'] ?? null,
             'password' => Hash::make($data['password']),
+            'password_set_at' => now(),
             'role' => UserRole::CUSTOMER,
         ]);
     }

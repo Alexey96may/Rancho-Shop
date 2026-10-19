@@ -8,6 +8,7 @@ export interface ProductVariant {
 
     price: number;
     old_price: number | null;
+    step: number;
 
     unit: {
         slug: string;
@@ -30,6 +31,7 @@ export interface ProductVariantDTO {
     price: number;
     old_price: number | null;
     stock: number;
+    step: number;
 
     is_in_stock: boolean;
     is_default: boolean;
