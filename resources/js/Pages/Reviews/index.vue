@@ -132,9 +132,7 @@
                 class="mb-8 flex flex-col justify-between gap-4 sm:mb-12 md:flex-row md:items-center"
             >
                 <div>
-                    <h1 class="text-2xl font-black text-rancho-forest sm:text-4xl">
-                        Отзывы о сайте
-                    </h1>
+                    <h1 class="text-2xl font-black text-rancho-forest sm:text-4xl">Отзывы о нас</h1>
                     <p class="mt-2 text-xs text-rancho-ink-600 sm:text-sm">
                         Впечатления и оценки наших посетителей
                     </p>

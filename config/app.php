@@ -123,8 +123,9 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
-    'admin_email' => env('ADMIN_EMAIL'),
+    'admin_phone' => env('ADMIN_PHONE'),
     'admin_password' => env('ADMIN_PASSWORD'),
+    'admin_email' => env('ADMIN_EMAIL'),
 
     'timezone_display' => env('APP_TIMEZONE_DISPLAY', 'Europe/Moscow'),
 
