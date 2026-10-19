@@ -10,7 +10,7 @@
     const error = defineModel<string | undefined>('error');
 
     defineOptions({
-        inheritAttrs: false,
+        inheritAttrs: true,
     });
 
     const emit = defineEmits<{
@@ -99,7 +99,7 @@
 </script>
 
 <template>
-    <div class="w-full" :class="{ 'pointer-events-none opacity-50': disabled }">
+    <div class="w-full" v-bind="$attrs" :class="{ 'pointer-events-none opacity-50': disabled }">
         <label
             v-if="label"
             :for="inputId"

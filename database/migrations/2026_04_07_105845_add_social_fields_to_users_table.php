@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::table('users', function (Blueprint $table) {
             $table->string('google_id')->nullable()->unique(); // Google
             $table->string('vkontakte_id')->nullable()->unique(); // VK
+            $table->string('telegram_id')->nullable()->unique(); // Tg
             $table->text('avatar_url')->nullable(); // Social avatar link
-            $table->string('password')->nullable()->change(); // nullable password
         });
     }
 

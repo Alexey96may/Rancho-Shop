@@ -2,22 +2,18 @@
 
 namespace App\Services;
 
-use App\DTO\CheckoutDTO;
-use App\DTO\DeliveryDTO;
-use App\Models\Order;
-use App\Models\User;
-use Illuminate\Support\Facades\DB;
-
-use App\Actions\Checkout\GetProductsAction;
-use App\Actions\Checkout\ValidateCartAction;
 use App\Actions\Checkout\CalculateOrderPriceAction;
 use App\Actions\Checkout\CreateOrderAction;
 use App\Actions\Checkout\CreateOrderItemsAction;
 use App\Actions\Checkout\DecrementStockAction;
+use App\Actions\Checkout\GetProductsAction;
 use App\Actions\Checkout\ResolveCheckoutUserAction;
+use App\Actions\Checkout\ValidateCartAction;
 use App\Actions\Checkout\ValidateDeliveryAction;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
+use App\DTO\CheckoutDTO;
+use App\DTO\DeliveryDTO;
+use App\Models\User;
+use Illuminate\Support\Facades\DB;
 
 class CheckoutService
 {
@@ -32,7 +28,7 @@ class CheckoutService
         protected ValidateDeliveryAction $validateDelivery,
     ) {}
 
-    public function handle(CheckoutDTO $dto, DeliveryDTO $delivery): Order
+    public function handle(CheckoutDTO $dto, DeliveryDTO $delivery): array
     {
 
         /** @var array{user: ?User, justCreated: bool}|null $result */
@@ -60,10 +56,9 @@ class CheckoutService
             return $order->load('items');
         });
 
-        if ($result['justCreated'] ?? false) {
-            Auth::login($result['user']);
-        }
-
-        return $order;
+        return [
+            'order' => $order,
+            'magicLink' => $result['magicLink'] ?? null,
+        ];
     }
 }

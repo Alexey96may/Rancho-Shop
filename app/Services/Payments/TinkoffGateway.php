@@ -34,7 +34,10 @@ class TinkoffGateway implements PaymentGatewayInterface
             'OrderId' => (string) $order->id,
             'Description' => "Оплата заказа #{$order->id}",
             'NotificationURL' => route('payments.tinkoff.callback'),
-            'SuccessURL' => route('payments.tinkoff.success', $order),
+            'SuccessURL' => route('payments.tinkoff.success', [
+                'order' => $order,
+                'token' => $order->payment_token,
+            ]),
             'FailURL' => route('checkout.index'),
         ];
 

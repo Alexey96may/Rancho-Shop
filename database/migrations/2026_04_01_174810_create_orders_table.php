@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class() extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -30,6 +30,7 @@ return new class() extends Migration
             $table->text('delivery_address')->nullable();
             $table->decimal('delivery_lat', 10, 7)->nullable();
             $table->decimal('delivery_lng', 10, 7)->nullable();
+            $table->string('payment_token', 64)->nullable()->unique();
             $table->boolean('delivery_validated')->default(true);
             $table->json('delivery_meta')->nullable();
 

@@ -39,7 +39,10 @@ class YooKassaGateway implements PaymentGatewayInterface
             'capture' => true,
             'confirmation' => [
                 'type' => 'redirect',
-                'return_url' => route('payments.yookassa.success', $order),
+                'return_url' => route('payments.yookassa.success', [
+                    'order' => $order,
+                    'token' => $order->payment_token,
+                ]),
             ],
             'description' => "Оплата заказа #{$order->id}",
             'metadata' => [

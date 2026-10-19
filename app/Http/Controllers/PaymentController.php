@@ -15,9 +15,12 @@ class PaymentController extends Controller
     /**
      * Страница оплаты / редирект на эквайринг.
      */
-    public function checkout(Order $order, PaymentGatewayInterface $paymentGateway)
+    public function checkout(Request $request, Order $order, PaymentGatewayInterface $paymentGateway)
     {
-        if ($order->user_id && $order->user_id !== Auth::id()) {
+        $isOwner = $order->user_id && $order->user_id === Auth::id();
+        $hasToken = $request->query('token') === $order->payment_token;
+
+        if (!$isOwner && !$hasToken) {
             abort(403);
         }
 
@@ -41,9 +44,14 @@ class PaymentController extends Controller
                 ->with('error', $paymentData['error'] ?? 'Не удалось создать платёж');
         }
 
+        // Ссылка живёт в сессии до завершения оплаты.
+        // get (не pull) — пользователь может обновить страницу или вернуться.
+        $magicLink = session("magic_link.{$order->id}");
+
         return inertia('Checkout/Payment', [
             'order' => $order,
             'payment' => $paymentData,
+            'magicLink' => $magicLink,
             'seo' => $this->seo('Оплата покупки', robots: 'noindex, nofollow'),
         ]);
     }
@@ -51,15 +59,22 @@ class PaymentController extends Controller
     /**
      * Страница "спасибо" после успешной оплаты (SuccessURL).
      */
-    public function success(Order $order)
+    public function success(Request $request, Order $order)
     {
-        // Простейшая защита: пользователь видит только свой заказ
-        if ($order->user_id && $order->user_id !== Auth::id()) {
+        $isOwner = $order->user_id && $order->user_id === Auth::id();
+        $hasToken = $order->payment_token !== null
+            && $request->query('token') === $order->payment_token;
+
+        if (!$isOwner && !$hasToken) {
             abort(403);
         }
 
+        // pull — забираем один раз. На повторный заход ссылки уже не будет.
+        $magicLink = session()->pull("magic_link.{$order->id}");
+
         return inertia('Checkout/Success', [
             'order' => $order->load('items'),
+            'magicLink' => $magicLink,
             'seo' => $this->seo('Заказ оформлен', robots: 'noindex, nofollow'),
         ]);
     }
@@ -203,9 +218,18 @@ class PaymentController extends Controller
 
         $this->markAsPaid($order, 'fake_trx_' . time());
 
-        return Auth::check()
-            ? redirect()->route('profile.orders.index')->with('success', 'Заказ оплачен (fake)')
-            : redirect()->route('home')->with('success', 'Заказ оплачен (fake)');
+        // Если пользователь не авторизован — показываем страницу успеха
+        // с magic link, чтобы он мог войти.
+        if (!Auth::check()) {
+            return redirect()->route('checkout.success', [
+                'order' => $order,
+                'token' => $order->payment_token,
+            ]);
+        }
+
+        return redirect()
+            ->route('profile.orders.index')
+            ->with('success', 'Заказ оплачен (fake)');
     }
 
     /**
@@ -235,14 +259,21 @@ class PaymentController extends Controller
      * Заказ мог быть ещё не помечен как оплаченный (вебхук идёт параллельно),
      * поэтому доверять payment_status здесь не стоит — просто показываем статус.
      */
-    public function successYooKassa(Order $order)
+    public function successYooKassa(Request $request, Order $order)
     {
-        if ($order->user_id && $order->user_id !== Auth::id()) {
+        $isOwner = $order->user_id && $order->user_id === Auth::id();
+        $hasToken = $order->payment_token !== null
+            && $request->query('token') === $order->payment_token;
+
+        if (!$isOwner && !$hasToken) {
             abort(403);
         }
 
+        $magicLink = session()->pull("magic_link.{$order->id}");
+
         return inertia('Checkout/Success', [
             'order' => $order->load('items'),
+            'magicLink' => $magicLink,
             'seo' => $this->seo('Заказ оформлен', robots: 'noindex, nofollow'),
         ]);
     }

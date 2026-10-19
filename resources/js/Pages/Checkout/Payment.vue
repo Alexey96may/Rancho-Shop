@@ -34,6 +34,7 @@
     const props = defineProps<{
         order: Order;
         payment: PaymentPayload;
+        magicLink?: string | null;
     }>();
 
     const formRef = ref<HTMLFormElement | null>(null);
@@ -71,6 +72,26 @@
                         {{ computedTotalPrice }}
                     </span>
                 </p>
+
+                <!-- MAGIC LINK — показываем до ухода на шлюз -->
+                <div
+                    v-if="magicLink"
+                    class="mt-6 rounded-xl border border-rancho-buttercup/40 bg-rancho-buttercup/15 p-4"
+                >
+                    <p class="text-sm font-bold text-rancho-forest">
+                        Мы создали для вас личный кабинет
+                    </p>
+                    <p class="mt-1 text-xs leading-relaxed text-rancho-ink-600">
+                        Войти можно по ссылке (действует 24 часа). Рекомендуем установить пароль
+                        сразу после входа.
+                    </p>
+                    <a
+                        :href="magicLink"
+                        class="mt-3 inline-flex w-full items-center justify-center rounded-xl bg-rancho-pine px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-rancho-forest sm:w-auto"
+                    >
+                        Войти в кабинет
+                    </a>
+                </div>
 
                 <!-- 1. REDIRECT: ЮKassa / Тинькофф / PayMaster -->
                 <div v-if="payment.type === 'redirect'" v-scroll-reveal class="mt-8 text-center">
@@ -149,8 +170,19 @@
                         статус заказа изменится автоматически.
                     </p>
 
-                    <div class="pt-4">
+                    <div class="space-y-2 pt-4">
+                        <!-- Если есть magicLink — ведём на вход -->
+                        <a
+                            v-if="magicLink"
+                            :href="magicLink"
+                            class="shadow-md hover:shadow-lg inline-flex w-full items-center justify-center rounded-xl bg-rancho-pine px-4 py-3 text-sm font-bold text-white transition-all hover:bg-rancho-forest focus:outline-none focus-visible:ring-4 focus-visible:ring-rancho-pine/30 active:scale-95"
+                        >
+                            Войти в кабинет и посмотреть заказы
+                        </a>
+
+                        <!-- Если авторизован (вошёл ранее) — обычная ссылка -->
                         <Link
+                            v-else
                             :href="route('profile.orders.index')"
                             class="shadow-md hover:shadow-lg inline-flex w-full items-center justify-center rounded-xl bg-rancho-pine px-4 py-3 text-sm font-bold text-white transition-all hover:bg-rancho-forest focus:outline-none focus-visible:ring-4 focus-visible:ring-rancho-pine/30 active:scale-95"
                         >

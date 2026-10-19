@@ -48,11 +48,7 @@
 
     const close = () => emit('update:modelValue', null);
 
-    function onKeydown(e: KeyboardEvent) {
-        if (!isOpen.value) return;
-        if (e.key === 'Escape') close();
-    }
-
+    // Блокировка скролла body
     watch(
         isOpen,
         (open) => {
@@ -62,15 +58,72 @@
         { immediate: true },
     );
 
+    // === History-стек для кнопки «Назад» ===
+
+    let ignoreNextPop = false;
+
+    function pushHistoryIfNeeded() {
+        if (typeof window === 'undefined') return;
+        if (!window.history.state?.lightbox) {
+            window.history.pushState(
+                { ...window.history.state, lightbox: true },
+                '',
+                window.location.href,
+            );
+        }
+    }
+
+    function popHistoryIfNeeded() {
+        if (typeof window === 'undefined') return;
+        if (window.history.state?.lightbox && !ignoreNextPop) {
+            ignoreNextPop = true;
+            window.history.back();
+        }
+    }
+
+    watch(
+        () => props.modelValue,
+        (val, prev) => {
+            if (typeof window === 'undefined') return;
+
+            if (val !== null && prev === null) {
+                pushHistoryIfNeeded();
+            } else if (val === null && prev !== null) {
+                popHistoryIfNeeded();
+            }
+        },
+    );
+
+    function onPopState() {
+        if (typeof window === 'undefined') return;
+
+        if (ignoreNextPop) {
+            ignoreNextPop = false;
+            return;
+        }
+
+        if (props.modelValue !== null) {
+            close();
+        }
+    }
+
+    function onKeydown(e: KeyboardEvent) {
+        if (!isOpen.value) return;
+        if (e.key === 'Escape') close();
+    }
+
     onMounted(() => {
         if (typeof window === 'undefined') return;
+        window.addEventListener('popstate', onPopState);
         window.addEventListener('keydown', onKeydown);
     });
 
     onUnmounted(() => {
         if (typeof window === 'undefined') return;
+        window.removeEventListener('popstate', onPopState);
         window.removeEventListener('keydown', onKeydown);
         document.body.classList.remove('modal-open');
+        popHistoryIfNeeded();
     });
 
     const openAt = (index: number) => {

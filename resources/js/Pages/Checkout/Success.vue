@@ -12,20 +12,10 @@
 
     defineOptions({ layout: MainLayout });
 
-    const props = defineProps({
-        order: {
-            type: Object as PropType<Order>,
-            required: true,
-            validator: (value: Order): boolean => {
-                return (
-                    typeof value === 'object' &&
-                    value !== null &&
-                    'id' in value &&
-                    'total_price' in value
-                );
-            },
-        },
-    });
+    const props = defineProps<{
+        order: Order;
+        magicLink?: string | null;
+    }>();
 
     const computedTotalPrice = computed(() => formatMoney(props.order.total_price));
     const computedDeliveryPrice = computed(() => formatMoney(props.order.delivery_price));
@@ -57,6 +47,25 @@
                     <span class="font-black text-rancho-forest">#{{ order.id }}</span>
                     и уже начали его обработку.
                 </p>
+            </div>
+
+            <!-- MAGIC LINK -->
+            <div
+                v-if="magicLink"
+                v-scroll-reveal
+                class="shadow-sm mb-8 rounded-2xl border border-rancho-buttercup/40 bg-rancho-buttercup/15 p-6 sm:p-8"
+            >
+                <p class="text-base font-black text-rancho-forest">Личный кабинет готов</p>
+                <p class="mt-2 text-sm leading-relaxed text-rancho-ink-600">
+                    Войти можно по ссылке (действует 24 часа). Рекомендуем установить пароль сразу
+                    после входа — иначе при следующем визите понадобится новая ссылка.
+                </p>
+                <a
+                    :href="magicLink"
+                    class="mt-4 inline-flex w-full items-center justify-center rounded-xl bg-rancho-pine px-6 py-3 text-sm font-bold text-white transition-all hover:bg-rancho-forest focus:outline-none focus-visible:ring-4 focus-visible:ring-rancho-pine/30 active:scale-95 sm:w-auto"
+                >
+                    Войти в кабинет
+                </a>
             </div>
 
             <!-- Детали заказа -->

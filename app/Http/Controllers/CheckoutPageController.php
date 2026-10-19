@@ -73,21 +73,33 @@ class CheckoutPageController extends Controller
         $checkoutDto = $request->toDTO();
         $deliveryDto = DeliveryDTO::fromRequest($request);
 
-        $order = app(CheckoutService::class)->handle(
-            $checkoutDto,
-            $deliveryDto
-        );
+        $result = app(CheckoutService::class)->handle($checkoutDto, $deliveryDto);
+
+        $order = $result['order'];
+        $magicLink = $result['magicLink'];
+
+        if ($magicLink) {
+            session(["magic_link.{$order->id}" => $magicLink]);
+        }
 
         // Промокод применён к заказу — очищаем сессию
         session()->forget('promo_code_id');
 
-        return redirect()->route('payments.checkout', $order);
+        $paymentUrl = route('payments.checkout', [
+            'order' => $order,
+            'token' => $order->payment_token,
+        ]);
+
+        return redirect($paymentUrl);
     }
 
     public function success(Order $order)
     {
+        $magicLink = session()->pull("magic_link.{$order->id}");
+
         return Inertia::render('Checkout/Success', [
             'order' => $order->load('items.variant.product'),
+            'magicLink' => $magicLink,
         ]);
     }
 }

@@ -314,6 +314,7 @@
                                 <button
                                     type="button"
                                     @click="goToDeliveryPage"
+                                    :disabled="form.processing"
                                     class="shadow-md hover:shadow-lg mt-3 w-full rounded-xl bg-rancho-pine px-4 py-3 text-sm font-bold text-white transition-all hover:bg-rancho-forest focus:outline-none focus-visible:ring-4 focus-visible:ring-rancho-pine/30 active:scale-95"
                                 >
                                     Выбрать адрес доставки
@@ -412,6 +413,7 @@
                                     <button
                                         type="button"
                                         @click="goToDeliveryPage"
+                                        :disabled="form.processing"
                                         class="flex-1 rounded-xl border-2 border-rancho-ink-300 bg-white px-4 py-2.5 text-xs font-black uppercase tracking-widest text-rancho-forest outline-none transition-all hover:border-rancho-forest hover:bg-rancho-ink-50 focus-visible:ring-4 focus-visible:ring-rancho-pine/30 active:scale-95"
                                     >
                                         Изменить
@@ -420,6 +422,7 @@
                                     <button
                                         type="button"
                                         @click="togglePickup"
+                                        :disabled="form.processing"
                                         class="hover:rancho-ember/40 flex-1 rounded-xl border-2 border-rancho-ember bg-white px-4 py-2.5 text-xs font-black uppercase tracking-widest text-rancho-ember outline-none transition-all hover:bg-rancho-ember/30 focus-visible:ring-4 focus-visible:ring-rose-500/30 active:scale-95"
                                     >
                                         Самовывоз

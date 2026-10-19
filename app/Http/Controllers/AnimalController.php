@@ -61,6 +61,7 @@ class AnimalController extends Controller
         ]);
 
         $comments = $animal->comments()
+            ->published()
             ->latest()
             ->paginate(setting('animals_per_page', 8));
 

@@ -22,6 +22,7 @@ use App\Http\Controllers\CheckoutPageController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\DeliveryController;
 use App\Http\Controllers\LandingController;
+use App\Http\Controllers\MagicLoginController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProductController;
@@ -66,6 +67,10 @@ Route::middleware('throttle:10,1')->group(function () {
     Route::post('/promo-code/check', [PublicPromoCodeController::class, 'check'])
         ->name('promo-code.check');
 });
+
+Route::get('/magic-login/{user}', [MagicLoginController::class, 'login'])
+    ->name('magic.login')
+    ->middleware('signed');
 
 Route::post('/promo-code/remove', [PublicPromoCodeController::class, 'remove'])
     ->name('promo-code.remove');

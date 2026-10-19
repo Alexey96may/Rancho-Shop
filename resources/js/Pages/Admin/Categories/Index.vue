@@ -80,9 +80,6 @@
         () => {
             submitFilters(filterForm, 'admin.categories.index');
         },
-        {
-            immediate: true,
-        },
     );
 
     const submit = () => {
@@ -93,10 +90,11 @@
 </script>
 
 <template>
-    <Teleport to="#admin-header-content">
-        <AdminPageHeader title="Список Категорий" subtitle="Управление базой категорий" />
-    </Teleport>
     <div class="space-y-10">
+        <Teleport to="#admin-header-content">
+            <AdminPageHeader title="Список Категорий" subtitle="Управление базой категорий" />
+        </Teleport>
+
         <!-- FILTERS -->
         <section class="flex flex-col gap-4 sm:flex-row sm:items-end" aria-label="Фильтрация">
             <AdminSearchInput

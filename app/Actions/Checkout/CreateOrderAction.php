@@ -7,6 +7,7 @@ use App\DTO\DeliveryDTO;
 use App\Models\Order;
 use App\Models\PromoCode;
 use App\Models\User;
+use Illuminate\Support\Str;
 
 class CreateOrderAction
 {
@@ -58,6 +59,7 @@ class CreateOrderAction
 
             'status' => 'new',
             'promo_code_id' => $promoCode?->id,
+            'payment_token' => Str::random(64),
         ]);
 
         if ($promoCode) {

@@ -8,6 +8,7 @@ use App\Models\Order;
 class PayMasterGateway implements PaymentGatewayInterface
 {
     private string $merchantId;
+
     private string $secretKey;
 
     public function __construct()
@@ -31,7 +32,10 @@ class PayMasterGateway implements PaymentGatewayInterface
             'LMI_PAYMENT_NO' => (string) $order->id,
             'LMI_PAYMENT_DESC' => "Оплата заказа #{$order->id}",
             'LMI_PAYMENT_NOTIFICATION_URL' => route('payments.paymaster.callback'),
-            'LMI_SUCCESS_URL' => route('profile.orders.index'),
+            'LMI_SUCCESS_URL' => route('checkout.success', [
+                'order' => $order,
+                'token' => $order->payment_token,
+            ]),
             'LMI_FAILURE_URL' => route('checkout.index'),
         ];
 

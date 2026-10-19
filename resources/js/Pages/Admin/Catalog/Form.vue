@@ -155,7 +155,7 @@
                     v-model:error="form.errors.price"
                     label="Цена продажи"
                     :is-money="true"
-                    class="md:col-span-4"
+                    class="md:col-span-6"
                     :min="0"
                 />
 
@@ -164,7 +164,7 @@
                     v-model:error="form.errors.old_price"
                     label="Старая цена"
                     :is-money="true"
-                    class="md:col-span-4"
+                    class="md:col-span-6"
                     :min="0"
                 />
 
@@ -172,7 +172,7 @@
                     v-model="form.stock"
                     v-model:error="form.errors.stock"
                     label="Текущий остаток"
-                    class="md:col-span-4"
+                    class="md:col-span-6"
                     :min="0"
                 />
 
@@ -180,7 +180,7 @@
                     v-model="form.position"
                     v-model:error="form.errors.position"
                     label="Позиция в списке"
-                    class="md:col-span-4"
+                    class="md:col-span-6"
                 />
 
                 <div class="flex items-end pb-2 md:col-span-8">

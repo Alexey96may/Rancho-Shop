@@ -57,6 +57,7 @@ class PageController extends Controller
             ->firstOrFail();
 
         $comments = $page->reviews()
+            ->published()
             ->latest()
             ->paginate(setting('comments_per_page', 8));
 
