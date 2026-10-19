@@ -34,10 +34,9 @@ jobs:
             - name: Execute deploy script via SSH
               uses: appleboy/ssh-action@v1
               with:
-                  host: ${{ secrets.SSH_HOST }}
+                  host: ${{ secrets.SSH_HOST }}:2222
                   username: ${{ secrets.SSH_USER }}
                   key: ${{ secrets.SSH_PRIVATE_KEY }}
-                  port: 2222
                   script: |
                       set -e
                       cd /var/www/milkshop
