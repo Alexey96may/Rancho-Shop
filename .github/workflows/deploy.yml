@@ -28,6 +28,9 @@ jobs:
               run: |
                   echo "frontend changed: ${{ steps.changes.outputs.frontend }}"
 
+            - name: Debug port
+              run: echo "Using port 2222 for SSH"
+
             - name: Execute deploy script via SSH
               uses: appleboy/ssh-action@v1
               with:
