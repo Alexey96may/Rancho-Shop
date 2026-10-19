@@ -4,6 +4,7 @@ namespace App\Actions\Checkout;
 
 use App\DTO\CheckoutDTO;
 use App\Models\User;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
@@ -41,6 +42,8 @@ class ResolveCheckoutUserAction
             'phone' => $dto->customerPhone,
             'password' => Hash::make($password),
         ]);
+
+        event(new Registered($user));
 
         // Генерируем magic link сразу — он будет передан на страницу оплаты.
         // Срок 24 часа: пользователь уходит на шлюз и может вернуться позже.
