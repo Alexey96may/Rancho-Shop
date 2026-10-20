@@ -13,6 +13,7 @@
     import StarterKit from '@tiptap/starter-kit';
     import { EditorContent, useEditor } from '@tiptap/vue-3';
     import { debounce } from 'lodash-es';
+    import { ChevronDown } from 'lucide-vue-next';
     // Lucide Icons
     import {
         Bold,
@@ -212,231 +213,286 @@
                 .run();
         }
     };
+
+    const isToolbarOpen = ref(true);
 </script>
 
 <template>
     <div
-        class="rounded-2xl border border-rancho-ink-800 bg-rancho-ink-900/30 p-3 sm:rounded-3xl sm:p-4"
+        class="relative rounded-xl border border-rancho-ink-800 bg-rancho-ink-900/30 p-3 sm:rounded-2xl sm:p-4"
     >
-        <!-- TOOLBAR -->
-        <div class="mb-4 space-y-2 border-b border-rancho-ink-800 pb-4">
-            <!-- MODE TOGGLE -->
+        <!-- TOOLBAR (accordion) -->
+        <div
+            class="sticky left-0 top-16 z-10 rounded-t-xl border-b border-rancho-ink-800 bg-rancho-ink-900 p-2 sm:top-20 sm:rounded-t-2xl"
+        >
+            <!-- Заголовок-переключатель -->
             <button
                 type="button"
-                @click="isHtmlMode = !isHtmlMode"
-                class="mode-toggle-btn m-auto block"
+                @click="isToolbarOpen = !isToolbarOpen"
+                class="flex w-full items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-[10px] font-black uppercase tracking-wider text-rancho-ink-400 transition-colors hover:bg-rancho-ink-800 hover:text-white"
+                :aria-expanded="isToolbarOpen"
+                aria-controls="tiptap-toolbar-content"
             >
-                <component :is="isHtmlMode ? Eye : Code2" class="h-4 w-4" />
-                {{ isHtmlMode ? 'Визуально' : 'HTML' }}
+                <span class="flex items-center gap-2">
+                    <ChevronDown
+                        class="h-4 w-4 transition-transform duration-200"
+                        :class="isToolbarOpen ? 'rotate-180' : 'rotate-0'"
+                    />
+                    Панель инструментов
+                </span>
+                <span class="normal-case tracking-normal text-rancho-ink-600">
+                    {{ isToolbarOpen ? 'Скрыть' : 'Показать' }}
+                </span>
             </button>
 
-            <!-- ROW 1: History + Headings + Paragraph -->
-            <div class="flex flex-wrap items-center justify-center gap-1">
-                <template v-if="!isHtmlMode && editor">
-                    <!-- UNDO / REDO -->
-                    <div class="flex items-center gap-0.5">
-                        <button
-                            type="button"
-                            @click="editor.chain().focus().undo().run()"
-                            :disabled="!editor.can().undo()"
-                            class="toolbar-btn"
-                            title="Назад (Ctrl+Z)"
-                        >
-                            <Undo class="h-4 w-4" />
-                        </button>
-
-                        <button
-                            type="button"
-                            @click="editor.chain().focus().redo().run()"
-                            :disabled="!editor.can().redo()"
-                            class="toolbar-btn"
-                            title="Вперед (Ctrl+Y)"
-                        >
-                            <Redo class="h-4 w-4" />
-                        </button>
-                    </div>
-
-                    <div class="mx-1 h-5 w-px bg-rancho-ink-700 sm:mx-2" aria-hidden="true"></div>
-
-                    <!-- HEADING SELECT -->
-                    <select
-                        :value="currentHeadingLevel"
-                        @change="onHeadingChange"
-                        class="h-8 cursor-pointer rounded-lg border border-rancho-ink-800 bg-rancho-ink-950 pl-2 pr-7 text-xs font-bold text-rancho-ink-300 transition-colors focus:border-rancho-mint focus:outline-none focus:ring-2 focus:ring-rancho-mint/20"
-                        title="Стиль текста"
-                        aria-label="Стиль текста"
+            <!-- Содержимое гармошки -->
+            <Transition
+                enter-active-class="transition-all duration-200 ease-out"
+                enter-from-class="max-h-0 opacity-0"
+                enter-to-class="max-h-[600px] opacity-100"
+                leave-active-class="transition-all duration-200 ease-in"
+                leave-from-class="max-h-[600px] opacity-100"
+                leave-to-class="max-h-0 opacity-0"
+            >
+                <div
+                    v-show="isToolbarOpen"
+                    id="tiptap-toolbar-content"
+                    class="mt-2 space-y-2 overflow-hidden"
+                >
+                    <!-- MODE TOGGLE -->
+                    <button
+                        type="button"
+                        @click="isHtmlMode = !isHtmlMode"
+                        class="mode-toggle-btn m-auto block"
                     >
-                        <option value="0">Абзац</option>
-                        <option value="1">H1</option>
-                        <option value="2">H2</option>
-                        <option value="3">H3</option>
-                        <option value="4">H4</option>
-                        <option value="5">H5</option>
-                        <option value="6">H6</option>
-                    </select>
+                        <component :is="isHtmlMode ? Eye : Code2" class="h-4 w-4" />
+                        {{ isHtmlMode ? 'Визуально' : 'HTML' }}
+                    </button>
 
-                    <div class="mx-1 h-5 w-px bg-rancho-ink-700 sm:mx-2" aria-hidden="true"></div>
+                    <!-- ROW 1: History + Headings + Paragraph -->
+                    <div class="flex flex-wrap items-center justify-center gap-1">
+                        <template v-if="!isHtmlMode && editor">
+                            <!-- UNDO / REDO -->
+                            <div class="flex items-center gap-0.5">
+                                <button
+                                    type="button"
+                                    @click="editor.chain().focus().undo().run()"
+                                    :disabled="!editor.can().undo()"
+                                    class="toolbar-btn"
+                                    title="Назад (Ctrl+Z)"
+                                >
+                                    <Undo class="h-4 w-4" />
+                                </button>
 
-                    <!-- TEXT STYLES -->
-                    <div class="flex items-center justify-center gap-0.5">
-                        <button
-                            type="button"
-                            @click="editor.chain().focus().toggleBold().run()"
-                            :class="{ 'active-btn': editor.isActive('bold') }"
-                            class="toolbar-btn"
-                            title="Жирный (Ctrl+B)"
-                        >
-                            <Bold class="h-4 w-4" />
-                        </button>
+                                <button
+                                    type="button"
+                                    @click="editor.chain().focus().redo().run()"
+                                    :disabled="!editor.can().redo()"
+                                    class="toolbar-btn"
+                                    title="Вперед (Ctrl+Y)"
+                                >
+                                    <Redo class="h-4 w-4" />
+                                </button>
+                            </div>
 
-                        <button
-                            type="button"
-                            @click="editor.chain().focus().toggleItalic().run()"
-                            :class="{ 'active-btn': editor.isActive('italic') }"
-                            class="toolbar-btn"
-                            title="Курсив (Ctrl+I)"
-                        >
-                            <Italic class="h-4 w-4" />
-                        </button>
+                            <div
+                                class="mx-1 h-5 w-px bg-rancho-ink-700 sm:mx-2"
+                                aria-hidden="true"
+                            ></div>
 
-                        <button
-                            type="button"
-                            @click="editor.chain().focus().toggleUnderline().run()"
-                            :class="{ 'active-btn': editor.isActive('underline') }"
-                            class="toolbar-btn"
-                            title="Подчеркнутый (Ctrl+U)"
-                        >
-                            <UnderlineIcon class="h-4 w-4" />
-                        </button>
+                            <!-- HEADING SELECT -->
+                            <select
+                                :value="currentHeadingLevel"
+                                @change="onHeadingChange"
+                                class="h-8 cursor-pointer rounded-lg border border-rancho-ink-800 bg-rancho-ink-950 pl-2 pr-7 text-xs font-bold text-rancho-ink-300 transition-colors focus:border-rancho-mint focus:outline-none focus:ring-2 focus:ring-rancho-mint/20"
+                                title="Стиль текста"
+                                aria-label="Стиль текста"
+                            >
+                                <option value="0">Абзац</option>
+                                <option value="1">H1</option>
+                                <option value="2">H2</option>
+                                <option value="3">H3</option>
+                                <option value="4">H4</option>
+                                <option value="5">H5</option>
+                                <option value="6">H6</option>
+                            </select>
+
+                            <div
+                                class="mx-1 h-5 w-px bg-rancho-ink-700 sm:mx-2"
+                                aria-hidden="true"
+                            ></div>
+
+                            <!-- TEXT STYLES -->
+                            <div class="flex items-center justify-center gap-0.5">
+                                <button
+                                    type="button"
+                                    @click="editor.chain().focus().toggleBold().run()"
+                                    :class="{ 'active-btn': editor.isActive('bold') }"
+                                    class="toolbar-btn"
+                                    title="Жирный (Ctrl+B)"
+                                >
+                                    <Bold class="h-4 w-4" />
+                                </button>
+
+                                <button
+                                    type="button"
+                                    @click="editor.chain().focus().toggleItalic().run()"
+                                    :class="{ 'active-btn': editor.isActive('italic') }"
+                                    class="toolbar-btn"
+                                    title="Курсив (Ctrl+I)"
+                                >
+                                    <Italic class="h-4 w-4" />
+                                </button>
+
+                                <button
+                                    type="button"
+                                    @click="editor.chain().focus().toggleUnderline().run()"
+                                    :class="{ 'active-btn': editor.isActive('underline') }"
+                                    class="toolbar-btn"
+                                    title="Подчеркнутый (Ctrl+U)"
+                                >
+                                    <UnderlineIcon class="h-4 w-4" />
+                                </button>
+                            </div>
+
+                            <div
+                                class="mx-1 h-5 w-px bg-rancho-ink-700 sm:mx-2"
+                                aria-hidden="true"
+                            ></div>
+
+                            <!-- COLOR -->
+                            <input
+                                type="color"
+                                @input="
+                                    editor
+                                        .chain()
+                                        .focus()
+                                        .setColor(($event.target as HTMLInputElement).value)
+                                        .run()
+                                "
+                                :value="editor.getAttributes('textStyle').color || '#b5ac96'"
+                                class="h-8 w-8 cursor-pointer rounded-lg border border-rancho-ink-800 bg-transparent p-0.5"
+                                title="Цвет текста"
+                            />
+                        </template>
                     </div>
 
-                    <div class="mx-1 h-5 w-px bg-rancho-ink-700 sm:mx-2" aria-hidden="true"></div>
+                    <!-- ROW 2: Lists, Blocks, Link, Image -->
+                    <div class="flex flex-wrap items-center justify-center gap-1">
+                        <template v-if="!isHtmlMode && editor">
+                            <!-- LISTS / QUOTE -->
+                            <div class="flex items-center gap-0.5">
+                                <button
+                                    type="button"
+                                    @click="editor.chain().focus().toggleBulletList().run()"
+                                    :class="{ 'active-btn': editor.isActive('bulletList') }"
+                                    class="toolbar-btn"
+                                    title="Маркированный список"
+                                >
+                                    <List class="h-4 w-4" />
+                                </button>
 
-                    <!-- COLOR -->
-                    <input
-                        type="color"
-                        @input="
-                            editor
-                                .chain()
-                                .focus()
-                                .setColor(($event.target as HTMLInputElement).value)
-                                .run()
-                        "
-                        :value="editor.getAttributes('textStyle').color || '#b5ac96'"
-                        class="h-8 w-8 cursor-pointer rounded-lg border border-rancho-ink-800 bg-transparent p-0.5"
-                        title="Цвет текста"
-                    />
-                </template>
-            </div>
+                                <button
+                                    type="button"
+                                    @click="editor.chain().focus().toggleOrderedList().run()"
+                                    :class="{ 'active-btn': editor.isActive('orderedList') }"
+                                    class="toolbar-btn"
+                                    title="Нумерованный список"
+                                >
+                                    <ListOrdered class="h-4 w-4" />
+                                </button>
 
-            <!-- ROW 2: Lists, Blocks, Link, Image -->
-            <div class="flex flex-wrap items-center justify-center gap-1">
-                <template v-if="!isHtmlMode && editor">
-                    <!-- LISTS / QUOTE -->
-                    <div class="flex items-center gap-0.5">
-                        <button
-                            type="button"
-                            @click="editor.chain().focus().toggleBulletList().run()"
-                            :class="{ 'active-btn': editor.isActive('bulletList') }"
-                            class="toolbar-btn"
-                            title="Маркированный список"
-                        >
-                            <List class="h-4 w-4" />
-                        </button>
+                                <button
+                                    type="button"
+                                    @click="editor.chain().focus().toggleBlockquote().run()"
+                                    :class="{ 'active-btn': editor.isActive('blockquote') }"
+                                    class="toolbar-btn"
+                                    title="Цитата"
+                                >
+                                    <Quote class="h-4 w-4" />
+                                </button>
+                            </div>
 
-                        <button
-                            type="button"
-                            @click="editor.chain().focus().toggleOrderedList().run()"
-                            :class="{ 'active-btn': editor.isActive('orderedList') }"
-                            class="toolbar-btn"
-                            title="Нумерованный список"
-                        >
-                            <ListOrdered class="h-4 w-4" />
-                        </button>
+                            <div
+                                class="mx-1 h-5 w-px bg-rancho-ink-700 sm:mx-2"
+                                aria-hidden="true"
+                            ></div>
 
-                        <button
-                            type="button"
-                            @click="editor.chain().focus().toggleBlockquote().run()"
-                            :class="{ 'active-btn': editor.isActive('blockquote') }"
-                            class="toolbar-btn"
-                            title="Цитата"
-                        >
-                            <Quote class="h-4 w-4" />
-                        </button>
+                            <!-- BLOCKS -->
+                            <div class="flex items-center gap-0.5">
+                                <button
+                                    type="button"
+                                    @click="editor.chain().focus().setHardBreak().run()"
+                                    class="toolbar-btn"
+                                    title="Перенос строки (BR)"
+                                >
+                                    <WrapText class="h-4 w-4" />
+                                </button>
+
+                                <button
+                                    type="button"
+                                    @click="editor.chain().focus().setHorizontalRule().run()"
+                                    class="toolbar-btn"
+                                    title="Горизонтальная линия"
+                                >
+                                    <Minus class="h-4 w-4" />
+                                </button>
+                            </div>
+
+                            <div
+                                class="mx-1 h-5 w-px bg-rancho-ink-700 sm:mx-2"
+                                aria-hidden="true"
+                            ></div>
+
+                            <!-- LINK / IMAGE -->
+                            <div class="flex items-center gap-0.5">
+                                <button
+                                    type="button"
+                                    @click="openLinkModal"
+                                    :class="{ 'active-btn': editor.isActive('link') }"
+                                    class="toolbar-btn"
+                                    title="Ссылка"
+                                >
+                                    <LinkIcon class="h-4 w-4" />
+                                </button>
+
+                                <button
+                                    v-if="editor.isActive('link')"
+                                    type="button"
+                                    @click="editor.chain().focus().unsetLink().run()"
+                                    class="toolbar-btn text-rose-400"
+                                    title="Удалить ссылку"
+                                >
+                                    <Unlink class="h-4 w-4" />
+                                </button>
+
+                                <button
+                                    type="button"
+                                    @click="fileInput?.click()"
+                                    :disabled="isUploading"
+                                    class="toolbar-btn"
+                                    title="Загрузить изображение"
+                                >
+                                    <Loader2 v-if="isUploading" class="h-4 w-4 animate-spin" />
+                                    <ImageIcon v-else class="h-4 w-4" />
+                                </button>
+
+                                <input
+                                    ref="fileInput"
+                                    type="file"
+                                    class="hidden"
+                                    accept="image/jpeg,image/png,image/webp,image/gif"
+                                    @change="handleFileUpload"
+                                />
+                            </div>
+                        </template>
                     </div>
-
-                    <div class="mx-1 h-5 w-px bg-rancho-ink-700 sm:mx-2" aria-hidden="true"></div>
-
-                    <!-- BLOCKS -->
-                    <div class="flex items-center gap-0.5">
-                        <button
-                            type="button"
-                            @click="editor.chain().focus().setHardBreak().run()"
-                            class="toolbar-btn"
-                            title="Перенос строки (BR)"
-                        >
-                            <WrapText class="h-4 w-4" />
-                        </button>
-
-                        <button
-                            type="button"
-                            @click="editor.chain().focus().setHorizontalRule().run()"
-                            class="toolbar-btn"
-                            title="Горизонтальная линия"
-                        >
-                            <Minus class="h-4 w-4" />
-                        </button>
-                    </div>
-
-                    <div class="mx-1 h-5 w-px bg-rancho-ink-700 sm:mx-2" aria-hidden="true"></div>
-
-                    <!-- LINK / IMAGE -->
-                    <div class="flex items-center gap-0.5">
-                        <button
-                            type="button"
-                            @click="openLinkModal"
-                            :class="{ 'active-btn': editor.isActive('link') }"
-                            class="toolbar-btn"
-                            title="Ссылка"
-                        >
-                            <LinkIcon class="h-4 w-4" />
-                        </button>
-
-                        <button
-                            v-if="editor.isActive('link')"
-                            type="button"
-                            @click="editor.chain().focus().unsetLink().run()"
-                            class="toolbar-btn text-rose-400"
-                            title="Удалить ссылку"
-                        >
-                            <Unlink class="h-4 w-4" />
-                        </button>
-
-                        <button
-                            type="button"
-                            @click="fileInput?.click()"
-                            :disabled="isUploading"
-                            class="toolbar-btn"
-                            title="Загрузить изображение"
-                        >
-                            <Loader2 v-if="isUploading" class="h-4 w-4 animate-spin" />
-                            <ImageIcon v-else class="h-4 w-4" />
-                        </button>
-
-                        <input
-                            ref="fileInput"
-                            type="file"
-                            class="hidden"
-                            accept="image/jpeg,image/png,image/webp,image/gif"
-                            @change="handleFileUpload"
-                        />
-                    </div>
-                </template>
-            </div>
+                </div>
+            </Transition>
         </div>
 
         <!-- EDITOR -->
-        <div class="grid gap-2 px-1 sm:px-2">
+        <div class="grid gap-2 border-none">
             <div v-show="!isHtmlMode" class="editor-container">
                 <EditorContent :editor="editor" />
             </div>
@@ -511,7 +567,7 @@
     }
 
     .editor-container {
-        @apply w-full overflow-hidden rounded-2xl border border-rancho-ink-800 bg-rancho-ink-950 transition-all focus-within:border-rancho-mint sm:rounded-3xl;
+        @apply w-full overflow-hidden rounded-b-xl border border-rancho-ink-800 bg-rancho-ink-950 transition-all focus-within:border-rancho-mint sm:rounded-b-2xl;
     }
 
     .html-textarea {
