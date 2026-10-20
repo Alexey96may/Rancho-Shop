@@ -17,11 +17,11 @@ if [ "${FRONTEND_CHANGED:-false}" = "true" ]; then
     npm ci
 
     echo "🏗️  Build (client)..."
-    NODE_OPTIONS="--max-old-space-size=4096" npm run build
+    NODE_OPTIONS="--max-old-space-size=2048" npm run build
 
     echo "🏗️  Build (ssr)..."
     rm -rf bootstrap/ssr
-    NODE_OPTIONS="--max-old-space-size=4096" npm run build:ssr
+    NODE_OPTIONS="--max-old-space-size=2048" npm run build:ssr
 else
     echo "⏭️  Skipping frontend build (no frontend changes)."
 fi
