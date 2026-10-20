@@ -58,11 +58,23 @@ sudo systemctl restart milkshop-queue
 if [ "${FRONTEND_CHANGED:-false}" = "true" ]; then
     echo "🖥️  SSR..."
     sudo systemctl restart milkshop-ssr
-    sleep 2
-    curl -fsS http://127.0.0.1:13714/health >/dev/null && echo "   ✓ SSR is responding" || {
-        echo "   ✗ SSR is not responding, check: journalctl -u milkshop-ssr -n 50"
+
+    echo "   ⏳ Waiting for SSR to start..."
+    SSR_OK=false
+    for i in $(seq 1 30); do
+        if curl -fsS http://127.0.0.1:13714/health >/dev/null 2>&1; then
+            SSR_OK=true
+            break
+        fi
+        sleep 1
+    done
+
+    if [ "$SSR_OK" = true ]; then
+        echo "   ✓ SSR is responding"
+    else
+        echo "   ✗ SSR is not responding after 30s, check: journalctl -u milkshop-ssr -n 50"
         exit 1
-    }
+    fi
 else
     echo "⏭️  Skipping SSR restart (no frontend changes)."
 fi
