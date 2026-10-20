@@ -1,7 +1,9 @@
 <script setup lang="ts">
     import TheHeader from '@/Components/Sections/TheHeader.vue';
+    import CookieConsent from '@/Components/Shared/CookieConsent.vue';
     import SeoMeta from '@/Components/Shared/SeoMeta.vue';
     import Toaster from '@/Components/Shared/Toaster.vue';
+    import YandexMetrica from '@/Components/Shared/YandexMetrica.vue';
     import { useFlashToasts } from '@/composables/useFlashToasts';
 
     useFlashToasts();
@@ -25,5 +27,7 @@
                 </div>
             </div>
         </div>
+        <YandexMetrica />
+        <CookieConsent />
     </div>
 </template>

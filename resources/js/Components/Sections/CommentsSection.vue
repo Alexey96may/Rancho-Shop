@@ -3,6 +3,7 @@
 
     import { router } from '@inertiajs/vue3';
 
+    import AgreementCheckbox from '@/Components/UI/AgreementCheckbox.vue';
     import AppCaptcha from '@/Components/UI/AppCaptcha.vue';
     import AppRating from '@/Components/UI/AppRating.vue';
     import BaseInput from '@/Components/UI/BaseInput.vue';
@@ -17,6 +18,7 @@
             title?: string;
             isAuthenticated?: boolean;
             onlyShow?: boolean;
+            errors?: Record<string, string>;
         }>(),
         {
             title: 'Отзывы',
@@ -26,11 +28,15 @@
     );
 
     const emit = defineEmits<{
-        (e: 'submit', payload: { content: string; guest_name?: string; rating?: number }): void;
+        (
+            e: 'submit',
+            payload: { content: string; guest_name?: string; rating?: number; agreement: boolean },
+        ): void;
     }>();
 
     // Реактивный массив для подгружаемых комментариев
     const items = ref<Comment[]>([...props.comments.data]);
+    const agreement = ref(false);
     const page = ref(props.comments.meta.current_page);
     const lastPage = ref(props.comments.meta.last_page);
     const loading = ref(false);
@@ -57,6 +63,8 @@
 
     // Валидация: капча нужна только гостям
     const canSubmit = computed(() => {
+        if (!agreement.value) return false;
+
         const hasContent = content.value.trim().length > 0;
         if (!hasContent) return false;
 
@@ -77,12 +85,14 @@
             content: content.value.trim(),
             guest_name: props.isAuthenticated ? undefined : guestName.value.trim(),
             rating: rating.value,
+            agreement: agreement.value,
         });
 
         // Сброс формы
         content.value = '';
         guestName.value = '';
         rating.value = 5;
+        agreement.value = false;
 
         captchaRef.value?.reset();
     };
@@ -173,6 +183,7 @@
                 v-model="guestName"
                 placeholder="Как к вам обращаться?"
                 type="text"
+                :error="errors?.isAuthenticated"
                 label="Ваше имя"
                 theme="light"
                 required
@@ -191,6 +202,7 @@
                 label="Комментарий"
                 placeholder="Ваш комментарий"
                 :disabled="false"
+                :error="errors?.content"
                 :rows="7"
                 theme="light"
                 required
@@ -209,6 +221,8 @@
                     theme="light"
                 />
             </Transition>
+
+            <AgreementCheckbox v-model="agreement" :error="errors?.agreement" />
 
             <div
                 class="flex flex-col-reverse items-stretch gap-4 sm:flex-row sm:items-center sm:justify-between"

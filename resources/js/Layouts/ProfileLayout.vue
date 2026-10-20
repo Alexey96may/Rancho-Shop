@@ -13,8 +13,10 @@
 
     import TheFooter from '@/Components/Sections/TheFooter.vue';
     import TheHeader from '@/Components/Sections/TheHeader.vue';
+    import CookieConsent from '@/Components/Shared/CookieConsent.vue';
     import SeoMeta from '@/Components/Shared/SeoMeta.vue';
     import Toaster from '@/Components/Shared/Toaster.vue';
+    import YandexMetrica from '@/Components/Shared/YandexMetrica.vue';
     import { useFlashToasts } from '@/composables/useFlashToasts';
     import type { SharedData } from '@/types';
 
@@ -186,5 +188,7 @@
         </div>
 
         <TheFooter theme="dark" />
+        <YandexMetrica />
+        <CookieConsent />
     </div>
 </template>

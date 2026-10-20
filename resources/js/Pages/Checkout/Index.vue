@@ -6,6 +6,7 @@
 
     import { ShoppingCartIcon, TruckIcon } from '@heroicons/vue/24/outline';
 
+    import AgreementCheckbox from '@/Components/UI/AgreementCheckbox.vue';
     import BaseInput from '@/Components/UI/BaseInput.vue';
     import BaseSubmitButton from '@/Components/UI/BaseSubmitButton.vue';
     import BaseSwitch from '@/Components/UI/BaseSwitch.vue';
@@ -111,6 +112,7 @@
         lat: number | null;
         lng: number | null;
         create_account: boolean;
+        agreement: boolean;
     };
 
     const form = useForm<CheckoutForm>({
@@ -122,6 +124,7 @@
         is_pickup: !delivery.value?.address,
         lat: delivery.value?.lat ?? null,
         lng: delivery.value?.lng ?? null,
+        agreement: false,
     });
 
     const isPickup = computed(() => form.is_pickup);
@@ -222,6 +225,7 @@
 
     function submit() {
         if (cart.items.length === 0) return;
+        if (!form.agreement) return;
 
         form.transform((data) => ({
             ...data,
@@ -594,10 +598,22 @@
                         </span>
                     </div>
 
+                    <AgreementCheckbox
+                        v-model="form.agreement"
+                        :error="errors.agreement"
+                        class="mt-4"
+                        label="Я согласен с"
+                        link-text="Политикой конфиденциальности"
+                    />
+
                     <BaseSubmitButton
                         @click="submit"
                         :processing="form.processing"
-                        :disabled="cart.items.length === 0 || (!isPickup && !isDeliveryValid)"
+                        :disabled="
+                            cart.items.length === 0 ||
+                            (!isPickup && !isDeliveryValid) ||
+                            !form.agreement
+                        "
                         :label="form.processing ? 'Оформление...' : 'Оформить заказ'"
                         class="mt-10 w-full"
                         :icon="ShoppingCartIcon"

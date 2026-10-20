@@ -1,3 +1,5 @@
+import { ref } from 'vue';
+
 import { router } from '@inertiajs/vue3';
 
 import { useNotificationsStore } from '@/stores/notifications';
@@ -8,6 +10,7 @@ export interface CommentSubmitPayload {
     content: string;
     guest_name?: string;
     rating?: number;
+    agreement: boolean;
 }
 
 export function useComments(
@@ -15,6 +18,7 @@ export function useComments(
     commentableId: number | null = null,
 ) {
     const notify = useNotificationsStore();
+    const errors = ref<Record<string, string>>({});
 
     const submitComment = (payload: CommentSubmitPayload) => {
         router.post(
@@ -23,20 +27,19 @@ export function useComments(
                 content: payload.content,
                 guest_name: payload.guest_name,
                 rating: payload.rating,
+                agreement: payload.agreement,
                 commentable_type: commentableType,
                 commentable_id: commentableId,
             },
             {
                 preserveScroll: true,
-                onError: (errors: Record<string, string>) => {
-                    console.error(errors);
+                onError: (e: Record<string, string>) => {
+                    errors.value = e;
                     notify.error('Ошибка валидации!');
                 },
             },
         );
     };
 
-    return {
-        submitComment,
-    };
+    return { submitComment, errors };
 }

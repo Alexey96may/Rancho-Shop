@@ -70,7 +70,7 @@
         if (idx >= 0) openImageIndex.value = idx;
     };
 
-    const { submitComment } = useComments('animal', animal.value.id);
+    const { submitComment, errors } = useComments('animal', animal.value.id);
 
     const page = usePage<SharedData>();
     const isAuthenticated = computed(() => !!page.props.auth?.user);
@@ -304,6 +304,7 @@
                     :comments="comments"
                     :is-authenticated="isAuthenticated"
                     @submit="submitComment"
+                    :errors="errors"
                 />
             </section>
         </div>

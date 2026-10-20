@@ -1,7 +1,7 @@
 <script setup lang="ts">
     import { type PropType, computed } from 'vue';
 
-    import { Link, useForm, usePage } from '@inertiajs/vue3';
+    import { Link, router, useForm, usePage } from '@inertiajs/vue3';
 
     import { CurrencyDollarIcon, ShoppingBagIcon } from '@heroicons/vue/24/outline';
 
@@ -11,6 +11,7 @@
     import PhoneInput from '@/Components/UI/PhoneInput.vue';
     import StatCard from '@/Components/UI/StatCard.vue';
     import ProfileLayout from '@/Layouts/ProfileLayout.vue';
+    import { useNotificationsStore } from '@/stores/notifications';
     import type { Order, ResourceSingle, SharedData } from '@/types';
     import { formatMoney } from '@/utils/format';
 
@@ -41,6 +42,10 @@
     const page = usePage<SharedData>();
     const user = page.props.auth?.user?.data;
 
+    const deleteForm = useForm({
+        password: '',
+    });
+
     const form = useForm({
         name: user?.name || '',
         email: user?.email || '',
@@ -64,6 +69,21 @@
     const computedLatestOrderPrice = computed(() =>
         formatMoney(props.latestOrder?.data.total_price || 0),
     );
+
+    const notify = useNotificationsStore();
+
+    const confirmDelete = () => {
+        notify.withUndo(
+            'Аккаунт будет удалён?',
+            () => {},
+            () => {
+                deleteForm.delete(route('profile.destroy'), {
+                    preserveScroll: true,
+                });
+            },
+            10000,
+        );
+    };
 </script>
 
 <template>
@@ -199,5 +219,56 @@
                 <BaseSubmitButton :processing="form.processing" label="Сохранить" />
             </div>
         </form>
+
+        <!-- ПЕРСОНАЛЬНЫЕ ДАННЫЕ -->
+        <section
+            v-scroll-reveal
+            class="space-y-3 rounded-2xl border border-rancho-ink-800 bg-rancho-ink-950/60 p-4 sm:p-5"
+        >
+            <h3 class="text-sm font-black uppercase tracking-wider text-rancho-ink-500">
+                Ваши персональные данные
+            </h3>
+
+            <p class="text-xs leading-relaxed text-rancho-ink-400 sm:text-sm">
+                Мы обрабатываем ваши данные (имя, телефон, email) для оформления и доставки заказов,
+                а также для связи с вами. Подробнее — в
+                <a
+                    href="/privacy"
+                    target="_blank"
+                    rel="noopener"
+                    class="font-semibold text-rancho-pine underline decoration-rancho-pine/30 underline-offset-2 transition-colors duration-200 hover:text-rancho-forest"
+                >
+                    Политике конфиденциальности </a
+                >.
+            </p>
+        </section>
+
+        <section class="space-y-3 rounded-2xl border border-rose-500/30 bg-rose-500/5 p-4 sm:p-5">
+            <h3 class="text-sm font-black uppercase tracking-wider text-rose-400">
+                Удаление аккаунта
+            </h3>
+            <p class="text-xs text-rancho-ink-400 sm:text-sm">
+                После удаления аккаунта все ваши данные будут удалены. Это действие необратимо.
+            </p>
+
+            <BaseInput
+                v-model="deleteForm.password"
+                type="password"
+                label="Подтвердите пароль"
+                placeholder="Введите пароль"
+                :error="deleteForm.errors.password"
+                theme="dark"
+                :disabled="deleteForm.processing"
+            />
+
+            <button
+                type="button"
+                @click="confirmDelete"
+                :disabled="deleteForm.processing || !deleteForm.password"
+                class="rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-2 text-xs font-bold uppercase tracking-wider text-rose-400 transition-colors hover:bg-rose-500 hover:text-white disabled:opacity-50"
+            >
+                Удалить аккаунт
+            </button>
+        </section>
     </div>
 </template>

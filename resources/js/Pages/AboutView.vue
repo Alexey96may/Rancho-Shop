@@ -1,7 +1,7 @@
 <script setup lang="ts">
     import { type PropType, computed } from 'vue';
 
-    import { Link } from '@inertiajs/vue3';
+    import { Link, usePage } from '@inertiajs/vue3';
 
     import {
         ClockIcon,
@@ -15,7 +15,8 @@
     import CowIconDark from '@/Components/Icons/CowIconDark.vue';
     import CommentsSection from '@/Components/Sections/CommentsSection.vue';
     import MainLayout from '@/Layouts/MainLayout.vue';
-    import type { Comment, Page, Paginated, ResourceSingle } from '@/types';
+    import { useComments } from '@/composables/crud/useComments';
+    import type { Comment, Page, Paginated, ResourceSingle, SharedData } from '@/types';
 
     defineOptions({ layout: MainLayout });
 
@@ -75,6 +76,11 @@
             cta: 'Узнать больше',
         },
     ];
+
+    const { submitComment, errors } = useComments('page', props.page.data.id);
+
+    const usedPage = usePage<SharedData>();
+    const isAuthenticated = computed(() => !!usedPage.props.auth?.user);
 </script>
 
 <template>
@@ -202,7 +208,12 @@
 
             <!-- REVIEWS / COMMENTS -->
             <div v-if="pageData.is_commentable" v-scroll-reveal>
-                <CommentsSection :comments="comments" :only-show="true" />
+                <CommentsSection
+                    :comments="comments"
+                    @submit="submitComment"
+                    :errors="errors"
+                    :is-authenticated="isAuthenticated"
+                />
             </div>
         </div>
     </AppContainer>

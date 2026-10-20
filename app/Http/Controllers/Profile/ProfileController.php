@@ -7,6 +7,7 @@ use App\Http\Requests\Profile\UpdateProfileRequest;
 use App\Http\Resources\OrderResource;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -50,5 +51,23 @@ class ProfileController extends Controller
         $user->update($validated);
 
         return back()->with('success', 'Данные профиля успешно обновлены!');
+    }
+
+    public function destroy(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'password' => ['required', 'current_password'],
+        ]);
+
+        $user = $request->user();
+
+        Auth::logout();
+
+        $user->delete();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect('/')->with('success', 'Аккаунт удалён.');
     }
 }

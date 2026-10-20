@@ -112,6 +112,7 @@ class HandleInertiaRequests extends Middleware
             ]),
 
             'promo' => fn () => $request->session()->get('promo'),
+            'metrikaId' => fn () => config('services.yandex_metrika.id'),
         ];
     }
 

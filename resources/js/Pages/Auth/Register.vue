@@ -5,6 +5,7 @@
 
     import { ArrowRightEndOnRectangleIcon } from '@heroicons/vue/24/outline';
 
+    import AgreementCheckbox from '@/Components/UI/AgreementCheckbox.vue';
     import AppCaptcha from '@/Components/UI/AppCaptcha.vue';
     import BaseInput from '@/Components/UI/BaseInput.vue';
     import BaseSubmitButton from '@/Components/UI/BaseSubmitButton.vue';
@@ -19,6 +20,7 @@
         password: '',
         password_confirmation: '',
         captcha: '',
+        agreement: false,
     });
 
     const isCaptchaValid = ref(false);
@@ -31,7 +33,7 @@
             form.password.length > 0 &&
             form.password_confirmation.length > 0;
 
-        return hasFields && isCaptchaValid.value && !form.processing;
+        return hasFields && form.agreement && isCaptchaValid.value && !form.processing;
     });
 
     const submit = () => {
@@ -39,7 +41,7 @@
 
         form.post(route('register'), {
             onSuccess: () => {
-                form.reset('password', 'password_confirmation', 'captcha');
+                form.reset('password', 'password_confirmation', 'captcha', 'agreement');
                 isCaptchaValid.value = false;
                 captchaRef.value?.reset();
             },
@@ -124,6 +126,13 @@
                 theme="light"
             />
         </Transition>
+
+        <AgreementCheckbox
+            v-model="form.agreement"
+            :error="form.errors.agreement"
+            label="Регистрируясь, я соглашаюсь с"
+            link-text="Политикой конфиденциальности"
+        />
 
         <p v-if="form.errors.captcha" class="text-xs font-medium text-rose-500">
             {{ form.errors.captcha }}

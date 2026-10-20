@@ -52,6 +52,7 @@ class CommentController extends Controller
             'content' => ['required', 'string', 'min:1'],
             'rating' => ['nullable', 'numeric', 'between:1,5'],
             'guest_name' => [Rule::requiredIf(!$user), 'nullable', 'string', 'max:50'],
+            'agreement' => ['required', 'accepted'],
         ]);
 
         $type = isset($data['commentable_type'])

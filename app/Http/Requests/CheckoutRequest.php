@@ -35,6 +35,7 @@ class CheckoutRequest extends FormRequest
             'delivery_address' => ['nullable', 'string'],
             'customer_comment' => ['nullable', 'string'],
             'create_account' => ['sometimes', 'boolean'],
+            'agreement' => ['required', 'accepted'],
 
             'promo_code_id' => [
                 'nullable',

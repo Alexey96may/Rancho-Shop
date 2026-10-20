@@ -39,6 +39,7 @@ class RegisteredUserController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'phone' => ['required', 'string', 'max:20', 'unique:' . User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'agreement' => ['required', 'accepted'],
         ]);
 
         $user = $userService->createCustomer($data);

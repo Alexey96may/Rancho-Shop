@@ -82,7 +82,6 @@
     });
 
     // gallery
-
     const openImageIndex = ref<number | null>(null);
 
     const allImages = computed<string[]>(() => {
@@ -105,7 +104,7 @@
         if (idx >= 0) openImageIndex.value = idx;
     };
 
-    const { submitComment } = useComments('product', productData.value.id);
+    const { submitComment, errors } = useComments('product', productData.value.id);
 
     const page = usePage<SharedData>();
     const isAuthenticated = computed(() => !!page.props.auth?.user);
@@ -190,7 +189,7 @@
                                 v-if="productData.seo"
                                 :seo="productData.seo"
                                 :title="
-                                    productData.name ? `Купить ${product.data.name}` : undefined
+                                    productData.name ? `Купить «${product.data.name}»` : undefined
                                 "
                                 :text="productData.description ?? undefined"
                                 :image="allImages[0]"
@@ -425,6 +424,7 @@
                     :comments="comments"
                     @submit="submitComment"
                     :is-authenticated="isAuthenticated"
+                    :errors="errors"
                 />
             </section>
         </AppContainer>

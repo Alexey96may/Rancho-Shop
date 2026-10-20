@@ -270,7 +270,7 @@
         }
     }
 
-    const { submitComment } = useComments('page', props.page.data.id);
+    const { submitComment, errors } = useComments('page', props.page.data.id);
 
     const usedPage = usePage<SharedData>();
     const isAuthenticated = computed(() => !!usedPage.props.auth?.user);
@@ -445,6 +445,7 @@
                 :comments="comments"
                 title="Отзывы о доставке"
                 @submit="submitComment"
+                :errors="errors"
                 :is-authenticated="isAuthenticated"
             />
         </div>

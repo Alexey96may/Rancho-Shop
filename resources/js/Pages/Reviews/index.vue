@@ -6,6 +6,7 @@
     import CommentCard from '@/Components/Cards/ReviewsPageCard.vue';
     import MainPagination from '@/Components/Shared/MainPagination.vue';
     import CommentCardSkeleton from '@/Components/Skeletons/ReviewsPageCardSkeleton.vue';
+    import AgreementCheckbox from '@/Components/UI/AgreementCheckbox.vue';
     import AppCaptcha from '@/Components/UI/AppCaptcha.vue';
     import AppRating from '@/Components/UI/AppRating.vue';
     import BaseInput from '@/Components/UI/BaseInput.vue';
@@ -90,6 +91,7 @@
         rating: 5,
         guest_name: '',
         captcha: '',
+        agreement: false,
     });
 
     const isCaptchaValid = ref(false);
@@ -99,6 +101,7 @@
 
     const canSubmit = computed(() => {
         if (form.processing) return false;
+        if (!form.agreement) return false;
         if (isAuthenticated.value) return true;
         return isCaptchaValid.value;
     });
@@ -109,7 +112,7 @@
         form.post(route('comments.store'), {
             preserveScroll: true,
             onSuccess: () => {
-                form.reset('content', 'rating', 'captcha');
+                form.reset('content', 'rating', 'captcha', 'agreement');
                 isCaptchaValid.value = false;
                 captchaRef.value?.reset();
                 isFormVisible.value = false;
@@ -202,6 +205,16 @@
 
                         <p v-if="form.errors.captcha" class="text-xs font-medium text-red-600">
                             {{ form.errors.captcha }}
+                        </p>
+
+                        <AgreementCheckbox
+                            v-model="form.agreement"
+                            :error="form.errors.agreement"
+                            class="pt-1"
+                        />
+
+                        <p v-if="form.errors.agreement" class="text-xs font-medium text-red-600">
+                            {{ form.errors.agreement }}
                         </p>
 
                         <div class="flex justify-end pt-2">
