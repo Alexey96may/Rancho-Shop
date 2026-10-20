@@ -29,6 +29,8 @@
         return item.url;
     };
 
+    const mainPhotoSrc = computed<Media | string | null>(() => props.mainPhoto ?? null);
+
     const mainPhotoUrl = computed(() => resolveUrl(props.mainPhoto));
 
     const openMain = () => {
@@ -57,7 +59,8 @@
             @click="openMain"
         >
             <AppImage
-                :src="mainPhotoUrl"
+                v-if="mainPhotoSrc"
+                :src="mainPhotoSrc"
                 :alt="alt"
                 class-name="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
             />

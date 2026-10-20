@@ -27,7 +27,7 @@ Stack: **Laravel 13 + Vue 3 + Inertia.js**. Production: [milkvalley.org](https:/
 
 **Backend**
 
-- PHP 8.5, Laravel 13
+- PHP 8.3, Laravel 13
 - PostgreSQL + **PostGIS** (delivery zones)
 - Laravel Sanctum (API auth for the mobile client)
 - Laravel Socialite (VK / Google login)
@@ -169,7 +169,7 @@ Stack: **Laravel 13 + Vue 3 + Inertia.js**. Production: [milkvalley.org](https:/
 
 ### Requirements
 
-- PHP 8.5+, Composer 2
+- PHP 8.3+, Composer 2
 - Node.js 20+, npm
 - PostgreSQL 16+ **with the PostGIS extension**
 - **RAM:** at least 2 GB + **4–6 GB swap** for `npm run build` (building 4785 modules on 0.9 GB RAM fails with `Killed`/exit 137). Swap is mandatory on a production server with 1 GB RAM.
@@ -421,7 +421,7 @@ GitHub → **Actions** → **Deploy to VSD** → **Run workflow**.
 ### Server Requirements
 
 - **RAM:** at least 2 GB + **4–6 GB swap**. On 0.9 GB RAM, building 4785 modules fails with `Killed` (exit 137). Swap is mandatory.
-- PHP 8.5, Composer, Node.js 20+, PostgreSQL 16 + PostGIS.
+- PHP 8.3, Composer, Node.js 20+, PostgreSQL 16 + PostGIS.
 - Nginx with `client_max_body_size 50M` (for photo uploads).
 - PHP-FPM: `upload_max_filesize = 50M`, `post_max_size = 52M`.
 

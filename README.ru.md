@@ -27,7 +27,7 @@ Pet-проект онлайн-магазина для небольшой мол�
 
 **Backend**
 
-- PHP 8.5, Laravel 13
+- PHP 8.3, Laravel 13
 - PostgreSQL + **PostGIS** (зоны доставки)
 - Laravel Sanctum (API-авторизация для мобильного клиента)
 - Laravel Socialite (вход через VK / Google)
@@ -169,7 +169,7 @@ Pet-проект онлайн-магазина для небольшой мол�
 
 ### Требования
 
-- PHP 8.5+, Composer 2
+- PHP 8.3+, Composer 2
 - Node.js 20+, npm
 - PostgreSQL 16+ **с расширением PostGIS**
 - **RAM:** минимум 2 ГБ + **4–6 ГБ swap** для `npm run build` (сборка 4785 модулей на 0.9 ГБ RAM падает с `Killed`/exit 137). Для прод-сервера с 1 ГБ RAM swap обязателен.
@@ -421,7 +421,7 @@ GitHub → **Actions** → **Deploy to VSD** → **Run workflow**.
 ### Требования к серверу
 
 - **RAM:** минимум 2 ГБ + **4–6 ГБ swap**. На 0.9 ГБ RAM сборка 4785 модулей падает с `Killed` (exit 137). Swap обязателен.
-- PHP 8.5, Composer, Node.js 20+, PostgreSQL 16 + PostGIS.
+- PHP 8.3, Composer, Node.js 20+, PostgreSQL 16 + PostGIS.
 - Nginx с `client_max_body_size 50M` (для загрузки фото).
 - PHP-FPM: `upload_max_filesize = 50M`, `post_max_size = 52M`.
 
