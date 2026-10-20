@@ -70,4 +70,8 @@ return [
     'yandex' => [
         'static_key' => env('YANDEX_STATIC_API_KEY'),
     ],
+
+    'yandex_metrika' => [
+        'id' => env('YANDEX_METRIKA_ID'),
+    ],
 ];
