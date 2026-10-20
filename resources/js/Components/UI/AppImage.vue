@@ -90,7 +90,10 @@
     const fallbackSrc = computed((): string => {
         if (typeof props.src === 'string') return props.src;
         if (isFileObject.value) return fileUrl.value ?? '';
-        if (isMediaObject.value) return (props.src as Media).url;
+        if (isMediaObject.value) {
+            const media = props.src as Media;
+            return media.previews?.original ?? media.url;
+        }
         return '';
     });
 
@@ -102,7 +105,6 @@
         return [
             { url: data.avif, type: 'image/avif' },
             { url: data.webp, type: 'image/webp' },
-            { url: data.original, type: `image/${media.mime_type.split('/')[1] || 'jpeg'}` },
         ].filter((s): s is { url: string; type: string } => {
             return typeof s.url === 'string' && s.url.length > 0;
         });
@@ -112,7 +114,11 @@
         if (!isMediaObject.value) return null;
         const media = props.src as Media;
         return (
-            media.thumbnails?.original ?? media.thumbnails?.webp ?? media.previews?.original ?? null
+            media.thumbnails?.avif ??
+            media.thumbnails?.webp ??
+            media.thumbnails?.original ??
+            media.previews?.original ??
+            null
         );
     });
 
