@@ -211,12 +211,12 @@ composer dev
 
 Created by `UserSeeder` (skipped in production). Default passwords:
 
-| Role          | Email                  | Password    |
-| ------------- | ---------------------- | ----------- |
-| **Admin**     | `admin@rancho.com`     | `admin`     |
-| **Moderator** | `moderator@rancho.com` | `moderator` |
-| **Worker**    | `worker@rancho.com`    | `worker`    |
-| **Customer**  | `customer@rancho.com`  | `customer`  |
+| Role          | Phone                | Password    |
+| ------------- | -------------------- | ----------- |
+| **Admin**     | `+7 (999) 111-11-11` | `admin`     |
+| **Moderator** | `+7 (999) 333-33-33` | `moderator` |
+| **Worker**    | `+7 (999) 444-44-44` | `worker`    |
+| **Customer**  | `+7 (999) 222-22-22` | `customer`  |
 
 The admin can be overridden via `.env`: `ADMIN_EMAIL`, `ADMIN_PHONE`, `ADMIN_PASSWORD`.
 
