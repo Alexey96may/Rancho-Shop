@@ -14,7 +14,9 @@ composer install --no-dev --optimize-autoloader
 # 3. NPM / Build / SSR — only if FRONTEND_CHANGED=true (set by CI)
 if [ "${FRONTEND_CHANGED:-false}" = "true" ]; then
     echo "📦 NPM..."
-    npm ci
+    sync
+    echo 3 | sudo tee /proc/sys/vm/drop_caches > /dev/null
+    npm ci --no-audit --no-fund
 
     echo "🏗️  Build (client)..."
     NODE_OPTIONS="--max-old-space-size=2048" npm run build
@@ -22,6 +24,14 @@ if [ "${FRONTEND_CHANGED:-false}" = "true" ]; then
     echo "🏗️  Build (ssr)..."
     rm -rf bootstrap/ssr
     NODE_OPTIONS="--max-old-space-size=2048" npm run build:ssr
+
+    echo "🔍 Checking build artifacts..."
+    test -d public/build || { echo "✗ public/build missing"; exit 1; }
+    test -d bootstrap/ssr || { echo "✗ bootstrap/ssr missing"; exit 1; }
+    echo "   ✓ build artifacts present"
+
+    echo "📊 Memory after build:"
+    free -h
 else
     echo "⏭️  Skipping frontend build (no frontend changes)."
 fi
