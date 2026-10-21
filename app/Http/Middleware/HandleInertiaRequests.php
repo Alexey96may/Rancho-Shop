@@ -93,8 +93,8 @@ class HandleInertiaRequests extends Middleware
                 : session('delivery_draft'),
 
             'seo' => [
-                'title' => 'Молочная Долина',
-                'description' => 'Крымский магазин натуральной молочной продукции.',
+                'title' => 'Семейное Ранчо',
+                'description' => 'Крымская ферма натуральной молочной продукции.',
                 'keywords' => 'домашнее молоко, крым, творог, масло, сыр',
                 'robots' => $this->getRobotsForRoute($request),
                 'image' => asset('images/og-default.png'),

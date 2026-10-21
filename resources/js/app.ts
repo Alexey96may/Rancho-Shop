@@ -17,10 +17,10 @@ import './bootstrap';
 const pinia = createPinia();
 pinia.use(piniaPluginPersistedstate);
 
-const appName = import.meta.env.VITE_APP_NAME || 'Молочная Долина';
+const appName = import.meta.env.VITE_APP_NAME || 'Крымская Молочная Долина';
 
 createInertiaApp({
-    title: (title) => `${title} - ${appName}`,
+    title: (title) => `${title} – ${appName}`,
     resolve: (name) =>
         resolvePageComponent(
             `./Pages/${name}.vue`,

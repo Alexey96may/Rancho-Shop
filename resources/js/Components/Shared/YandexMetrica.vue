@@ -12,7 +12,7 @@
 
     const loadMetrika = (id: number) => {
         if (typeof window === 'undefined') return;
-        if ((window as any).ym) return; // уже загружена
+        if ((window as any).ym) return;
 
         // Стандартный сниппет Яндекс.Метрики
         (function (m: any, e: Document, t: string, r: string, i: string, k?: any, a?: any) {

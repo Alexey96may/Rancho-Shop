@@ -46,7 +46,7 @@ class LandingController extends Controller
                     ->get()
             ),
             'faqs' => FaqResource::collection(Faq::published()->orderBy('sort_order')->get()),
-            'seo' => $this->seo('Молочная Долина', 'Магазин - семейное Ранчо'),
+            'seo' => $this->seo('Семейное Ранчо', 'Магазин - семейное Ранчо'),
         ]);
     }
 }
