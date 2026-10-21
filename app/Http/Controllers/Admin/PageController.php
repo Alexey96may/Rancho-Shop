@@ -80,7 +80,7 @@ class PageController extends Controller
      */
     public function update(PageSaveRequest $request, Page $page)
     {
-        $dto = $request->toDto();
+        $dto = $request->toDto($page->id);
 
         if ($dto->content !== null) {
             $this->sanitizeMedia($dto->content, $page);

@@ -2,7 +2,8 @@
 
 namespace App\DTO;
 
-use Illuminate\Support\Str;
+use App\Models\Animal;
+use App\Services\SlugService;
 
 class AnimalDataDTO
 {
@@ -22,11 +23,16 @@ class AnimalDataDTO
         public array $seoData
     ) {}
 
-    public static function fromRequest(array $validated): self
+    public static function fromRequest(array $validated, ?int $ignoreId = null): self
     {
         return new self(
             name: $validated['name'],
-            slug: Str::slug($validated['name']),
+            slug: SlugService::prepare(
+                $validated['slug'] ?? null,
+                $validated['name'],
+                Animal::class,
+                $ignoreId,
+            ),
             category_id: (int) $validated['category_id'],
             parent_id: !empty($validated['parent_id']) ? (int) $validated['parent_id'] : null,
             status: $validated['status'] ?? null,

@@ -88,8 +88,8 @@ class StoreAnimalRequest extends FormRequest
         ];
     }
 
-    public function toDto(): AnimalDataDTO
+    public function toDto(?int $ignoreId = null): AnimalDataDTO
     {
-        return AnimalDataDTO::fromRequest($this->validated());
+        return AnimalDataDTO::fromRequest($this->validated(), $ignoreId);
     }
 }

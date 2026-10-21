@@ -2,6 +2,7 @@
 
 namespace App\DTO;
 
+use App\Models\Page;
 use App\Services\SanitizeService;
 use App\Services\SlugService;
 
@@ -20,7 +21,7 @@ class PageDataDTO
         public array $seoData,
     ) {}
 
-    public static function fromRequest(array $validated): self
+    public static function fromRequest(array $validated, ?int $ignoreId = null): self
     {
         $content = $validated['content'] ?? null;
         if (!empty($content)) {
@@ -34,7 +35,12 @@ class PageDataDTO
             is_active: (bool) ($validated['is_active'] ?? false),
             is_commentable: (bool) ($validated['is_commentable'] ?? true),
             template: $validated['template'],
-            slug: SlugService::prepare($validated['slug'] ?? null, $validated['title']),
+            slug: SlugService::prepare(
+                $validated['slug'] ?? null,
+                $validated['title'],
+                Page::class,
+                $ignoreId,
+            ),
             show_in_menu: (bool) ($validated['show_in_menu'] ?? false),
             menu_order: (int) ($validated['menu_order'] ?? 0),
             seoData: $validated['seo'] ?? [],

@@ -3,7 +3,7 @@
 
     import { useForm } from '@inertiajs/vue3';
 
-    import { CheckIcon } from '@heroicons/vue/24/outline';
+    import { CheckIcon, EyeIcon } from '@heroicons/vue/24/outline';
 
     import FeaturesSection from '@/Components/Admin/Sections/FeaturesSection.vue';
     import MediaSection from '@/Components/Admin/Sections/MediaSection.vue';
@@ -95,8 +95,24 @@
 
 <template>
     <div class="mx-auto max-w-5xl space-y-4 sm:space-y-6">
-        <!-- НАЗАД (top) -->
-        <BaseCancelButton :href="backUrl" label="Назад" />
+        <!-- НАЗАД + ПРОСМОТР (top) -->
+        <div class="flex flex-wrap items-center justify-between gap-2">
+            <BaseCancelButton :href="backUrl" label="Назад" theme="dark" />
+
+            <a
+                v-if="animal"
+                :href="route('animals.show', animal.slug)"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="group flex items-center gap-2 text-[10px] font-black uppercase text-rancho-ink-500 transition-colors hover:text-rancho-mint sm:self-auto"
+            >
+                <EyeIcon
+                    class="h-4 w-4 transition-transform group-hover:scale-110"
+                    aria-hidden="true"
+                />
+                Просмотр
+            </a>
+        </div>
 
         <form @submit.prevent="submit" class="space-y-4 sm:space-y-6 lg:space-y-8" novalidate>
             <!-- TABS -->

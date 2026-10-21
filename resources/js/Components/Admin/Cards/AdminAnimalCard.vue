@@ -53,7 +53,7 @@
             />
 
             <!-- Бейдж статуса -->
-            <div class="absolute right-3 top-3 flex gap-2">
+            <div class="absolute right-3 top-3 flex gap-2" v-if="animal.status">
                 <span
                     class="rounded-full bg-rancho-ink-950/70 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-white backdrop-blur-md"
                     :class="
@@ -62,7 +62,7 @@
                             : 'border border-rancho-ink-700'
                     "
                 >
-                    {{ animal.is_trashed ? 'В КОРЗИНЕ' : animal.status }}
+                    {{ animal.status }}
                 </span>
             </div>
         </div>

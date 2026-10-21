@@ -111,7 +111,7 @@ class ProductController extends Controller
      */
     public function update(UpdateProductRequest $request, Product $product)
     {
-        $dto = $request->toDto();
+        $dto = $request->toDto($product->id);
 
         DB::transaction(function () use ($dto, $request, $product) {
             $product->update($dto->toArray());

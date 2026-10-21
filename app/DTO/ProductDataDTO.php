@@ -3,6 +3,7 @@
 namespace App\DTO;
 
 use App\Enums\AvailabilityType;
+use App\Models\Product;
 use App\Services\SlugService;
 
 class ProductDataDTO
@@ -27,12 +28,17 @@ class ProductDataDTO
     /**
      * Factory method for assembling a DTO from validated request data
      */
-    public static function fromRequest(array $validated): self
+    public static function fromRequest(array $validated, ?int $ignoreId = null): self
     {
 
         return new self(
             name: $validated['name'],
-            slug: SlugService::prepare($validated['slug'] ?? null, $validated['name']),
+            slug: SlugService::prepare(
+                $validated['slug'] ?? null,
+                $validated['name'],
+                Product::class,
+                $ignoreId,
+            ),
             category_id: (int) $validated['category_id'],
             availability_type: $validated['availability_type'] instanceof AvailabilityType
                 ? $validated['availability_type']

@@ -87,8 +87,9 @@ class StoreProductRequest extends FormRequest
     /**
      * Get a strongly typed DTO from the request
      */
-    public function toDto(): ProductDataDTO
+    public function toDto(?int $ignoreId = null): ProductDataDTO
     {
-        return ProductDataDTO::fromRequest($this->validated());
+        return ProductDataDTO::fromRequest($this->validated(), $ignoreId);
+
     }
 }

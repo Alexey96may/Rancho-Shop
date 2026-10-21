@@ -37,7 +37,7 @@ class PageSaveRequest extends FormRequest
             'is_commentable' => 'boolean',
             'menu_order' => 'nullable|integer|min:0',
             'template' => 'required|string|in:default,delivery,about',
-            'slug' => 'nullable|string|max:255|unique:pages,slug,' . $pageId,
+            'slug' => 'nullable|string|max:255',
 
             'seo.title' => 'nullable|string|max:255',
             'seo.description' => 'nullable|string',
@@ -47,8 +47,8 @@ class PageSaveRequest extends FormRequest
         ];
     }
 
-    public function toDto(): PageDataDTO
+    public function toDto(?int $ignoreId = null): PageDataDTO
     {
-        return PageDataDTO::fromRequest($this->validated());
+        return PageDataDTO::fromRequest($this->validated(), $ignoreId);
     }
 }

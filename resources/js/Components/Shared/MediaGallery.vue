@@ -69,7 +69,7 @@
             />
 
             <div
-                class="absolute inset-0 flex items-center justify-center gap-2 bg-rancho-ink-950/70 opacity-0 backdrop-blur-sm transition-opacity focus-within:opacity-100 group-hover:opacity-100"
+                class="gallery-overlay absolute inset-0 flex items-center justify-center gap-2 bg-rancho-ink-950/70 opacity-0 backdrop-blur-sm transition-opacity focus-within:opacity-100 group-hover:opacity-100"
             >
                 <button
                     type="button"
@@ -84,7 +84,7 @@
                     type="button"
                     class="flex h-10 w-10 items-center justify-center rounded-full bg-rose-500/30 text-rose-100 outline-none backdrop-blur-md transition-all hover:bg-rose-500/60 hover:text-white focus-visible:ring-2 focus-visible:ring-rose-300 active:scale-95"
                     title="Удалить"
-                    @click="remove(index)"
+                    @click.stop="remove(index)"
                 >
                     <XMarkIcon class="h-5 w-5" aria-hidden="true" />
                     <span class="sr-only">Удалить это изображение</span>
@@ -109,7 +109,7 @@
             role="listitem"
             class="group relative h-24 w-24 shrink-0 cursor-zoom-in overflow-hidden rounded-xl border border-rancho-ink-200 bg-rancho-ink-50 outline-none transition-all hover:border-rancho-pine focus-visible:ring-2 focus-visible:ring-rancho-pine/40 sm:h-36 sm:w-36"
             :aria-label="`Открыть фото ${index + 1}`"
-            @click="preview(file)"
+            @click.stop="preview(file)"
         >
             <AppImage
                 :src="file"
@@ -127,3 +127,14 @@
         </button>
     </div>
 </template>
+
+<style scoped>
+    @media (hover: none) and (pointer: coarse) {
+        .gallery-overlay {
+            opacity: 1;
+            background-color: transparent;
+            backdrop-filter: none;
+            gap: 1rem;
+        }
+    }
+</style>

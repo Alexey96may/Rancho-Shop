@@ -3,7 +3,7 @@
 
     import { useForm } from '@inertiajs/vue3';
 
-    import { PhotoIcon } from '@heroicons/vue/24/outline';
+    import { EyeIcon, PhotoIcon } from '@heroicons/vue/24/outline';
 
     import FeaturesSection from '@/Components/Admin/Sections/FeaturesSection.vue';
     import ProductScheduleFields from '@/Components/Admin/Sections/ProductScheduleFields.vue';
@@ -25,7 +25,6 @@
     import { useAdminTabs } from '@/composables/config/useAdminTabs';
     import { useAdminCrud } from '@/composables/crud/useAdminCrud';
     import { useAdminForm } from '@/composables/crud/useAdminForm';
-    import type { GalleryItem } from '@/composables/features/useMediaUpload';
     import { useMediaUpload, useSingleImagePreview } from '@/composables/features/useMediaUpload';
     import type {
         AdminProduct,
@@ -191,7 +190,23 @@
     </Teleport>
 
     <div class="space-y-12 sm:space-y-8">
-        <BaseCancelButton :href="backUrl" label="Назад" theme="dark" />
+        <div class="flex flex-wrap items-center justify-between gap-2">
+            <BaseCancelButton :href="backUrl" label="Назад" theme="dark" />
+
+            <a
+                v-if="isEdit && product?.data?.slug"
+                :href="route('catalog.show', product.data.slug)"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="group flex items-center gap-2 text-[10px] font-black uppercase text-rancho-ink-500 transition-colors hover:text-rancho-mint sm:self-auto"
+            >
+                <EyeIcon
+                    class="h-4 w-4 transition-transform group-hover:scale-110"
+                    aria-hidden="true"
+                />
+                Просмотр
+            </a>
+        </div>
 
         <!-- TABS -->
         <nav

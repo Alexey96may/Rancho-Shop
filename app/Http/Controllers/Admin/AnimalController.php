@@ -12,6 +12,7 @@ use App\Traits\Http\Controllers\HandlesSmartPagination;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
@@ -106,7 +107,7 @@ class AnimalController extends Controller
      */
     public function update(StoreAnimalRequest $request, Animal $animal)
     {
-        $dto = $request->toDto();
+        $dto = $request->toDto($animal->id);
 
         DB::transaction(function () use ($dto, $request, $animal) {
             $animal->update($dto->toArray());
@@ -171,5 +172,23 @@ class AnimalController extends Controller
         $media->delete();
 
         return redirect()->back()->with('success', 'Фото удалено');
+    }
+
+    private function generateUniqueSlug(string $name, ?int $ignoreId = null): string
+    {
+        $base = Str::slug($name);
+        $slug = $base;
+        $i = 2;
+
+        while (
+            Animal::withTrashed()
+                ->where('slug', $slug)
+                ->when($ignoreId, fn ($q) => $q->where('id', '!=', $ignoreId))
+                ->exists()
+        ) {
+            $slug = $base . '-' . $i++;
+        }
+
+        return $slug;
     }
 }
