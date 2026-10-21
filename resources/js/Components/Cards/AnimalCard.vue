@@ -41,7 +41,7 @@
                 :className="'h-full w-full object-cover transition-transform duration-700 group-hover:scale-105'"
             />
 
-            <div class="absolute left-4 top-4">
+            <div v-if="animal.status" class="absolute left-4 top-4">
                 <span
                     class="shadow-sm inline-flex items-center gap-1.5 rounded-full bg-rancho-ink-50/90 px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-rancho-forest ring-1 ring-inset ring-rancho-ink-200 backdrop-blur-md"
                     role="status"

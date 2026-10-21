@@ -195,6 +195,7 @@ class ProductController extends Controller
     private function getAnimalOptions(): array
     {
         return Animal::query()
+            ->where('is_active', true)
             ->select(['id', 'name'])
             ->orderBy('name')
             ->get()

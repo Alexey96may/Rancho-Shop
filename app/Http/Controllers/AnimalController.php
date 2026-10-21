@@ -58,6 +58,7 @@ class AnimalController extends Controller
             'seo',
             'products' => function ($query) {
                 $query->where('products.is_active', true)
+                    ->inStock()
                     ->select('products.id', 'products.name', 'products.category_id', 'products.slug', 'products.description', 'products.availability_type')
                     ->with('media', 'defaultVariant.unit');
             },
