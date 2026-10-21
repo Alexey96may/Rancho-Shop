@@ -1,7 +1,14 @@
 <script setup lang="ts">
+    import { onMounted, ref } from 'vue';
+
     import { useCookieConsent } from '@/composables/useCookieConsent';
 
     const { consent, accept, reject } = useCookieConsent();
+
+    const isMounted = ref(false);
+    onMounted(() => {
+        isMounted.value = true;
+    });
 </script>
 
 <template>
@@ -14,7 +21,7 @@
         leave-to-class="opacity-0"
     >
         <div
-            v-if="consent === null"
+            v-if="isMounted && consent === null"
             class="fixed inset-x-0 bottom-0 z-[9999] p-3 sm:p-4"
             role="dialog"
             aria-live="polite"

@@ -1,14 +1,28 @@
-import { ref } from 'vue';
+import { readonly, ref } from 'vue';
 
 const STORAGE_KEY = 'cookie_consent';
 
-// Глобальное состояние (синглтон на всё приложение)
-const consent = ref<boolean | null>(null);
+type Consent = boolean | null;
 
-// Инициализация из localStorage (один раз при загрузке)
-if (typeof window !== 'undefined') {
+// Инициализация: на сервере — null, на клиенте — из localStorage
+const readConsent = (): Consent => {
+    if (typeof window === 'undefined') return null;
     const stored = localStorage.getItem(STORAGE_KEY);
-    consent.value = stored === 'accepted' ? true : stored === 'rejected' ? false : null;
+    if (stored === 'accepted') return true;
+    if (stored === 'rejected') return false;
+    return null;
+};
+
+// Синглтон: создаётся один раз при импорте модуля
+const consent = ref<Consent>(readConsent());
+
+// Синхронизация между вкладками (storage event)
+if (typeof window !== 'undefined') {
+    window.addEventListener('storage', (e) => {
+        if (e.key === STORAGE_KEY) {
+            consent.value = readConsent();
+        }
+    });
 }
 
 export function useCookieConsent() {
@@ -27,5 +41,5 @@ export function useCookieConsent() {
         if (typeof window !== 'undefined') localStorage.removeItem(STORAGE_KEY);
     };
 
-    return { consent, accept, reject, reset };
+    return { consent: readonly(consent), accept, reject, reset };
 }

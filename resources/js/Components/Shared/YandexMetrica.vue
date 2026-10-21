@@ -5,6 +5,17 @@
 
     import { useCookieConsent } from '@/composables/useCookieConsent';
 
+    interface YmFunction {
+        (id: number, action: string, ...args: unknown[]): void;
+        a?: unknown[];
+        l?: number;
+    }
+
+    type YmWindow = Window & {
+        ym?: YmFunction;
+        ymConfig?: { id: number };
+    };
+
     const page = usePage();
     const { consent } = useCookieConsent();
 
@@ -12,27 +23,29 @@
 
     const loadMetrika = (id: number) => {
         if (typeof window === 'undefined') return;
-        if ((window as any).ym) return;
 
-        // Стандартный сниппет Яндекс.Метрики
-        (function (m: any, e: Document, t: string, r: string, i: string, k?: any, a?: any) {
-            m[i] =
-                m[i] ||
-                function () {
-                    (m[i].a = m[i].a || []).push(arguments);
-                };
-            m[i].l = 1 * Date.now();
-            for (let j = 0; j < e.scripts.length; j++) {
-                if (e.scripts[j].src === r) return;
-            }
-            k = e.createElement(t);
-            a = e.getElementsByTagName(t)[0];
-            k.async = 1;
-            k.src = r;
-            a.parentNode?.insertBefore(k, a);
-        })(window, document, 'script', `https://mc.yandex.ru/metrika/tag.js?id=${id}`, 'ym');
+        const w = window as YmWindow;
+        if (w.ym) return;
 
-        (window as any).ym(id, 'init', {
+        // Создаём ym, если нет
+        const fn = function (...args: unknown[]) {
+            (fn.a = fn.a || []).push(args);
+        } as YmFunction;
+        fn.l = Date.now();
+        w.ym = fn;
+
+        // Подключаем скрипт (если ещё не подключён)
+        const scriptSrc = `https://mc.yandex.ru/metrika/tag.js?id=${id}`;
+        const exists = Array.from(document.scripts).some((s) => s.src === scriptSrc);
+        if (!exists) {
+            const k = document.createElement('script');
+            k.async = true;
+            k.src = scriptSrc;
+            document.head.appendChild(k);
+        }
+
+        // Теперь w.ym точно YmFunction, и TS это видит (без сужения)
+        w.ym(id, 'init', {
             clickmap: true,
             trackLinks: true,
             accurateTrackBounce: true,
@@ -40,7 +53,7 @@
             url: location.href,
         });
 
-        (window as any).ymConfig = { id };
+        w.ymConfig = { id };
     };
 
     onMounted(() => {
@@ -49,9 +62,8 @@
         }
     });
 
-    // Если пользователь нажал «Принять» уже после загрузки страницы
     watch(consent, (value) => {
-        if (value === true && metrikaId && !(window as any).ym) {
+        if (value === true && metrikaId && !(window as YmWindow).ym) {
             loadMetrika(metrikaId);
         }
     });
