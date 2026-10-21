@@ -34,7 +34,6 @@
         fn.l = Date.now();
         w.ym = fn;
 
-        // Подключаем скрипт (если ещё не подключён)
         const scriptSrc = `https://mc.yandex.ru/metrika/tag.js?id=${id}`;
         const exists = Array.from(document.scripts).some((s) => s.src === scriptSrc);
         if (!exists) {
@@ -44,7 +43,6 @@
             document.head.appendChild(k);
         }
 
-        // Теперь w.ym точно YmFunction, и TS это видит (без сужения)
         w.ym(id, 'init', {
             clickmap: true,
             trackLinks: true,

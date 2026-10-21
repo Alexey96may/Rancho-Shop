@@ -51,7 +51,6 @@ class AnimalController extends Controller
             'animal' => null,
             'categories' => Category::where('type', 'animal')->get(['id', 'name', 'slug']),
             'parents' => Animal::query()
-                ->where('is_active', true)
                 ->orderBy('name')
                 ->get(['id', 'name', 'category_id']),
             'seo' => $this->seo('Добавление новой особи', robots: 'noindex, nofollow'),
