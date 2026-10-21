@@ -113,7 +113,6 @@
     const lowStockThreshold = computed<number | null>(() => {
         const threshold = productData.value?.unit?.low_stock_threshold;
 
-        alert(threshold);
         if (threshold === null || threshold === undefined) return null;
         const n = Number(threshold);
         return Number.isFinite(n) && n > 0 ? n : null;

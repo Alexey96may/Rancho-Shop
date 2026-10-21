@@ -14,11 +14,13 @@ class ProductResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $mainVariant = $this->relationLoaded('variants') ? $this->mainVariant() : null;
+        $default = $this->relationLoaded('defaultVariant')
+        ? $this->defaultVariant
+        : null;
 
-        $default = $this->whenLoaded('defaultVariant',
-            fn () => $this->defaultVariant ?? $this->variants->first()
-        );
+        if (!$default && $this->relationLoaded('variants')) {
+            $default = $this->variants->first();
+        }
 
         return [
             'id' => $this->id,
