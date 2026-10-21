@@ -2,9 +2,9 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\DTO\UnitDataDTO;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
-use App\DTO\UnitDataDTO;
 
 class UnitSaveRequest extends FormRequest
 {
@@ -24,16 +24,18 @@ class UnitSaveRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name'     => 'required|string|max:255',
-            'short'    => 'required|string|max:50',
-            'slug'     => 'nullable|string|max:255',
+            'name' => 'required|string|max:255',
+            'short' => 'required|string|max:50',
+            'slug' => 'nullable|string|max:255',
             'position' => 'nullable|integer|min:0',
+            'low_stock_threshold' => 'nullable|numeric|min:0|max:999999.999',
         ];
     }
 
     public function toDto(): UnitDataDTO
     {
         $unit = $this->route('unit');
+
         return UnitDataDTO::fromRequest($this->validated(), $unit?->id);
     }
 }

@@ -2,6 +2,7 @@ export interface BaseUnit {
     name: string;
     short: string;
     slug: string;
+    low_stock_threshold: number;
 }
 
 export interface Unit extends BaseUnit {
@@ -11,7 +12,6 @@ export interface Unit extends BaseUnit {
 
 export interface UnitAdmin extends Unit {
     created_at: string;
-    low_stock_threshold: number;
     product_variants_count?: number;
     can_delete: boolean;
 }

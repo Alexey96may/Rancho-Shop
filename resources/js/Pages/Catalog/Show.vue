@@ -109,15 +109,25 @@
     const page = usePage<SharedData>();
     const isAuthenticated = computed(() => !!page.props.auth?.user);
 
-    /** Порог, ниже которого показываем «Осталось мало» */
-    const LOW_STOCK_THRESHOLD = 5;
+    /** Порог низкого остатка берём из единицы измерения дефолтного варианта */
+    const lowStockThreshold = computed<number | null>(() => {
+        const threshold = productData.value?.unit?.low_stock_threshold;
+
+        alert(threshold);
+        if (threshold === null || threshold === undefined) return null;
+        const n = Number(threshold);
+        return Number.isFinite(n) && n > 0 ? n : null;
+    });
 
     type StockState = 'out' | 'low' | 'in';
 
     const stockState = computed<StockState>(() => {
         const variant = productData.value?.default_variant;
         if (!variant || !variant.is_in_stock || variant.stock <= 0) return 'out';
-        if (variant.stock <= LOW_STOCK_THRESHOLD) return 'low';
+
+        const threshold = lowStockThreshold.value;
+        if (threshold !== null && variant.stock <= threshold) return 'low';
+
         return 'in';
     });
 

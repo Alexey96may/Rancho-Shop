@@ -53,7 +53,7 @@ class ProductResource extends JsonResource
             'seo' => new SeoResource($this->whenLoaded('seo')),
             'animals' => AnimalResource::collection($this->whenLoaded('animals')),
 
-            'unit' => $mainVariant?->unit ? new UnitResource($mainVariant->unit) : null,
+            'unit' => $default?->unit ? new UnitResource($default->unit) : null,
 
             'schedule' => $this->schedule,
             'next_delivery_date' => $this->next_delivery_date?->format('Y-m-d'),

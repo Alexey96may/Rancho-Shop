@@ -225,7 +225,7 @@
                         v-model.number="form.low_stock_threshold"
                         v-model:error="form.errors.low_stock_threshold"
                         label="Порог низкого остатка"
-                        :step="1"
+                        :step="0.001"
                         @input-start="form.clearErrors('low_stock_threshold')"
                         placeholder="1"
                         :disabled="form.processing"

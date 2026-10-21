@@ -20,6 +20,7 @@ class UnitResource extends JsonResource
             'short' => $this->short,
             'slug' => $this->slug,
             'position' => $this->position,
+            'low_stock_threshold' => (float) $this->low_stock_threshold,
         ];
     }
 }
