@@ -27,6 +27,7 @@ use App\Http\Controllers\PageController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\Profile\ProductSubscriptionController;
+use App\Http\Controllers\Profile\ProductSubscriptionsController;
 use App\Http\Controllers\Profile\ProfileCommentController;
 use App\Http\Controllers\Profile\ProfileController;
 use App\Http\Controllers\Profile\ProfileOrderController;
@@ -121,6 +122,9 @@ Route::middleware('auth')->prefix('profile')->name('profile.')->group(function (
 
     Route::get('/orders', [ProfileOrderController::class, 'index'])->name('orders.index');
     Route::delete('/orders/{order}', [ProfileOrderController::class, 'destroy'])->name('orders.destroy');
+
+    Route::get('/subscriptions', [ProductSubscriptionsController::class, 'index'])
+        ->name('subscriptions.index');
 
     Route::post('/products/{product}/subscribe', [ProductSubscriptionController::class, 'store'])
         ->name('products.subscribe');

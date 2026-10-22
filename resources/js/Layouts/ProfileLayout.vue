@@ -5,6 +5,7 @@
 
     import {
         ArrowRightStartOnRectangleIcon,
+        BellIcon,
         ChatBubbleLeftRightIcon,
         CpuChipIcon,
         ShoppingBagIcon,
@@ -141,6 +142,17 @@
                             >
                                 <ShoppingBagIcon class="h-4 w-4 md:h-5 md:w-5" aria-hidden="true" />
                                 История заказов
+                            </Link>
+
+                            <Link
+                                :href="route('profile.subscriptions.index')"
+                                :class="[
+                                    navLinkClasses(route().current('profile.subscriptions.*')),
+                                    'shrink-0 whitespace-nowrap',
+                                ]"
+                            >
+                                <BellIcon class="h-5 w-5" />
+                                Мои подписки
                             </Link>
 
                             <!-- LOGOUT: только на мобилке, отделён от остальных -->

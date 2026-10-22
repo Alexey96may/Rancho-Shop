@@ -96,9 +96,7 @@
         try {
             const audio = new Audio('/audio/effects/bell.mp3');
             audio.volume = 0.3;
-            audio.play().catch(() => {
-                alert('dvdsdffs');
-            });
+            audio.play().catch(() => {});
         } catch {}
     }
 </script>
