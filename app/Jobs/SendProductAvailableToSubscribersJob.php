@@ -9,6 +9,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Throwable;
@@ -36,7 +37,10 @@ class SendProductAvailableToSubscribersJob implements ShouldQueue
                 continue;
             }
 
-            $lastNotified = $user->pivot->notified_at;
+            $lastNotified = $user->pivot->notified_at
+                ? Carbon::parse($user->pivot->notified_at)
+                : null;
+
             if ($lastNotified && $lastNotified->gt(now()->subDay())) {
                 continue;
             }

@@ -26,7 +26,6 @@ use App\Http\Controllers\MagicLoginController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProductController;
-use App\Http\Controllers\Profile\ProductSubscriptionController;
 use App\Http\Controllers\Profile\ProductSubscriptionsController;
 use App\Http\Controllers\Profile\ProfileCommentController;
 use App\Http\Controllers\Profile\ProfileController;
@@ -110,6 +109,14 @@ Route::post('/payments/paymaster/callback', [PaymentController::class, 'callback
 Route::get('/robots.txt', [RobotsController::class, 'index'])->name('robots');
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
 
+Route::middleware('auth')->group(function () {
+    Route::post('/products/{product}/subscribe', [ProductSubscriptionsController::class, 'store'])
+        ->name('products.subscribe');
+
+    Route::delete('/products/{product}/subscribe', [ProductSubscriptionsController::class, 'destroy'])
+        ->name('products.unsubscribe');
+});
+
 Route::middleware('auth')->prefix('profile')->name('profile.')->group(function () {
     Route::get('/', [ProfileController::class, 'edit'])->name('edit');
     Route::patch('/', [ProfileController::class, 'update'])->name('update');
@@ -125,12 +132,6 @@ Route::middleware('auth')->prefix('profile')->name('profile.')->group(function (
 
     Route::get('/subscriptions', [ProductSubscriptionsController::class, 'index'])
         ->name('subscriptions.index');
-
-    Route::post('/products/{product}/subscribe', [ProductSubscriptionController::class, 'store'])
-        ->name('products.subscribe');
-
-    Route::delete('/products/{product}/subscribe', [ProductSubscriptionController::class, 'destroy'])
-        ->name('products.unsubscribe');
 });
 
 require __DIR__ . '/auth.php';

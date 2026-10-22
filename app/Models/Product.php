@@ -104,6 +104,7 @@ class Product extends Model implements HasMedia
     public function subscribers(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'product_subscriptions')
+            ->withPivot('notified_at')
             ->withTimestamps();
     }
 

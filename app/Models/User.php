@@ -107,6 +107,7 @@ class User extends Authenticatable implements HasMedia
     public function subscribedProducts(): BelongsToMany
     {
         return $this->belongsToMany(Product::class, 'product_subscriptions')
+            ->withPivot('notified_at')
             ->withTimestamps();
     }
 

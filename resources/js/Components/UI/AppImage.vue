@@ -193,8 +193,6 @@
             ]"
         />
 
-        {{ console.log('APPIMAGE fallbackSrc:', fallbackSrc) }}
-
         <!-- ─────────── Плейсхолдер: blur или скелетон, поверх картинки ─────────── -->
         <Transition
             appear

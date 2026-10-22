@@ -1,9 +1,9 @@
 <script setup lang="ts">
-    import { computed, ref, watch } from 'vue';
+    import { computed, onUnmounted, ref } from 'vue';
 
     import { router, usePage } from '@inertiajs/vue3';
 
-    import { BellIcon, BellSlashIcon } from '@heroicons/vue/24/outline';
+    import { BellIcon } from '@heroicons/vue/24/outline';
 
     import { useNotificationsStore } from '@/stores/notifications';
     import type { SharedData } from '@/types';
@@ -22,9 +22,36 @@
 
     const isAuthenticated = computed(() => !!page.props.auth?.user);
 
-    const subscribed = ref<boolean>(props.isSubscribed);
+    // ← ЕДИНСТВЕННЫЙ источник правды
+    const subscribed = computed(() => props.isSubscribed);
+
     const isSubscribing = ref(false);
     const bellState = ref<'idle' | 'ringing' | 'subscribed'>('idle');
+
+    let safetyTimer: ReturnType<typeof setTimeout> | null = null;
+    let bellTimer: ReturnType<typeof setTimeout> | null = null;
+
+    function clearSafetyTimer() {
+        if (safetyTimer) {
+            clearTimeout(safetyTimer);
+            safetyTimer = null;
+        }
+    }
+
+    function clearBellTimer() {
+        if (bellTimer) {
+            clearTimeout(bellTimer);
+            bellTimer = null;
+        }
+    }
+
+    function resetState() {
+        isSubscribing.value = false;
+        bellState.value = 'idle';
+
+        clearSafetyTimer();
+        clearBellTimer();
+    }
 
     function toggleSubscription() {
         if (typeof window === 'undefined') return;
@@ -40,55 +67,71 @@
 
         if (isSubscribing.value) return;
 
+        clearSafetyTimer();
+        clearBellTimer();
+
         isSubscribing.value = true;
         bellState.value = 'ringing';
 
+        let url: string | undefined;
+
         try {
-            const url = subscribed.value
+            url = subscribed.value
                 ? route('products.unsubscribe', props.productId)
                 : route('products.subscribe', props.productId);
-
-            const method = subscribed.value ? 'delete' : 'post';
-
-            router[method](
-                url,
-                {},
-                {
-                    preserveScroll: true,
-                    onSuccess: () => {
-                        subscribed.value = !subscribed.value;
-                        bellState.value = 'subscribed';
-
-                        if (subscribed.value) {
-                            playBellSound();
-                        }
-
-                        setTimeout(() => {
-                            bellState.value = 'idle';
-                        }, 700);
-                    },
-                    onFinish: () => {
-                        isSubscribing.value = false;
-                    },
-                    onError: () => {
-                        bellState.value = 'idle';
-                        notify.error('Ошибка подписки, попробуйте позже!');
-                    },
-                },
-            );
         } catch (e) {
-            console.error('Subscription toggle failed', e);
-            isSubscribing.value = false;
-            bellState.value = 'idle';
+            console.error('Subscription route not found', e);
+            resetState();
+            return;
         }
-    }
 
-    watch(
-        () => props.isSubscribed,
-        (v) => {
-            subscribed.value = v;
-        },
-    );
+        if (!url) {
+            console.error('Subscription route returned undefined');
+            resetState();
+            return;
+        }
+
+        const method = subscribed.value ? 'delete' : 'post';
+        const wasSubscribing = !subscribed.value;
+
+        safetyTimer = setTimeout(() => {
+            if (isSubscribing.value) {
+                console.warn('Subscription request timed out — resetting state');
+                resetState();
+            }
+        }, 15000);
+
+        router[method](
+            url,
+            {},
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    bellState.value = 'subscribed';
+                    isSubscribing.value = false;
+
+                    if (wasSubscribing) {
+                        playBellSound();
+                    }
+
+                    clearSafetyTimer();
+                    clearBellTimer();
+                    bellTimer = setTimeout(() => {
+                        bellState.value = 'idle';
+                        bellTimer = null;
+                    }, 700);
+                },
+                onFinish: () => {
+                    isSubscribing.value = false;
+                    clearSafetyTimer();
+                },
+                onError: () => {
+                    resetState();
+                    notify.error('Ошибка подписки, попробуйте позже!');
+                },
+            },
+        );
+    }
 
     function playBellSound() {
         if (typeof window === 'undefined') return;
@@ -97,8 +140,15 @@
             const audio = new Audio('/audio/effects/bell.mp3');
             audio.volume = 0.3;
             audio.play().catch(() => {});
-        } catch {}
+        } catch {
+            // silent fallback
+        }
     }
+
+    onUnmounted(() => {
+        clearSafetyTimer();
+        clearBellTimer();
+    });
 </script>
 
 <template>
@@ -111,24 +161,15 @@
             :class="
                 subscribed
                     ? 'border-rancho-pine bg-rancho-pine/10 text-rancho-pine hover:bg-rancho-pine/20 hover:fill-rancho-forest'
-                    : 'border-rancho-ink-300 bg-white text-rancho-forest hover:border-rancho-forest hover:bg-rancho-ink-50 hover:fill-rancho-forest'
+                    : 'bg-white text-rancho-forest hover:border-rancho-forest/60 hover:text-rancho-pine'
             "
         >
             <BellIcon
-                v-if="!subscribed"
                 class="h-4 w-4 transition-transform"
                 :class="{
                     'bell-wiggle': bellState === 'ringing',
                     'bell-ring': bellState === 'subscribed',
-                }"
-                aria-hidden="true"
-            />
-            <BellSlashIcon
-                v-else
-                class="h-4 w-4 transition-transform"
-                :class="{
-                    'bell-wiggle': bellState === 'ringing',
-                    'bell-ring': bellState === 'subscribed',
+                    'fill-rancho-pine text-rancho-pine': subscribed,
                 }"
                 aria-hidden="true"
             />
@@ -136,7 +177,7 @@
             <div class="hidden sm:block">
                 <Transition name="fade" mode="out-in">
                     <span v-if="isSubscribing">Минуточку...</span>
-                    <span v-else-if="subscribed">Вы подписаны — отписаться</span>
+                    <span v-else-if="subscribed">Подписаны</span>
                     <span v-else>Подписаться</span>
                 </Transition>
             </div>
