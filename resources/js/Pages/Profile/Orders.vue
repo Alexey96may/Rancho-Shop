@@ -67,11 +67,10 @@
         </div>
 
         <!-- LIST -->
-        <div v-else class="grid grid-cols-1 gap-4">
+        <div v-else class="grid grid-cols-1 gap-4" v-scroll-reveal>
             <section
                 v-for="order in orders.data"
                 :key="order.id"
-                v-scroll-reveal
                 class="rounded-2xl border border-rancho-ink-800 bg-rancho-ink-950 p-5 transition-all"
                 :class="{
                     'opacity-60': order.status === 'cancelled',

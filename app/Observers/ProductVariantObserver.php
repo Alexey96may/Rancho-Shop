@@ -24,6 +24,11 @@ class ProductVariantObserver
             return;
         }
 
+        // Реагируем только на дефолтный вариант — он определяет наличие товара
+        if (!$variant->is_default) {
+            return;
+        }
+
         $oldStock = (float) $variant->getOriginal('stock');
         $newStock = (float) $variant->stock;
 

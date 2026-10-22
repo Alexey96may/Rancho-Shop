@@ -35,7 +35,7 @@
     <header v-scroll-reveal class="mb-6">
         <h1 class="text-2xl font-black text-rancho-forest sm:text-3xl">Вход</h1>
         <p class="mt-2 text-sm leading-relaxed text-rancho-ink-600">
-            Введите email и пароль, чтобы продолжить.
+            Введите номер телефона и пароль, чтобы продолжить.
         </p>
     </header>
 

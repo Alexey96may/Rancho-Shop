@@ -20,9 +20,26 @@ class ProductObserver
      */
     public function updated(Product $product): void
     {
-        if ($product->wasChanged('is_active') && $product->is_active) {
-            SendProductAvailableToSubscribersJob::dispatch($product->id)->afterCommit();
+        // Реагируем только если изменилось что-то, что влияет на доступность:
+        // is_active, или сток дефолтного варианта
+        $isActiveChanged = $product->wasChanged('is_active');
+
+        if (!$isActiveChanged) {
+            return;
         }
+
+        if (!$product->is_active) {
+            return;
+        }
+
+        // Товар стал активен — проверяем, есть ли сток у дефолтного варианта
+        $default = $product->defaultVariant()->first();
+
+        if (!$default || (float) $default->stock <= 0) {
+            return;
+        }
+
+        SendProductAvailableToSubscribersJob::dispatch($product->id)->afterCommit();
     }
 
     /**

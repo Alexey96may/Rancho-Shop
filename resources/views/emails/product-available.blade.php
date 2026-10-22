@@ -10,7 +10,7 @@
     </p>
 
     <p>
-        <a href="{{ url('/product/' . $product->slug) }}"
+        <a href="{{ url('/catalog/' . $product->slug) }}"
            style="display:inline-block;padding:10px 20px;background:#2f6f4e;color:#fff;text-decoration:none;border-radius:8px;">
             Открыть товар
         </a>
