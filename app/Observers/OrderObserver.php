@@ -37,10 +37,11 @@ class OrderObserver
 
         // Уведомление по email при смене статуса
         if ($order->wasChanged('status')) {
-            $oldStatus = $order->getOriginal('status');
-            $newStatus = $order->status instanceof \UnitEnum
-                ? $order->status->value
-                : $order->status;
+            $oldStatusRaw = $order->getOriginal('status');
+            $newStatusRaw = $order->status;
+
+            $oldStatus = $oldStatusRaw instanceof \UnitEnum ? $oldStatusRaw->value : (string) $oldStatusRaw;
+            $newStatus = $newStatusRaw instanceof \UnitEnum ? $newStatusRaw->value : (string) $newStatusRaw;
 
             SendOrderStatusToEmailJob::dispatch($order->id, $oldStatus, $newStatus)
                 ->afterCommit();
