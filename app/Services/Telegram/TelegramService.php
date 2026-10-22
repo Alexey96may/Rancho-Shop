@@ -35,7 +35,8 @@ class TelegramService
         }
 
         try {
-            $response = Http::timeout(5)
+            $response = $this->client()
+                ->timeout(5)
                 ->post("https://api.telegram.org/bot{$token}/sendMessage", [
                     'chat_id' => $chatId,
                     'text' => $text,
@@ -73,15 +74,14 @@ class TelegramService
         }
 
         try {
-            $response = Http::timeout(10)->post(
-                "https://api.telegram.org/bot{$token}/sendPhoto",
-                [
+            $response = $this->client()
+                ->timeout(10)
+                ->post("https://api.telegram.org/bot{$token}/sendPhoto", [
                     'chat_id' => $chatId,
                     'photo' => $photoUrl,
                     'caption' => $caption,
                     'parse_mode' => 'HTML',
-                ]
-            );
+                ]);
 
             if ($response->failed()) {
                 Log::warning('Telegram sendPhoto failed', [
@@ -100,5 +100,17 @@ class TelegramService
 
             return false;
         }
+    }
+
+    private function client()
+    {
+        $options = ['timeout' => 10];
+
+        $proxy = config('services.telegram.proxy');
+        if ($proxy) {
+            $options['proxy'] = $proxy;
+        }
+
+        return Http::withOptions($options);
     }
 }
