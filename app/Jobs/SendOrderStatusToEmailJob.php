@@ -57,7 +57,7 @@ class SendOrderStatusToEmailJob implements ShouldQueue
         }
 
         // 2. Клиенту — если есть email
-        $customerEmail = $order->user?->email ?? $order->customer_email ?? null;
+        $customerEmail = $order->customer_email ?? $order->user?->email ?? null;
 
         if ($customerEmail) {
             try {
