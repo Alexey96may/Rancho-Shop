@@ -161,6 +161,11 @@
         if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return 'дня';
         return 'дней';
     };
+
+    const isAvailable = computed(
+        () =>
+            !!productData.value.default_variant && !!productData.value.default_variant.is_in_stock,
+    );
 </script>
 
 <template>
@@ -232,10 +237,10 @@
                         </div>
                     </div>
 
-                    <div class="mt-6 flex items-center gap-4">
+                    <div class="mt-6 flex items-center justify-start gap-4">
                         <!-- BUY -->
                         <div
-                            v-if="productData.default_variant"
+                            v-if="productData.default_variant && isAvailable"
                             class="min-w-40 basis-full sm:basis-2/3"
                         >
                             <BuyButton :product="productData" />

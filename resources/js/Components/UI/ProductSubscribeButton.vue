@@ -91,7 +91,6 @@
             return;
         }
 
-        const method = subscribed.value ? 'delete' : 'post';
         const wasSubscribing = !subscribed.value;
 
         safetyTimer = setTimeout(() => {
@@ -101,36 +100,38 @@
             }
         }, 15000);
 
-        router[method](
-            url,
-            {},
-            {
-                preserveScroll: true,
-                onSuccess: () => {
-                    bellState.value = 'subscribed';
-                    isSubscribing.value = false;
+        const options = {
+            preserveScroll: true,
+            onSuccess: () => {
+                bellState.value = 'subscribed';
+                isSubscribing.value = false;
 
-                    if (wasSubscribing) {
-                        playBellSound();
-                    }
+                if (wasSubscribing) {
+                    playBellSound();
+                }
 
-                    clearSafetyTimer();
-                    clearBellTimer();
-                    bellTimer = setTimeout(() => {
-                        bellState.value = 'idle';
-                        bellTimer = null;
-                    }, 700);
-                },
-                onFinish: () => {
-                    isSubscribing.value = false;
-                    clearSafetyTimer();
-                },
-                onError: () => {
-                    resetState();
-                    notify.error('Ошибка подписки, попробуйте позже!');
-                },
+                clearSafetyTimer();
+                clearBellTimer();
+                bellTimer = setTimeout(() => {
+                    bellState.value = 'idle';
+                    bellTimer = null;
+                }, 700);
             },
-        );
+            onFinish: () => {
+                isSubscribing.value = false;
+                clearSafetyTimer();
+            },
+            onError: () => {
+                resetState();
+                notify.error('Ошибка подписки, попробуйте позже!');
+            },
+        };
+
+        if (subscribed.value) {
+            router.delete(url, options);
+        } else {
+            router.post(url, {}, options);
+        }
     }
 
     function playBellSound() {

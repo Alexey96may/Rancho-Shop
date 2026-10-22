@@ -24,7 +24,7 @@
      *
      * @emits {Event} load — fired when the image successfully loads.
      */
-    import { computed, onBeforeUnmount, ref, watch } from 'vue';
+    import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
     import type { Media } from '@/types';
     import { handleImageError } from '@/utils';
@@ -65,22 +65,6 @@
 
     // ─────────────── Object URL для File ───────────────
     const fileUrl = ref<string | null>(null);
-
-    watch(
-        () => props.src,
-        (src) => {
-            if (fileUrl.value) {
-                URL.revokeObjectURL(fileUrl.value);
-                fileUrl.value = null;
-            }
-            if (src instanceof File && typeof window !== 'undefined') {
-                fileUrl.value = URL.createObjectURL(src);
-            }
-            isLoading.value = true;
-            isError.value = false;
-        },
-        { immediate: true },
-    );
 
     onBeforeUnmount(() => {
         if (fileUrl.value) URL.revokeObjectURL(fileUrl.value);
@@ -149,6 +133,33 @@
         isError.value = true;
         handleImageError(e, props.context);
     };
+
+    const imgRef = ref<HTMLImageElement | null>(null);
+
+    watch(
+        () => fallbackSrc.value,
+        (url, oldUrl) => {
+            if (fileUrl.value) {
+                URL.revokeObjectURL(fileUrl.value);
+                fileUrl.value = null;
+            }
+            if (props.src instanceof File && typeof window !== 'undefined') {
+                fileUrl.value = URL.createObjectURL(props.src);
+            }
+            // если URL не изменился — не сбрасываем isLoading
+            if (url !== oldUrl) {
+                isLoading.value = true;
+                isError.value = false;
+            }
+        },
+        { immediate: true },
+    );
+
+    onMounted(() => {
+        if (imgRef.value?.complete) {
+            isLoading.value = false;
+        }
+    });
 </script>
 
 <template>
@@ -164,6 +175,7 @@
             <img
                 :src="fallbackSrc"
                 :alt="imgAlt"
+                ref="imgRef"
                 @error="onError"
                 @load="onImageLoad"
                 loading="lazy"
@@ -181,6 +193,7 @@
             v-else
             :src="isError ? errorSrc : fallbackSrc"
             :alt="imgAlt"
+            ref="imgRef"
             @load="onImageLoad"
             @error="onError"
             loading="lazy"

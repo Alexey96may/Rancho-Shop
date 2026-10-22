@@ -176,7 +176,7 @@
                     v-else
                     type="button"
                     disabled
-                    class="flex h-12 w-full cursor-not-allowed items-center justify-center rounded-xl px-3 text-xs font-bold transition-colors sm:text-lg"
+                    class="line-clamp-1 flex h-12 w-full cursor-not-allowed items-center justify-center text-nowrap rounded-xl px-3 text-xs font-bold transition-colors sm:text-lg"
                     :class="unavailableButtonClass"
                 >
                     Нельзя заказать

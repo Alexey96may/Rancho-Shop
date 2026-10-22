@@ -105,7 +105,7 @@
 
                         <!-- MOBILE: horizontal scroll tabs -->
                         <nav
-                            class="scrollbar-hide -mx-4 flex gap-2 overflow-x-auto px-4 py-4 md:mx-0 md:flex-col md:gap-1 md:overflow-visible md:px-0 md:py-0"
+                            class="scrollbar-hide shadow-md md:shadow-none -mx-4 flex gap-2 overflow-x-auto bg-rancho-ink-900 px-4 py-4 md:mx-0 md:flex-col md:gap-1 md:overflow-visible md:bg-transparent md:px-0 md:py-0"
                             aria-label="Навигация профиля"
                         >
                             <Link
