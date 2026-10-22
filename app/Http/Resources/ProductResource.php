@@ -30,6 +30,12 @@ class ProductResource extends JsonResource
             'slug' => $this->slug,
             'description' => $this->description,
             'is_commentable' => (bool) $this->is_commentable,
+            'is_subscribed' => $request->user()
+                ? $request->user()
+                    ->subscribedProducts()
+                    ->where('products.id', $this->id)
+                    ->exists()
+                : false,
 
             'availability' => $this->availability_type
                 ? [

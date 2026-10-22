@@ -15,6 +15,7 @@
     import ImageLightbox from '@/Components/Shared/ImageLightbox.vue';
     import ProductGallery from '@/Components/Shared/UIGallery.vue';
     import BuyButton from '@/Components/UI/BuyButton.vue';
+    import ProductSubscribeButton from '@/Components/UI/ProductSubscribeButton.vue';
     import ShareButton from '@/Components/UI/ShareButton.vue';
     import MainLayout from '@/Layouts/MainLayout.vue';
     import { useComments } from '@/composables/crud/useComments';
@@ -231,11 +232,23 @@
                         </div>
                     </div>
 
-                    <!-- BUY -->
-                    <div v-if="productData.default_variant" class="mt-6">
-                        <BuyButton :product="productData" />
-                    </div>
+                    <div class="mt-6 flex items-center gap-4">
+                        <!-- BUY -->
+                        <div
+                            v-if="productData.default_variant"
+                            class="min-w-40 basis-full sm:basis-2/3"
+                        >
+                            <BuyButton :product="productData" />
+                        </div>
 
+                        <!-- SUBSCRIBE -->
+                        <div class="basis-24 sm:basis-1/3">
+                            <ProductSubscribeButton
+                                :product-id="productData.id"
+                                :is-subscribed="productData.is_subscribed ?? false"
+                            />
+                        </div>
+                    </div>
                     <!-- META (только статус и наличие) -->
                     <div class="mt-8 space-y-3 border-y border-rancho-ink-200 py-5 text-sm">
                         <div class="flex items-center justify-between gap-2">

@@ -10,8 +10,11 @@ use App\Models\Animal;
 use App\Models\Order;
 use App\Models\Page;
 use App\Models\Product;
+use App\Models\ProductVariant;
 use App\Models\Seo;
 use App\Models\User;
+use App\Observers\ProductObserver;
+use App\Observers\ProductVariantObserver;
 use App\Observers\SeoCleanupObserver;
 use App\Observers\SeoObserver;
 use App\Observers\SitemapCacheObserver;
@@ -112,6 +115,8 @@ class AppServiceProvider extends ServiceProvider
             $model::observe(SitemapCacheObserver::class);
         }
 
+        Product::observe(ProductObserver::class);
+        ProductVariant::observe(ProductVariantObserver::class);
         Seo::observe(SeoObserver::class);
 
         Relation::enforceMorphMap([

@@ -2,6 +2,7 @@
 
 namespace App\Observers;
 
+use App\Jobs\SendProductAvailableToSubscribersJob;
 use App\Models\ProductVariant;
 
 class ProductVariantObserver
@@ -17,9 +18,27 @@ class ProductVariantObserver
     /**
      * Handle the ProductVariant "updated" event.
      */
-    public function updated(ProductVariant $productVariant): void
+    public function updated(ProductVariant $variant): void
     {
-        //
+        if (!$variant->wasChanged('stock')) {
+            return;
+        }
+
+        $oldStock = (float) $variant->getOriginal('stock');
+        $newStock = (float) $variant->stock;
+
+        // Интересует только переход «было 0 → стало > 0»
+        if ($oldStock > 0 || $newStock <= 0) {
+            return;
+        }
+
+        $productId = $variant->product_id;
+
+        if (!$productId) {
+            return;
+        }
+
+        SendProductAvailableToSubscribersJob::dispatch($productId)->afterCommit();
     }
 
     /**
@@ -64,6 +83,7 @@ class ProductVariantObserver
         // If this is the product's only variant, it MUST be the default one.
         if ($catalog->product->variants()->count() === 0) {
             $catalog->is_default = true;
+
             return;
         }
 

@@ -23,6 +23,7 @@ export interface Product {
     slug: string;
     description: string | null;
     is_commentable: boolean;
+    is_subscribed?: boolean;
 
     availability: Availability;
 
