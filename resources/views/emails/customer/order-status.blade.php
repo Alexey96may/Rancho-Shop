@@ -9,7 +9,7 @@
 
     <p>
         Статус вашего заказа <strong>#{{ $order->id }}</strong> обновлён:
-        <strong>{{ $newStatus }}</strong>.
+        <strong>{{ $newStatusLabel }}</strong>.
     </p>
 
     <p>

@@ -7,9 +7,7 @@
 <body style="font-family: Arial, sans-serif; color: #333;">
     <h2>🛒 Заказ #{{ $order->id }} — статус изменён</h2>
 
-    <p>
-        Статус: <strong>{{ $oldStatus }}</strong> → <strong>{{ $newStatus }}</strong>
-    </p>
+    Статус: <strong>{{ $oldStatus }}</strong> → <strong>{{ $newStatus }}</strong>
 
     <h3>Клиент</h3>
     <p>

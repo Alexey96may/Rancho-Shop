@@ -2,6 +2,7 @@
 
 namespace App\Services\Telegram;
 
+use App\Enums\OrderStatus;
 use App\Models\Order;
 
 class OrderTelegramNotifier
@@ -155,7 +156,7 @@ class OrderTelegramNotifier
         $lines = [];
         $lines[] = '🔄 <b>Заказ #' . $order->id . ' — статус изменён</b>';
         $lines[] = '';
-        $lines[] = '<b>Статус:</b> ' . e($oldStatus) . ' → <b>' . e($newStatus) . '</b>';
+        $lines[] = '<b>Статус:</b> ' . e($this->statusLabel($oldStatus)) . ' → <b>' . e($this->statusLabel($newStatus)) . '</b>';
         $lines[] = '<b>Клиент:</b> ' . e($order->customer_name ?? '—');
         $lines[] = '<b>Телефон:</b> ' . e($order->customer_phone ?? '—');
 
@@ -167,5 +168,12 @@ class OrderTelegramNotifier
         $lines[] = '<b>Итого:</b> ' . $this->money($order->total_price);
 
         return implode("\n", $lines);
+    }
+
+    private function statusLabel(string $value): string
+    {
+        $case = OrderStatus::tryFrom($value);
+
+        return $case?->label() ?? $value;
     }
 }

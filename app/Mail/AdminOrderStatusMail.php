@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Enums\OrderStatus;
 use App\Models\Order;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
@@ -34,7 +35,14 @@ class AdminOrderStatusMail extends Mailable
                 'order' => $this->order,
                 'oldStatus' => $this->oldStatus,
                 'newStatus' => $this->newStatus,
+                'oldStatusLabel' => $this->statusLabel($this->oldStatus),
+                'newStatusLabel' => $this->statusLabel($this->newStatus),
             ],
         );
+    }
+
+    private function statusLabel(string $value): string
+    {
+        return OrderStatus::tryFrom($value)?->label() ?? $value;
     }
 }
