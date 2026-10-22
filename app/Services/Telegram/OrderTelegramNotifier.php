@@ -53,12 +53,12 @@ class OrderTelegramNotifier
 
             $price = (float) $item->unit_price * (float) $item->quantity;
 
-            $lines[] = sprintf(
-                '• %s × %d — %s',
-                e($name),
-                $item->quantity,
-                $this->money($price)
-            );
+            $qty = (float) $item->quantity;
+            $qtyFormatted = fmod($qty, 1.0) === 0.0
+                ? (string) (int) $qty          // 2 → "2"
+                : rtrim(rtrim(number_format($qty, 3, '.', ''), '0'), '.');
+
+            $lines[] = sprintf('• %s × %s — %s', e($name), $qtyFormatted, $this->money($price));
         }
 
         $lines[] = '';

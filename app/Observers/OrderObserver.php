@@ -2,6 +2,7 @@
 
 namespace App\Observers;
 
+use App\Jobs\SendOrderStatusToEmailJob;
 use App\Jobs\SendOrderToTelegramJob;
 use App\Models\Order;
 use App\Services\Admin\AnalyticsService;
@@ -29,6 +30,17 @@ class OrderObserver
             }
         } elseif ($order->wasChanged('status') && $order->getOriginal('status') === 'completed') {
             $this->analyticsService->updateStats($order);
+        }
+
+        // Уведомление по email при смене статуса
+        if ($order->wasChanged('status')) {
+            $oldStatus = $order->getOriginal('status');
+            $newStatus = $order->status instanceof \UnitEnum
+                ? $order->status->value
+                : $order->status;
+
+            SendOrderStatusToEmailJob::dispatch($order->id, $oldStatus, $newStatus)
+                ->afterCommit();
         }
     }
 

@@ -173,6 +173,7 @@
                     v-model="form.stock"
                     v-model:error="form.errors.stock"
                     label="Текущий остаток"
+                    :step="0.01"
                     class="md:col-span-6"
                     :min="0"
                 />
