@@ -144,4 +144,28 @@ class OrderTelegramNotifier
         return 'https://yandex.ru/maps/?pt=' . rawurlencode("{$lng},{$lat}")
             . '&z=16&l=map';
     }
+
+    public function notifyStatusChanged(Order $order, string $oldStatus, string $newStatus): void
+    {
+        $this->telegram->sendToAdmin($this->formatStatusMessage($order, $oldStatus, $newStatus));
+    }
+
+    private function formatStatusMessage(Order $order, string $oldStatus, string $newStatus): string
+    {
+        $lines = [];
+        $lines[] = '🔄 <b>Заказ #' . $order->id . ' — статус изменён</b>';
+        $lines[] = '';
+        $lines[] = '<b>Статус:</b> ' . e($oldStatus) . ' → <b>' . e($newStatus) . '</b>';
+        $lines[] = '<b>Клиент:</b> ' . e($order->customer_name ?? '—');
+        $lines[] = '<b>Телефон:</b> ' . e($order->customer_phone ?? '—');
+
+        if ($order->customer_email) {
+            $lines[] = '<b>Email:</b> ' . e($order->customer_email);
+        }
+
+        $lines[] = '';
+        $lines[] = '<b>Итого:</b> ' . $this->money($order->total_price);
+
+        return implode("\n", $lines);
+    }
 }

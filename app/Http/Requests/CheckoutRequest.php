@@ -32,6 +32,7 @@ class CheckoutRequest extends FormRequest
                 'string',
                 'regex:/^\+7 \(\d{3}\) \d{3}-\d{2}-\d{2}$/',
             ],
+            'customer_email' => ['nullable', 'email', 'max:255'],
             'delivery_address' => ['nullable', 'string'],
             'customer_comment' => ['nullable', 'string'],
             'create_account' => ['sometimes', 'boolean'],
@@ -102,6 +103,7 @@ class CheckoutRequest extends FormRequest
         return new CheckoutDTO(
             customerName: $data['customer_name'],
             customerPhone: $data['customer_phone'],
+            customerEmail: $data['customer_email'] ?? null,
             deliveryAddress: $data['delivery_address'] ?? null,
             customerComment: $data['customer_comment'] ?? null,
             createAccount: (bool) ($data['create_account'] ?? false),

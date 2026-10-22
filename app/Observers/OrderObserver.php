@@ -2,7 +2,9 @@
 
 namespace App\Observers;
 
+use App\Jobs\SendNewOrderToEmailJob;
 use App\Jobs\SendOrderStatusToEmailJob;
+use App\Jobs\SendOrderStatusToTelegramJob;
 use App\Jobs\SendOrderToTelegramJob;
 use App\Models\Order;
 use App\Services\Admin\AnalyticsService;
@@ -20,6 +22,7 @@ class OrderObserver
         }
 
         SendOrderToTelegramJob::dispatch($order->id)->afterCommit();
+        SendNewOrderToEmailJob::dispatch($order->id)->afterCommit();
     }
 
     public function updated(Order $order): void
@@ -40,6 +43,9 @@ class OrderObserver
                 : $order->status;
 
             SendOrderStatusToEmailJob::dispatch($order->id, $oldStatus, $newStatus)
+                ->afterCommit();
+
+            SendOrderStatusToTelegramJob::dispatch($order->id, $oldStatus, $newStatus)
                 ->afterCommit();
         }
     }

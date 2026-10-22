@@ -106,6 +106,7 @@
     type CheckoutForm = {
         customer_name: string;
         customer_phone: string;
+        customer_email: string;
         delivery_address: string | null;
         customer_comment: string;
         is_pickup: boolean;
@@ -118,6 +119,7 @@
     const form = useForm<CheckoutForm>({
         customer_name: user.value?.data?.name ?? '',
         customer_phone: user.value?.data?.phone ?? '',
+        customer_email: user.value?.data?.email ?? '',
         delivery_address: delivery.value?.address ?? null,
         customer_comment: '',
         create_account: false,
@@ -289,6 +291,17 @@
                         required
                         theme="light"
                         @input-start="form.clearErrors('customer_phone')"
+                        :disabled="form.processing"
+                    />
+
+                    <BaseInput
+                        label="Email (для уведомлений о статусе заказа)"
+                        type="email"
+                        placeholder="you@example.com"
+                        v-model="form.customer_email"
+                        @input-start="form.clearErrors('customer_email')"
+                        :error="errors.customer_email"
+                        theme="light"
                         :disabled="form.processing"
                     />
 

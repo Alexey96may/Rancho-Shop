@@ -42,6 +42,7 @@ class CreateOrderAction
             'user_id' => $user?->id,
             'customer_name' => $dto->customerName,
             'customer_phone' => $dto->customerPhone,
+            'customer_email' => $dto->customerEmail,
 
             'delivery_address' => $delivery->is_pickup ? null : $delivery->address,
             'delivery_lat' => $delivery->lat,

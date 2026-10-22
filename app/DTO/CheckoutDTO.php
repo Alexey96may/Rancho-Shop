@@ -9,6 +9,7 @@ class CheckoutDTO
     public function __construct(
         public string $customerName,
         public string $customerPhone,
+        public ?string $customerEmail,
         public ?string $deliveryAddress,
         public ?string $customerComment,
 

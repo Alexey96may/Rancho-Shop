@@ -2,19 +2,22 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Enums\OrderStatus;
 use App\Observers\OrderObserver;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
  * @property int|null $promo_code_id
  * @property string $customer_name
  * @property string $customer_phone
+ * @property string $customer_email
  * @property string|null $customer_comment
  * @property bool $is_pickup
  * @property string|null $delivery_address
@@ -27,13 +30,14 @@ use Illuminate\Database\Eloquent\Builder;
  * @property int $delivery_price
  * @property OrderStatus $status
  * @property string|null $admin_note
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
  * @property int|null $user_id
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\OrderItem> $items
+ * @property-read Collection<int, OrderItem> $items
  * @property-read int|null $items_count
- * @property-read \App\Models\PromoCode|null $promoCode
- * @property-read \App\Models\User|null $user
+ * @property-read PromoCode|null $promoCode
+ * @property-read User|null $user
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Order newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Order newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Order query()
@@ -57,13 +61,15 @@ use Illuminate\Database\Eloquent\Builder;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Order whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Order whereUserId($value)
  * @method static Builder<static>|Order filter(array $filters)
+ *
  * @mixin \Eloquent
  */
 #[ObservedBy(OrderObserver::class)]
 class Order extends Model
 {
     protected $fillable = [
-        'user_id', 'promo_code_id', 'customer_name', 'customer_phone', 'delivery_address',
+        'user_id', 'promo_code_id', 'customer_name', 'customer_phone',
+        'customer_email', 'delivery_address',
         'delivery_lat', 'delivery_lng', 'is_pickup', 'delivery_validated',
         'delivery_meta', 'customer_comment', 'discount_total',
         'total_price', 'delivery_price', 'status', 'admin_note',
@@ -100,17 +106,17 @@ class Order extends Model
     }
 
     /**
-    * Scope for filtering orders by customer, ID, and status
-    */
+     * Scope for filtering orders by customer, ID, and status
+     */
     public function scopeFilter(Builder $query, array $filters): Builder
     {
         return $query
             ->when($filters['search'] ?? null, function ($query, $search) {
                 $search = mb_strtolower($search, 'UTF-8');
 
-                $query->where(function($q) use ($search) {
+                $query->where(function ($q) use ($search) {
                     $q->whereRaw('LOWER(customer_name) LIKE ?', ["%{$search}%"])
-                      ->orWhere('id', 'LIKE', "%{$search}%");
+                        ->orWhere('id', 'LIKE', "%{$search}%");
                 });
             })
             ->when($filters['status'] ?? null, function ($query, $status) {
@@ -119,8 +125,8 @@ class Order extends Model
     }
 
     /**
-    * Order and revenue statistics in ONE query
-    */
+     * Order and revenue statistics in ONE query
+     */
     public static function getStats(): array
     {
         $totals = self::selectRaw("
@@ -130,15 +136,15 @@ class Order extends Model
         ")->first();
 
         return [
-            'total_count'             => (int) $totals->total_count,
+            'total_count' => (int) $totals->total_count,
             'total_completed_revenue' => (int) $totals->completed_revenue,
-            'total_pending_revenue'   => (int) $totals->pending_revenue,
+            'total_pending_revenue' => (int) $totals->pending_revenue,
         ];
     }
 
     /**
-    * Get the total revenue for completed orders and their total quantity per request
-    */
+     * Get the total revenue for completed orders and their total quantity per request
+     */
     public static function getOverviewStats(): array
     {
         $stats = self::selectRaw("
@@ -148,7 +154,7 @@ class Order extends Model
 
         return [
             'total_revenue' => (int) ($stats->total_revenue ?? 0),
-            'orders_count'  => (int) $stats->orders_count,
+            'orders_count' => (int) $stats->orders_count,
         ];
     }
 }
