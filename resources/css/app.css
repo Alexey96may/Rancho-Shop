@@ -272,21 +272,3 @@ html {
 body.modal-open {
     overflow: hidden;
 }
-
-@keyframes fade-in {
-    from {
-        opacity: 0;
-    }
-}
-@keyframes fade-out {
-    to {
-        opacity: 0;
-    }
-}
-
-::view-transition-old(root) {
-    animation: 150ms ease both fade-out;
-}
-::view-transition-new(root) {
-    animation: 200ms ease both fade-in;
-}
