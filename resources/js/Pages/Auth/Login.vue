@@ -63,7 +63,6 @@
             placeholder="+7 (___) ___-__-__"
             :error="form.errors.phone"
             theme="light"
-            autofocus
             required
             :disabled="form.processing"
             @input-start="form.clearErrors('phone')"

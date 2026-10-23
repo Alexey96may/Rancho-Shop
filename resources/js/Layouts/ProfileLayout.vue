@@ -23,8 +23,6 @@
 
     useFlashToasts();
 
-    defineProps<{ title: string }>();
-
     const page = usePage<SharedData>();
     const user = computed(() => page.props.auth?.user?.data);
 
@@ -189,9 +187,8 @@
                     <Transition name="fade" mode="out-in">
                         <main
                             :key="page.url"
-                            class="rounded-2xl backdrop-blur-sm sm:border sm:border-rancho-ink-800 sm:bg-rancho-ink-900/50 sm:p-6 md:col-span-3"
+                            class="rounded-2xl backdrop-blur-sm sm:border sm:border-rancho-ink-800 sm:bg-rancho-ink-900/50 sm:px-6 sm:py-10 md:col-span-3"
                         >
-                            <h2 class="mb-6 text-xl font-black text-white">{{ title }}</h2>
                             <slot />
                         </main>
                     </Transition>

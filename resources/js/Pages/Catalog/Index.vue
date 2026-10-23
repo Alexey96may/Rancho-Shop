@@ -44,16 +44,14 @@
             required: false,
             default: () => ({}),
             validator: (value: CatalogFilters) => {
-                if (typeof value !== 'object' || value === null) return false;
-                if ('in_stock' in value && typeof value.in_stock !== 'boolean') return false;
-                return true;
+                return typeof value === 'object' && value !== null;
             },
         },
     });
 
     const search = ref(props.filters.search || '');
     const category = ref(props.filters.category ? Number(props.filters.category) : '');
-    const sort = ref(props.filters.sort || '');
+    const sortValue = ref(props.filters.sort || '');
     const inStock = ref(Boolean(props.filters.in_stock) || false);
 
     const isFiltering = ref(false);
@@ -75,12 +73,11 @@
             {
                 search: search.value,
                 category: category.value,
-                sort: sort.value,
+                sort: sortValue.value,
                 in_stock: inStock.value,
             },
             {
                 preserveState: true,
-                replace: true,
                 onFinish: () => {
                     showSkeleton.cancel();
                     hideSkeleton();
@@ -89,7 +86,7 @@
         );
     };
 
-    watch([category, sort, inStock], () => {
+    watch([category, sortValue, inStock], () => {
         applyFilters();
     });
 
@@ -115,7 +112,7 @@
     const resetFilters = () => {
         category.value = '';
         search.value = '';
-        sort.value = '';
+        sortValue.value = '';
         inStock.value = false;
         applyFilters();
     };
@@ -125,7 +122,7 @@
         if (category.value) return true;
 
         const validSorts = sortArray.map((s) => s.id);
-        if (sort.value && validSorts.includes(String(sort.value))) return true;
+        if (sortValue.value && validSorts.includes(String(sortValue.value))) return true;
 
         if (inStock.value === true) return true;
 
@@ -185,7 +182,7 @@
                             <BaseSelect
                                 label="Сортировка:"
                                 placeholder="По умолчанию"
-                                v-model="sort"
+                                v-model="sortValue"
                                 :options="sortArray"
                                 width-class="w-full"
                             />

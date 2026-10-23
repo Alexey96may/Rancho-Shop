@@ -20,6 +20,10 @@ class ProductController extends Controller
     {
         $filters = $request->only(['category', 'search', 'sort', 'animal', 'in_stock']);
 
+        if (array_key_exists('in_stock', $filters)) {
+            $filters['in_stock'] = $request->boolean('in_stock');
+        }
+
         $products = Product::query()
             ->where('is_active', true)
             ->with([

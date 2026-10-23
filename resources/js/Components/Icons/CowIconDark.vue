@@ -254,7 +254,7 @@
     };
 </script>
 
-<style>
+<style scoped>
     .uuid-685d41f1-8e7d-4ce7-9d3a-439234cf0c82 {
         fill: #edece2;
     }

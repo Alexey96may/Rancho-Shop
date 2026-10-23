@@ -161,7 +161,7 @@
             class="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl border-2 px-2 text-xs font-black uppercase tracking-widest outline-none transition-all duration-300 focus-visible:ring-4 focus-visible:ring-rancho-pine/30 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
             :class="
                 subscribed
-                    ? 'border-rancho-pine bg-rancho-pine/10 text-rancho-pine hover:bg-rancho-pine/20 hover:fill-rancho-forest'
+                    ? 'border-rancho-pine bg-rancho-pine text-rancho-paper hover:bg-rancho-pine/80 hover:fill-rancho-paper'
                     : 'bg-white text-rancho-forest hover:border-rancho-forest/60 hover:text-rancho-pine'
             "
         >
@@ -170,7 +170,7 @@
                 :class="{
                     'bell-wiggle': bellState === 'ringing',
                     'bell-ring': bellState === 'subscribed',
-                    'fill-rancho-pine text-rancho-pine': subscribed,
+                    'fill-rancho-paper text-rancho-pine': subscribed,
                 }"
                 aria-hidden="true"
             />
