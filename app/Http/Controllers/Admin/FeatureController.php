@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Http\Resources\Admin\AdminLandingBlockResource;
 use App\Http\Requests\Admin\UpdateLandingBlockRequest;
+use App\Http\Resources\Admin\AdminLandingBlockResource;
 use App\Models\LandingBlock;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -27,7 +27,7 @@ class FeatureController extends Controller
         return Inertia::render('Admin/Features/Index', [
             'blocks' => AdminLandingBlockResource::collection($blocks),
             'filters' => $filters,
-            'seo' => $this->seo('Панель управления: Блоки', robots: 'noindex, nofollow')
+            'seo' => $this->seo('Панель управления: Блоки', robots: 'noindex, nofollow'),
         ]);
     }
 
@@ -43,14 +43,14 @@ class FeatureController extends Controller
     }
 
     /**
-    * Updating a block.
-    * We don't create new blocks through the UI (they're from the seeder),
-    * but we do provide the ability to edit existing ones.
-    */
+     * Updating a block.
+     * We don't create new blocks through the UI (they're from the seeder),
+     * but we do provide the ability to edit existing ones.
+     */
     public function update(UpdateLandingBlockRequest $request, LandingBlock $feature)
     {
         $dto = $request->toDto();
-        
+
         $feature->update($dto->toArray());
 
         return redirect()->route('admin.features.index')->with('success', "Блок {$feature->key->label()} обновлён!");
@@ -61,11 +61,8 @@ class FeatureController extends Controller
      */
     public function toggle(LandingBlock $feature)
     {
-        $feature->update([
-            'is_visible' => !$feature->is_visible
-        ]);
-
-        $status = $feature->is_visible ? "отображается" : "скрыт";
+        $isVisible = $feature->toggleVisibility();
+        $status = $isVisible ? 'отображается' : 'скрыт';
 
         return redirect()->back()->with('success', "Блок «{$feature->key->label()}» теперь {$status}");
     }

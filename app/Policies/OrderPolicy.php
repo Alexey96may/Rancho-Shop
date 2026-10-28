@@ -4,7 +4,6 @@ namespace App\Policies;
 
 use App\Models\Order;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class OrderPolicy
 {
@@ -13,7 +12,7 @@ class OrderPolicy
      */
     public function viewAny(User $user): bool
     {
-        return false;
+        return $user->can('manage-orders');
     }
 
     /**
@@ -21,7 +20,7 @@ class OrderPolicy
      */
     public function view(User $user, Order $order): bool
     {
-        return $user->id === $order->user_id || $user->can('manage-orders');
+        return $user->can('manage-orders') || $user->id === $order->user_id;
     }
 
     /**
@@ -37,7 +36,7 @@ class OrderPolicy
      */
     public function update(User $user, Order $order): bool
     {
-        return false;
+        return $user->can('manage-orders');
     }
 
     /**
@@ -45,7 +44,7 @@ class OrderPolicy
      */
     public function delete(User $user, Order $order): bool
     {
-        return false;
+        return $user->isAdmin();
     }
 
     /**
@@ -53,7 +52,7 @@ class OrderPolicy
      */
     public function restore(User $user, Order $order): bool
     {
-        return false;
+        return $user->isAdmin();
     }
 
     /**
@@ -61,6 +60,6 @@ class OrderPolicy
      */
     public function forceDelete(User $user, Order $order): bool
     {
-        return false;
+        return $user->isAdmin();
     }
 }

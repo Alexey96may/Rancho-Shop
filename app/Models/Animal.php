@@ -9,14 +9,14 @@ use App\Traits\HasStandardMedia;
 use App\Traits\Models\HasAdminTrash;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-// Spatie
 use Illuminate\Database\Eloquent\SoftDeletes;
+// Spatie
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Collections\MediaCollection;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
@@ -198,6 +198,16 @@ class Animal extends Model implements HasMedia
                     $query->where('status', $status);
                 }
             });
+    }
+
+    public static function getAvailableStatuses(): Collection
+    {
+        return self::query()
+            ->where('is_active', true)
+            ->whereNotNull('status')
+            ->distinct()
+            ->pluck('status')
+            ->map(fn ($status) => ['id' => $status, 'name' => ucfirst($status)]);
     }
 
     protected function voiceUrl(): Attribute

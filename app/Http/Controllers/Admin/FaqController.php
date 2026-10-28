@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Actions\Admin\Faq\ReorderFaqAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\FaqRequest;
 use App\Http\Requests\Admin\ReorderFaqRequest;
@@ -9,7 +10,6 @@ use App\Http\Resources\Admin\AdminFaqResource;
 use App\Models\Faq;
 use App\Traits\Http\Controllers\HandlesSmartPagination;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class FaqController extends Controller
@@ -76,38 +76,17 @@ class FaqController extends Controller
     /**
      * Bulk order update (if we're doing drag-n-drop)
      */
-    public function reorder(ReorderFaqRequest $request)
+    public function reorder(ReorderFaqRequest $request, ReorderFaqAction $action)
     {
         $ids = $request->validated()['ids'];
-        if (empty($ids)) {
-            return redirect()->back();
-        }
-
-        $cases = [];
-        $params = [];
-
-        foreach ($ids as $index => $id) {
-            $cases[] = 'WHEN id = ? THEN ?::integer';
-            $params[] = $id;
-            $params[] = $index;
-        }
-
-        $params = array_merge($params, $ids);
-        $idsPlaceholder = implode(',', array_fill(0, count($ids), '?'));
-
-        $query = '
-            UPDATE faqs
-            SET sort_order = (CASE ' . implode(' ', $cases) . " END)
-            WHERE id IN ($idsPlaceholder)
-        ";
 
         try {
-            DB::transaction(fn () => DB::update($query, $params));
-
-            return redirect()->back()->with('success', 'Порядок вопросов обновлён!');
+            $action->handle($ids);
         } catch (\Exception $e) {
             return redirect()->back()->withErrors(['error' => 'Ошибка базы данных: ' . $e->getMessage()]);
         }
+
+        return redirect()->back()->with('success', 'Порядок вопросов обновлён!');
     }
 
     /**

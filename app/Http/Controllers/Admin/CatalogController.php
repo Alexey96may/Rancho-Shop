@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Actions\Admin\Catalog\CreateProductVariantAction;
+use App\Actions\Admin\Catalog\DeleteProductVariantAction;
+use App\Actions\Admin\Catalog\UpdateProductVariantAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\CatalogRequest;
 use App\Http\Requests\Admin\QuickUpdateCatalogRequest;
@@ -17,9 +20,6 @@ class CatalogController extends Controller
 {
     use HandlesSmartPagination;
 
-    /**
-     * Display a listing of the resource.
-     */
     public function index(Request $request)
     {
         $filters = $request->only(['search', 'product_id', 'unit_id', 'in_stock', 'sort']);
@@ -41,9 +41,6 @@ class CatalogController extends Controller
         ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create(Request $request)
     {
         return Inertia::render('Admin/Catalog/Form', [
@@ -56,25 +53,22 @@ class CatalogController extends Controller
         ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(CatalogRequest $request)
+    public function store(CatalogRequest $request, CreateProductVariantAction $action)
     {
-        $dto = $request->toDto();
-        $variant = ProductVariant::create($dto->toArray());
+        $variant = $action->handle($request->toDto());
 
         if ($request->boolean('create_another')) {
             return redirect()->back()
                 ->with('success', "Вариант «{$variant->name}» создан. Можете добавить следующий.");
         }
 
-        return $this->redirectWithFilters($request, 'admin.catalog.index', "Вариант «{$variant->name}» успешно создан!");
+        return $this->redirectWithFilters(
+            $request,
+            'admin.catalog.index',
+            "Вариант «{$variant->name}» успешно создан!"
+        );
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(ProductVariant $catalog, Request $request)
     {
         $catalog->load(['product.media', 'unit']);
@@ -85,22 +79,23 @@ class CatalogController extends Controller
             'units' => Unit::select(['id', 'short', 'name'])->orderBy('name')->get(),
             'seo' => $this->seo('Редактирование варианта: ' . $catalog->name, robots: 'noindex, nofollow'),
             'isEdit' => true,
-            'backUrl' => $request->query('back') ? route('admin.catalog.index') . $request->query('back') : route('admin.catalog.index'),
+            'backUrl' => $request->query('back')
+                ? route('admin.catalog.index') . $request->query('back')
+                : route('admin.catalog.index'),
         ]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(CatalogRequest $request, ProductVariant $catalog)
+    public function update(CatalogRequest $request, ProductVariant $catalog, UpdateProductVariantAction $action)
     {
-        $dto = $request->toDto();
-        $catalog->update($dto->toArray());
+        $action->handle($catalog, $request->toDto());
 
-        return $this->redirectWithFilters($request, 'admin.catalog.index', "Вариант «{$catalog->name}» успешно обновлён!");
+        return $this->redirectWithFilters(
+            $request,
+            'admin.catalog.index',
+            "Вариант «{$catalog->name}» успешно обновлён!"
+        );
     }
 
-    // Method for quickly updating balances/prices from a table (In-line edit)
     public function quickUpdate(QuickUpdateCatalogRequest $request, ProductVariant $variant)
     {
         $variant->update($request->validated());
@@ -108,26 +103,25 @@ class CatalogController extends Controller
         return redirect()->back()->with('success', 'Данные обновлены');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Request $request, ProductVariant $catalog)
+    public function destroy(Request $request, ProductVariant $catalog, DeleteProductVariantAction $action)
     {
-        $catalog->delete();
+        $name = $catalog->name;
+        $action->handle($catalog);
 
-        return $this->redirectWithFilters($request, 'admin.catalog.index', "Вариант «{$catalog->name}» успешно удалён!");
+        return $this->redirectWithFilters(
+            $request,
+            'admin.catalog.index',
+            "Вариант «{$name}» успешно удалён!"
+        );
     }
 
-    /**
-     * Static mapping of sorting options
-     */
     private function getSortOptions(): array
     {
         return [
-            ['label' => 'Новинки',           'value' => 'newest'],
-            ['label' => 'Сначала дешёвые',   'value' => 'price_asc'],
-            ['label' => 'Сначала дорогие',   'value' => 'price_desc'],
-            ['label' => 'Много на складе',   'value' => 'stock_desc'],
+            ['label' => 'Новинки',         'value' => 'newest'],
+            ['label' => 'Сначала дешёвые', 'value' => 'price_asc'],
+            ['label' => 'Сначала дорогие', 'value' => 'price_desc'],
+            ['label' => 'Много на складе', 'value' => 'stock_desc'],
         ];
     }
 }

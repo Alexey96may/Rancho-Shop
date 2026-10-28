@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Checkout\GetDeliveryDraftAction;
 use App\Actions\Checkout\ValidateDeliveryAction;
 use App\DTO\DeliveryDTO;
 use App\Http\Requests\CheckoutRequest;
@@ -14,30 +15,14 @@ use Inertia\Response;
 
 class CheckoutPageController extends Controller
 {
-    public function index(Request $request, ValidateDeliveryAction $validateDelivery): Response
-    {
-        $user = $request->user();
-
-        if ($user) {
-            $deliveryDraft = [
-                'address' => $user->last_delivery_address ?? $user->defaultDeliveryAddress?->address,
-                'lat' => $user->last_delivery_lat ?? $user->defaultDeliveryAddress?->lat,
-                'lng' => $user->last_delivery_lng ?? $user->defaultDeliveryAddress?->lng,
-                'is_pickup' => false,
-                'is_valid' => true,
-            ];
-        } else {
-            $deliveryDraft = session('delivery_draft', [
-                'address' => null,
-                'lat' => null,
-                'lng' => null,
-                'is_pickup' => false,
-                'is_valid' => false,
-            ]);
-        }
+    public function index(
+        Request $request,
+        GetDeliveryDraftAction $getDraft,
+        ValidateDeliveryAction $validateDelivery,
+    ): Response {
+        $deliveryDraft = $getDraft->handle($request->user(), $request);
 
         $deliveryResult = null;
-
         $hasCoords = !empty($deliveryDraft['lat']) && !empty($deliveryDraft['lng']);
         $isPickup = (bool) ($deliveryDraft['is_pickup'] ?? false);
 
@@ -45,11 +30,11 @@ class CheckoutPageController extends Controller
             try {
                 $deliveryDto = new DeliveryDTO(
                     address: $deliveryDraft['address'] ?? null,
-                    lat: isset($deliveryDraft['lat']) ? (float) $deliveryDraft['lat'] : null,
-                    lng: isset($deliveryDraft['lng']) ? (float) $deliveryDraft['lng'] : null,
+                    lat: (float) $deliveryDraft['lat'],
+                    lng: (float) $deliveryDraft['lng'],
                     is_pickup: $isPickup,
                     is_valid: (bool) ($deliveryDraft['is_valid'] ?? true),
-                    meta: null
+                    meta: null,
                 );
 
                 $deliveryResult = $validateDelivery->handle($deliveryDto);
@@ -68,12 +53,12 @@ class CheckoutPageController extends Controller
         ]);
     }
 
-    public function store(CheckoutRequest $request)
+    public function store(CheckoutRequest $request, CheckoutService $checkoutService)
     {
         $checkoutDto = $request->toDTO();
         $deliveryDto = DeliveryDTO::fromRequest($request);
 
-        $result = app(CheckoutService::class)->handle($checkoutDto, $deliveryDto);
+        $result = $checkoutService->handle($checkoutDto, $deliveryDto);
 
         $order = $result['order'];
         $magicLink = $result['magicLink'];

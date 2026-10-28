@@ -66,13 +66,8 @@ class PromocodeController extends Controller
 
     public function create(Request $request)
     {
-        $typeOptions = collect(PromoCodeType::cases())->map(fn ($type) => [
-            'value' => $type->value,
-            'label' => $type->label(),
-        ]);
-
         return Inertia::render('Admin/PromoCodes/Create', [
-            'typeOptions' => $typeOptions,
+            'typeOptions' => $this->getTypeOptions(),
             'backUrl' => $request->query('back')
                     ? route('admin.promocodes.index') . $request->query('back')
                     : route('admin.promocodes.index'),
@@ -109,7 +104,9 @@ class PromocodeController extends Controller
     {
         $promoCode->update(['is_active' => !$promoCode->is_active]);
 
-        return redirect()->back();
+        $status = $promoCode->is_active ? 'активирован' : 'деактивирован';
+
+        return redirect()->back()->with('success', "Промокод «{$promoCode->code}» {$status}!");
     }
 
     // ==========================================

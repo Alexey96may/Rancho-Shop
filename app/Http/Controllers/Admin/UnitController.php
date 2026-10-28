@@ -2,20 +2,20 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Actions\Admin\Units\CreateUnitAction;
+use App\Actions\Admin\Units\DeleteUnitAction;
+use App\Actions\Admin\Units\ReorderUnitAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\UnitReorderRequest;
 use App\Http\Requests\Admin\UnitSaveRequest;
 use App\Http\Resources\Admin\AdminUnitResource;
 use App\Models\Unit;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
+use RuntimeException;
 
 class UnitController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index(Request $request)
     {
         $filters = $request->only(['search']);
@@ -23,7 +23,6 @@ class UnitController extends Controller
         $units = Unit::query()
             ->filter($filters)
             ->withCount('productVariants')
-            ->orderBy('position', 'asc')
             ->orderBy('position', 'asc')
             ->paginate(setting('admin_per_page', 10))
             ->withQueryString();
@@ -35,74 +34,37 @@ class UnitController extends Controller
         ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(UnitSaveRequest $request)
+    public function store(UnitSaveRequest $request, CreateUnitAction $action)
     {
-        $dto = $request->toDto();
+        $unit = $action->handle($request->toDto()->toArray());
 
-        Unit::create([
-            ...$dto->toArray(),
-            'position' => (Unit::max('position') ?? 0) + 1,
-        ]);
-
-        return redirect()->back()->with('success', "Единица «{$dto->name}» измерения  создана");
+        return redirect()->back()->with('success', "Единица «{$unit->name}» измерения создана");
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(UnitSaveRequest $request, Unit $unit)
     {
-        $dto = $request->toDto();
-
-        $unit->update($dto->toArray());
+        $unit->update($request->toDto()->toArray());
 
         return redirect()->back()->with('success', "Данные «{$unit->name}» обновлены");
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Unit $unit)
+    public function destroy(Unit $unit, DeleteUnitAction $action)
     {
-        if ($unit->productVariants()->exists()) {
-            return redirect()->back()->with('error', "Нельзя удалить «{$unit->name}»: единица используется в товарах");
+        $name = $unit->name;
+
+        try {
+            $action->handle($unit);
+        } catch (RuntimeException $e) {
+            return redirect()->back()->with('error', $e->getMessage());
         }
 
-        $unit->delete();
-
-        return redirect()->back()->with('success', "Единица измерения «{$unit->name}» удалена");
+        return redirect()->back()->with('success', "Единица измерения «{$name}» удалена");
     }
 
-    /**
-     * Change order of a Unit.
-     */
-    public function reorder(UnitReorderRequest $request)
+    public function reorder(UnitReorderRequest $request, ReorderUnitAction $action)
     {
-        $ids = $request->validated('ids');
+        $action->handle($request->validated('ids'));
 
-        if (empty($ids)) {
-            return back();
-        }
-
-        $cases = [];
-        $params = [];
-
-        foreach ($ids as $index => $id) {
-            $cases[] = 'WHEN id = ? THEN ?::integer';
-            $params[] = $id;
-            $params[] = $index;
-        }
-
-        $params = array_merge($params, $ids);
-        $placeholders = implode(',', array_fill(0, count($ids), '?'));
-
-        $sql = 'UPDATE units SET position = (CASE ' . implode(' ', $cases) . " END) WHERE id IN ({$placeholders})";
-
-        DB::transaction(fn () => DB::update($sql, $params));
-
-        return back()->with('success', 'Порядок обновлен');
+        return back()->with('success', 'Порядок обновлён');
     }
 }

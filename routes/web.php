@@ -5,7 +5,6 @@ use App\Http\Controllers\Admin\AnalyticsController;
 use App\Http\Controllers\Admin\AnimalController as AdminAnimalController;
 use App\Http\Controllers\Admin\CatalogController;
 use App\Http\Controllers\Admin\CategoryController;
-// use App\Http\Controllers\Auth\SocialController;
 use App\Http\Controllers\Admin\CommentController as AdminCommentController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\FaqController;
@@ -79,9 +78,11 @@ Route::post('/promo-code/remove', [PublicPromoCodeController::class, 'remove'])
 // Публичные маршруты оплаты (доступны и для гостей, и для авторизованных)
 // Публичные роуты оплаты
 Route::get('/orders/{order}/pay', [PaymentController::class, 'checkout'])
+    ->middleware('order.access')
     ->name('payments.checkout');
 
 Route::get('/orders/{order}/success', [PaymentController::class, 'success'])
+    ->middleware('order.access')
     ->name('payments.tinkoff.success');
 
 Route::get('/orders/{order}/fake-pay', [PaymentController::class, 'fakeProcess'])
@@ -89,6 +90,7 @@ Route::get('/orders/{order}/fake-pay', [PaymentController::class, 'fakeProcess']
 
 // Возврат пользователя после оплаты в ЮKassa
 Route::get('/orders/{order}/yookassa/success', [PaymentController::class, 'successYooKassa'])
+    ->middleware('order.access')
     ->name('payments.yookassa.success');
 
 // Webhook от ЮKassa

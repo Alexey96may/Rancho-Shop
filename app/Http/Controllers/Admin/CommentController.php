@@ -6,11 +6,10 @@ use App\Enums\CommentStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\UpdateCommentStatusRequest;
 use App\Http\Resources\Admin\AdminCommentResource;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Gate;
-use App\Enums\UserRole;
 use App\Models\Comment;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 
 class CommentController extends Controller
@@ -23,7 +22,7 @@ class CommentController extends Controller
         $filters = $request->only(['type', 'status']);
 
         $comments = Comment::query()
-            ->with(['user', 'commentable' => fn($q) => $q->withTrashed()])
+            ->with(['user', 'commentable' => fn ($q) => $q->withTrashed()])
             ->withTrashControl($request, $filters)
             ->filter($filters)
             ->latest()
@@ -31,14 +30,14 @@ class CommentController extends Controller
             ->withQueryString();
 
         return Inertia::render('Admin/Comments/Index', [
-            'comments'  => AdminCommentResource::collection($comments),
-            'filters'   => $filters,
-            'stats'     => Comment::getStats(),
-            'statuses'  => collect(CommentStatus::cases())->map(fn($s) => [
+            'comments' => AdminCommentResource::collection($comments),
+            'filters' => $filters,
+            'stats' => Comment::getStats(),
+            'statuses' => collect(CommentStatus::cases())->map(fn ($s) => [
                 'value' => $s->value,
-                'label' => $s->label()
+                'label' => $s->label(),
             ]),
-            'seo'       => $this->seo('Панель управления: Комментарии', robots: 'noindex, nofollow')
+            'seo' => $this->seo('Панель управления: Комментарии', robots: 'noindex, nofollow'),
         ]);
     }
 
@@ -68,7 +67,8 @@ class CommentController extends Controller
         }
 
         $comment->delete();
-        return back()->with('success', "Комментарий помечен как удалённый!");
+
+        return back()->with('success', 'Комментарий помечен как удалённый!');
     }
 
     /**
@@ -80,6 +80,6 @@ class CommentController extends Controller
 
         $comment->restore();
 
-        return redirect()->back()->with('success', "Комментарий успешно восстановлен!");
+        return redirect()->back()->with('success', 'Комментарий успешно восстановлен!');
     }
 }

@@ -1,0 +1,40 @@
+<?php
+
+namespace App\Http\Requests;
+
+use Illuminate\Contracts\Validation\ValidationRule;
+use Illuminate\Foundation\Http\FormRequest;
+
+class CatalogFilterRequest extends FormRequest
+{
+    /**
+     * Determine if the user is authorized to make this request.
+     */
+    public function authorize(): bool
+    {
+        return true;
+    }
+
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * @return array<string, ValidationRule|array<mixed>|string>
+     */
+    public function rules(): array
+    {
+        return [
+            'category' => ['nullable', 'string'],
+            'search' => ['nullable', 'string'],
+            'sort' => ['nullable', 'string'],
+            'animal' => ['nullable', 'string'],
+            'in_stock' => ['nullable', 'boolean'],
+        ];
+    }
+
+    protected function prepareForValidation(): void
+    {
+        if ($this->filled('in_stock')) {
+            $this->merge(['in_stock' => $this->boolean('in_stock')]);
+        }
+    }
+}

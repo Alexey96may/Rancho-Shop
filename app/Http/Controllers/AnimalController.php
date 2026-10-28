@@ -30,22 +30,12 @@ class AnimalController extends Controller
             ->whereHas('animals')
             ->get();
 
-        $statuses = Animal::query()
-            ->where('is_active', true)
-            ->whereNotNull('status')
-            ->distinct()
-            ->pluck('status')
-            ->map(fn ($status) => [
-                'id' => $status,
-                'name' => ucfirst($status),
-            ]);
-
         return Inertia::render('Animals/Index', [
             'animals' => AnimalResource::collection($animals),
             'categories' => CategoryResource::collection($categories),
-            'statuses' => $statuses,
+            'statuses' => Animal::getAvailableStatuses(),
             'filters' => $filters,
-            'seo' => $this->seo('Наши жители фермы', 'Познакомьтесь с животными, которые живут на нашей ферме'),
+            'seo' => $this->seo('Жители нашей фермы', 'Познакомьтесь с животными, которые живут на нашей ферме'),
         ]);
     }
 

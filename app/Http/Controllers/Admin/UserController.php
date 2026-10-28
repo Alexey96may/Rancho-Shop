@@ -8,7 +8,6 @@ use App\Http\Requests\Admin\UserSaveRequest;
 use App\Http\Resources\Admin\AdminUserResource;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -54,9 +53,7 @@ class UserController extends Controller
 
     public function destroy(User $user)
     {
-        if ($user->id === Auth::id()) {
-            return back()->withErrors(['error' => 'Нельзя удалить свой аккаунт!']);
-        }
+        $this->authorize('delete', $user);
 
         $user->delete();
 

@@ -2,27 +2,24 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Actions\Admin\Animals\CreateAnimalAction;
+use App\Actions\Admin\Animals\DeleteAnimalAction;
+use App\Actions\Admin\Animals\UpdateAnimalAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreAnimalRequest;
 use App\Http\Resources\Admin\AnimalResource as AdminAnimalResource;
 use App\Models\Animal;
 use App\Models\Category;
-use App\Traits\HandlesAdminMedia;
 use App\Traits\Http\Controllers\HandlesSmartPagination;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class AnimalController extends Controller
 {
-    use HandlesAdminMedia, HandlesSmartPagination;
+    use HandlesSmartPagination;
 
-    /**
-     * Display a listing of the resource.
-     */
     public function index(Request $request)
     {
         $filters = $request->only(['search', 'category_id', 'status']);
@@ -43,9 +40,6 @@ class AnimalController extends Controller
         ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create(Request $request)
     {
         return Inertia::render('Admin/Animals/FormPage', [
@@ -61,28 +55,17 @@ class AnimalController extends Controller
         ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(StoreAnimalRequest $request)
+    public function store(StoreAnimalRequest $request, CreateAnimalAction $action)
     {
-        $dto = $request->toDto();
+        $animal = $action->handle($request->toDto(), $request);
 
-        $animal = DB::transaction(function () use ($dto, $request) {
-            $animal = Animal::create($dto->toArray());
-            $animal->syncSeo($dto->seoData);
-
-            $this->syncModelMedia($animal, $request);
-
-            return $animal;
-        });
-
-        return $this->redirectWithFilters($request, 'admin.animals.index', "Животное «{$animal->name}» успешно добавлено!");
+        return $this->redirectWithFilters(
+            $request,
+            'admin.animals.index',
+            "Животное «{$animal->name}» успешно добавлено!"
+        );
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(Request $request, Animal $animal)
     {
         $animal->load(['seo', 'category', 'parent']);
@@ -102,48 +85,30 @@ class AnimalController extends Controller
         ]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(StoreAnimalRequest $request, Animal $animal)
+    public function update(StoreAnimalRequest $request, Animal $animal, UpdateAnimalAction $action)
     {
-        $dto = $request->toDto($animal->id);
+        $action->handle($animal, $request->toDto($animal->id), $request);
 
-        DB::transaction(function () use ($dto, $request, $animal) {
-            $animal->update($dto->toArray());
-            $animal->syncSeo($dto->seoData);
-
-            $this->syncModelMedia($animal, $request);
-        });
-
-        return $this->redirectWithFilters($request, 'admin.animals.index', "Данные животного «{$animal->name}» успешно обновлены!");
+        return $this->redirectWithFilters(
+            $request,
+            'admin.animals.index',
+            "Данные животного «{$animal->name}» успешно обновлены!"
+        );
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Request $request, int $id)
+    public function destroy(Request $request, int $id, DeleteAnimalAction $action)
     {
         $animal = Animal::withTrashed()->findOrFail($id);
+        $name = $animal->name;
+        $wasTrashed = $animal->trashed();
 
-        if ($animal->trashed()) {
-            Gate::authorize('forceDelete', $animal);
+        $action->handle($animal);
 
-            $name = $animal->name;
+        $message = $wasTrashed
+            ? "Животное «{$name}» окончательно удалено!"
+            : "Животное «{$name}» перемещено в корзину";
 
-            DB::transaction(function () use ($animal) {
-                $animal->seo?->delete();
-                $animal->media()->delete();
-                $animal->forceDelete();
-            });
-
-            return back()->with('success', "Животное «{$name}» окончательно удалено!");
-        }
-
-        Gate::authorize('delete', $animal);
-        $animal->delete();
-
-        return back()->with('success', "Животное «{$animal->name}» перемещено в корзину");
+        return back()->with('success', $message);
     }
 
     public function restore(Animal $animal)
@@ -172,23 +137,5 @@ class AnimalController extends Controller
         $media->delete();
 
         return redirect()->back()->with('success', 'Фото удалено');
-    }
-
-    private function generateUniqueSlug(string $name, ?int $ignoreId = null): string
-    {
-        $base = Str::slug($name);
-        $slug = $base;
-        $i = 2;
-
-        while (
-            Animal::withTrashed()
-                ->where('slug', $slug)
-                ->when($ignoreId, fn ($q) => $q->where('id', '!=', $ignoreId))
-                ->exists()
-        ) {
-            $slug = $base . '-' . $i++;
-        }
-
-        return $slug;
     }
 }

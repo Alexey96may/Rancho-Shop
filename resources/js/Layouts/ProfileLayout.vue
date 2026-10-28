@@ -118,20 +118,6 @@
                             </Link>
 
                             <Link
-                                :href="route('profile.comments.index')"
-                                :class="[
-                                    navLinkClasses(route().current('profile.comments.*')),
-                                    'shrink-0 whitespace-nowrap',
-                                ]"
-                            >
-                                <ChatBubbleLeftRightIcon
-                                    class="h-4 w-4 md:h-5 md:w-5"
-                                    aria-hidden="true"
-                                />
-                                Мои отзывы
-                            </Link>
-
-                            <Link
                                 :href="route('profile.orders.index')"
                                 :class="[
                                     navLinkClasses(route().current('profile.orders.*')),
@@ -151,6 +137,20 @@
                             >
                                 <BellIcon class="h-5 w-5" />
                                 Мои подписки
+                            </Link>
+
+                            <Link
+                                :href="route('profile.comments.index')"
+                                :class="[
+                                    navLinkClasses(route().current('profile.comments.*')),
+                                    'shrink-0 whitespace-nowrap',
+                                ]"
+                            >
+                                <ChatBubbleLeftRightIcon
+                                    class="h-4 w-4 md:h-5 md:w-5"
+                                    aria-hidden="true"
+                                />
+                                Мои отзывы
                             </Link>
 
                             <!-- LOGOUT: только на мобилке, отделён от остальных -->

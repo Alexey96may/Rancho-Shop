@@ -2,6 +2,10 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Actions\Admin\Products\CreateProductAction;
+use App\Actions\Admin\Products\DeleteProductAction;
+use App\Actions\Admin\Products\RestoreProductAction;
+use App\Actions\Admin\Products\UpdateProductAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreProductRequest;
 use App\Http\Requests\Admin\UpdateProductRequest;
@@ -11,21 +15,16 @@ use App\Http\Resources\CommentResource;
 use App\Models\Animal;
 use App\Models\Category;
 use App\Models\Product;
-use App\Traits\HandlesAdminMedia;
 use App\Traits\Http\Controllers\HandlesSmartPagination;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
+use RuntimeException;
 
 class ProductController extends Controller
 {
-    use HandlesAdminMedia, HandlesSmartPagination;
+    use HandlesSmartPagination;
 
-    /**
-     * Display a listing of the resource.
-     */
     public function index(Request $request)
     {
         $filters = $request->only(['search', 'category', 'animal']);
@@ -51,9 +50,6 @@ class ProductController extends Controller
         ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create(Request $request)
     {
         return Inertia::render('Admin/Products/Form', array_merge([
@@ -62,23 +58,9 @@ class ProductController extends Controller
         ], $this->getFormOptions()));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(StoreProductRequest $request)
+    public function store(StoreProductRequest $request, CreateProductAction $action)
     {
-        $dto = $request->toDto();
-
-        $product = DB::transaction(function () use ($dto, $request) {
-            $product = Product::create($dto->toArray());
-
-            $product->animals()->sync($dto->animal_ids);
-            $product->syncSeo($dto->seoData);
-
-            $this->syncModelMedia($product, $request);
-
-            return $product;
-        });
+        $product = $action->handle($request->toDto(), $request);
 
         return $this->redirectWithFilters(
             $request,
@@ -87,9 +69,6 @@ class ProductController extends Controller
         );
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(Request $request, Product $product)
     {
         $product->load(['variants.unit', 'category', 'media', 'animals', 'seo'])
@@ -106,21 +85,9 @@ class ProductController extends Controller
         ], $this->getFormOptions()));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(UpdateProductRequest $request, Product $product)
+    public function update(UpdateProductRequest $request, Product $product, UpdateProductAction $action)
     {
-        $dto = $request->toDto($product->id);
-
-        DB::transaction(function () use ($dto, $request, $product) {
-            $product->update($dto->toArray());
-
-            $product->animals()->sync($dto->animal_ids);
-            $product->syncSeo($dto->seoData);
-
-            $this->syncModelMedia($product, $request);
-        });
+        $action->handle($product, $request->toDto($product->id), $request);
 
         return $this->redirectWithFilters(
             $request,
@@ -129,56 +96,32 @@ class ProductController extends Controller
         );
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Request $request, int $id): RedirectResponse
+    public function destroy(Request $request, int $id, DeleteProductAction $action): RedirectResponse
     {
         $product = Product::withTrashed()->findOrFail($id);
+        $name = $product->name;
+        $wasTrashed = $product->trashed();
 
-        if ($product->trashed()) {
-            Gate::authorize('forceDelete', $product);
-
-            $name = $product->name;
-
-            DB::transaction(function () use ($product) {
-                $product->seo?->delete();
-                $product->clearMediaCollection('main');
-                $product->clearMediaCollection('gallery');
-                $product->variants()->delete();
-                $product->animals()->detach();
-                $product->forceDelete();
-            });
-
-            return $this->redirectWithFilters(
-                $request,
-                'admin.products.index',
-                "Товар «{$name}» окончательно удалён!"
-            );
+        try {
+            $action->handle($product);
+        } catch (RuntimeException $e) {
+            return redirect()->back()->with('error', $e->getMessage());
         }
 
-        Gate::authorize('delete', $product);
-        $product->delete();
+        $message = $wasTrashed
+            ? "Товар «{$name}» окончательно удалён!"
+            : "Товар «{$name}» помечен как удалённый!";
 
-        return $this->redirectWithFilters(
-            $request,
-            'admin.products.index',
-            "Товар «{$product->name}» помечен как удалённый!"
-        );
+        return $this->redirectWithFilters($request, 'admin.products.index', $message);
     }
 
-    public function restore(Product $product): RedirectResponse
+    public function restore(Product $product, RestoreProductAction $action): RedirectResponse
     {
-        Gate::authorize('restore', $product);
-
-        $product->restore();
+        $action->handle($product);
 
         return back()->with('success', "Товар «{$product->name}» успешно восстановлен!");
     }
 
-    /**
-     * Общие опции форм create / edit.
-     */
     private function getFormOptions(): array
     {
         return [
@@ -189,9 +132,6 @@ class ProductController extends Controller
         ];
     }
 
-    /**
-     * Лёгкий список животных для select'ов — только id и name.
-     */
     private function getAnimalOptions(): array
     {
         return Animal::query()
@@ -206,9 +146,6 @@ class ProductController extends Controller
             ->all();
     }
 
-    /**
-     * URL возврата с учётом фильтров.
-     */
     private function backUrl(Request $request): string
     {
         return $request->query('back')

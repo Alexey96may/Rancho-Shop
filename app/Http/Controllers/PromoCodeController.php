@@ -3,16 +3,18 @@
 namespace App\Http\Controllers;
 
 use App\Actions\Checkout\ApplyPromoCodeAction;
-use Illuminate\Http\Request;
+use App\Http\Requests\ApplyPromoCodeRequest;
 
 class PromoCodeController extends Controller
 {
-    public function check(Request $request, ApplyPromoCodeAction $applyPromo)
+    /**
+     * ВНИМАНИЕ: subtotal приходит с клиента и НЕ является доверенным.
+     * Используется только для предпросмотра скидки в UI.
+     * При оформлении заказа сумму и скидку пересчитывать на сервере.
+     */
+    public function check(ApplyPromoCodeRequest $request, ApplyPromoCodeAction $applyPromo)
     {
-        $data = $request->validate([
-            'code' => ['required', 'string', 'max:50'],
-            'subtotal' => ['required', 'integer', 'min:0'],
-        ]);
+        $data = $request->validated();
 
         $promo = $applyPromo->handle($data['code'], $data['subtotal']);
 

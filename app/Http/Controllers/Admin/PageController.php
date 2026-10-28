@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Actions\Admin\Pages\CreatePageAction;
+use App\Actions\Admin\Pages\DeletePageAction;
+use App\Actions\Admin\Pages\UpdatePageAction;
 use App\Enums\PageType;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\PageSaveRequest;
@@ -13,6 +16,7 @@ use App\Traits\Http\Controllers\HandlesSmartPagination;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
+use RuntimeException;
 use Spatie\MediaLibrary\HasMedia;
 
 class PageController extends Controller
@@ -60,37 +64,27 @@ class PageController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(PageSaveRequest $request)
+    public function store(PageSaveRequest $request, CreatePageAction $action)
     {
-        $dto = $request->toDto();
+        $page = $action->handle($request->toDto());
 
-        $page = Page::create($dto->toPageArray());
-
-        if ($page->content) {
-            $this->moveTemporaryMedia($page->content, $page);
-        }
-
-        $page->syncSeo($dto->seoData);
-
-        return $this->redirectWithFilters($request, 'admin.pages.index', "Страница «{$page->title}» созданa!");
+        return $this->redirectWithFilters(
+            $request, 'admin.pages.index',
+            "Страница «{$page->title}» создана!"
+        );
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(PageSaveRequest $request, Page $page)
+    public function update(PageSaveRequest $request, Page $page, UpdatePageAction $action)
     {
-        $dto = $request->toDto($page->id);
+        $action->handle($page, $request->toDto($page->id));
 
-        if ($dto->content !== null) {
-            $this->sanitizeMedia($dto->content, $page);
-        }
-
-        $page->update($dto->toPageArray());
-
-        $page->syncSeo($dto->seoData);
-
-        return $this->redirectWithFilters($request, 'admin.pages.index', "Контент страницы «{$page->title}» обновлён!");
+        return $this->redirectWithFilters(
+            $request, 'admin.pages.index',
+            "Контент страницы «{$page->title}» обновлён!"
+        );
     }
 
     /**
@@ -114,16 +108,20 @@ class PageController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Request $request, Page $page)
+    public function destroy(Request $request, Page $page, DeletePageAction $action)
     {
-        if (!$page->isDeletable()) {
-            return redirect()->back()->with('error', 'Эту страницу нельзя удалить, так как она является системной.');
+        $title = $page->title;
+
+        try {
+            $action->handle($page);
+        } catch (RuntimeException $e) {
+            return redirect()->back()->with('error', $e->getMessage());
         }
 
-        $page->seo()->delete();
-        $page->delete();
-
-        return $this->redirectWithFilters($request, 'admin.pages.index', "Страница «{$page->title}» успешно удалена!");
+        return $this->redirectWithFilters(
+            $request, 'admin.pages.index',
+            "Страница «{$title}» успешно удалена!"
+        );
     }
 
     /**
@@ -146,43 +144,6 @@ class PageController extends Controller
         $media = $user->addMediaFromRequest('image')->toMediaCollection('tmp');
 
         return back()->with('last_uploaded_url', $media->getFullUrl());
-    }
-
-    /**
-     * Delete Unusable Media
-     */
-    private function sanitizeMedia(string $content, Page $page): void
-    {
-        $mediaItems = $page->getMedia('content_images');
-
-        foreach ($mediaItems as $media) {
-            if (!str_contains($content, $media->getUrl())) {
-                $media->delete();
-            }
-        }
-    }
-
-    /**
-     * Move Temporary Media files to the admin/moder tmp
-     */
-    private function moveTemporaryMedia(string $content, Page $page)
-    {
-        /** @var User|HasMedia $user */
-        $user = Auth::user();
-        $temporaryMedia = $user->getMedia('tmp');
-
-        foreach ($temporaryMedia as $media) {
-            if (str_contains($content, $media->getUrl())) {
-                $media->move($page, 'content_images');
-            }
-        }
-
-        $keepIds = $user->getMedia('tmp')
-            ->where('created_at', '>', now()->subDay())
-            ->pluck('id')
-            ->all();
-
-        $user->clearMediaCollectionExcept('tmp', $keepIds);
     }
 
     private function getFormattedPageTypes(): array

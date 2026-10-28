@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\CatalogFilterRequest;
 use App\Http\Resources\CategoryResource;
 use App\Http\Resources\CommentResource;
 use App\Http\Resources\ProductResource;
 use App\Models\Category;
 use App\Models\Product;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -16,13 +16,9 @@ class ProductController extends Controller
     /**
      * List of products for the catalog
      */
-    public function index(Request $request): Response
+    public function index(CatalogFilterRequest $request): Response
     {
-        $filters = $request->only(['category', 'search', 'sort', 'animal', 'in_stock']);
-
-        if (array_key_exists('in_stock', $filters)) {
-            $filters['in_stock'] = $request->boolean('in_stock');
-        }
+        $filters = $request->validated();
 
         $products = Product::query()
             ->where('is_active', true)

@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
@@ -16,12 +18,13 @@ use Illuminate\Database\Eloquent\Builder;
  * @property string|null $icon
  * @property int $sort_order
  * @property bool $is_active
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Animal> $animals
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read Collection<int, Animal> $animals
  * @property-read int|null $animals_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Product> $products
+ * @property-read Collection<int, Product> $products
  * @property-read int|null $products_count
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Category foAnimals()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Category forProducts()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Category hasActiveAnimals()
@@ -41,6 +44,7 @@ use Illuminate\Database\Eloquent\Builder;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Category whereUpdatedAt($value)
  * @method static Builder<static>|Category filter(array $filters)
  * @method static Builder<static>|Category forAnimals()
+ *
  * @mixin \Eloquent
  */
 class Category extends Model
@@ -58,7 +62,7 @@ class Category extends Model
     public function scopeHasActiveProducts(Builder $query)
     {
         return $query->whereHas('products', function ($q) {
-            $q->where('is_active', true); 
+            $q->where('is_active', true);
         });
     }
 
@@ -66,7 +70,7 @@ class Category extends Model
     public function scopeHasActiveAnimals(Builder $query)
     {
         return $query->whereHas('animals', function ($q) {
-            $q->where('is_active', true); 
+            $q->where('is_active', true);
         });
     }
 
@@ -85,15 +89,14 @@ class Category extends Model
         return $query->where('type', 'product');
     }
 
-    
     public function scopeForAnimals(Builder $query)
     {
         return $query->where('type', 'animals');
     }
 
     /**
-    * Scope for case-insensitive category filtering
-    */
+     * Scope for case-insensitive category filtering
+     */
     public function scopeFilter(Builder $query, array $filters): Builder
     {
         return $query

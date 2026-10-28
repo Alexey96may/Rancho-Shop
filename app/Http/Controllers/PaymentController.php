@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Payments\MarkOrderAsPaidAction;
+use App\Actions\Payments\ValidatePaymentAmountAction;
 use App\Contracts\PaymentGatewayInterface;
 use App\Enums\OrderStatus;
 use App\Models\Order;
@@ -17,13 +19,6 @@ class PaymentController extends Controller
      */
     public function checkout(Request $request, Order $order, PaymentGatewayInterface $paymentGateway)
     {
-        $isOwner = $order->user_id && $order->user_id === Auth::id();
-        $hasToken = $request->query('token') === $order->payment_token;
-
-        if (!$isOwner && !$hasToken) {
-            abort(403);
-        }
-
         if ($order->payment_status === 'paid') {
             return Auth::check()
                 ? redirect()->route('profile.orders.index')
@@ -32,20 +27,10 @@ class PaymentController extends Controller
 
         $paymentData = $paymentGateway->getPaymentData($order);
 
-        // Ошибка инициализации платежа (например, Тинькофф вернул Success=false)
         if (($paymentData['type'] ?? null) === 'error') {
-            Log::warning('Payment init failed', [
-                'order_id' => $order->id,
-                'error' => $paymentData['error'] ?? 'unknown',
-            ]);
-
-            return redirect()
-                ->route('checkout.index')
-                ->with('error', $paymentData['error'] ?? 'Не удалось создать платёж');
+            return redirect()->route('checkout.index')->with('error', $paymentData['error'] ?? 'Не удалось создать платёж');
         }
 
-        // Ссылка живёт в сессии до завершения оплаты.
-        // get (не pull) — пользователь может обновить страницу или вернуться.
         $magicLink = session("magic_link.{$order->id}");
 
         return inertia('Checkout/Payment', [
@@ -104,37 +89,25 @@ class PaymentController extends Controller
     /**
      * Webhook от Тинькофф.
      */
-    public function callbackTinkoff(Request $request, PaymentGatewayInterface $paymentGateway)
+    public function callbackTinkoff(Request $request, PaymentGatewayInterface $paymentGateway, MarkOrderAsPaidAction $markAsPaid, ValidatePaymentAmountAction $validateAmount)
     {
         if (!$paymentGateway->validateCallback($request->all())) {
-            Log::warning('Tinkoff callback: invalid token', $request->all());
-
             return response('Invalid token', 400);
         }
 
         $order = Order::find($request->input('OrderId'));
-
         if (!$order) {
             return response('Order not found', 404);
         }
 
-        // 🔒 Сверяем сумму: Тинькофф присылает в копейках
-        if ((int) $request->input('Amount') !== (int) $order->total_price) {
-            Log::warning('Tinkoff callback: amount mismatch', [
-                'order_id' => $order->id,
-                'expected' => $order->total_price,
-                'got' => $request->input('Amount'),
-            ]);
-
+        if (!$validateAmount->handleTinkoff($order, (int) $request->input('Amount'))) {
             return response('Amount mismatch', 400);
         }
 
-        // Обрабатываем только успех
         if ($request->input('Status') === 'CONFIRMED' && $request->boolean('Success')) {
-            $this->markAsPaid($order, (string) $request->input('PaymentId'));
+            $markAsPaid->handle($order, (string) $request->input('PaymentId'));
         }
 
-        // Тинькофф ждёт чистый "OK"
         return response('OK', 200);
     }
 

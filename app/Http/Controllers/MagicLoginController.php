@@ -10,7 +10,6 @@ class MagicLoginController extends Controller
 {
     public function login(Request $request, User $user)
     {
-        // Middleware 'signed' уже проверил подпись и срок.
         Auth::login($user);
 
         return redirect()

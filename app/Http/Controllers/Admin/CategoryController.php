@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Actions\Admin\Categories\DeleteCategoryAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\CategoryRequest;
 use App\Http\Resources\Admin\CategoryResource;
@@ -62,13 +63,11 @@ class CategoryController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Request $request, Category $category)
+    public function destroy(Request $request, Category $category, DeleteCategoryAction $action)
     {
-        if ($category->products()->count() > 0 || $category->animals()->count() > 0) {
-            return redirect()->back()->with('error', 'Нельзя удалить категорию, в которой есть товары или животные');
+        if (!$action->handle($category)) {
+            return redirect()->back()->with('error', 'Нельзя удалить категорию...');
         }
-
-        $category->delete();
 
         return $this->redirectWithFilters($request, 'admin.categories.index', "Категория «{$category->name}» удалена!");
     }

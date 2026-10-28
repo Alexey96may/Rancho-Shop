@@ -2,15 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Comments\CreateCommentAction;
 use App\Actions\Comments\EnsureCommentableAction;
 use App\Enums\CommentableType;
 use App\Enums\CommentStatus;
+use App\Http\Requests\StoreCommentRequest;
 use App\Http\Resources\CommentResource;
 use App\Models\Comment;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Validation\Rule;
-use Illuminate\Validation\Rules\Enum;
 use Inertia\Inertia;
 
 class CommentController extends Controller
@@ -41,44 +40,23 @@ class CommentController extends Controller
         ]);
     }
 
-    public function store(Request $request,
-        EnsureCommentableAction $ensureCommentable, )
-    {
-        $user = Auth::user();
-
-        $data = $request->validate([
-            'commentable_id' => ['nullable', 'integer'],
-            'commentable_type' => ['nullable', 'string', new Enum(CommentableType::class)],
-            'content' => ['required', 'string', 'min:1'],
-            'rating' => ['nullable', 'numeric', 'between:1,5'],
-            'guest_name' => [Rule::requiredIf(!$user), 'nullable', 'string', 'max:50'],
-            'agreement' => ['required', 'accepted'],
-        ]);
+    public function store(
+        StoreCommentRequest $request,
+        EnsureCommentableAction $ensureCommentable,
+        CreateCommentAction $createComment,
+    ) {
+        $user = $request->user();
+        $data = $request->validated();
 
         $type = isset($data['commentable_type'])
             ? CommentableType::from($data['commentable_type'])
             : null;
 
-        $ensureCommentable->handle(
-            $type,
-            $data['commentable_id'] ?? null,
-        );
+        $ensureCommentable->handle($type, $data['commentable_id'] ?? null);
 
-        $status = $user->is_admin ?? false
-            ? CommentStatus::APPROVED
-            : CommentStatus::PENDING;
+        $comment = $createComment->handle($data, $user);
 
-        Comment::create([
-            'commentable_id' => $data['commentable_id'] ?? null,
-            'commentable_type' => $type,
-            'content' => $data['content'],
-            'rating' => $data['rating'] ?? null,
-            'user_id' => $user?->id,
-            'guest_name' => $user ? null : $data['guest_name'],
-            'status' => $status,
-        ]);
-
-        $message = $status === CommentStatus::PENDING
+        $message = $comment->status === CommentStatus::PENDING
             ? 'Спасибо за отзыв! Он появится на сайте после проверки модератором.'
             : 'Комментарий успешно опубликован.';
 

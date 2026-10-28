@@ -3,8 +3,9 @@
 namespace App\Models;
 
 use App\Enums\LandingBlockKey;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
@@ -13,8 +14,9 @@ use Illuminate\Database\Eloquent\Builder;
  * @property string|null $subtitle
  * @property array<array-key, mixed> $content
  * @property bool $is_visible
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|LandingBlock newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|LandingBlock newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|LandingBlock query()
@@ -27,6 +29,7 @@ use Illuminate\Database\Eloquent\Builder;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|LandingBlock whereTitle($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|LandingBlock whereUpdatedAt($value)
  * @method static Builder<static>|LandingBlock filter(array $filters)
+ *
  * @mixin \Eloquent
  */
 class LandingBlock extends Model
@@ -40,8 +43,8 @@ class LandingBlock extends Model
     ];
 
     /**
-    * Returns a block by key or an empty placeholder object.
-    */
+     * Returns a block by key or an empty placeholder object.
+     */
     public static function getSafe(string $key): self
     {
         return self::where('key', $key)
@@ -61,24 +64,31 @@ class LandingBlock extends Model
     }
 
     /**
-    * Scope for case-insensitive searching by enum name and labels
-    */
+     * Scope for case-insensitive searching by enum name and labels
+     */
     public function scopeFilter(Builder $query, array $filters): Builder
     {
         return $query->when($filters['search'] ?? null, function ($query, $search) {
             $search = mb_strtolower($search, 'UTF-8');
 
             $matchingKeys = collect(LandingBlockKey::cases())
-                ->filter(fn($case) => str_contains(
-                    mb_strtolower($case->label(), 'UTF-8'), 
+                ->filter(fn ($case) => str_contains(
+                    mb_strtolower($case->label(), 'UTF-8'),
                     $search
                 ))
-                ->map(fn($case) => $case->value);
+                ->map(fn ($case) => $case->value);
 
             $query->where(function ($q) use ($search, $matchingKeys) {
                 $q->whereRaw('LOWER(title) LIKE ?', ["%{$search}%"])
-                  ->orWhereIn('key', $matchingKeys);
+                    ->orWhereIn('key', $matchingKeys);
             });
         });
+    }
+
+    public function toggleVisibility(): bool
+    {
+        $this->update(['is_visible' => !$this->is_visible]);
+
+        return $this->is_visible;
     }
 }

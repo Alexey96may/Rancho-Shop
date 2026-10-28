@@ -3,16 +3,17 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\UpdateOrderRequest;
 use App\Http\Resources\Admin\OrderResource;
 use App\Models\Order;
-use App\Http\Requests\Admin\UpdateOrderRequest;
 use App\Traits\Http\Controllers\HandlesSmartPagination;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class OrderController extends Controller
 {
-    use HandlesSmartPagination;
+    use AuthorizesRequests, HandlesSmartPagination;
 
     /**
      * Display a listing of the resource.
@@ -32,7 +33,7 @@ class OrderController extends Controller
             'orders' => OrderResource::collection($orders),
             'filters' => $filters,
             ...Order::getStats(),
-            'seo' => $this->seo('Панель управления: Заказы', 'Просмотр заказов',  robots: 'noindex, nofollow')
+            'seo' => $this->seo('Панель управления: Заказы', 'Просмотр заказов', robots: 'noindex, nofollow'),
         ]);
     }
 
@@ -42,8 +43,8 @@ class OrderController extends Controller
 
         return Inertia::render('Admin/Orders/Show', [
             'order' => new OrderResource($order),
-            'seo' => $this->seo("Заказ #{$order->id}", "Просмотр деталей заказа", robots: 'noindex, nofollow'),
-            'backUrl' => $request->query('back') 
+            'seo' => $this->seo("Заказ #{$order->id}", 'Просмотр деталей заказа', robots: 'noindex, nofollow'),
+            'backUrl' => $request->query('back')
                 ? route('admin.orders.index') . $request->query('back')
                 : route('admin.orders.index'),
         ]);
@@ -65,12 +66,11 @@ class OrderController extends Controller
      */
     public function destroy(Request $request, Order $order)
     {
-        if (!$request->user()->isAdmin()) {
-            abort(403, 'У вас недостаточно прав для удаления заказа.');
-        }
+        $this->authorize('delete', $order);
 
+        $orderId = $order->id;
         $order->delete();
 
-        return $this->redirectWithFilters($request, 'admin.orders.index', "Заказ #{$order->id} успешно удалён из базы!");
+        return $this->redirectWithFilters($request, 'admin.orders.index', "Заказ #{$orderId} успешно удалён из базы!");
     }
 }

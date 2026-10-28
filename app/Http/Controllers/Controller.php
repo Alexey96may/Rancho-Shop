@@ -4,9 +4,16 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\SeoResource;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Foundation\Validation\ValidatesRequests;
 
 abstract class Controller
 {
+    use AuthorizesRequests, ValidatesRequests;
+
+    /**
+     * Build a default SEO array for Inertia pages.
+     */
     protected function seo(
         string $title,
         ?string $description = null,
@@ -17,11 +24,11 @@ abstract class Controller
     ): array {
         return [
             'title' => $title,
-            'description' => $description ?? 'Натуральные молочные продукты из Крыма.',
-            'keywords' => $keywords ?? 'домашнее молоко, крым, творог, купить фермерские продукты',
+            'description' => $description ?? config('seo.default_description'),
+            'keywords' => $keywords ?? config('seo.default_keywords'),
             'robots' => $robots,
             'canonical' => $canonical ?? url()->current(),
-            'image' => $image ?? asset('images/og-default.png'),
+            'image' => $image ?? asset(config('seo.default_image')),
 
             'og_data' => null,
             'json_ld' => null,
@@ -29,8 +36,7 @@ abstract class Controller
     }
 
     /**
-     * SEO From Model (Page, Product, Animal, …).
-     * Or default
+     * SEO from a model (Page, Product, Animal, …) or fallback to defaults.
      */
     protected function seoFromModel(?Model $model, ?string $fallbackTitle = null): array
     {
