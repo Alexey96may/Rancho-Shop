@@ -38,4 +38,8 @@ export interface SiteSettings {
     featured_comments_limit: number;
 
     header_announcement?: string;
+
+    ai_bot_name?: string;
+    ai_bot_greetings?: string;
+    ai_bot_prompt?: string;
 }

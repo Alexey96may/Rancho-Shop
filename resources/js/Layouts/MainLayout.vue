@@ -1,5 +1,5 @@
 <script setup lang="ts">
-    import { onMounted, onUnmounted, ref } from 'vue';
+    import { computed, onMounted, onUnmounted, ref } from 'vue';
 
     import { usePage } from '@inertiajs/vue3';
 
@@ -9,8 +9,12 @@
     import SeoMeta from '@/Components/Shared/SeoMeta.vue';
     import Toaster from '@/Components/Shared/Toaster.vue';
     import YandexMetrica from '@/Components/Shared/YandexMetrica.vue';
+    import AiChatBubble from '@/Components/UI/AiChatBubble.vue';
+    import AiChatWindow from '@/Components/UI/AiChatWindow.vue';
+    import BaseModal from '@/Components/UI/BaseModal.vue';
     import { useFlashToasts } from '@/composables/useFlashToasts';
     import { useCartStore } from '@/stores/cart';
+    import type { SharedData } from '@/types';
 
     useFlashToasts();
 
@@ -48,7 +52,21 @@
         document.removeEventListener('visibilitychange', handleVisibilityChange);
     });
 
-    const page = usePage();
+    const page = usePage<SharedData>();
+    const showChat = ref(false);
+
+    const ai = computed(
+        () =>
+            (page.props.ai as {
+                bot_name: string;
+                greetings: string;
+                avatar: string;
+            }) ?? {
+                bot_name: 'ИИ-помощник',
+                greetings: 'Могу вам чем-нибудь помочь?',
+                avatar: '/images/ai/bot-avatar.png',
+            },
+    );
 </script>
 
 <template>
@@ -92,6 +110,23 @@
                 </svg>
             </button>
         </Transition>
+
+        <!-- AI-виджет -->
+        <AiChatBubble
+            :teaser="ai.greetings"
+            :bot-name="ai.bot_name"
+            :avatar="ai.avatar"
+            theme="light"
+            @open="showChat = true"
+        />
+
+        <BaseModal :show="showChat" :title="ai.bot_name" variant="light" @close="showChat = false">
+            <AiChatWindow
+                :avatar="ai.avatar"
+                theme="light"
+                :honeypot="page.props.honeypot ?? undefined"
+            />
+        </BaseModal>
 
         <YandexMetrica />
         <CookieConsent />
@@ -172,7 +207,6 @@
         animation: twinkle 2s infinite;
     }
 
-    /* Контейнер для твоего приложения (Layout) */
     /* Мы НЕ вешаем сюда fixed, чтобы страница могла скроллиться */
     .content-overlay {
         position: relative;

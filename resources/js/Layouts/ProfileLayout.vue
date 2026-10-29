@@ -1,5 +1,5 @@
 <script setup lang="ts">
-    import { computed } from 'vue';
+    import { computed, ref } from 'vue';
 
     import { Link, usePage } from '@inertiajs/vue3';
 
@@ -18,6 +18,9 @@
     import SeoMeta from '@/Components/Shared/SeoMeta.vue';
     import Toaster from '@/Components/Shared/Toaster.vue';
     import YandexMetrica from '@/Components/Shared/YandexMetrica.vue';
+    import AiChatBubble from '@/Components/UI/AiChatBubble.vue';
+    import AiChatWindow from '@/Components/UI/AiChatWindow.vue';
+    import BaseModal from '@/Components/UI/BaseModal.vue';
     import { useFlashToasts } from '@/composables/useFlashToasts';
     import type { SharedData } from '@/types';
 
@@ -27,6 +30,22 @@
     const user = computed(() => page.props.auth?.user?.data);
 
     const isStuff = computed(() => user.value?.is_stuff);
+
+    /** AI-настройки из shared props */
+    const ai = computed(
+        () =>
+            (page.props.ai as {
+                bot_name: string;
+                greetings: string;
+                avatar: string;
+            }) ?? {
+                bot_name: 'ИИ-помощник',
+                greetings: 'Могу вам чем-нибудь помочь?',
+                avatar: '/images/ai/bot-avatar.png',
+            },
+    );
+
+    const showChat = ref(false);
 
     /** Классы для пункта навигации */
     function navLinkClasses(isActive: boolean): string {
@@ -183,7 +202,6 @@
                     </aside>
 
                     <!-- MAIN -->
-
                     <Transition name="fade" mode="out-in">
                         <main
                             :key="page.url"
@@ -199,5 +217,27 @@
         <TheFooter theme="dark" />
         <YandexMetrica />
         <CookieConsent />
+
+        <!-- AI-виджет (тёмная тема) -->
+        <AiChatBubble
+            :teaser="ai.greetings"
+            :bot-name="ai.bot_name"
+            :avatar="ai.avatar"
+            theme="dark"
+            @open="showChat = true"
+        />
+
+        <BaseModal
+            :show="showChat"
+            :title="ai.bot_name"
+            variant="default"
+            @close="showChat = false"
+        >
+            <AiChatWindow
+                :avatar="ai.avatar"
+                theme="dark"
+                :honeypot="page.props.honeypot ?? undefined"
+            />
+        </BaseModal>
     </div>
 </template>

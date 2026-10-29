@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Contracts\Ai\GigaChatClient;
 use App\Contracts\PaymentGatewayInterface;
 use App\DTO\DeliveryDTO;
 use App\Enums\Permission;
@@ -18,6 +19,7 @@ use App\Observers\ProductVariantObserver;
 use App\Observers\SeoCleanupObserver;
 use App\Observers\SeoObserver;
 use App\Observers\SitemapCacheObserver;
+use App\Services\Ai\FacadeGigaChatClient;
 use App\Services\Payments\DirectPaymentGateway;
 use App\Services\Payments\FakePaymentGateway;
 use App\Services\Payments\PayMasterGateway;
@@ -53,6 +55,8 @@ class AppServiceProvider extends ServiceProvider
                 default => $app->make(FakePaymentGateway::class),
             };
         });
+
+        $this->app->bind(GigaChatClient::class, FacadeGigaChatClient::class);
     }
 
     /**

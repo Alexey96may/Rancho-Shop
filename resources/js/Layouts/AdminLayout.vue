@@ -9,6 +9,7 @@
         Bars3Icon,
         ChartBarIcon,
         ChatBubbleBottomCenterTextIcon,
+        ChatBubbleLeftRightIcon,
         Cog6ToothIcon,
         DocumentTextIcon,
         EyeIcon,
@@ -172,6 +173,14 @@
                             :active="route().current('admin.analytics.*')"
                             :icon="ChartBarIcon"
                             label="Аналитика"
+                        />
+                    </li>
+                    <li>
+                        <AdminSidebarLink
+                            :href="route('admin.ai-messages.index')"
+                            :active="route().current('admin.ai-messages.*')"
+                            :icon="ChatBubbleLeftRightIcon"
+                            label="AI"
                         />
                     </li>
 

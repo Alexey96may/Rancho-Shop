@@ -1,25 +1,25 @@
 <?php
 
-use App\Http\Controllers\Api\ApiLandingController;
-use App\Http\Controllers\Api\ProductController;
-use App\Http\Controllers\Api\CartController;
-use Illuminate\Http\Request;
-// use App\Http\Controllers\Api\Auth\SocialAuthController;
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\CheckoutController;
+use App\Http\Controllers\Api\AiConsultController;
 use App\Http\Controllers\Api\AnimalApiController;
+use App\Http\Controllers\Api\ApiLandingController;
+// use App\Http\Controllers\Api\Auth\SocialAuthController;
+use App\Http\Controllers\Api\CartController;
+use App\Http\Controllers\Api\CheckoutController;
 use App\Http\Controllers\Api\CommentController;
-use App\Http\Controllers\Api\PageController;
-use App\Http\Controllers\Api\SettingController;
-use App\Http\Controllers\Api\DeliveryController;
 use App\Http\Controllers\Api\DeliveryCalculateController;
+use App\Http\Controllers\Api\DeliveryController;
+use App\Http\Controllers\Api\PageController;
+use App\Http\Controllers\Api\ProductController;
+use App\Http\Controllers\Api\SettingController;
+use Illuminate\Support\Facades\Route;
 
 // /api/landing
 Route::get('/landing', [ApiLandingController::class, 'index']);
 
 Route::prefix('auth/google')->group(function () {
     // Route::get('/url', [SocialAuthController::class, 'getGoogleUrl']);
-    
+
     // Route::get('/callback', [SocialAuthController::class, 'handleGoogleCallback']);
 });
 
@@ -50,3 +50,8 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
 Route::middleware(['auth:sanctum', 'role:worker'])->group(function () {
     // Route::get('/tasks', [TaskController::class, 'index']);
 });
+
+// AI
+Route::post('/ai/consult', [AiConsultController::class, 'consult'])
+    ->middleware(['throttle:10,1']) // 10 per/min
+    ->name('ai.consult');

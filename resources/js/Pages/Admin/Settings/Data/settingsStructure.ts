@@ -1,6 +1,7 @@
 import type { Component } from 'vue';
 
 import {
+    ChatBubbleLeftRightIcon,
     Cog6ToothIcon,
     CurrencyDollarIcon,
     DevicePhoneMobileIcon,
@@ -60,6 +61,12 @@ export const SETTINGS_SECTIONS: SettingSection[] = [
         keys: ['delivery_schedule', 'delivery_info', 'delivery_zones'],
     },
     {
+        id: 'ai',
+        label: 'AI',
+        icon: ChatBubbleLeftRightIcon,
+        keys: ['ai_bot_name', 'ai_bot_greetings', 'ai_bot_prompt'],
+    },
+    {
         id: 'ui',
         label: 'Интерфейс',
         icon: PresentationChartLineIcon,
@@ -106,4 +113,7 @@ export const SETTINGS_LABELS: Record<string, string> = {
     payment_direct_bank: 'Название Банка',
     payment_direct_recipient: 'Имя получателя',
     payment_direct_note_template: 'Заметка',
+    ai_bot_name: 'Имя ИИ-ассистента',
+    ai_bot_greetings: 'Приветствие ИИ-ассистента',
+    ai_bot_prompt: 'Легенда для ИИ-ассистента',
 };

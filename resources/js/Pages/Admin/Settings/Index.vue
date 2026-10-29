@@ -79,11 +79,11 @@
 </script>
 
 <template>
-    <Teleport to="#admin-header-content">
-        <AdminPageHeader title="Модерация Настроек" subtitle="Управление настройками сайта" />
-    </Teleport>
-
     <div class="space-y-6">
+        <Teleport to="#admin-header-content">
+            <AdminPageHeader title="Модерация Настроек" subtitle="Управление настройками сайта" />
+        </Teleport>
+
         <!-- TABS -->
         <nav
             class="no-scrollbar flex items-center gap-2 overflow-x-auto py-2"
@@ -97,7 +97,7 @@
                 @click="activeSection = section.id"
                 role="tab"
                 :aria-selected="activeSection === section.id"
-                class="flex shrink-0 items-center gap-2 whitespace-nowrap rounded-2xl px-5 py-3 text-sm font-bold transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-rancho-mint/40"
+                class="flex shrink-0 items-center gap-2 whitespace-nowrap rounded-2xl px-5 py-3 text-sm font-bold outline-none transition-all focus-visible:ring-2 focus-visible:ring-rancho-mint/40"
                 :class="
                     activeSection === section.id
                         ? 'shadow-lg bg-rancho-mint text-rancho-ink-950 shadow-rancho-mint/20'
@@ -155,7 +155,7 @@
 
                             <!-- JSON -->
                             <AdminBaseTextarea
-                                v-else-if="field.type === 'json'"
+                                v-else-if="field.type === 'json' || field.key === 'ai_bot_prompt'"
                                 :id="field.key"
                                 :label="formatLabel(field.key)"
                                 :model-value="String(field.value)"

@@ -21,6 +21,7 @@ export * from './Delivery';
 export * from './User';
 export * from './Forms';
 export * from './Analitic';
+export * from './AiMessage';
 
 export interface ResourceCollection<T> {
     data: T[];
@@ -108,6 +109,11 @@ export interface SharedData extends PageProps {
     };
     flash: FlashPayload;
     permissions: Permission[];
+    ai?: {
+        bot_name: string;
+        greetings: string;
+        avatar: string;
+    };
 
     [key: string]: any;
 }

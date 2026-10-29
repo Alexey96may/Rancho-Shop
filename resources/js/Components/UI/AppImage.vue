@@ -61,7 +61,7 @@
     const isMediaObject = computed(
         () => typeof props.src === 'object' && props.src !== null && 'url' in props.src,
     );
-    const isFileObject = computed(() => props.src instanceof File);
+    const isFileObject = computed(() => typeof File !== 'undefined' && props.src instanceof File);
 
     // ─────────────── Object URL для File ───────────────
     const fileUrl = ref<string | null>(null);

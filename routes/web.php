@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\Permission;
+use App\Http\Controllers\Admin\AiMessageController;
 use App\Http\Controllers\Admin\AnalyticsController;
 use App\Http\Controllers\Admin\AnimalController as AdminAnimalController;
 use App\Http\Controllers\Admin\CatalogController;
@@ -178,6 +179,11 @@ Route::prefix('admin')
 
             Route::patch('comments/{comment}/restore', [AdminCommentController::class, 'restore'])->name('comments.restore')->withTrashed();
             Route::resource('comments', AdminCommentController::class)->only(['index', 'update', 'destroy'])->withTrashed();
+
+            Route::get('ai-messages', [AiMessageController::class, 'index'])
+                ->name('ai-messages.index');
+            Route::delete('ai-messages/{aiMessage}', [AiMessageController::class, 'destroy'])
+                ->name('ai-messages.destroy');
         });
 
         // (Admin, Worker)

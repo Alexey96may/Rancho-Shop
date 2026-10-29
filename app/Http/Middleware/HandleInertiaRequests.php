@@ -9,6 +9,7 @@ use App\Services\SettingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Middleware;
+use Spatie\Honeypot\Honeypot;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -113,6 +114,13 @@ class HandleInertiaRequests extends Middleware
 
             'promo' => fn () => $request->session()->get('promo'),
             'metrikaId' => fn () => config('services.yandex_metrika.id'),
+
+            'ai' => fn () => [
+                'bot_name' => $settings->get('ai_bot_name', 'ИИ-помощник'),
+                'greetings' => $settings->get('ai_bot_greetings', 'Могу вам чем-нибудь помочь?'),
+                'avatar' => asset('images/ai/bot-avatar.png'),
+            ],
+            'honeypot' => fn () => new Honeypot(config('honeypot')),
         ];
     }
 
