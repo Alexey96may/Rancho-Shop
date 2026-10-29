@@ -2,7 +2,7 @@
 
 **🌐 Русский** · [English](README.ru.md)
 
-A pet project of an online store for a small dairy farm: products are linked to specific cows, delivery zones, multi-role admin panel.
+A pet project: an online store for a small dairy farm — products tied to specific cows, delivery zones, multi-role admin panel.
 Stack: **Laravel 13 + Vue 3 + Inertia.js**. Production: [milkvalley.org](https://milkvalley.org).
 
 ---
@@ -15,11 +15,11 @@ Stack: **Laravel 13 + Vue 3 + Inertia.js**. Production: [milkvalley.org](https:/
 | ----------------------------------------- | --------------------------------------------- | ----------------------------------------------- |
 | ![home](docs/screenshots/Rancho_main.jpg) | ![shop](docs/screenshots/Rancho_products.jpg) | ![animals](docs/screenshots/Rancho_animals.jpg) |
 
-| Admin panel                                 | User profile                              |
+| Admin                                       | User profile                              |
 | ------------------------------------------- | ----------------------------------------- |
 | ![admin](docs/screenshots/Rancho_admin.jpg) | ![user](docs/screenshots/Rancho_user.jpg) |
 
-> Live production: [https://milkvalley.org](https://milkvalley.org). Runs locally in a couple of minutes (see [Installation](#-installation)).
+> Live: [https://milkvalley.org](https://milkvalley.org). Local setup takes a couple of minutes (see [Installation](#-installation)).
 
 ---
 
@@ -32,7 +32,7 @@ Stack: **Laravel 13 + Vue 3 + Inertia.js**. Production: [milkvalley.org](https:/
 - Laravel Sanctum (API auth for mobile client)
 - Laravel Socialite (VK / Google login)
 - Spatie Laravel Media Library (`thumb`/`preview` conversions + `webp`/`avif`)
-- HTMLPurifier (rich-text content sanitizing)
+- HTMLPurifier (rich-text sanitizing)
 - Tightenco Ziggy (routes in JS)
 - Inertia SSR (server-side rendering)
 
@@ -50,8 +50,8 @@ Stack: **Laravel 13 + Vue 3 + Inertia.js**. Production: [milkvalley.org](https:/
 - Vite 8
 - Tailwind CSS + Typography plugin
 - **Pinia** + persist (cart and settings in localStorage)
-- **TipTap** — rich-text editor in the admin panel
-- **ApexCharts** (`vue3-apexcharts`) — analytics in the admin panel
+- **TipTap** — rich-text editor in admin
+- **ApexCharts** (`vue3-apexcharts`) — admin analytics
 - **Mapbox GL + Turf.js** — delivery zone map and geo calculations
 - Swiper · Howler · VueUse · vuedraggable
 - Headless UI · Heroicons · Lucide · Popper
@@ -61,16 +61,17 @@ Stack: **Laravel 13 + Vue 3 + Inertia.js**. Production: [milkvalley.org](https:/
 **Integrations**
 
 - **Telegram bot** — notifications about new users and orders to a group, with a Yandex Maps screenshot
-- **Yandex Metrica** — counter via `YANDEX_METRIKA_ID`
+- **Yandex Metrika** — counter via `YANDEX_METRIKA_ID`
 - **Yandex Static API** — map screenshot for the Telegram bot
 - **Payments:** YooKassa (tested), Direct / Tinkoff / PayMaster / Fake via a single `PaymentGatewayInterface`
-- **Email notifications** — sending emails to the admin and the customer via SMTP (new orders, status changes, product back in stock). Queues, error logging, protection against duplicate sends.
+- **Email notifications** — admin and customer emails via SMTP (new orders, status changes, back-in-stock). Queues, error logging, duplicate-send protection.
+- **AI assistant (GigaChat)** — on-site chat widget: consultations on products, prices, stock, animals and delivery. Function calling (tools), pre-flight calls for Lite models, escalation to a manager with contact capture, admin notifications via Telegram and email.
 
 **Quality**
 
 - PHPUnit 12 (Unit + Feature)
 - Laravel Pint (PSR-12)
-- Laravel Pail (logs in dev)
+- Laravel Pail (dev logs)
 - Vitest + @vue/test-utils + jsdom
 - ESLint 9 (Vue + TS) + Prettier (Tailwind and import sorting)
 - barryvdh/laravel-ide-helper
@@ -83,35 +84,36 @@ Stack: **Laravel 13 + Vue 3 + Inertia.js**. Production: [milkvalley.org](https:/
 
 - Landing page with configurable blocks (hero, banners, FAQ, featured products)
 - Product catalog with filters and pagination
-- Product page linked to a specific cow (or general, without a cow)
-- "Animals" section — each cow has a profile, biography, audio, gallery, pedigree
-- Cart in Pinia (localStorage), prices re-verified with the server
+- Product page tied to a specific cow (or generic, without a cow)
+- "Animals" section — each cow has a profile, bio, audio, gallery, pedigree
+- Cart in Pinia (localStorage), prices re-validated against the server
 - Checkout with promo codes and discounts
 - Reviews (planned: VK / Google login)
 - Static pages from the DB (About, Contacts, Offer, 404)
-- Contacts page with a Mapbox map
+- Contacts page with Mapbox map
+- **AI assistant** — chat widget (bubble + modal) answering questions about products, prices, stock, animals and delivery. Pulls data from the DB via tools, does not hallucinate. On "call a human" — asks for phone/email and notifies the admin.
 
 ### Delivery
 
-- Delivery zones stored in settings (JSON), zone membership check in PHP
-- Outside the zone → no delivery; near the zone → surcharge
+- Delivery zones stored in settings (JSON), zone check in PHP
+- Outside zone → no delivery; near zone → surcharge
 - Address selection with Mapbox + distance check via Turf.js (frontend) and Haversine (backend)
-- **Smart route-based delivery**: the admin sets a delivery route, the customer picks a point within a radius around the route
+- **Smart route-based delivery**: admin draws a route, customer picks a point within a radius around it
 
-### Admin panel
+### Admin
 
 - Products, cows, categories, orders, reviews, pages, settings
 - Multi-role access: `admin`, `moderator`, `worker`
 - TipTap editor for content
 - Dashboard with ApexCharts
 - Image galleries with drag & drop upload (Spatie Media Library)
-- **Units of measurement with `low_stock_threshold`** — visual warning in the admin panel when a product is running out
+- **Units with `low_stock_threshold`** — visual alert in admin when a product runs low
 
 ### SEO
 
-- Morphological SEO table with manual input for each model
+- Morphological SEO table with manual input per model
 - Auto-generated OG / Twitter meta
-- `robots.txt` editable from the admin panel
+- `robots.txt` editable from admin
 - `sitemap.xml` — with priorities and `is_noindex` filtering
 - Canonical URL
 - Full ARIA coverage (roles, `aria-label`, `aria-live`, `aria-busy`, …)
@@ -119,14 +121,15 @@ Stack: **Laravel 13 + Vue 3 + Inertia.js**. Production: [milkvalley.org](https:/
 ### Integrations
 
 - **Telegram bot** — new users and orders to a group (with a Yandex Maps screenshot)
-- **Email notifications** — new orders and order status changes (to the admin and the customer), product back in stock notifications for subscribers. Sending via SMTP, queues, error logging
-- **Yandex Metrica** — site counter
+- **Email notifications** — new orders and order status changes (admin and customer), back-in-stock notifications by subscription. SMTP, queues, error logging
+- **Yandex Metrika** — site counter
 - API for the Android client (Sanctum) — partially implemented
-- **Payments:** YooKassa (tested), Direct / Tinkoff / PayMaster / Fake via `PaymentGatewayInterface`
+- **Payments:** YooKassa (tested), Direct, Tinkoff, PayMaster, Fake via `PaymentGatewayInterface`
+- **AI assistant (GigaChat)** — see [AI assistant](#-ai-assistant) below
 
 ### Performance
 
-- **SSR (Inertia server-side rendering)** — fast first paint, better for SEO
+- **SSR (Inertia server-side rendering)** — fast first paint, better SEO
 - **Modern image formats** — AVIF/WebP via `<picture>`, blur-up, responsive images (Spatie Media Library)
 
 ---
@@ -135,24 +138,25 @@ Stack: **Laravel 13 + Vue 3 + Inertia.js**. Production: [milkvalley.org](https:/
 
 - [x] Clean architecture: Controllers, Services, Actions, DTO, Enums, Exceptions, Helpers, Observers, Policies, Providers, Resources
 - [x] Roles: `admin`, `customer`, `moderator`, `worker`
-- [x] Cart in the UI with server-side validation via API
-- [x] Smart delivery: the admin draws a route, the customer picks a point within a radius around it
-- [x] Smart product variants with custom units of measurement and quantity step
-- [x] Units of measurement with `low_stock_threshold` — warning in the admin panel when a product is running out
-- [x] Smart SEO: morphological table, manual input, `robots.txt` from the admin panel, `sitemap.xml`
+- [x] UI cart with server-side validation via API
+- [x] Smart delivery: admin draws a route, customer picks a point within a radius
+- [x] Smart product variants with custom units and quantity steps
+- [x] Units with `low_stock_threshold` — admin alert when a product runs low
+- [x] Smart SEO: morphological table, manual input, `robots.txt` from admin, `sitemap.xml`
 - [x] Soft deletes: cows, products, reviews, pages
 - [x] Role-based access system
-- [x] **Telegram bot**: notifications to a group about new users and orders, with a Yandex Maps screenshot
-- [x] **Yandex Metrica** (counter via `YANDEX_METRIKA_ID`)
+- [x] **Telegram bot**: new users and orders to a group, with a Yandex Maps screenshot
+- [x] **Yandex Metrika** (counter via `YANDEX_METRIKA_ID`)
 - [x] **Yandex Static API** (map screenshot for the Telegram bot)
-- [x] Settings with caching (TTL 24 hours, reset on save)
-- [x] Discounts and promo codes (DB and admin panel only)
-- [x] Payments: YooKassa (tested), Direct, Tinkoff, Fake — via a single `PaymentGatewayInterface`
-- [x] **SSR (server-side rendering in Inertia)**
+- [x] Settings with caching (TTL 24h, flushed on save)
+- [x] Discounts and promo codes (DB + admin only)
+- [x] Payments: YooKassa (tested), Direct, Tinkoff, Fake via `PaymentGatewayInterface`
+- [x] **SSR (Inertia server-side rendering)**
 - [x] **Modern image formats**: AVIF/WebP, `thumb`/`preview` conversions, responsive images
-- [x] Magic link, temporary automatic account
+- [x] Magic link, temporary auto-account
 - [x] "Share" button
-- [x] **Email notifications**: new orders and status changes (to the admin and the customer), product back in stock notifications for subscribers. Queues, logging, protection against duplicate sends
+- [x] **Email notifications**: new orders and status changes (admin and customer), back-in-stock by subscription. Queues, logging, duplicate-send protection
+- [x] **AI assistant on GigaChat**: chat widget with dialog history (`ai_messages`), function calling (`get_product_price`, `get_animal_info`, `get_delivery_info`), pre-flight calls for Lite models, dynamic product/animal names from the DB (5 min cache), correct per-unit prices (`price_per_unit` + `step`), escalation to a manager with phone/email recognition, admin notifications via Telegram and email (with name, phone, email of the authenticated user), Honeypot + throttle on the API route
 
 ## 🔮 Roadmap
 
@@ -160,9 +164,10 @@ Stack: **Laravel 13 + Vue 3 + Inertia.js**. Production: [milkvalley.org](https:/
 - [ ] Animal subscriptions.
 - [ ] Gifts/points from animals.
 - [ ] Animal and product ratings.
-- [ ] Link "Buy" / "Pre-order" buttons to the delivery schedule.
+- [ ] Tie "Buy" / "Pre-order" buttons to the delivery schedule.
 - [ ] Sockets. Messages to admin/moderator/worker.
-- [ ] **PostGIS** — move delivery zones from JSON to PostGIS polygons for DB-level spatial queries
+- [ ] **Redis** — move settings cache, AI name cache (`ai_known_products`, `ai_known_animals`) and sessions from files/DB to Redis for speed and a single store. Queues (`queue:work`) — on Redis instead of `database`.
+- [ ] **PostGIS** — move delivery zones from JSON to PostGIS polygons for DB-level spatial queries.
 
 ---
 
@@ -173,15 +178,15 @@ Stack: **Laravel 13 + Vue 3 + Inertia.js**. Production: [milkvalley.org](https:/
 - PHP 8.3+, Composer 2
 - Node.js 20+, npm
 - PostgreSQL 16+
-- **RAM:** minimum 2 GB + **4–6 GB swap** for `npm run build` (building 4785 modules on 0.9 GB RAM fails with `Killed`/exit 137). Swap is mandatory for a production server with 1 GB RAM.
+- **RAM:** at least 2 GB + **4–6 GB swap** for `npm run build` (building 4785 modules on 0.9 GB RAM dies with `Killed`/exit 137). On a 1 GB production server swap is mandatory.
 - (Optional) Mapbox access token — for the delivery zone map
 - (Optional) Yandex Geocoder key — for address suggestions
 - (Optional) VK / Google OAuth keys
 - (Optional) Telegram bot token + chat_id — for notifications
-- (Optional) Yandex Static API key — for the map screenshot in the Telegram bot
+- (Optional) Yandex Static API key — for the map screenshot in Telegram
 - (Optional) Mailtrap or `MAIL_MAILER=log` for local emails
 
-### Installation
+### Setup
 
 ````bash
 # 1. Clone and install dependencies
@@ -194,7 +199,7 @@ npm install
 cp .env.example .env
 php artisan key:generate
 
-# 2. Edit .env (see the "Environment variables" section)
+# 2. Edit .env (see "Environment variables")
 
 # 3. Migrations and seeds
 php artisan migrate --seed
@@ -275,6 +280,17 @@ TELEGRAM_ADMIN_CHAT_ID=
 
 # Yandex Metrica
 YANDEX_METRIKA_ID=
+
+# AI-консультант (GigaChat)
+GIGACHAT_AUTH_KEY=
+GIGACHAT_SCOPE=GIGACHAT_API_PERS
+GIGACHAT_DEFAULT_MODEL=GigaChat-2
+
+# Honeypot (защита AI-чата от ботов)
+HONEYPOT_ENABLED=true
+HONEYPOT_NAME=my_name
+HONEYPOT_VALID_FROM=valid_from
+HONEYPOT_SECONDS=1
 ````
 
 ### Payment Drivers
