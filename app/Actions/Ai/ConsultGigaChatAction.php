@@ -185,7 +185,7 @@ class ConsultGigaChatAction
                 ->timeout(30)
                 ->withoutVerifying() // только для dev, на проде — свой сертификат
                 ->post('https://api.giga.chat/v1/chat/completions', [
-                    'model' => 'GigaChat',
+                    'model' => config('gigachat.model', 'GigaChat'),
                     'messages' => $messages,
                     'tools' => $tools,
                     'temperature' => 0.3,
@@ -214,7 +214,7 @@ class ConsultGigaChatAction
     private function getAccessToken(): string
     {
         return Cache::remember('gigachat_access_token', 25 * 60, function () {
-            $authKey = config('services.gigachat.auth_key');
+            $authKey = config('gigachat.auth_key');
 
             if (!$authKey) {
                 throw new \RuntimeException('GIGACHAT_AUTH_KEY is not configured');
@@ -228,7 +228,7 @@ class ConsultGigaChatAction
                 ->asForm()
                 ->withoutVerifying()
                 ->post('https://ngw.devices.sberbank.ru:9443/api/v2/oauth', [
-                    'scope' => config('services.gigachat.scope', 'GIGACHAT_API_PERS'),
+                    'scope' => config('gigachat.scope', 'GIGACHAT_API_PERS'),
                 ]);
 
             if ($response->failed()) {

@@ -26,7 +26,8 @@ Route::prefix('auth/google')->group(function () {
 Route::get('/products', [ProductController::class, 'index']);
 Route::get('/products/{product:slug}', [ProductController::class, 'show']);
 
-Route::post('/cart/validate', [CartController::class, 'validate']);
+Route::post('/cart/validate', [CartController::class, 'validateCart']);
+
 Route::get('/checkout', [CheckoutController::class, 'index']);
 Route::post('/checkout', [CheckoutController::class, 'store']);
 

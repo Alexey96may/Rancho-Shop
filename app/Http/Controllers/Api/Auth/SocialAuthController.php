@@ -6,13 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Laravel\Socialite\Facades\Socialite;
-use Illuminate\Support\Facades\Auth;
 
 class SocialAuthController extends Controller
 {
     /**
-    * Return the frontend URL where the user should be redirected
-    */
+     * Return the frontend URL where the user should be redirected
+     */
     public function getGoogleUrl(): JsonResponse
     {
         return response()->json([
@@ -21,14 +20,14 @@ class SocialAuthController extends Controller
     }
 
     /**
-    * Processing data from Google and issuing an API token
-    */
+     * Processing data from Google and issuing an API token
+     */
     public function handleGoogleCallback(): JsonResponse
     {
         try {
             // .stateless() is required for the API since there are no sessions (cookies)
             $googleUser = Socialite::driver('google')->stateless()->user();
-            
+
             $user = User::updateOrCreate(
                 ['email' => $googleUser->getEmail()],
                 [
