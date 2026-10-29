@@ -60,25 +60,28 @@ PROMPT;
             [['role' => 'user', 'content' => $question]],
         );
 
-        // 4. Спрашиваем GigaChat
+        // 4. Принудительный вызов функций (pre-flight) — ДО GigaChat
+        $this->preFlightTools($question, $messages);
+
+        // 5. Спрашиваем GigaChat
         $answer = $this->chatWithTools($messages);
 
-        // 5. Определяем причину эскалации
+        // 6. Определяем причину эскалации
         $reason = $this->escalationReason($question, $answer);
 
-        // 6. Если зовут человека — просим контакт
+        // 7. Если зовут человека — просим контакт
         if ($reason && $this->isHumanRequest($question)) {
             $answer .= "\n\nЧтобы менеджер связался с вами, оставьте, пожалуйста, телефон или email.";
         }
 
-        // 7. Если пользователь оставил контакт (и была эскалация) — отвечаем «спасибо»
+        // 8. Если пользователь оставил контакт (и была эскалация) — отвечаем «спасибо»
         $contactAccepted = $contact && $wasEscalated;
 
         if ($contactAccepted) {
             $answer = 'Спасибо! Передали ваш контакт менеджеру — он свяжется с вами в ближайшее время.';
         }
 
-        // 8. Сохраняем сообщения
+        // 9. Сохраняем сообщения
         $userMessage = AiMessage::create([
             'session_id' => $sessionId,
             'user_id' => $userId,
@@ -98,7 +101,7 @@ PROMPT;
             ],
         ]);
 
-        // 9. Уведомляем админа об эскалации
+        // 10. Уведомляем админа об эскалации
         if ($reason) {
             NotifyAdminAboutAiChatJob::dispatch(
                 $userMessage->id,
@@ -107,7 +110,7 @@ PROMPT;
             );
         }
 
-        // 10. Уведомляем админа о контакте
+        // 11. Уведомляем админа о контакте
         if ($contactAccepted) {
             NotifyAdminAboutAiContactJob::dispatch(
                 $userMessage->id,
@@ -133,6 +136,84 @@ PROMPT;
         }
 
         return false;
+    }
+
+    /**
+     * Принудительный вызов функций, если модель не умеет tools (Lite).
+     * Результат вставляется в messages как tool-сообщение,
+     * чтобы GigaChat видел готовый факт и не фантазировал.
+     */
+    private function preFlightTools(string $question, array &$messages): void
+    {
+        $q = mb_strtolower($question, 'UTF-8');
+
+        // Цена / наличие
+        if (preg_match('/(цена|стоит|стоимость|наличие|почём|почем|сколько)/u', $q)) {
+            $productName = $this->extractProductName($q);
+            if ($productName) {
+                $result = $this->getProductPrice($productName);
+                $messages[] = [
+                    'role' => 'tool',
+                    'tool_call_id' => 'preflight_price_' . uniqid(),
+                    'content' => json_encode($result, JSON_UNESCAPED_UNICODE),
+                ];
+            }
+        }
+
+        // Животное
+        if (preg_match('/(кот|кошка|корова|коза|животное|рыжик|фиона|малышка|брызя|ошур|пчёлки|пчелки)/u', $q)) {
+            $animalName = $this->extractAnimalName($q);
+            if ($animalName) {
+                $result = $this->getAnimalInfo($animalName);
+                $messages[] = [
+                    'role' => 'tool',
+                    'tool_call_id' => 'preflight_animal_' . uniqid(),
+                    'content' => json_encode($result, JSON_UNESCAPED_UNICODE),
+                ];
+            }
+        }
+
+        // Доставка
+        if (preg_match('/(доставка|доставке|график|привоз|минимальный заказ)/u', $q)) {
+            $result = $this->getDeliveryInfo();
+            $messages[] = [
+                'role' => 'tool',
+                'tool_call_id' => 'preflight_delivery_' . uniqid(),
+                'content' => json_encode($result, JSON_UNESCAPED_UNICODE),
+            ];
+        }
+    }
+
+    private function extractProductName(string $q): ?string
+    {
+        // Слова после «стоит/цена/сколько/наличие», до 30 символов
+        if (preg_match('/(?:стоит|цена|стоимость|наличие|почём|почем|сколько)\s+(?:на\s+)?([а-яёa-z\s]{2,30})/ui', $q, $m)) {
+            $name = trim($m[1]);
+            // Отрезать «?» и хвосты
+            $name = preg_replace('/[?.,!].*$/u', '', $name);
+
+            return $name !== '' ? $name : null;
+        }
+
+        return null;
+    }
+
+    private function extractAnimalName(string $q): ?string
+    {
+        // Известные клички
+        $names = ['рыжик', 'фиона', 'малышка', 'брызя', 'ошур', 'пчёлки', 'пчелки'];
+        foreach ($names as $n) {
+            if (str_contains($q, $n)) {
+                return $n;
+            }
+        }
+
+        // Или слово после «про»
+        if (preg_match('/(?:про|о)\s+([а-яёa-z]{3,20})/ui', $q, $m)) {
+            return trim($m[1]);
+        }
+
+        return null;
     }
 
     /**
@@ -184,7 +265,6 @@ PROMPT;
 
     /**
      * Вызов GigaChat API (OpenAI-совместимый).
-     * Токен берём из кэша или получаем новый.
      */
     private function callGigaChat(array $messages, array $tools): array
     {
@@ -193,7 +273,7 @@ PROMPT;
 
             $response = Http::withToken($token)
                 ->timeout(30)
-                ->withoutVerifying() // только для dev, на проде — свой сертификат
+                ->withoutVerifying()
                 ->post('https://api.giga.chat/v1/chat/completions', [
                     'model' => config('gigachat.default_model', 'GigaChat-2'),
                     'messages' => $messages,
@@ -218,9 +298,6 @@ PROMPT;
         }
     }
 
-    /**
-     * Получение access_token (живёт 30 минут, кэшируем на 25).
-     */
     private function getAccessToken(): string
     {
         return Cache::remember('gigachat_access_token', 25 * 60, function () {
@@ -256,13 +333,13 @@ PROMPT;
                 'type' => 'function',
                 'function' => [
                     'name' => 'get_product_price',
-                    'description' => 'ОБЯЗАТЕЛЬНО вызывай, когда пользователь спрашивает про цену, стоимость, наличие или ассортимент любого товара. Никогда не отвечай про цены из памяти — только через эту функцию. Возвращает актуальную цену и наличие.',
+                    'description' => 'ОБЯЗАТЕЛЬНО вызывай, когда пользователь спрашивает про цену, стоимость, наличие или ассортимент любого товара. Никогда не отвечай про цены из памяти — только через эту функцию.',
                     'parameters' => [
                         'type' => 'object',
                         'properties' => [
                             'product_name' => [
                                 'type' => 'string',
-                                'description' => 'Название товара (например, "молоко", "творог", "сыр", "молоко 3,2%")',
+                                'description' => 'Название товара (например, "молоко", "творог", "сыр")',
                             ],
                         ],
                         'required' => ['product_name'],
@@ -273,13 +350,13 @@ PROMPT;
                 'type' => 'function',
                 'function' => [
                     'name' => 'get_animal_info',
-                    'description' => 'ОБЯЗАТЕЛЬНО вызывай, когда спрашивают про конкретное животное на ферме (корову, кота, козу) по кличке, или про то, кто даёт молоко/продукт. Никогда не выдумывай кличек, пород и статусов — только через эту функцию.',
+                    'description' => 'ОБЯЗАТЕЛЬНО вызывай, когда спрашивают про конкретное животное на ферме (корову, кота, козу) по кличке, или про то, кто даёт молоко. Никогда не выдумывай кличек — только через эту функцию.',
                     'parameters' => [
                         'type' => 'object',
                         'properties' => [
                             'animal_name' => [
                                 'type' => 'string',
-                                'description' => 'Имя, кличка животного или название продукта (например, "Зорька", "Бурёнка", "молоко")',
+                                'description' => 'Кличка животного (например, "Рыжик", "Зорька")',
                             ],
                         ],
                         'required' => ['animal_name'],
@@ -290,7 +367,7 @@ PROMPT;
                 'type' => 'function',
                 'function' => [
                     'name' => 'get_delivery_info',
-                    'description' => 'ОБЯЗАТЕЛЬНО вызывай, когда спрашивают про доставку, график, условия, минимальный заказ. Никогда не отвечай по памяти.',
+                    'description' => 'ОБЯЗАТЕЛЬНО вызывай, когда спрашивают про доставку, график, условия, минимальный заказ.',
                     'parameters' => ['type' => 'object', 'properties' => new \stdClass],
                 ],
             ],
@@ -430,12 +507,8 @@ PROMPT;
         return null;
     }
 
-    /**
-     * Есть ли в тексте телефон или email.
-     */
     private function extractContact(string $text): ?array
     {
-        // Телефон: +7..., 8..., с пробелами/дефисами/скобками
         if (preg_match('/(\+?7|8)[\s\-\(]*\d{3}[\s\-\)]*\d{3}[\s\-]*\d{2}[\s\-]*\d{2}/u', $text, $m)) {
             return [
                 'type' => 'phone',
@@ -443,7 +516,6 @@ PROMPT;
             ];
         }
 
-        // Email
         if (preg_match('/[\w.+-]+@[\w-]+\.[\w.-]+/u', $text, $m)) {
             return [
                 'type' => 'email',
@@ -454,9 +526,6 @@ PROMPT;
         return null;
     }
 
-    /**
-     * Была ли эскалация в последнем ответе бота по этой сессии.
-     */
     private function wasEscalatedRecently(string $sessionId, ?int $userId): bool
     {
         $lastAssistant = AiMessage::query()
