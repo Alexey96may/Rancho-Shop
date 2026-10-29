@@ -158,16 +158,20 @@ PROMPT;
         try {
             $q = mb_strtolower($question, 'UTF-8');
 
+            $appendData = function (array $result) use (&$messages) {
+                $lastIndex = count($messages) - 1;
+                if ($lastIndex >= 0 && ($messages[$lastIndex]['role'] ?? '') === 'user') {
+                    $messages[$lastIndex]['content'] .=
+                        "\n\n[Актуальные данные из базы, ОБЯЗАТЕЛЬНО используй в ответе, не выдумывай: "
+                        . json_encode($result, JSON_UNESCAPED_UNICODE) . ']';
+                }
+            };
+
             // Цена / наличие
             if (preg_match('/(цена|стоит|стоимость|наличие|почём|почем|сколько)/u', $q)) {
                 $productName = $this->extractProductName($q);
                 if ($productName) {
-                    $result = $this->getProductPrice($productName);
-                    $messages[] = [
-                        'role' => 'system',
-                        'content' => 'Актуальные данные из базы (ОБЯЗАТЕЛЬНО используй в ответе, не выдумывай): '
-                            . json_encode($result, JSON_UNESCAPED_UNICODE),
-                    ];
+                    $appendData($this->getProductPrice($productName));
                 }
             }
 
@@ -175,23 +179,13 @@ PROMPT;
             if (preg_match('/(кот|кошка|корова|коза|животное|рыжик|фиона|малышка|брызя|ошур|пчёлки|пчелки)/u', $q)) {
                 $animalName = $this->extractAnimalName($q);
                 if ($animalName) {
-                    $result = $this->getAnimalInfo($animalName);
-                    $messages[] = [
-                        'role' => 'system',
-                        'content' => 'Актуальные данные из базы (ОБЯЗАТЕЛЬНО используй в ответе, не выдумывай): '
-                            . json_encode($result, JSON_UNESCAPED_UNICODE),
-                    ];
+                    $appendData($this->getAnimalInfo($animalName));
                 }
             }
 
             // Доставка
             if (preg_match('/(доставка|доставке|график|привоз|минимальный заказ)/u', $q)) {
-                $result = $this->getDeliveryInfo();
-                $messages[] = [
-                    'role' => 'system',
-                    'content' => 'Актуальные данные из базы (ОБЯЗАТЕЛЬНО используй в ответе, не выдумывай): '
-                        . json_encode($result, JSON_UNESCAPED_UNICODE),
-                ];
+                $appendData($this->getDeliveryInfo());
             }
         } catch (\Throwable $e) {
             Log::warning('preFlightTools failed', ['message' => $e->getMessage()]);
