@@ -26,6 +26,10 @@ return Application::configure(basePath: dirname(__DIR__))
             AddLinkHeadersForPreloadedAssets::class,
         ]);
 
+        $middleware->preventRequestForgery(except: [
+            'api/ai/consult',
+        ]);
+
         $middleware->alias([
             'role' => RoleMiddleware::class,
             'order.access' => EnsureOrderAccess::class,

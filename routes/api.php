@@ -54,5 +54,5 @@ Route::middleware(['auth:sanctum', 'role:worker'])->group(function () {
 
 // AI
 Route::post('/ai/consult', [AiConsultController::class, 'consult'])
-    ->middleware(['throttle:10,1']) // 10 per/min
+    ->middleware(['web', 'throttle:10,1']) // 10 per/min
     ->name('ai.consult');
