@@ -17,14 +17,26 @@ class ConsultGigaChatAction
 {
     private const HISTORY_LIMIT = 20;
 
-    private const FALLBACK_PROMPT = 'Ты — вежливый консультант интернет-магазина. Отвечай кратко.';
-
     private const MAX_TOOL_ITERATIONS = 3;
 
     private const ESCALATION_KEYWORDS = [
         'человек', 'оператор', 'менеджер', 'позовите', 'соедините',
         'жалоба', 'проблема', 'не работает', 'обман',
     ];
+
+    private const FALLBACK_PROMPT = <<<'PROMPT'
+Ты — вежливый консультант интернет-магазина «Молочная Долина».
+
+ЖЁСТКИЕ ПРАВИЛА:
+- Ты НЕ знаешь ассортимент, цены и животных по памяти. Никогда не выдумывай названия товаров, цены, клички, породы.
+- Если вопрос про цену, стоимость, наличие или ассортимент — ОБЯЗАТЕЛЬНО вызови get_product_price.
+- Если вопрос про конкретное животное (корову, кота, козу) или «кто даёт молоко» — ОБЯЗАТЕЛЬНО вызови get_animal_info.
+- Если вопрос про доставку — ОБЯЗАТЕЛЬНО вызови get_delivery_info.
+- Если функция вернула found: false — честно скажи «не нашёл» и предложи посмотреть каталог. НЕ придумывай.
+- Если не уверен — скажи «уточните в каталоге» или «не могу ответить».
+PROMPT;
+
+    private ?array $lastUsage = null;
 
     public function execute(string $question, ?int $userId, string $sessionId): string
     {
@@ -123,8 +135,6 @@ class ConsultGigaChatAction
         return false;
     }
 
-    private ?array $lastUsage = null;
-
     /**
      * Цикл: отправляем в GigaChat, если он просит функцию — вызываем, отправляем результат обратно.
      */
@@ -188,7 +198,7 @@ class ConsultGigaChatAction
                     'model' => config('gigachat.default_model', 'GigaChat-2'),
                     'messages' => $messages,
                     'tools' => $tools,
-                    'temperature' => 0.3,
+                    'temperature' => 0.1,
                 ]);
 
             if ($response->failed()) {
@@ -246,13 +256,13 @@ class ConsultGigaChatAction
                 'type' => 'function',
                 'function' => [
                     'name' => 'get_product_price',
-                    'description' => 'Возвращает актуальную цену и наличие товара по названию. Используй, когда спрашивают цену, стоимость или наличие продукта.',
+                    'description' => 'ОБЯЗАТЕЛЬНО вызывай, когда пользователь спрашивает про цену, стоимость, наличие или ассортимент любого товара. Никогда не отвечай про цены из памяти — только через эту функцию. Возвращает актуальную цену и наличие.',
                     'parameters' => [
                         'type' => 'object',
                         'properties' => [
                             'product_name' => [
                                 'type' => 'string',
-                                'description' => 'Название товара (например, "молоко", "творог", "сыр")',
+                                'description' => 'Название товара (например, "молоко", "творог", "сыр", "молоко 3,2%")',
                             ],
                         ],
                         'required' => ['product_name'],
@@ -263,13 +273,13 @@ class ConsultGigaChatAction
                 'type' => 'function',
                 'function' => [
                     'name' => 'get_animal_info',
-                    'description' => 'Возвращает информацию о животном на ферме по имени или кличке: вид, порода, статус, что производит, фото. Используй, когда спрашивают про конкретное животное (корову, козу и т.д.) или про то, кто даёт молоко.',
+                    'description' => 'ОБЯЗАТЕЛЬНО вызывай, когда спрашивают про конкретное животное на ферме (корову, кота, козу) по кличке, или про то, кто даёт молоко/продукт. Никогда не выдумывай кличек, пород и статусов — только через эту функцию.',
                     'parameters' => [
                         'type' => 'object',
                         'properties' => [
                             'animal_name' => [
                                 'type' => 'string',
-                                'description' => 'Имя или кличка животного (например, "Зорька", "Бурёнка")',
+                                'description' => 'Имя, кличка животного или название продукта (например, "Зорька", "Бурёнка", "молоко")',
                             ],
                         ],
                         'required' => ['animal_name'],
@@ -280,7 +290,7 @@ class ConsultGigaChatAction
                 'type' => 'function',
                 'function' => [
                     'name' => 'get_delivery_info',
-                    'description' => 'Возвращает график доставки и условия. Используй, когда спрашивают про доставку.',
+                    'description' => 'ОБЯЗАТЕЛЬНО вызывай, когда спрашивают про доставку, график, условия, минимальный заказ. Никогда не отвечай по памяти.',
                     'parameters' => ['type' => 'object', 'properties' => new \stdClass],
                 ],
             ],
@@ -289,68 +299,108 @@ class ConsultGigaChatAction
 
     private function callFunction(string $name, array $args): array
     {
-        return match ($name) {
+        Log::info('AI tool call', ['name' => $name, 'args' => $args]);
+
+        $result = match ($name) {
             'get_product_price' => $this->getProductPrice($args['product_name'] ?? ''),
             'get_animal_info' => $this->getAnimalInfo($args['animal_name'] ?? ''),
             'get_delivery_info' => $this->getDeliveryInfo(),
             default => ['error' => 'Unknown function: ' . $name],
         };
+
+        Log::info('AI tool result', ['name' => $name, 'result' => $result]);
+
+        return $result;
     }
 
     private function getProductPrice(string $name): array
     {
+        $needle = mb_strtolower(trim($name), 'UTF-8');
+
         $product = Product::query()
             ->where('is_active', true)
-            ->whereRaw('LOWER(name) LIKE ?', ['%' . mb_strtolower($name, 'UTF-8') . '%'])
-            ->with(['variants' => fn ($q) => $q->where('stock', '>', 0)])
+            ->where(function ($q) use ($needle) {
+                $q->whereRaw('LOWER(products.name) LIKE ?', ["%{$needle}%"])
+                    ->orWhereHas('variants', fn ($v) => $v->whereRaw('LOWER(variants.name) LIKE ?', ["%{$needle}%"]));
+            })
+            ->with(['variants' => fn ($q) => $q->orderByDesc('is_default')->orderBy('id')])
             ->first();
 
         if (!$product) {
             return ['found' => false, 'message' => 'Товар не найден'];
         }
 
+        $variants = $product->variants->map(fn ($v) => [
+            'name' => $v->name,
+            'price_rub' => $v->priceRub(),
+            'stock' => (float) $v->stock,
+            'unit' => $v->unit?->short,
+        ])->values()->toArray();
+
+        $inStock = array_filter($variants, fn ($v) => $v['stock'] > 0);
+
+        if (empty($inStock)) {
+            return [
+                'found' => true,
+                'name' => $product->name,
+                'in_stock' => false,
+                'message' => 'Товар есть в каталоге, но сейчас нет в наличии',
+                'variants' => $variants,
+            ];
+        }
+
         return [
             'found' => true,
             'name' => $product->name,
-            'variants' => $product->variants->map(fn ($v) => [
-                'name' => $v->name,
-                'price' => $v->price,
-                'price_rub' => $v->priceRub(),
-                'stock' => (float) $v->stock,
-                'unit' => $v->unit?->short,
-            ])->toArray(),
+            'in_stock' => true,
+            'variants' => array_values($inStock),
         ];
     }
 
     private function getAnimalInfo(string $name): array
     {
-        $animal = Animal::query()
-            ->where('is_active', true)
-            ->where(function ($q) use ($name) {
-                $q->whereRaw('LOWER(name) LIKE ?', ['%' . mb_strtolower($name, 'UTF-8') . '%'])
-                    ->orWhereHas('products', fn ($p) => $p->whereRaw('LOWER(name) LIKE ?', ['%' . mb_strtolower($name, 'UTF-8') . '%']));
-            })
-            ->with(['category', 'products.variants' => fn ($q) => $q->where('is_default', true)])
-            ->first();
+        $needle = mb_strtolower(trim($name), 'UTF-8');
 
-        if (!$animal) {
+        $animals = Animal::query()
+            ->where('is_active', true)
+            ->where(function ($q) use ($needle) {
+                $q->whereRaw('LOWER(animals.name) LIKE ?', ["%{$needle}%"])
+                    ->orWhereHas('products', fn ($p) => $p->whereRaw('LOWER(products.name) LIKE ?', ["%{$needle}%"]));
+            })
+            ->with([
+                'category',
+                'products.variants' => fn ($q) => $q->where('is_default', true),
+            ])
+            ->limit(5)
+            ->get();
+
+        if ($animals->isEmpty()) {
             return ['found' => false, 'message' => 'Животное не найдено'];
         }
 
         return [
             'found' => true,
-            'name' => $animal->name,
-            'category' => $animal->category?->name,
-            'status' => $animal->status,
-            'bio' => $animal->bio,
-            'features' => $animal->features,
-            'photo_url' => $animal->getFirstMediaUrl('avatars') ?: null,
-            'products' => $animal->products->map(fn ($p) => [
-                'name' => $p->name,
-                'price_rub' => $p->mainVariant()?->priceRub(),
-                'stock' => (float) ($p->mainVariant()?->stock ?? 0),
-                'unit' => $p->mainVariant()?->unit?->short,
-            ])->toArray(),
+            'count' => $animals->count(),
+            'animals' => $animals->map(function (Animal $animal) {
+                return [
+                    'name' => $animal->name,
+                    'category' => $animal->category?->name,
+                    'status' => $animal->status,
+                    'bio' => $animal->bio,
+                    'features' => $animal->features,
+                    'photo_url' => $animal->getFirstMediaUrl('avatars') ?: null,
+                    'products' => $animal->products->map(function (Product $p) {
+                        $variant = $p->variants->first();
+
+                        return [
+                            'name' => $p->name,
+                            'price_rub' => $variant?->priceRub(),
+                            'stock' => (float) ($variant?->stock ?? 0),
+                            'unit' => $variant?->unit?->short,
+                        ];
+                    })->values()->toArray(),
+                ];
+            })->values()->toArray(),
         ];
     }
 
