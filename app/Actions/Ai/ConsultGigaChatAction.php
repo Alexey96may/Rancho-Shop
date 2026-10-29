@@ -8,6 +8,7 @@ use App\Models\AiMessage;
 use App\Models\Animal;
 use App\Models\Product;
 use App\Models\Setting;
+use App\Models\User;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -47,8 +48,17 @@ PROMPT;
         $contact = $this->extractContact($question);
         $wasEscalated = $this->wasEscalatedRecently($sessionId, $userId);
 
+        $userName = null;
+        if ($userId) {
+            $userName = User::find($userId)?->name;
+        }
+
         $systemPrompt = Setting::where('key', 'ai_bot_prompt')->value('value')
             ?? self::FALLBACK_PROMPT;
+
+        if ($userName) {
+            $systemPrompt .= "\n\nПользователя зовут {$userName}. Обращайся по имени, если уместно.";
+        }
 
         $history = AiMessage::historyFor($sessionId, $userId, self::HISTORY_LIMIT);
 

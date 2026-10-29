@@ -23,8 +23,27 @@ class AiChatTelegramNotifier
         $lines[] = '<b>Причина:</b> ' . e($reason);
         $lines[] = '<b>Сессия:</b> <code>' . e($user->session_id ?? '—') . '</code>';
 
-        if ($user->user_id) {
+        // Данные авторизованного пользователя
+        if ($user->user_id && $user->relationLoaded('user') === false) {
+            $user->loadMissing('user');
+        }
+
+        if ($user->user) {
+            $lines[] = '<b>Пользователь:</b> ' . e($user->user->name ?? '—');
+
+            if ($user->user->phone) {
+                $lines[] = '<b>Телефон:</b> ' . e($user->user->phone);
+            }
+
+            if ($user->user->email) {
+                $lines[] = '<b>Email:</b> ' . e($user->user->email);
+            }
+
+            $lines[] = '<b>User ID:</b> ' . $user->user->id;
+        } elseif ($user->user_id) {
             $lines[] = '<b>User ID:</b> ' . $user->user_id;
+        } else {
+            $lines[] = '<b>Гость</b> (не авторизован)';
         }
 
         $lines[] = '';
@@ -54,7 +73,25 @@ class AiChatTelegramNotifier
         $lines[] = '<b>Сессия:</b> <code>' . e($user->session_id ?? '—') . '</code>';
 
         if ($user->user_id) {
-            $lines[] = '<b>User ID:</b> ' . $user->user_id;
+            if (!$user->relationLoaded('user')) {
+                $user->loadMissing('user');
+            }
+
+            if ($user->user) {
+                $lines[] = '<b>Пользователь:</b> ' . e($user->user->name ?? '—');
+
+                if ($user->user->phone) {
+                    $lines[] = '<b>Телефон в профиле:</b> ' . e($user->user->phone);
+                }
+
+                if ($user->user->email) {
+                    $lines[] = '<b>Email в профиле:</b> ' . e($user->user->email);
+                }
+
+                $lines[] = '<b>User ID:</b> ' . $user->user->id;
+            }
+        } else {
+            $lines[] = '<b>Гость</b> (не авторизован)';
         }
 
         $lines[] = '';

@@ -10,8 +10,23 @@
     <p><strong>Причина:</strong> {{ $reason }}</p>
     <p><strong>Сессия:</strong> {{ $userMessage->session_id ?? '—' }}</p>
 
-    @if ($userMessage->user_id)
+    {{-- Данные пользователя --}}
+    @if ($userMessage->user)
+        <p><strong>Пользователь:</strong> {{ $userMessage->user->name }}</p>
+
+        @if ($userMessage->user->phone)
+            <p><strong>Телефон:</strong> {{ $userMessage->user->phone }}</p>
+        @endif
+
+        @if ($userMessage->user->email)
+            <p><strong>Email:</strong> {{ $userMessage->user->email }}</p>
+        @endif
+
+        <p><strong>User ID:</strong> {{ $userMessage->user->id }}</p>
+    @elseif ($userMessage->user_id)
         <p><strong>User ID:</strong> {{ $userMessage->user_id }}</p>
+    @else
+        <p><strong>Гость</strong> (не авторизован)</p>
     @endif
 
     <hr style="border: none; border-top: 1px solid #E8E3D6; margin: 24px 0;">

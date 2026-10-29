@@ -31,7 +31,7 @@ class NotifyAdminAboutAiContactJob implements ShouldQueue
 
     public function handle(AiChatTelegramNotifier $telegramNotifier): void
     {
-        $userMsg = AiMessage::find($this->userMessageId);
+        $userMsg = AiMessage::with('user')->find($this->userMessageId);
         if (!$userMsg) {
             return;
         }
