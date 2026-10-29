@@ -24,15 +24,6 @@ class ConsultGigaChatAction
         'жалоба', 'проблема', 'не работает', 'обман',
     ];
 
-    private const KNOWN_PRODUCTS = [
-        'молоко', 'творог', 'сыр', 'масло', 'сметана', 'кефир',
-        'ряженка', 'йогурт', 'брынза', 'сливки', 'простокваша',
-    ];
-
-    private const KNOWN_ANIMALS = [
-        'рыжик', 'фиона', 'малышка', 'брызя', 'ошур', 'пчёлки', 'пчелки',
-    ];
-
     private const FALLBACK_PROMPT = <<<'PROMPT'
 Ты — вежливый консультант интернет-магазина «Молочная Долина».
 
@@ -43,6 +34,8 @@ class ConsultGigaChatAction
 - Если вопрос про доставку — ОБЯЗАТЕЛЬНО вызови get_delivery_info.
 - Если функция вернула found: false — честно скажи «не нашёл» и предложи посмотреть каталог. НЕ придумывай.
 - Если не уверен — скажи «уточните в каталоге» или «не могу ответить».
+- Цена всегда за единицу (unit). Если step > 1 — укажи цену за единицу и итог за шаг.
+  Пример: «Молоко — 200₽ за литр, банка 3л — 600₽».
 PROMPT;
 
     private ?array $lastUsage = null;
@@ -51,13 +44,9 @@ PROMPT;
     {
         $this->lastUsage = null;
 
-        // 1. Проверяем, есть ли в сообщении контакт
         $contact = $this->extractContact($question);
-
-        // 2. Проверяем, была ли недавно эскалация (по этой сессии)
         $wasEscalated = $this->wasEscalatedRecently($sessionId, $userId);
 
-        // 3. Собираем промпт + историю
         $systemPrompt = Setting::where('key', 'ai_bot_prompt')->value('value')
             ?? self::FALLBACK_PROMPT;
 
@@ -69,28 +58,23 @@ PROMPT;
             [['role' => 'user', 'content' => $question]],
         );
 
-        // 4. Принудительный вызов функций (pre-flight) — ДО GigaChat
+        // Принудительный вызов функций (pre-flight) — ДО GigaChat
         $this->preFlightTools($question, $messages);
 
-        // 5. Спрашиваем GigaChat
         $answer = $this->chatWithTools($messages);
 
-        // 6. Определяем причину эскалации
         $reason = $this->escalationReason($question, $answer);
 
-        // 7. Если зовут человека — просим контакт
         if ($reason && $this->isHumanRequest($question)) {
             $answer .= "\n\nЧтобы менеджер связался с вами, оставьте, пожалуйста, телефон или email.";
         }
 
-        // 8. Если пользователь оставил контакт (и была эскалация) — отвечаем «спасибо»
         $contactAccepted = $contact && $wasEscalated;
 
         if ($contactAccepted) {
             $answer = 'Спасибо! Передали ваш контакт менеджеру — он свяжется с вами в ближайшее время.';
         }
 
-        // 9. Сохраняем сообщения
         $userMessage = AiMessage::create([
             'session_id' => $sessionId,
             'user_id' => $userId,
@@ -110,7 +94,6 @@ PROMPT;
             ],
         ]);
 
-        // 10. Уведомляем админа об эскалации
         if ($reason) {
             NotifyAdminAboutAiChatJob::dispatch(
                 $userMessage->id,
@@ -119,7 +102,6 @@ PROMPT;
             );
         }
 
-        // 11. Уведомляем админа о контакте
         if ($contactAccepted) {
             NotifyAdminAboutAiContactJob::dispatch(
                 $userMessage->id,
@@ -136,9 +118,7 @@ PROMPT;
     {
         $q = mb_strtolower($question, 'UTF-8');
 
-        $keywords = ['человек', 'оператор', 'менеджер', 'позовите', 'соедините'];
-
-        foreach ($keywords as $kw) {
+        foreach (['человек', 'оператор', 'менеджер', 'позовите', 'соедините'] as $kw) {
             if (str_contains($q, $kw)) {
                 return true;
             }
@@ -148,10 +128,41 @@ PROMPT;
     }
 
     /**
-     * Принудительный вызов функций (для Lite-моделей, которые не умеют tools).
-     * Результат вставляется как system-сообщение, потому что GigaChat
-     * принимает role: system в любом месте messages, а role: tool — только
-     * после assistant с tool_calls.
+     * Динамические имена товаров из БД (кэш 5 минут).
+     */
+    private function knownProducts(): array
+    {
+        return Cache::remember('ai_known_products', 300, function () {
+            return Product::query()
+                ->where('is_active', true)
+                ->pluck('name')
+                ->map(fn ($n) => mb_strtolower($n, 'UTF-8'))
+                ->unique()
+                ->values()
+                ->toArray();
+        });
+    }
+
+    /**
+     * Динамические клички животных из БД (кэш 5 минут).
+     */
+    private function knownAnimals(): array
+    {
+        return Cache::remember('ai_known_animals', 300, function () {
+            return Animal::query()
+                ->where('is_active', true)
+                ->pluck('name')
+                ->map(fn ($n) => mb_strtolower($n, 'UTF-8'))
+                ->unique()
+                ->values()
+                ->toArray();
+        });
+    }
+
+    /**
+     * Принудительный вызов функций (для Lite-моделей).
+     * Результат дописывается в последнее user-сообщение,
+     * потому что GigaChat требует system только первым.
      */
     private function preFlightTools(string $question, array &$messages): void
     {
@@ -175,11 +186,12 @@ PROMPT;
                 }
             }
 
-            // Животное
-            if (preg_match('/(кот|кошка|корова|коза|животное|рыжик|фиона|малышка|брызя|ошур|пчёлки|пчелки)/u', $q)) {
-                $animalName = $this->extractAnimalName($q);
-                if ($animalName) {
-                    $appendData($this->getAnimalInfo($animalName));
+            // Животное — если нашли кличку в БД
+            $animalName = $this->extractAnimalName($q);
+            if ($animalName) {
+                $result = $this->getAnimalInfo($animalName);
+                if ($result['found'] ?? false) {
+                    $appendData($result);
                 }
             }
 
@@ -194,51 +206,63 @@ PROMPT;
 
     private function extractProductName(string $q): ?string
     {
-        // 1. Известные товары
-        foreach (self::KNOWN_PRODUCTS as $word) {
-            if (str_contains($q, $word)) {
-                return $word;
+        // 1. Прямое вхождение названия из БД
+        foreach ($this->knownProducts() as $name) {
+            if (str_contains($q, $name)) {
+                return $name;
             }
         }
 
-        // 2. Fallback: слово после «стоит/цена/сколько», без захвата служебных слов
+        // 2. По отдельным словам («молоко 3,2%» → «молоко»)
+        $words = preg_split('/\s+/u', $q);
+        foreach ($words as $word) {
+            $word = trim($word, " \t\n\r\0\x0B.,!?");
+            if (mb_strlen($word) < 3) {
+                continue;
+            }
+            foreach ($this->knownProducts() as $name) {
+                if (str_contains($name, $word)) {
+                    return $name;
+                }
+            }
+        }
+
+        // 3. Fallback: слово после «стоит/цена/сколько»
         $clean = preg_replace(
             '/^(?:сколько\s+)?(?:стоит|цена|стоимость|наличие|почём|почем|сколько)\s+(?:на\s+)?/ui',
             '',
             $q,
         );
-
-        $clean = trim($clean);
-        $clean = preg_replace('/[?.,!].*$/u', '', $clean);
-        $clean = trim($clean);
-
-        // Убираем «пожалуйста», «у вас», «ваш...»
-        $clean = preg_replace('/\b(пожалуйста|у вас|ваш[а-я]*)\b/ui', '', $clean);
-        $clean = trim($clean);
+        $clean = trim(preg_replace('/[?.,!].*$/u', '', trim($clean)));
+        $clean = trim(preg_replace('/\b(пожалуйста|у вас|ваш[а-я]*)\b/ui', '', $clean));
 
         return $clean !== '' ? $clean : null;
     }
 
     private function extractAnimalName(string $q): ?string
     {
-        // 1. Известные клички
-        foreach (self::KNOWN_ANIMALS as $n) {
-            if (str_contains($q, $n)) {
-                return $n;
+        // 1. Прямое вхождение клички из БД
+        foreach ($this->knownAnimals() as $name) {
+            if (str_contains($q, $name)) {
+                return $name;
             }
         }
 
         // 2. Слово после «про»
         if (preg_match('/(?:про|о)\s+([а-яёa-z]{3,20})/ui', $q, $m)) {
-            return trim($m[1]);
+            $word = mb_strtolower(trim($m[1]), 'UTF-8');
+            foreach ($this->knownAnimals() as $name) {
+                if (str_contains($name, $word) || str_contains($word, $name)) {
+                    return $name;
+                }
+            }
+
+            return $word;
         }
 
         return null;
     }
 
-    /**
-     * Цикл: отправляем в GigaChat, если он просит функцию — вызываем, отправляем результат обратно.
-     */
     private function chatWithTools(array $messages): string
     {
         $tools = $this->tools();
@@ -257,7 +281,6 @@ PROMPT;
                 return 'Извините, не могу ответить.';
             }
 
-            // Модель просит вызвать функцию
             if (!empty($choice['tool_calls'])) {
                 $messages[] = $choice;
 
@@ -283,9 +306,6 @@ PROMPT;
         return 'Извините, не удалось получить ответ.';
     }
 
-    /**
-     * Вызов GigaChat API (OpenAI-совместимый).
-     */
     private function callGigaChat(array $messages, array $tools): array
     {
         try {
@@ -431,12 +451,24 @@ PROMPT;
             return ['found' => false, 'message' => 'Товар не найден'];
         }
 
-        $variants = $product->variants->map(fn ($v) => [
-            'name' => $v->name,
-            'price_rub' => $v->priceRub(),
-            'stock' => (float) $v->stock,
-            'unit' => $v->unit?->short,
-        ])->values()->toArray();
+        $variants = $product->variants->map(function ($v) {
+            $pricePerUnit = $v->priceRub();
+            $step = (float) $v->step;
+            $unit = $v->unit?->short ?? 'шт';
+            $pricePerStep = $pricePerUnit * $step;
+
+            return [
+                'name' => $v->name,
+                'price_per_unit' => $pricePerUnit,
+                'unit' => $unit,
+                'step' => $step,
+                'price_per_step' => $pricePerStep,
+                'stock' => (float) $v->stock,
+                'price_note' => $step > 1
+                    ? "{$pricePerUnit}₽ за 1 {$unit}, продаётся кратно {$step} {$unit} (итого {$pricePerStep}₽ за {$step} {$unit})"
+                    : "{$pricePerUnit}₽ за 1 {$unit}",
+            ];
+        })->values()->toArray();
 
         $inStock = array_filter($variants, fn ($v) => $v['stock'] > 0);
 
@@ -496,12 +528,17 @@ PROMPT;
                     'photo_url' => $animal->getFirstMediaUrl('avatars') ?: null,
                     'products' => $animal->products->map(function (Product $p) {
                         $variant = $p->variants->first();
+                        $pricePerUnit = $variant?->priceRub();
+                        $step = (float) ($variant?->step ?? 1);
+                        $unit = $variant?->unit?->short ?? 'шт';
 
                         return [
                             'name' => $p->name,
-                            'price_rub' => $variant?->priceRub(),
+                            'price_per_unit' => $pricePerUnit,
+                            'unit' => $unit,
+                            'step' => $step,
+                            'price_per_step' => $pricePerUnit !== null ? $pricePerUnit * $step : null,
                             'stock' => (float) ($variant?->stock ?? 0),
-                            'unit' => $variant?->unit?->short,
                         ];
                     })->values()->toArray(),
                 ];
