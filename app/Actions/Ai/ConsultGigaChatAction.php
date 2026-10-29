@@ -24,6 +24,15 @@ class ConsultGigaChatAction
         'жалоба', 'проблема', 'не работает', 'обман',
     ];
 
+    private const KNOWN_PRODUCTS = [
+        'молоко', 'творог', 'сыр', 'масло', 'сметана', 'кефир',
+        'ряженка', 'йогурт', 'брынза', 'сливки', 'простокваша',
+    ];
+
+    private const KNOWN_ANIMALS = [
+        'рыжик', 'фиона', 'малышка', 'брызя', 'ошур', 'пчёлки', 'пчелки',
+    ];
+
     private const FALLBACK_PROMPT = <<<'PROMPT'
 Ты — вежливый консультант интернет-магазина «Молочная Долина».
 
@@ -139,76 +148,93 @@ PROMPT;
     }
 
     /**
-     * Принудительный вызов функций, если модель не умеет tools (Lite).
-     * Результат вставляется в messages как tool-сообщение,
-     * чтобы GigaChat видел готовый факт и не фантазировал.
+     * Принудительный вызов функций (для Lite-моделей, которые не умеют tools).
+     * Результат вставляется как system-сообщение, потому что GigaChat
+     * принимает role: system в любом месте messages, а role: tool — только
+     * после assistant с tool_calls.
      */
     private function preFlightTools(string $question, array &$messages): void
     {
-        $q = mb_strtolower($question, 'UTF-8');
+        try {
+            $q = mb_strtolower($question, 'UTF-8');
 
-        // Цена / наличие
-        if (preg_match('/(цена|стоит|стоимость|наличие|почём|почем|сколько)/u', $q)) {
-            $productName = $this->extractProductName($q);
-            if ($productName) {
-                $result = $this->getProductPrice($productName);
+            // Цена / наличие
+            if (preg_match('/(цена|стоит|стоимость|наличие|почём|почем|сколько)/u', $q)) {
+                $productName = $this->extractProductName($q);
+                if ($productName) {
+                    $result = $this->getProductPrice($productName);
+                    $messages[] = [
+                        'role' => 'system',
+                        'content' => 'Актуальные данные из базы (ОБЯЗАТЕЛЬНО используй в ответе, не выдумывай): '
+                            . json_encode($result, JSON_UNESCAPED_UNICODE),
+                    ];
+                }
+            }
+
+            // Животное
+            if (preg_match('/(кот|кошка|корова|коза|животное|рыжик|фиона|малышка|брызя|ошур|пчёлки|пчелки)/u', $q)) {
+                $animalName = $this->extractAnimalName($q);
+                if ($animalName) {
+                    $result = $this->getAnimalInfo($animalName);
+                    $messages[] = [
+                        'role' => 'system',
+                        'content' => 'Актуальные данные из базы (ОБЯЗАТЕЛЬНО используй в ответе, не выдумывай): '
+                            . json_encode($result, JSON_UNESCAPED_UNICODE),
+                    ];
+                }
+            }
+
+            // Доставка
+            if (preg_match('/(доставка|доставке|график|привоз|минимальный заказ)/u', $q)) {
+                $result = $this->getDeliveryInfo();
                 $messages[] = [
-                    'role' => 'tool',
-                    'tool_call_id' => 'preflight_price_' . uniqid(),
-                    'content' => json_encode($result, JSON_UNESCAPED_UNICODE),
+                    'role' => 'system',
+                    'content' => 'Актуальные данные из базы (ОБЯЗАТЕЛЬНО используй в ответе, не выдумывай): '
+                        . json_encode($result, JSON_UNESCAPED_UNICODE),
                 ];
             }
-        }
-
-        // Животное
-        if (preg_match('/(кот|кошка|корова|коза|животное|рыжик|фиона|малышка|брызя|ошур|пчёлки|пчелки)/u', $q)) {
-            $animalName = $this->extractAnimalName($q);
-            if ($animalName) {
-                $result = $this->getAnimalInfo($animalName);
-                $messages[] = [
-                    'role' => 'tool',
-                    'tool_call_id' => 'preflight_animal_' . uniqid(),
-                    'content' => json_encode($result, JSON_UNESCAPED_UNICODE),
-                ];
-            }
-        }
-
-        // Доставка
-        if (preg_match('/(доставка|доставке|график|привоз|минимальный заказ)/u', $q)) {
-            $result = $this->getDeliveryInfo();
-            $messages[] = [
-                'role' => 'tool',
-                'tool_call_id' => 'preflight_delivery_' . uniqid(),
-                'content' => json_encode($result, JSON_UNESCAPED_UNICODE),
-            ];
+        } catch (\Throwable $e) {
+            Log::warning('preFlightTools failed', ['message' => $e->getMessage()]);
         }
     }
 
     private function extractProductName(string $q): ?string
     {
-        // Слова после «стоит/цена/сколько/наличие», до 30 символов
-        if (preg_match('/(?:стоит|цена|стоимость|наличие|почём|почем|сколько)\s+(?:на\s+)?([а-яёa-z\s]{2,30})/ui', $q, $m)) {
-            $name = trim($m[1]);
-            // Отрезать «?» и хвосты
-            $name = preg_replace('/[?.,!].*$/u', '', $name);
-
-            return $name !== '' ? $name : null;
+        // 1. Известные товары
+        foreach (self::KNOWN_PRODUCTS as $word) {
+            if (str_contains($q, $word)) {
+                return $word;
+            }
         }
 
-        return null;
+        // 2. Fallback: слово после «стоит/цена/сколько», без захвата служебных слов
+        $clean = preg_replace(
+            '/^(?:сколько\s+)?(?:стоит|цена|стоимость|наличие|почём|почем|сколько)\s+(?:на\s+)?/ui',
+            '',
+            $q,
+        );
+
+        $clean = trim($clean);
+        $clean = preg_replace('/[?.,!].*$/u', '', $clean);
+        $clean = trim($clean);
+
+        // Убираем «пожалуйста», «у вас», «ваш...»
+        $clean = preg_replace('/\b(пожалуйста|у вас|ваш[а-я]*)\b/ui', '', $clean);
+        $clean = trim($clean);
+
+        return $clean !== '' ? $clean : null;
     }
 
     private function extractAnimalName(string $q): ?string
     {
-        // Известные клички
-        $names = ['рыжик', 'фиона', 'малышка', 'брызя', 'ошур', 'пчёлки', 'пчелки'];
-        foreach ($names as $n) {
+        // 1. Известные клички
+        foreach (self::KNOWN_ANIMALS as $n) {
             if (str_contains($q, $n)) {
                 return $n;
             }
         }
 
-        // Или слово после «про»
+        // 2. Слово после «про»
         if (preg_match('/(?:про|о)\s+([а-яёa-z]{3,20})/ui', $q, $m)) {
             return trim($m[1]);
         }
@@ -394,11 +420,15 @@ PROMPT;
     {
         $needle = mb_strtolower(trim($name), 'UTF-8');
 
+        if ($needle === '') {
+            return ['found' => false, 'message' => 'Не указано название товара'];
+        }
+
         $product = Product::query()
             ->where('is_active', true)
             ->where(function ($q) use ($needle) {
                 $q->whereRaw('LOWER(products.name) LIKE ?', ["%{$needle}%"])
-                    ->orWhereHas('variants', fn ($v) => $v->whereRaw('LOWER(variants.name) LIKE ?', ["%{$needle}%"]));
+                    ->orWhereHas('variants', fn ($v) => $v->whereRaw('LOWER(product_variants.name) LIKE ?', ["%{$needle}%"]));
             })
             ->with(['variants' => fn ($q) => $q->orderByDesc('is_default')->orderBy('id')])
             ->first();
@@ -437,6 +467,10 @@ PROMPT;
     private function getAnimalInfo(string $name): array
     {
         $needle = mb_strtolower(trim($name), 'UTF-8');
+
+        if ($needle === '') {
+            return ['found' => false, 'message' => 'Не указано имя животного'];
+        }
 
         $animals = Animal::query()
             ->where('is_active', true)
