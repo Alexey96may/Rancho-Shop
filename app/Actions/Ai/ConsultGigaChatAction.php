@@ -185,7 +185,7 @@ class ConsultGigaChatAction
                 ->timeout(30)
                 ->withoutVerifying() // только для dev, на проде — свой сертификат
                 ->post('https://api.giga.chat/v1/chat/completions', [
-                    'model' => config('gigachat.model', 'GigaChat'),
+                    'model' => config('gigachat.default_model', 'GigaChat-2'),
                     'messages' => $messages,
                     'tools' => $tools,
                     'temperature' => 0.3,
