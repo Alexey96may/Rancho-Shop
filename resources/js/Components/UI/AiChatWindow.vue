@@ -22,7 +22,13 @@
             };
         }>(),
         {
-            quickQuestions: () => ['Как оформить заказ?', 'Условия доставки', 'Способы оплаты'],
+            quickQuestions: () => [
+                'Как оформить заказ?',
+                'Пункты доставки',
+                'Способы оплаты',
+                'Подписка на продукты',
+                'Позвать человека',
+            ],
             maxLength: 1000,
             avatar: '/images/ai/bot-avatar.png',
             theme: 'dark',
@@ -38,12 +44,59 @@
     const textareaRef = ref<HTMLTextAreaElement | null>(null);
     const mounted = ref(false);
 
+    /* ---------- Печать ---------- */
+    const TYPING_SPEED = 12; // мс на символ
+    const SCROLL_EVERY = 3; // прокрутка каждые N символов
+    let typingCancelled = false;
+
+    const isTyping = ref(false);
+
+    const typewrite = async (fullText: string, messageIndex: number) => {
+        typingCancelled = false;
+        const msg = messages.value[messageIndex];
+        if (!msg) return;
+
+        msg.content = '';
+        isTyping.value = true;
+
+        for (let i = 0; i < fullText.length; i++) {
+            if (typingCancelled) {
+                msg.content = fullText;
+                isTyping.value = false;
+                await scrollToBottom(true);
+                return;
+            }
+
+            msg.content += fullText[i];
+
+            if (i % SCROLL_EVERY === 0) {
+                await scrollToBottom();
+            }
+
+            await new Promise((r) => setTimeout(r, TYPING_SPEED));
+        }
+
+        isTyping.value = false;
+        await scrollToBottom(true);
+    };
+
+    /* ---------- Тема ---------- */
     const isDark = computed(() => props.theme === 'dark');
 
+    /* ---------- Store ---------- */
     const messages = computed(() => store.messages);
     const isSending = computed(() => store.isSending);
     const error = computed(() => store.error);
-    const canSend = computed(() => input.value.trim().length > 0 && !store.isSending);
+
+    const canSend = computed(
+        () => input.value.trim().length > 0 && !store.isSending && !isTyping.value,
+    );
+
+    const showTypingDots = computed(
+        () =>
+            (store.isSending || isTyping.value) &&
+            !messages.value.some((m) => m.role === 'assistant' && m.content !== ''),
+    );
 
     onMounted(() => {
         mounted.value = true;
@@ -82,6 +135,9 @@
         const question = (forcedQuestion ?? input.value).trim();
         if (!question || store.isSending) return;
 
+        // Отменяем текущую печать, если она идёт
+        typingCancelled = true;
+
         input.value = '';
         await scrollToBottom(true);
 
@@ -94,8 +150,19 @@
               }
             : undefined;
 
+        // store.send возвращает void, но нам нужен ответ для печати
+        // Поэтому: вызываем store.send, ловим новое сообщение после
+        const beforeCount = store.messages.length;
+
         await store.send(question, honeypotPayload);
-        await scrollToBottom();
+
+        // Если пришёл новый assistant-ответ — печатаем его
+        if (store.messages.length > beforeCount) {
+            const last = store.messages[store.messages.length - 1];
+            if (last.role === 'assistant' && last.content) {
+                await typewrite(last.content, store.messages.length - 1);
+            }
+        }
     };
 
     const onKeydown = (e: KeyboardEvent) => {
@@ -161,7 +228,7 @@
 
 <template>
     <div v-if="mounted" class="flex h-[60vh] max-h-[500px] flex-col">
-        <!-- HONEYPOT (скрытые поля для защиты от ботов) -->
+        <!-- HONEYPOT -->
         <div v-if="honeypot?.enabled" style="display: none" aria-hidden="true">
             <input
                 type="text"
@@ -188,11 +255,12 @@
         >
             <!-- Пустой экран -->
             <div
-                v-if="!messages.length && !isSending"
+                v-if="!messages.length && !showTypingDots"
                 class="flex h-full flex-col items-center justify-center gap-4 py-6"
             >
                 <p class="text-center text-sm" :class="emptyTextClass">
-                    Задайте вопрос — я подскажу по доставке, оплате и заказам.
+                    Задайте любой вопрос — помогу с заказом, доставкой, оплатой, товарами и не
+                    только.
                 </p>
 
                 <div v-if="quickQuestions.length" class="flex flex-wrap justify-center gap-2">
@@ -200,7 +268,7 @@
                         v-for="q in quickQuestions"
                         :key="q"
                         type="button"
-                        class="rounded-full border px-3 py-1.5 text-xs transition-colors focus:outline-none focus-visible:ring-2"
+                        class="rounded-full border px-3 py-1.5 text-xs outline-none transition-colors focus-visible:ring-2"
                         :class="quickBtnClass"
                         @click="send(q)"
                     >
@@ -218,7 +286,7 @@
             >
                 <div
                     v-if="msg.role === 'assistant' && avatar"
-                    class="mb-1 h-7 w-7 shrink-0 overflow-hidden rounded-full sm:h-12 sm:w-12"
+                    class="mb-1 h-7 w-7 shrink-0 overflow-hidden rounded-full"
                 >
                     <AppImage
                         :src="avatar"
@@ -237,11 +305,16 @@
                     ]"
                 >
                     {{ msg.content }}
+                    <span
+                        v-if="isTyping && i === messages.length - 1 && msg.role === 'assistant'"
+                        class="ml-0.5 inline-block h-4 w-0.5 animate-pulse bg-current align-middle"
+                        aria-hidden="true"
+                    ></span>
                 </div>
             </div>
 
-            <!-- Индикатор печати -->
-            <div v-if="isSending" class="flex items-end gap-2">
+            <!-- Индикатор печати (три точки) -->
+            <div v-if="showTypingDots" class="flex items-end gap-2">
                 <div v-if="avatar" class="mb-1 h-7 w-7 shrink-0 overflow-hidden rounded-full">
                     <AppImage
                         :src="avatar"
@@ -273,7 +346,7 @@
         </div>
 
         <!-- INPUT -->
-        <div class="mt-4 flex items-end gap-2 border-t pt-4" :class="inputBorderClass">
+        <div class="mt-4 flex items-end gap-2 border-t px-1 pt-4" :class="inputBorderClass">
             <textarea
                 ref="textareaRef"
                 v-model="input"
@@ -281,14 +354,14 @@
                 :maxlength="maxLength"
                 placeholder="Ваш вопрос..."
                 aria-label="Ваш вопрос ИИ-помощнику"
-                class="max-h-32 min-h-[44px] flex-1 resize-none rounded-xl border px-3 py-2.5 text-sm focus:outline-none focus:ring-2"
+                class="max-h-32 min-h-[44px] flex-1 resize-none rounded-xl border px-3 py-2.5 text-sm outline-none focus:ring-2"
                 :class="[textareaClass, scrollbarClass]"
                 @keydown="onKeydown"
             ></textarea>
 
             <button
                 type="button"
-                class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl transition-colors focus:outline-none focus-visible:ring-2 disabled:opacity-50"
+                class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl outline-none transition-colors focus-visible:ring-2 disabled:opacity-50"
                 :class="sendBtnClass"
                 :disabled="!canSend"
                 aria-label="Отправить"
@@ -299,10 +372,10 @@
         </div>
 
         <!-- Сброс -->
-        <div v-if="messages.length" class="mt-2 flex justify-end">
+        <div v-if="messages.length" class="mt-4 flex justify-end">
             <button
                 type="button"
-                class="text-[10px] font-black uppercase tracking-widest transition-colors focus:outline-none focus-visible:ring-2"
+                class="text-[10px] font-black uppercase tracking-widest outline-none transition-colors focus-visible:ring-2"
                 :class="clearBtnClass"
                 @click="store.clearHistory()"
             >
@@ -342,7 +415,8 @@
     }
 
     @media (prefers-reduced-motion: reduce) {
-        .animate-bounce {
+        .animate-bounce,
+        .animate-pulse {
             animation: none;
         }
     }
