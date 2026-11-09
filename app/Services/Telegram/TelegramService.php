@@ -104,12 +104,7 @@ class TelegramService
 
     private function client()
     {
-        $options = ['timeout' => 10];
-
-        $proxy = config('services.telegram.proxy');
-        if ($proxy) {
-            $options['proxy'] = $proxy;
-        }
+        $options = ['timeout' => 10, 'proxy' => ''];
 
         return Http::withOptions($options);
     }
