@@ -37,7 +37,7 @@ class TelegramService
         try {
             $response = $this->client()
                 ->timeout(5)
-                ->post("https://api.telegram.org/bot{$token}/sendMessage", [
+                ->post("https://wandering-recipe-6281.shulga-alexey.workers.dev/bot{$token}/sendMessage", [
                     'chat_id' => $chatId,
                     'text' => $text,
                     'parse_mode' => 'HTML',
@@ -76,7 +76,7 @@ class TelegramService
         try {
             $response = $this->client()
                 ->timeout(10)
-                ->post("https://api.telegram.org/bot{$token}/sendPhoto", [
+                ->post("https://wandering-recipe-6281.shulga-alexey.workers.dev/bot{$token}/sendPhoto", [
                     'chat_id' => $chatId,
                     'photo' => $photoUrl,
                     'caption' => $caption,
