@@ -153,16 +153,16 @@
 </script>
 
 <template>
-    <div title="Пришлём письмо, когда товар в наличии">
+    <div class="h-full" title="Пришлём письмо, когда товар в наличии">
         <button
             type="button"
             @click="toggleSubscription"
             :disabled="isSubscribing"
-            class="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl border-2 px-2 text-xs font-black uppercase tracking-widest outline-none transition-all duration-300 focus-visible:ring-4 focus-visible:ring-rancho-pine/30 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+            class="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border-2 p-3 text-xs font-black uppercase tracking-widest outline-none transition-all duration-300 focus-visible:ring-4 focus-visible:ring-rancho-pine/30 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
             :class="
                 subscribed
-                    ? 'border-rancho-pine bg-rancho-pine text-rancho-paper hover:bg-rancho-pine/80 hover:fill-rancho-paper'
-                    : 'bg-white text-rancho-forest hover:border-rancho-forest/60 hover:text-rancho-pine'
+                    ? 'bg-rancho-forest text-rancho-paper hover:bg-rancho-pine/80 hover:fill-rancho-paper'
+                    : 'bg-white text-rancho-forest hover:text-rancho-pine'
             "
         >
             <BellIcon
@@ -170,7 +170,7 @@
                 :class="{
                     'bell-wiggle': bellState === 'ringing',
                     'bell-ring': bellState === 'subscribed',
-                    'fill-rancho-paper text-rancho-pine': subscribed,
+                    'fill-rancho-paper text-rancho-forest': subscribed,
                 }"
                 aria-hidden="true"
             />

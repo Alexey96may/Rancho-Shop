@@ -136,18 +136,40 @@
 
     const imgRef = ref<HTMLImageElement | null>(null);
 
+    const sourceKey = computed((): string => {
+        const s = props.src;
+
+        if (typeof s === 'string') return `url:${s}`;
+
+        if (typeof File !== 'undefined' && s instanceof File) {
+            // File не имеет стабильного id, но name+size+lastModified — уникальны
+            return `file:${s.name}:${s.size}:${s.lastModified}`;
+        }
+
+        if (s && typeof s === 'object' && 'url' in s) {
+            const media = s as Media;
+            const url = media.previews?.original ?? media.url;
+            return `media:${url}`;
+        }
+
+        return 'empty';
+    });
+
     watch(
-        () => fallbackSrc.value,
-        (url, oldUrl) => {
+        sourceKey,
+        (newKey, oldKey) => {
+            // Первый прогон (immediate) или реальная смена источника
             if (fileUrl.value) {
                 URL.revokeObjectURL(fileUrl.value);
                 fileUrl.value = null;
             }
-            if (props.src instanceof File && typeof window !== 'undefined') {
+
+            if (typeof File !== 'undefined' && props.src instanceof File) {
                 fileUrl.value = URL.createObjectURL(props.src);
             }
-            // если URL не изменился — не сбрасываем isLoading
-            if (url !== oldUrl) {
+
+            // Сбрасываем состояние ТОЛЬКО если источник реально другой
+            if (newKey !== oldKey) {
                 isLoading.value = true;
                 isError.value = false;
             }

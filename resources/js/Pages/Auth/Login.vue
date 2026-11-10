@@ -33,7 +33,7 @@
     <Head title="Вход" />
 
     <header v-scroll-reveal class="mb-6">
-        <h1 class="text-2xl font-black text-rancho-forest sm:text-3xl">Вход</h1>
+        <h1 class="text-xl font-black text-rancho-forest sm:text-3xl">Вход</h1>
         <p class="mt-2 text-sm leading-relaxed text-rancho-ink-600">
             Введите номер телефона и пароль, чтобы продолжить.
         </p>
@@ -81,15 +81,24 @@
             @input-start="form.clearErrors('password')"
         />
 
-        <!-- Remember me -->
-        <label class="flex cursor-pointer select-none items-center gap-2.5">
-            <input
-                v-model="form.remember"
-                type="checkbox"
-                class="h-4 w-4 cursor-pointer rounded border-rancho-ink-300 text-rancho-pine transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-rancho-pine/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
-            />
-            <span class="text-sm text-rancho-ink-700">Запомнить меня</span>
-        </label>
+        <!-- Remember me + Забыли пароль -->
+        <div class="flex flex-col items-center justify-between gap-3 sm:flex-row">
+            <label class="flex cursor-pointer select-none items-center gap-2.5">
+                <input
+                    v-model="form.remember"
+                    type="checkbox"
+                    class="h-4 w-4 cursor-pointer rounded border-rancho-ink-300 text-rancho-pine transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-rancho-pine/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+                />
+                <span class="text-sm text-rancho-ink-700">Запомнить меня</span>
+            </label>
+
+            <Link
+                :href="route('password.request')"
+                class="shrink-0 text-sm font-medium text-rancho-pine underline-offset-2 transition-colors hover:text-rancho-forest hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-rancho-pine/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+            >
+                Забыли пароль?
+            </Link>
+        </div>
 
         <!-- Actions -->
         <div

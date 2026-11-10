@@ -57,7 +57,7 @@
     <Head title="Регистрация" />
 
     <header v-scroll-reveal class="mb-6">
-        <h1 class="text-2xl font-black text-rancho-forest sm:text-3xl">Регистрация</h1>
+        <h1 class="text-xl font-black text-rancho-forest sm:text-3xl">Регистрация</h1>
         <p class="mt-2 text-sm leading-relaxed text-rancho-ink-600">
             Создайте аккаунт — это займёт меньше минуты.
         </p>

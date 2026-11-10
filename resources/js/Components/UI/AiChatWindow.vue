@@ -45,7 +45,7 @@
     const mounted = ref(false);
 
     /* ---------- Печать ---------- */
-    const TYPING_SPEED = 12; // мс на символ
+    const TYPING_SPEED = 25; // мс на символ
     const SCROLL_EVERY = 3; // прокрутка каждые N символов
     let typingCancelled = false;
 
@@ -305,11 +305,6 @@
                     ]"
                 >
                     {{ msg.content }}
-                    <span
-                        v-if="isTyping && i === messages.length - 1 && msg.role === 'assistant'"
-                        class="ml-0.5 inline-block h-4 w-0.5 animate-pulse bg-current align-middle"
-                        aria-hidden="true"
-                    ></span>
                 </div>
             </div>
 

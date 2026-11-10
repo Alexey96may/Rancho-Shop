@@ -141,15 +141,12 @@
         <button
             v-if="variant === 'button'"
             type="button"
-            class="group inline-flex items-center gap-2 rounded-xl border border-rancho-olive/40 bg-white px-4 py-2.5 text-xs font-bold text-rancho-forest outline-none transition-all hover:border-rancho-pine/40 hover:bg-rancho-pine/80 hover:text-rancho-paper hover:shadow-rancho-sm focus-visible:ring-4 focus-visible:ring-rancho-buttercup/40 active:scale-95"
+            class="group inline-flex items-center gap-2 rounded-lg border border-rancho-olive/40 bg-white px-3 py-2.5 text-xs font-bold text-rancho-forest outline-none transition-all hover:border-rancho-pine/40 hover:bg-rancho-pine/80 hover:text-rancho-paper hover:shadow-rancho-sm focus-visible:ring-4 focus-visible:ring-rancho-buttercup/40 active:scale-95 sm:rounded-xl sm:px-4 sm:py-2.5"
             :aria-expanded="open"
             aria-haspopup="menu"
             @click.stop="nativeShare"
         >
-            <Share2
-                class="h-3 w-3 text-rancho-pine transition-transform group-hover:scale-110"
-                aria-hidden="true"
-            />
+            <Share2 class="h-3 w-3 transition-transform group-hover:scale-110" aria-hidden="true" />
             <span class="hidden sm:inline">{{ label }}</span>
         </button>
 
@@ -177,7 +174,7 @@
             <div
                 v-if="open"
                 role="menu"
-                class="shadow-xl absolute right-0 z-50 mt-2 w-56 overflow-hidden rounded-2xl border border-rancho-olive/15 bg-white p-1.5"
+                class="shadow-xl absolute right-0 z-50 mt-2 w-56 overflow-hidden rounded-xl border border-rancho-olive/15 bg-white p-1.5"
             >
                 <div class="px-3 py-2">
                     <p

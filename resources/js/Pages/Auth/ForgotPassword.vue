@@ -48,8 +48,8 @@
 <template>
     <Head title="Восстановление пароля" />
 
-    <header v-scroll-reveal class="mb-6">
-        <h1 class="text-2xl font-black text-rancho-forest sm:text-3xl">Восстановление пароля</h1>
+    <header v-scroll-reveal class="mb-8">
+        <h1 class="text-xl font-black text-rancho-forest sm:text-3xl">Восстановление пароля</h1>
         <p class="mt-2 text-sm leading-relaxed text-rancho-ink-600">
             Забыли пароль? Ничего страшного. Укажите email — мы отправим ссылку для сброса пароля.
         </p>

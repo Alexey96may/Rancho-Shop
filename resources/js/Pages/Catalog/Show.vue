@@ -195,13 +195,11 @@
                         <div
                             class="flex items-center justify-between gap-4 sm:flex-col sm:items-start"
                         >
-                            <!-- Название -->
                             <h1 class="text-3xl font-black text-rancho-forest sm:text-4xl">
                                 {{ productData.name }}
                             </h1>
 
                             <ShareButton
-                                v-if="productData.seo"
                                 :seo="productData.seo"
                                 :title="
                                     productData.name ? `Купить «${product.data.name}»` : undefined
@@ -237,7 +235,7 @@
                         </div>
                     </div>
 
-                    <div class="mt-6 flex items-center justify-start gap-4">
+                    <div class="mt-6 flex items-stretch justify-start gap-4">
                         <!-- BUY -->
                         <div
                             v-if="productData.default_variant && isAvailable"
@@ -247,7 +245,7 @@
                         </div>
 
                         <!-- SUBSCRIBE -->
-                        <div class="basis-24 sm:basis-1/3">
+                        <div class="h-full basis-24 self-stretch sm:basis-1/3">
                             <ProductSubscribeButton
                                 :product-id="productData.id"
                                 :is-subscribed="productData.is_subscribed ?? false"
