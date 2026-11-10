@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Actions\Admin\Catalog;
+namespace App\Actions\Admin\ProductVariants;
 
 use App\Models\ProductVariant;
 

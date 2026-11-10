@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Actions\Admin\Catalog\CreateProductVariantAction;
-use App\Actions\Admin\Catalog\DeleteProductVariantAction;
-use App\Actions\Admin\Catalog\UpdateProductVariantAction;
+use App\Actions\Admin\ProductVariants\CreateProductVariantAction;
+use App\Actions\Admin\ProductVariants\DeleteProductVariantAction;
+use App\Actions\Admin\ProductVariants\UpdateProductVariantAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\CatalogRequest;
 use App\Http\Requests\Admin\QuickUpdateCatalogRequest;
